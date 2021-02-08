@@ -9,11 +9,11 @@ The goal is to achieve this in a purely client-side mod, using an external serve
 # Creation
 
 This is primarily achived through five primary steps
-1 - Bedrock Models created in blockbench, exported from blockbench, and then imported into the game using mods. Special names are used to assign model parts to specific vanilla body parts for animation syncing and such.
-2 - Texture files created as one would normally create a .png file. No limit on size for the image itself.
-3 - .Obj files created through Blender or similar programs. These allow for non-cube models to be added to your avatar, for more creativity.
-4 - [OPTIONAL] Creating a .lua script file to indicate the behaviour of your avatar, animate it, that sort.
-5 - Import all above asset files with a single command, verify the avatar works correctly, export avatar to .nbt file, upload .nbt file to server
+1. Bedrock Models created in blockbench, exported from blockbench, and then imported into the game using mods. Special names are used to assign model parts to specific vanilla body parts for animation syncing and such.
+2. Texture files created as one would normally create a .png file. No limit on size for the image itself.
+3. .Obj files created through Blender or similar programs. These allow for non-cube models to be added to your avatar, for more creativity.
+4. [OPTIONAL] Creating a .lua script file to indicate the behaviour of your avatar, animate it, that sort.
+5. Import all above asset files with a single command, verify the avatar works correctly, export avatar to .nbt file, upload .nbt file to server
 
 
 # Features
