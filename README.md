@@ -42,7 +42,7 @@ Creative Freedom
 # Plans
 Plans for the future of Figura include
 
--Functional Shaders
+1. Functional Shaders
   - Allowing users to write their own shaders for avatars/parts of avatars
-
--Writing Blender Compatibility Scripts for animations, model creation purely in Blender, etc.
+2. Writing Blender Compatibility Scripts.
+  - Support for exporting animation files, possibly blendshapes, and more(?).
