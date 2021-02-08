@@ -10,7 +10,7 @@ The goal is to achieve this in a purely client-side mod, using an external serve
 
 Model Creation is primarily achived through five steps:
 1. Bedrock Models created in blockbench, exported from blockbench, and then imported into the game while using the mod. Special names are used to assign model parts to specific vanilla body parts for animation syncing and such, as well as rending some parts with/without certain armor or held items, during certain animations, etc. This enables a lot of customization with **little to no scripting**.
-2. Texture files created as one would normally create a .png file. No limit on size for the image itself.
+2. Texture files created as one would normally create a .png file. No limit on size for the image itself, though it is included under the maximum 100kb file size limit for any avatar.
 3. [OPTIONAL] .Obj files created through Blender or similar programs. These allow for non-cube models to be added to your avatar, for more creativity.
 4. [OPTIONAL] Creating a .lua script file to indicate the behaviour of your avatar, animate it, that sort.
 5. Import all above asset files with a single command, verify the avatar works correctly, export avatar to .nbt file, upload .nbt file to server
