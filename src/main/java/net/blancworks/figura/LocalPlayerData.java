@@ -85,6 +85,7 @@ public class LocalPlayerData extends PlayerData {
 
             CustomModel mdl = builder.fromJson(text, CustomModel.class);
             model = mdl;
+            mdl.owner = this;
         } catch (Exception e) {
             System.out.println(e);
             return;

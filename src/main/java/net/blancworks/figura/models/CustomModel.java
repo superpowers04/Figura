@@ -1,14 +1,19 @@
 package net.blancworks.figura.models;
 
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.models.lua.CustomScript;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import org.luaj.vm2.LuaNumber;
 
 import java.util.ArrayList;
 
 public class CustomModel {
+    public PlayerData owner;
     public ArrayList<CustomModelPart> all_parts = new ArrayList<CustomModelPart>();
 
     public int getMaxRenderAmount() {
@@ -17,6 +22,10 @@ public class CustomModel {
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         int left_to_render = getMaxRenderAmount();
+        
+        if(owner.script != null)
+            owner.script.runFunctionImmediate("render", CustomScript.max_lua_instructions_render, LuaNumber.valueOf(FiguraMod.deltaTime));
+        
         for (CustomModelPart part : all_parts) {
 
             matrices.push();

@@ -21,6 +21,7 @@ public class FiguraMod implements ClientModInitializer {
     public static PlayerEntityModel curr_model;
     public static VertexConsumerProvider vertex_consumer_provider;
     private static PlayerData curr_data;
+    public static float deltaTime;
 
     private static final boolean USE_DEBUG_MODEL = true;
     private static final CustomModel debug_model = new DebugModel();
@@ -34,11 +35,12 @@ public class FiguraMod implements ClientModInitializer {
     //Set current player.
     //If there is a model loaded for the player, it'll be assigned here to the current model.
     //Otherwise, sends the model to the request list.
-    public static void setRenderingMode(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl) {
+    public static void setRenderingMode(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt) {
         curr_player = player;
         curr_data = PlayerDataManager.getDataForPlayer(player.getUuid());
         curr_data.vanillaModel = mdl;
         vertex_consumer_provider = vertexConsumerProvider;
+        deltaTime = dt;
     }
 
     //Returns the current custom model for rendering. 

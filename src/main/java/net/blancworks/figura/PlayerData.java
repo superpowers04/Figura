@@ -98,6 +98,7 @@ public class PlayerData {
             CompoundTag modelTag = (CompoundTag) tag.get("model");
             model = new CustomModel();
             model.fromNBT(modelTag);
+            model.owner = this;
 
             CompoundTag textureTag = (CompoundTag) tag.get("texture");
             texture = new FiguraTexture();
@@ -127,7 +128,7 @@ public class PlayerData {
 
 
         if (script != null) {
-            script.runFunction("tick");
+            script.runFunction("tick", CustomScript.max_lua_instructions_tick);
         }
     }
 
