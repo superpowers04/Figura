@@ -26,7 +26,6 @@ import java.util.concurrent.CompletableFuture;
 //and allow for easier editing.
 public class LocalPlayerData extends PlayerData {
 
-    private static final Gson builder = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BedrockModelDeserializer()).setPrettyPrinting().create();
 
     private Path texturePath = null;
     private boolean didTextureLoad = false;
@@ -83,7 +82,7 @@ public class LocalPlayerData extends PlayerData {
                 text = CharStreams.toString(reader);
             }
 
-            CustomModel mdl = builder.fromJson(text, CustomModel.class);
+            CustomModel mdl = FiguraMod.builder.fromJson(text, CustomModel.class);
             model = mdl;
             mdl.owner = this;
         } catch (Exception e) {
@@ -137,10 +136,7 @@ public class LocalPlayerData extends PlayerData {
 
     public void loadModelFileNBT(DataInputStream stream){
         try {
-            PositionTracker positionTracker = new PositionTracker(999999999);
-            CompoundTag nbtTag = CompoundTag.READER.read(stream, 0, positionTracker);
-
-            fromNBT(nbtTag);
+            super.loadFromNBT(stream);
         } catch (Exception e){
             System.out.println(e);
         }

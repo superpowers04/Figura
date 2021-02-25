@@ -185,8 +185,10 @@ public class PlayerData {
     }
 
     public void loadFromNBT(DataInputStream input) throws Exception {
-        PositionTracker tracker = new PositionTracker(99999999);
-        CompoundTag tag = CompoundTag.READER.read(input, 0, tracker);
+        PositionTracker positionTracker = new PositionTracker(999999999);
+        CompoundTag nbtTag = CompoundTag.READER.read(input, 0, positionTracker);
+
+        fromNBT(nbtTag);
     }
     
     

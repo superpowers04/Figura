@@ -1,5 +1,8 @@
 package net.blancworks.figura.commands;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -7,23 +10,24 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.network.FiguraNetworkManager;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.command.argument.NbtCompoundTagArgumentType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -64,6 +68,14 @@ public class FiguraCommands {
                                     argument("url", StringArgumentType.string()).executes(
                                             FiguraCommands::load_model_url_command
                                     )
+                            )
+                    ).then(
+                            literal("post_model").executes(
+                                    FiguraCommands::post_model_command
+                            )
+                    ).then(
+                            literal("clear_cache").executes(
+                                    FiguraCommands::clear_cache_command
                             )
                     )
             );
@@ -132,6 +144,69 @@ public class FiguraCommands {
                 System.out.println(e);
             }
         }, Util.getMainWorkerExecutor());
+
+        return 1;
+    }
+
+    public static int post_model_command(CommandContext ctx) {
+        int key = FiguraNetworkManager.figuraSessionKey;
+
+        String uuidString = MinecraftClient.getInstance().player.getUuid().toString();
+
+        try {
+            URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.GetServerURL(), uuidString, key));
+
+            System.out.println(url.toString());
+
+            CompletableFuture.runAsync(() -> {
+                HttpURLConnection httpURLConnection = null;
+
+                try {
+                    PlayerData data = PlayerDataManager.localPlayer;
+
+                    CompoundTag infoTag = new CompoundTag();
+                    data.toNBT(infoTag);
+            
+                    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+                    DataOutputStream nbtDataStream = new DataOutputStream(byteStream);
+                    infoTag.write(nbtDataStream);
+                    
+                    JsonObject finalObject = new JsonObject();
+
+                    finalObject.addProperty("data", Base64.getEncoder().encodeToString(byteStream.toByteArray()));
+                    
+                    String finalResult = finalObject.toString();
+
+                    httpURLConnection = (HttpURLConnection) url.openConnection();
+                    httpURLConnection.setRequestMethod("PUT");
+                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
+
+                    httpURLConnection.setDoOutput(true);
+                    httpURLConnection.setDoInput(true);
+
+                    //httpURLConnection.connect();
+                    OutputStream outStream = httpURLConnection.getOutputStream();
+                    OutputStreamWriter outWriter = new OutputStreamWriter(outStream);
+
+                    outWriter.write(finalResult);
+                    outWriter.close();
+
+                    System.out.println(httpURLConnection.getResponseMessage());
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }, Util.getMainWorkerExecutor());
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+
+        return 1;
+    }
+
+    public static int clear_cache_command(CommandContext ctx) {
+        
+        System.out.println("CLEAR");
+        PlayerDataManager.clearCache();
         
         return 1;
     }

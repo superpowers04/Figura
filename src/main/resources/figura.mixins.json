@@ -7,7 +7,8 @@
   ],
   "client": [
     "PlayerEntityModelMixin",
-    "PlayerEntityRendererMixin"
+    "PlayerEntityRendererMixin",
+    "ClientLoginNetworkHandlerMixin"
   ],
   "injectors": {
     "defaultRequire": 1
