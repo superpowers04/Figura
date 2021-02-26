@@ -25,27 +25,33 @@ public class PlayerDataManager {
     public static LocalPlayerData localPlayer;
 
     public static PlayerData getDataForPlayer(UUID id) {
+        
+        PlayerData getData = null;
+        
+        if(!didInitLocalPlayer){
+            if(id == MinecraftClient.getInstance().player.getUuid()){
+                localPlayer = new LocalPlayerData();
+                localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
+                PlayerDataManager.loadedPlayerData.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
+                didInitLocalPlayer = true;
 
-        if (!didInitLocalPlayer && MinecraftClient.getInstance().player != null) {
-            localPlayer = new LocalPlayerData();
-            localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
-            PlayerDataManager.loadedPlayerData.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
-            didInitLocalPlayer = true;
-
-            GetPlayerAvatarFromServer(localPlayer.playerId, localPlayer);
+                GetPlayerAvatarFromServer(localPlayer.playerId, localPlayer);
+                return localPlayer;
+            }
         }
         
         if (loadedPlayerData.containsKey(id) == false) {
-            PlayerData newData = new PlayerData();
-            newData.playerId = id;
+            getData = new PlayerData();
+            getData.playerId = id;
 
-            GetPlayerAvatarFromServer(id, newData);
+            GetPlayerAvatarFromServer(id, getData);
 
-            loadedPlayerData.put(id, newData);
-            return newData;
+            loadedPlayerData.put(id, getData);
+        } else {
+            getData = loadedPlayerData.get(id);
         }
-
-        return loadedPlayerData.get(id);
+        
+        return getData;
     }
 
     public static PlayerTrustData getTrustDataForPlayer(UUID id) {
@@ -134,15 +140,6 @@ public class PlayerDataManager {
     public static void tick() {
         if (MinecraftClient.getInstance().world == null)
             return;
-
-        if (!didInitLocalPlayer && MinecraftClient.getInstance().player != null) {
-            localPlayer = new LocalPlayerData();
-            localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
-            PlayerDataManager.loadedPlayerData.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
-            didInitLocalPlayer = true;
-
-            GetPlayerAvatarFromServer(localPlayer.playerId, localPlayer);
-        }
 
         for (Map.Entry<UUID, PlayerData> entry : loadedPlayerData.entrySet()) {
             entry.getValue().tick();

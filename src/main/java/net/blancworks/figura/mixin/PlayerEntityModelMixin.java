@@ -1,11 +1,13 @@
 package net.blancworks.figura.mixin;
 
+import net.blancworks.figura.access.ModelPartAccess;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.LivingEntity;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
@@ -18,16 +20,31 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashSet;
+import java.util.List;
 
 @Mixin(PlayerEntityModel.class)
 public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityModel<T> implements PlayerEntityModelAccess {
 
-    @Shadow @Final public ModelPart jacket;
-    @Shadow @Final public ModelPart leftPantLeg;
-    @Shadow @Final public ModelPart leftSleeve;
-    @Shadow @Final public ModelPart rightSleeve;
-    @Shadow @Final public ModelPart rightPantLeg;
-    @Shadow @Final private ModelPart ears;
+    @Shadow
+    @Final
+    public ModelPart jacket;
+    @Shadow
+    @Final
+    public ModelPart leftPantLeg;
+    @Shadow
+    @Final
+    public ModelPart leftSleeve;
+    @Shadow
+    @Final
+    public ModelPart rightSleeve;
+    @Shadow
+    @Final
+    public ModelPart rightPantLeg;
+    @Shadow
+    @Final
+    private ModelPart ears;
+    @Shadow
+    private List<ModelPart> parts;
     private HashSet<String> disabled_parts = new HashSet<String>();
 
     public PlayerEntityModelMixin(float scale) {
@@ -36,18 +53,33 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
     @Override
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
-        super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
-        PlayerData playerData = FiguraMod.getCurrData();
+        try {
+            PlayerData playerData = FiguraMod.getCurrData();
 
-        if (playerData != null) {
-            if (playerData.model != null) {
-                if (playerData.texture == null || playerData.texture.ready == false) {
-                    return;
+            if (playerData != null && playerData.script != null && playerData.script.vanillaModelRepresentation != null) {
+                playerData.script.vanillaModelRepresentation.applyModelTransforms((PlayerEntityModel) (Object) this);
+            } else {
+                for (ModelPart part : parts) {
+                    ModelPartAccess mpa = (ModelPartAccess) (Object) part;
+                    mpa.setAdditionalPos(new Vector3f());
+                    mpa.setAdditionalRot(new Vector3f());
                 }
-                //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.
-                VertexConsumer actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
-                playerData.model.render((PlayerEntityModel<?>) (Object) this, matrices, actualConsumer, light, overlay, red, green, blue, alpha);
             }
+
+            super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
+
+            if (playerData != null) {
+                if (playerData.model != null) {
+                    if (playerData.texture == null || playerData.texture.ready == false) {
+                        return;
+                    }
+                    //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.
+                    VertexConsumer actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
+                    playerData.model.render((PlayerEntityModel<?>) (Object) this, matrices, actualConsumer, light, overlay, red, green, blue, alpha);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 
