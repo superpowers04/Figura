@@ -13,7 +13,7 @@ Model Creation is primarily achived through five steps:
 2. Texture files created as one would normally create a .png file. No limit on size for the image itself, though it is included under the maximum 100kb file size limit for any avatar.
 3. [OPTIONAL] .Obj files created through Blender or similar programs. These allow for non-cube models to be added to your avatar, for more creativity.
 4. [OPTIONAL] Creating a .lua script file to indicate the behaviour of your avatar, animate it, that sort.
-5. Import all above asset files with a single command, verify the avatar works correctly, export avatar to .nbt file, upload .nbt file to server
+5. Import all above asset files with a single command, verify the avatar works correctly, and running a command to upload the avatar.
 
 
 # Features
@@ -24,25 +24,29 @@ Notable features for the mod include
   - Other users **are** required to have the mod installed to see your avatar, and you must have it installed to see theirs. It's physically impossible to circumvent this issue.
 
 Client-Side Performance limitations.
-  - Model Complexity is caluclated and limited on the fly, enabling users to limit how much performance is sunk into model detail. Parts are rendered linearly in the hierarchy, allowing creators to prioritize specific details over others. Faces on mesh models are limited using the same system.
-  - Lua Script Execution is limited. Scripts run by non-trusted users are limited to a specific instruction count, ensuring that it is impossible for random users to destroy framerate using just "while true do end". Similarly, Lua Scripts are incredibly sandboxed, not allowing for any systems beyond basic math libraries and executing very safely guarded Java code. This ensures users cannot write malicious scripts.
+  - Each user decides on the performance settings individually. This means that someone with a lower-end PC can set avatars to render at less detail, while someone with a beast PC can set things to have practically no detail limit.
+  - Model Complexity is limited on the fly. Model parts are rendered linearly in the hierarchy, allowing creators to prioritize specific details over others. Quads/Tris on mesh models are limited using the same system.
+  - Lua Script Execution is limited. Scripts run by non-trusted users are limited to a specific instruction count, ensuring that it is impossible for random users to destroy framerate using just "while true do end". Similarly, Lua Scripts are incredibly sandboxed, not allowing for any systems beyond basic math libraries and executing very safely guarded Java code. This ensures users cannot write malicious scripts. On top of both of these factors, lua scripting is multi-threaded, ensuring that the main game's FPS will never drop due to a script executing slowly.
 
 
 Easy Creation
   - Models are simply blockbench models set to Bedrock mode. They work 1:1 with Blockbench, enabling easy comparison and creation.
   - Texture mapping with Models/OBJ Models match exactly as you'd expect. There's no difficult setup. If your texture maps correctly in Blockbench or whatever software you use for OBJ files, it will match in-game.
-  - Loading Avatars in-game for preview is a single command, `/figura load_model [avatar_name]`. Saving avatars is just as simple, `/figura save_model [avatar_name]`, which results in an output .nbt file for the current avatar that you can upload to the servers.
-  - **All files hotswap once initially loaded, enabling extremely fast iteration time.** In layman's terms: Once you load an avatar from local files, any changes to those local files will show in-game immedaitely, without even re-starting the game.
+  - Loading Avatars in-game for preview is a single command, `/figura load_model [avatar_name]`. Uploading avatars is just as simple, done by using the `/figura post_model` command, which will upload whatever your current avatar is.
+  - **All files hotswap once initially loaded, enabling extremely fast iteration time.** In layman's terms: Once you load an avatar from local files, any changes to those local files will show in-game immedaitely, without even re-starting the game, or re-loading with the command.
 
 Creative Freedom
-  - Creators are allowed to create nearly anything they like with the mod, and upload that as their avatar safely.
-  - Creation is easy, and near-limitless in potentail, within the confines of Minecraft's own rendering system and the 100kb file size limit (It doesn't sound like much, but it goes a long way for raw model data). In the future, Figura will either use Canvas, or write it's own rendering system that's significantly more optimized (VBOS isntead of Immediate Rendering)
+  - Creators are allowed to create nearly anything they like with the mod, without concerns about security, or limitations. The people who see the avatar decide the limitations for themselves, individually. Not the creator.
 
 
 # Plans
 Plans for the future of Figura include
 
-1. Functional Shaders
+1. Friend/Trust System
+  - A system that allows you to friend/trust specific users, releasing limits on what their models can render.
+2. Report System
+  - A system for handling reporting avatars, and punishing players for being reported. Ideally, this system will simply run on it's own, and not require too much intervention by real people.
+3. Functional Shaders
   - Allowing users to write their own shaders for avatars/parts of avatars
-2. Writing Blender Compatibility Scripts.
+4. Writing Blender Compatibility Scripts.
   - Support for exporting animation files, possibly blendshapes, and more(?).
