@@ -2,7 +2,7 @@
 
 The Figura Project is a project dedicated to re-creating the VRChat Avatar System in Minecraft, as a way to allow users to more creatively express themselves.
 
-The goal is to achieve this in a purely client-side mod, using an external server to store user asset files for in-game retrieval, and to create a mod that enables users to create custom, expressive avatars that do not risk the safety or performance of other users.
+The goal is to achieve this in a purely client-side mod, using an external server to store user asset files for in-game retrieval, and to create a mod that enables users to create custom, interesting avatars that do not risk the safety or performance of other users.
 
 
 
