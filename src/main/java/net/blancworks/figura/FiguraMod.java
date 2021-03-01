@@ -3,8 +3,7 @@ package net.blancworks.figura;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.blancworks.figura.models.CustomModel;
-import net.blancworks.figura.models.DebugModel;
-import net.blancworks.figura.models.bedrock.BedrockModelDeserializer;
+import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -19,7 +18,7 @@ import java.nio.file.WatchKey;
 
 public class FiguraMod implements ClientModInitializer {
 
-    public static final Gson builder = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BedrockModelDeserializer()).setPrettyPrinting().create();
+    public static final Gson builder = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BlockbenchModelDeserializer()).setPrettyPrinting().create();
 
     //Used during rendering.
     public static AbstractClientPlayerEntity curr_player;
@@ -29,7 +28,6 @@ public class FiguraMod implements ClientModInitializer {
     public static float deltaTime;
 
     private static final boolean USE_DEBUG_MODEL = true;
-    private static final CustomModel debug_model = new DebugModel();
     private static WatchKey watch_key;
     private static Path path;
 

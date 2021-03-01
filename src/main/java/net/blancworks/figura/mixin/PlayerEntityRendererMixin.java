@@ -49,13 +49,16 @@ public class PlayerEntityRendererMixin {
                         matrices.push();
                         
                         model.rightArm.rotate(matrices);
-                        part.pitch = 0;
                         part.render(99999, matrices, vc, light, OverlayTexture.DEFAULT_UV);
                         
                         matrices.pop();
                     } else if(part.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm){
-                        part.pitch = 0;
-                        part.render(99999, matrices,vc, light, OverlayTexture.DEFAULT_UV);
+                        matrices.push();
+
+                        model.leftArm.rotate(matrices);
+                        part.render(99999, matrices, vc, light, OverlayTexture.DEFAULT_UV);
+
+                        matrices.pop();
                     }
                 }
                 

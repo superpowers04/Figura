@@ -217,10 +217,12 @@ public class FiguraCommands {
 
         ArrayList<String> valid_loads = new ArrayList<String>();
 
-        for (File file : contentDirectory.listFiles()) {
+        File[] files = contentDirectory.listFiles();
+
+        for (File file : files) {
             String fileName = FilenameUtils.removeExtension(file.getName());
 
-            if (Files.exists(contentDirectory.toPath().resolve(fileName + ".json")) && Files.exists(contentDirectory.toPath().resolve(fileName + ".png"))) {
+            if (Files.exists(contentDirectory.toPath().resolve(fileName + ".bbmodel")) && Files.exists(contentDirectory.toPath().resolve(fileName + ".png"))) {
                 if (valid_loads.contains(fileName))
                     continue;
                 valid_loads.add(fileName);

@@ -2,8 +2,6 @@ package net.blancworks.figura;
 
 
 import com.google.common.io.CharStreams;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import net.blancworks.figura.models.lua.CustomScript;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.CompoundTag;
@@ -12,7 +10,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
-import net.blancworks.figura.models.bedrock.BedrockModelDeserializer;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
@@ -56,7 +53,7 @@ public class LocalPlayerData extends PlayerData {
     //Loads a model file at a specific directory.
     public void loadModelFile(String fileName) {
         Path contentDirectory = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files");
-        Path jsonPath = contentDirectory.resolve(fileName + ".json");
+        Path jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
         texturePath = contentDirectory.resolve(fileName + ".png");
         Path scriptPath = contentDirectory.resolve(fileName + ".lua");
 

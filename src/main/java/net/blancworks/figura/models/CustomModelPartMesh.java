@@ -21,9 +21,16 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
 
+@Deprecated
 public class CustomModelPartMesh extends CustomModelPart {
 
-    //All the mesh components.
+
+
+    public void fromNBT(CompoundTag partTag) {
+
+    }
+
+    /*//All the mesh components.
     //Sorted in sets of 8.
     //Vertex X,Y,Z
     //UV X,Y
@@ -220,5 +227,5 @@ public class CustomModelPartMesh extends CustomModelPart {
         for (int i = 0; i < geometryData.size(); i++) {
             meshComponents.add(geometryData.getFloat(i));
         }
-    }
+    }*/
 }

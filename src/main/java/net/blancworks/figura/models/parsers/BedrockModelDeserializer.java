@@ -1,4 +1,4 @@
-package net.blancworks.figura.models.bedrock;
+package net.blancworks.figura.models.parsers;
 
 import com.google.gson.*;
 import net.blancworks.figura.models.CustomModel;
@@ -12,11 +12,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
+@Deprecated
 public class BedrockModelDeserializer implements JsonDeserializer<CustomModel> {
 
     @Override
     public CustomModel deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-
+/*
         CustomModel model = new CustomModel();
 
         JsonObject obj = json.getAsJsonObject();
@@ -57,9 +58,15 @@ public class BedrockModelDeserializer implements JsonDeserializer<CustomModel> {
                 } else {
                     group_part = new CustomModelPart();
                 }
-                
+
+                //If, somehow, a mesh file doesn't exist, we set it to be a normal model part.
+                if(group_part == null)
+                    group_part = new CustomModelPart();
+
                 group_part.setTextureSize(textureWidth, textureHeight);
-                
+
+                group_part.name = name;
+
                 if(name.contains("NOLOAD"))
                     group_part.visible = false;
                 
@@ -135,6 +142,7 @@ public class BedrockModelDeserializer implements JsonDeserializer<CustomModel> {
             }
         }
 
-        return model;
+        return model;*/
+        return null;
     }
 }
