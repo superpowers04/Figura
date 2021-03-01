@@ -15,6 +15,9 @@ import java.util.ArrayList;
 public class CustomModel {
     public PlayerData owner;
     public ArrayList<CustomModelPart> all_parts = new ArrayList<CustomModelPart>();
+    
+    public float texWidth = 64, texHeight = 64;
+    
 
     public int getMaxRenderAmount() {
         return 128;

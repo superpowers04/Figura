@@ -7,10 +7,7 @@ import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel> {
 
@@ -28,77 +25,108 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         JsonArray outliner = root.get("outliner").getAsJsonArray();
         JsonArray textures = root.get("textures").getAsJsonArray();
 
+        retModel.texWidth = resolution.get("width").getAsFloat();
+        retModel.texHeight = resolution.get("height").getAsFloat();
+
         HashMap<UUID, JsonObject> elementsByUuid = sortElements(elements);
-        HashMap<UUID, JsonObject> groupsByUuid = sortElements(outliner);
         HashMap<UUID, CustomModelPart> parsedParts = new HashMap<UUID, CustomModelPart>();
 
-        parseGroupsAndElements(retModel, parsedParts, groupsByUuid, elementsByUuid);
+
+        //Parse out custom model parts from json objects.
+        for (Map.Entry<UUID, JsonObject> entry : elementsByUuid.entrySet()) {
+            UUID id = entry.getKey();
+            JsonObject obj = entry.getValue();
+
+            parsedParts.put(id, parseElement(obj, retModel));
+        }
+
+        for (JsonElement element : outliner) {
+            if (element.isJsonObject()) {
+                //If the element is a json object, it's a group, so parse the group.
+                buildGroup(element.getAsJsonObject(), retModel, parsedParts, null);
+            } else {
+                //If the element is a string, it's an element, so just add it to the children.
+                String s = element.getAsString();
+
+                if (s != null)
+                    retModel.all_parts.add(parsedParts.get(UUID.fromString(s)));
+            }
+        }
 
         return retModel;
     }
 
-    //Parses out all the groups and elements into the custom model.
-    public void parseGroupsAndElements(CustomModel model, HashMap<UUID, CustomModelPart> parsedParts, HashMap<UUID, JsonObject> groups, HashMap<UUID, JsonObject> elements) {
+    //Builds out a group from a JsonObject that specifies the group in the outline.
+    public void buildGroup(JsonObject group, CustomModel target, HashMap<UUID, CustomModelPart> allParts, CustomModelPart parent) {
+        CustomModelPart groupPart = new CustomModelPart();
 
-        ArrayList<UUID> rootParts = new ArrayList<UUID>();
 
-        //Foreach group, make a custom model part for it.
-        for (Map.Entry<UUID, JsonObject> group : groups.entrySet()) {
-            JsonObject groupObj = group.getValue();
-            UUID id = UUID.fromString(groupObj.get("uuid").getAsString());
-            parsedParts.put(id, parseGroup(groupObj));
-            rootParts.add(id);
+        if (group.has("name")) {
+            groupPart.name = group.get("name").getAsString();
+
+            //Find parent type.
+            for (Map.Entry<String, CustomModelPart.ParentType> entry : nameParentTypeTags.entrySet()) {
+                if(groupPart.name.contains(entry.getKey())) {
+                    groupPart.parentType = entry.getValue();
+                    break;
+                }
+            }
         }
+        if (group.has("visibility")) groupPart.visible = group.get("visibility").getAsBoolean();
+        if (group.has("origin")) groupPart.pivot = v3fFromJArray(group.get("origin").getAsJsonArray());
+        if (group.has("rotation")) groupPart.rot = v3fFromJArray(group.get("rotation").getAsJsonArray());
 
-        for (Map.Entry<UUID, JsonObject> element : elements.entrySet()) {
-            JsonObject elementObject = element.getValue();
-            UUID id = UUID.fromString(elementObject.get("uuid").getAsString());
-            parsedParts.put(id, parseElement(elementObject));
-            rootParts.add(id);
-        }
+        JsonArray children = group.get("children").getAsJsonArray();
 
-        for (Map.Entry<UUID, CustomModelPart> entry : parsedParts.entrySet()) {
+        for (JsonElement child : children) {
+            if (child.isJsonObject()) {
+                //If the element is a json object, it's a group, so parse the group.
+                buildGroup(child.getAsJsonObject(), target, allParts, groupPart);
+            } else {
+                //If the element is a string, it's an element, so just add it to the children.
+                String s = child.getAsString();
 
-            //Get stuff from entry
-            UUID id = entry.getKey();
-            CustomModelPart part = entry.getValue();
-
-            //If this part is a group
-            if(groups.containsKey(id)){
-
+                if (s != null)
+                    groupPart.children.add(allParts.get(UUID.fromString(s)));
             }
         }
 
+        //Add part.
+        if (parent == null)
+            target.all_parts.add(groupPart);
+        else
+            parent.children.add(groupPart);
     }
 
-    public CustomModelPart parseGroup(JsonObject groupObject) {
-        CustomModelPart groupPart = new CustomModelPart();
-
-        if(groupObject.has("name")) groupPart.name = groupObject.get("name").getAsString();
-        if(groupObject.has("visibility")) groupPart.visible = groupObject.get("visibility").getAsBoolean();
-        if(groupObject.has("origin")) groupPart.pos = v3fFromJArray(groupObject.get("origin").getAsJsonArray());
-        if(groupObject.has("rotation")) groupPart.pos = v3fFromJArray(groupObject.get("rotation").getAsJsonArray());
-
-        return groupPart;
-    }
-
-    public CustomModelPart parseElement(JsonObject elementObject){
+    public static final HashMap<String, CustomModelPart.ParentType> nameParentTypeTags = new HashMap<String, CustomModelPart.ParentType>(){{
+        put("HEAD", CustomModelPart.ParentType.Head);
+        put("TORSO", CustomModelPart.ParentType.Torso);
+        put("LEFT_ARM", CustomModelPart.ParentType.LeftArm);
+        put("RIGHT_ARM", CustomModelPart.ParentType.RightArm);
+        put("LEFT_LEG", CustomModelPart.ParentType.LeftLeg);
+        put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg);
+    }};
+    
+    public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
         CustomModelPart elementPart = new CustomModelPart();
 
-        if(elementObject.has("name")) elementPart.name = elementObject.get("name").getAsString();
-        if(elementObject.has("visibility")) elementPart.visible = elementObject.get("visibility").getAsBoolean();
+        if (elementObject.has("name")) {
+            elementPart.name = elementObject.get("name").getAsString();
+        }
+        if (elementObject.has("visibility")) elementPart.visible = elementObject.get("visibility").getAsBoolean();
 
         Vector3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
         Vector3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
-        if(elementObject.has("origin")) elementPart.pivot = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
-        if(elementObject.has("rotation")) elementPart.rot = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
-
+        if (elementObject.has("origin"))
+            elementPart.pivot = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
+        if (elementObject.has("rotation"))
+            elementPart.rot = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
 
 
         Vector3f size = to.copy();
         size.subtract(from);
 
-        if(elementObject.has("uv_offset")) {
+        if (elementObject.has("uv_offset")) {
             elementPart.uOffset = elementObject.get("uv_offset").getAsJsonArray().get(0).getAsInt();
             elementPart.vOffset = elementObject.get("uv_offset").getAsJsonArray().get(1).getAsInt();
         }
@@ -109,11 +137,77 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         {
             JsonObject faceData = facesObject.get("north").getAsJsonObject();
             generateFace(elementPart,
-                    new Vector3f(from.getX(), from.getY(), from.getZ()),
-                    new Vector3f(to.getX(), from.getY(), from.getZ()),
-                    new Vector3f(to.getX(), to.getY(), from.getZ()),
-                    new Vector3f(from.getX(), to.getY(), from.getZ()),
-                    v4fFromJArray(faceData.get("uv").getAsJsonArray())
+                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
+                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
+                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
+                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
+                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
+                    target.texWidth, target.texHeight
+            );
+        }
+
+        //South
+        {
+            JsonObject faceData = facesObject.get("south").getAsJsonObject();
+            generateFace(elementPart,
+                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
+                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
+                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
+                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
+                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
+                    target.texWidth, target.texHeight
+            );
+        }
+
+        //East
+        {
+            JsonObject faceData = facesObject.get("east").getAsJsonObject();
+            generateFace(elementPart,
+                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
+                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
+                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
+                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
+                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
+                    target.texWidth, target.texHeight
+            );
+        }
+
+        //West
+        {
+            JsonObject faceData = facesObject.get("west").getAsJsonObject();
+            generateFace(elementPart,
+                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
+                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
+                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
+                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
+                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
+                    target.texWidth, target.texHeight
+            );
+        }
+
+        //Top
+        {
+            JsonObject faceData = facesObject.get("up").getAsJsonObject();
+            generateFace(elementPart,
+                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
+                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
+                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
+                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
+                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
+                    target.texWidth, target.texHeight
+            );
+        }
+
+        //Bottom
+        {
+            JsonObject faceData = facesObject.get("down").getAsJsonObject();
+            generateFace(elementPart,
+                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
+                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
+                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
+                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
+                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
+                    target.texWidth, target.texHeight
             );
         }
 
@@ -121,7 +215,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         return elementPart;
     }
 
-    public void generateFace(CustomModelPart part, Vector3f a, Vector3f b, Vector3f c, Vector3f d, Vector4f uv){
+    public void generateFace(CustomModelPart part, Vector3f a, Vector3f b, Vector3f c, Vector3f d, Vector4f uv, float texWidth, float texHeight) {
         Vector3f nA = b.copy();
         nA.subtract(a);
         Vector3f nB = c.copy();
@@ -129,18 +223,18 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         nA.cross(nB);
         nA.normalize();
 
-        part.addVertex(a, uv.getX(), uv.getY(), nA);
-        part.addVertex(b, uv.getZ(), uv.getY(), nA);
-        part.addVertex(c, uv.getZ(), uv.getW(), nA);
-        part.addVertex(d, uv.getX(), uv.getW(), nA);
+        part.addVertex(b, uv.getX() / texWidth, uv.getW() / texHeight, nA);
+        part.addVertex(a, uv.getZ() / texWidth, uv.getW() / texHeight, nA);
+        part.addVertex(d, uv.getZ() / texWidth, uv.getY() / texHeight, nA);
+        part.addVertex(c, uv.getX() / texWidth, uv.getY() / texHeight, nA);
     }
 
-    public Vector3f v3fFromJArray(JsonArray array){
-        return new Vector3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(),array.get(2).getAsFloat());
+    public Vector3f v3fFromJArray(JsonArray array) {
+        return new Vector3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat());
     }
 
-    public Vector4f v4fFromJArray(JsonArray array){
-        return new Vector4f(array.get(0).getAsFloat(), array.get(1).getAsFloat(),array.get(2).getAsFloat(),array.get(3).getAsFloat());
+    public Vector4f v4fFromJArray(JsonArray array) {
+        return new Vector4f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat(), array.get(3).getAsFloat());
     }
 
     //Sorts out all the things in a json array out by UUID.

@@ -24,7 +24,7 @@ import java.util.Random;
 
 public class CustomModelPart {
 
-    public String name;
+    public String name = "NULL";
 
     //Transform data
     public Vector3f pivot = new Vector3f();
@@ -33,12 +33,12 @@ public class CustomModelPart {
     public Vector3f scale = new Vector3f(1,1,1);
 
     //Offsets
-    public float uOffset;
-    public float vOffset;
+    public float uOffset = 0;
+    public float vOffset = 0;
 
-    public boolean visible;
+    public boolean visible = true;
 
-    public ParentType parentType;
+    public ParentType parentType = ParentType.None;
 
     public ArrayList<CustomModelPart> children = new ArrayList<>();
 
@@ -113,24 +113,27 @@ public class CustomModelPart {
     }
 
     public void applyTransforms(MatrixStack stack) {
-        stack.translate(pos.getX(), pos.getY(), pos.getZ());
+        stack.translate(-pivot.getX() / 16.0f, -pivot.getY()/ 16.0f, -pivot.getZ()/ 16.0f);
 
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
-        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(-rot.getZ()));
+
+        stack.translate(pivot.getX() / 16.0f, pivot.getY()/ 16.0f, pivot.getZ()/ 16.0f);
 
         stack.scale(scale.getX(), scale.getY(), scale.getZ());
     }
 
     public void addVertex(Vector3f vert, float u, float v, Vector3f normal) {
-        vertexData.add(vert.getX());
-        vertexData.add(vert.getY());
-        vertexData.add(vert.getZ());
+        vertexData.add(vert.getX() / 16.0f);
+        vertexData.add(vert.getY() / 16.0f);
+        vertexData.add(vert.getZ() / 16.0f);
         vertexData.add(u);
         vertexData.add(v);
-        vertexData.add(normal.getX());
-        vertexData.add(normal.getY());
-        vertexData.add(normal.getZ());
+        vertexData.add(-normal.getX());
+        vertexData.add(-normal.getY());
+        vertexData.add(-normal.getZ());
+        vertexCount++;
     }
 
     public void fromNBT(CompoundTag partTag) {
