@@ -3,8 +3,12 @@ package net.blancworks.figura.models.parsers;
 import com.google.gson.*;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.ListTag;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -66,7 +70,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
             //Find parent type.
             for (Map.Entry<String, CustomModelPart.ParentType> entry : nameParentTypeTags.entrySet()) {
-                if(groupPart.name.contains(entry.getKey())) {
+                if (groupPart.name.contains(entry.getKey())) {
                     groupPart.parentType = entry.getValue();
                     break;
                 }
@@ -98,7 +102,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             parent.children.add(groupPart);
     }
 
-    public static final HashMap<String, CustomModelPart.ParentType> nameParentTypeTags = new HashMap<String, CustomModelPart.ParentType>(){{
+    public static final HashMap<String, CustomModelPart.ParentType> nameParentTypeTags = new HashMap<String, CustomModelPart.ParentType>() {{
         put("HEAD", CustomModelPart.ParentType.Head);
         put("TORSO", CustomModelPart.ParentType.Torso);
         put("LEFT_ARM", CustomModelPart.ParentType.LeftArm);
@@ -106,9 +110,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         put("LEFT_LEG", CustomModelPart.ParentType.LeftLeg);
         put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg);
     }};
-    
+
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
-        CustomModelPart elementPart = new CustomModelPart();
+        CustomModelPartCuboid elementPart = new CustomModelPartCuboid();
 
         if (elementObject.has("name")) {
             elementPart.name = elementObject.get("name").getAsString();
@@ -133,100 +137,38 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
 
-        //North
-        {
-            JsonObject faceData = facesObject.get("north").getAsJsonObject();
-            generateFace(elementPart,
-                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
-                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
-                    target.texWidth, target.texHeight
-            );
-        }
+        CompoundTag cuboidPropertiesTag = new CompoundTag();
 
-        //South
-        {
-            JsonObject faceData = facesObject.get("south").getAsJsonObject();
-            generateFace(elementPart,
-                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
-                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
-                    target.texWidth, target.texHeight
-            );
-        }
+        cuboidPropertiesTag.put("f", new ListTag(){{
+            add(FloatTag.of(from.getX()));
+            add(FloatTag.of(from.getY()));
+            add(FloatTag.of(from.getZ()));
+        }});
 
-        //East
-        {
-            JsonObject faceData = facesObject.get("east").getAsJsonObject();
-            generateFace(elementPart,
-                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
-                    target.texWidth, target.texHeight
-            );
-        }
+        cuboidPropertiesTag.put("t", new ListTag(){{
+            add(FloatTag.of(to.getX()));
+            add(FloatTag.of(to.getY()));
+            add(FloatTag.of(to.getZ()));
+        }});
 
-        //West
-        {
-            JsonObject faceData = facesObject.get("west").getAsJsonObject();
-            generateFace(elementPart,
-                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
-                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
-                    target.texWidth, target.texHeight
-            );
-        }
-
-        //Top
-        {
-            JsonObject faceData = facesObject.get("up").getAsJsonObject();
-            generateFace(elementPart,
-                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
-                    target.texWidth, target.texHeight
-            );
-        }
-
-        //Bottom
-        {
-            JsonObject faceData = facesObject.get("down").getAsJsonObject();
-            generateFace(elementPart,
-                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
-                    v4fFromJArray(faceData.get("uv").getAsJsonArray()),
-                    target.texWidth, target.texHeight
-            );
-        }
-
+        cuboidPropertiesTag.put("tw", FloatTag.of(target.texWidth));
+        cuboidPropertiesTag.put("th", FloatTag.of(target.texHeight));
+        
+        cuboidPropertiesTag.put("n", JsonArrayToListTag(facesObject.get("north").getAsJsonObject().get("uv").getAsJsonArray()));
+        cuboidPropertiesTag.put("s", JsonArrayToListTag(facesObject.get("south").getAsJsonObject().get("uv").getAsJsonArray()));
+        cuboidPropertiesTag.put("e", JsonArrayToListTag(facesObject.get("east").getAsJsonObject().get("uv").getAsJsonArray()));
+        cuboidPropertiesTag.put("w", JsonArrayToListTag(facesObject.get("west").getAsJsonObject().get("uv").getAsJsonArray()));
+        cuboidPropertiesTag.put("u", JsonArrayToListTag(facesObject.get("up").getAsJsonObject().get("uv").getAsJsonArray()));
+        cuboidPropertiesTag.put("d", JsonArrayToListTag(facesObject.get("down").getAsJsonObject().get("uv").getAsJsonArray()));
+        
+        elementPart.cuboidProperties = cuboidPropertiesTag;
+        elementPart.rebuild();
 
         return elementPart;
     }
 
-    public void generateFace(CustomModelPart part, Vector3f a, Vector3f b, Vector3f c, Vector3f d, Vector4f uv, float texWidth, float texHeight) {
-        Vector3f nA = b.copy();
-        nA.subtract(a);
-        Vector3f nB = c.copy();
-        nB.subtract(a);
-        nA.cross(nB);
-        nA.normalize();
-
-        part.addVertex(b, uv.getX() / texWidth, uv.getW() / texHeight, nA);
-        part.addVertex(a, uv.getZ() / texWidth, uv.getW() / texHeight, nA);
-        part.addVertex(d, uv.getZ() / texWidth, uv.getY() / texHeight, nA);
-        part.addVertex(c, uv.getX() / texWidth, uv.getY() / texHeight, nA);
+    public void generateFace(CustomModelPartCuboid part, Vector3f a, Vector3f b, Vector3f c, Vector3f d, Vector4f uv, float texWidth, float texHeight) {
+        part.generateFace(a, b, c, d, uv, texWidth, texHeight);
     }
 
     public Vector3f v3fFromJArray(JsonArray array) {
@@ -237,6 +179,14 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         return new Vector4f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat(), array.get(3).getAsFloat());
     }
 
+    public ListTag JsonArrayToListTag(JsonArray array){
+        return new ListTag(){{
+            for (JsonElement element : array) {
+                add(FloatTag.of(element.getAsFloat()));
+            }
+        }};
+    }
+    
     //Sorts out all the things in a json array out by UUID.
     public HashMap<UUID, JsonObject> sortElements(JsonArray elementContainer) {
         HashMap<UUID, JsonObject> objects = new HashMap<>();

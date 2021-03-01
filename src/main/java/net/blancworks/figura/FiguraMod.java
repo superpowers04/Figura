@@ -60,7 +60,7 @@ public class FiguraMod implements ClientModInitializer {
     public void onInitializeClient() {
         FiguraLuaManager.initialize();
         FiguraCommands.initialize();
-
+        
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
     }
 

@@ -69,7 +69,7 @@ public class CustomModel {
 
         for (int i = 0; i < all_parts.size(); i++) {
             CompoundTag partTag = new CompoundTag();
-            all_parts.get(i).toNBT(partTag);
+            CustomModelPart.writeToCompoundTag(partTag, all_parts.get(i));
             partList.add(partTag);
         }
 
@@ -82,22 +82,13 @@ public class CustomModel {
         for (int i = 0; i < partList.size(); i++) {
             CompoundTag partTag = (CompoundTag) partList.get(i);
             int type = partTag.getInt("type");
-            CustomModelPart part = null;
             
-            switch (type) {
-                case 0:
-                    CustomModelPart np = new CustomModelPart();
-                    np.fromNBT(partTag);
-                    part = np;
-                    break;
-                case 1:
-                    CustomModelPartMesh nmp = new CustomModelPartMesh();
-                    nmp.fromNBT(partTag);
-                    part=nmp;
-                    break;
+            CustomModelPart part = CustomModelPart.getFromNbtTag(partTag);
+            
+            if(part != null) {
+                part.rebuild();
+                all_parts.add(part);
             }
-            
-            all_parts.add(part);
         }
     }
 
