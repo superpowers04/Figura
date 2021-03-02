@@ -16,23 +16,6 @@ public class ClientLoginNetworkHandlerMixin {
 
     @Inject(at = @At("HEAD"), method = "onDisconnected(Lnet/minecraft/text/Text;)V")
     public void onDisconnected(Text reason, CallbackInfo ci) {
-        
-        try{
-            if(reason.asString().equals("This is the Figura Auth Server!\n")){
-
-                Text keyText = reason.getSiblings().get(1);
-                FiguraNetworkManager.figuraSessionKey = Integer.parseInt(keyText.asString());
-
-                LiteralText garbleText = new LiteralText("-------------------------\n\n\n");
-                garbleText.setStyle(Style.EMPTY.withFormatting(Formatting.OBFUSCATED));
-                
-                reason.getSiblings().set(1, garbleText);
-                
-                System.out.println(String.format("FIGURA AUTH CODE:%d", FiguraNetworkManager.figuraSessionKey));
-            }
-        }
-        catch (Exception e){
-            System.out.println(e.toString());
-        }
+        FiguraNetworkManager.parseAuthKeyFromDisconnectMessage(reason);
     }
 }

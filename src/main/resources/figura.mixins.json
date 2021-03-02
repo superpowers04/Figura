@@ -9,7 +9,9 @@
     "PlayerEntityModelMixin",
     "PlayerEntityRendererMixin",
     "ClientLoginNetworkHandlerMixin",
-    "ModelPartMixin"
+    "ModelPartMixin",
+    "ElytraFeatureRendererMixin",
+    "GameMenuScreenMixin"
   ],
   "injectors": {
     "defaultRequire": 1

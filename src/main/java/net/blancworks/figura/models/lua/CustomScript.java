@@ -1,5 +1,6 @@
 package net.blancworks.figura.models.lua;
 
+import net.blancworks.figura.models.lua.representations.CustomModelRepresentation;
 import net.blancworks.figura.models.lua.representations.PlayerRepresentation;
 import net.blancworks.figura.models.lua.representations.VanillaModelRepresentation;
 import net.minecraft.nbt.CompoundTag;
@@ -20,6 +21,7 @@ public class CustomScript {
     public VanillaModelRepresentation vanillaModelRepresentation;
     //Represents the player's data inside the script's code.
     public PlayerRepresentation playerRepresentation;
+    public CustomModelRepresentation customModelRepresentation;
     
     public static final int max_lua_instructions_render = 1024 * 2;
     public static final int max_lua_instructions_tick = 1024 * 4;
@@ -169,6 +171,7 @@ public class CustomScript {
         scriptGlobals.set("log", CoerceJavaToLua.coerce(new LuaLog()));
 
         vanillaModelRepresentation = new VanillaModelRepresentation(this);
+        customModelRepresentation = new CustomModelRepresentation(this);
         playerRepresentation = new PlayerRepresentation(this);
     }
 

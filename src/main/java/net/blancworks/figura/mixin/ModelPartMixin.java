@@ -16,22 +16,38 @@ import java.time.Instant;
 @Mixin(ModelPart.class)
 public class ModelPartMixin implements ModelPartAccess {
 
-    @Shadow @Final public float pivotX;
-    @Shadow @Final public float pivotY;
-    @Shadow @Final public float pivotZ;
-    @Shadow @Final public float pitch;
-    @Shadow @Final public float yaw;
-    @Shadow @Final public float roll;
-    
+    @Shadow
+    @Final
+    public float pivotX;
+    @Shadow
+    @Final
+    public float pivotY;
+    @Shadow
+    @Final
+    public float pivotZ;
+    @Shadow
+    @Final
+    public float pitch;
+    @Shadow
+    @Final
+    public float yaw;
+    @Shadow
+    @Final
+    public float roll;
+
     private Vector3f additional_pos = new Vector3f();
     private Vector3f additional_rot = new Vector3f();
-    
+
+    //Used sometimes for copying stuff to armor, or similar.
+    private Vector3f last_additional_pos = new Vector3f();
+    private Vector3f last_additional_rot = new Vector3f();
+
     @Inject(at = @At("HEAD"), method = "rotate", cancellable = true)
     public void rotate_head(MatrixStack matrix, CallbackInfo info) {
-        if(additional_pos != null) {
+        if (additional_pos != null) {
             matrix.translate((pivotX + additional_pos.getX()) / 16.0f, (pivotY + additional_pos.getY()) / 16.0f, (pivotZ + additional_pos.getZ()) / 16.0f);
         } else {
-            matrix.translate(pivotX / 16.0f, pivotY/ 16.0f, pivotZ/ 16.0f);
+            matrix.translate(pivotX / 16.0f, pivotY / 16.0f, pivotZ / 16.0f);
         }
 
         if (additional_rot != null) {
@@ -43,22 +59,39 @@ public class ModelPartMixin implements ModelPartAccess {
             matrix.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw));
             matrix.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch));
         }
-        
+
         info.cancel();
     }
 
-    public void setAdditionalPos(Vector3f v){
+    @Inject(at = @At("TAIL"), method = "copyPositionAndRotation(Lnet/minecraft/client/model/ModelPart;)V")
+    public void copyPositionAndRotation(ModelPart modelPart, CallbackInfo ci) {
+        setAdditionalPos(((ModelPartAccess)(Object)modelPart).getAdditionalPos());
+        setAdditionalRot(((ModelPartAccess)(Object)modelPart).getAdditionalRot());
+    }
+
+    public void setAdditionalPos(Vector3f v) {
+        last_additional_pos = additional_pos;
         additional_pos = v;
     }
-    public void setAdditionalRot(Vector3f v){
+
+    public void setAdditionalRot(Vector3f v) {
+        last_additional_rot = additional_rot;
         additional_rot = v;
     }
 
-    public Vector3f getAdditionalPos(){
+    public Vector3f getAdditionalPos() {
         return additional_pos;
     }
-    public Vector3f getAdditionalRot(){
+
+    public Vector3f getAdditionalRot() {
         return additional_rot;
     }
-    
+
+    public Vector3f getLastAdditionalPos() {
+        return last_additional_pos;
+    }
+
+    public Vector3f getLastAdditionalRot() {
+        return last_additional_rot;
+    }
 }

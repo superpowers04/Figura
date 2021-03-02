@@ -40,9 +40,9 @@ public class CustomModelRepresentation extends LuaRepresentation {
         LuaTable partTable = partData.getLuaTable();
 
         //Push data up
-        //table.set(originalPart.name, partTable);
+        table.set(originalPart.name, partTable);
         table.set(partData.id, partTable);
-        //modelPartData.put(originalPart.name, partData);
+        modelPartData.put(originalPart.name, partData);
     }
 
     public static class ModelPartRepresentation {
