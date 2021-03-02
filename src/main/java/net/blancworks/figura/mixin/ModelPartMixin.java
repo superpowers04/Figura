@@ -63,7 +63,7 @@ public class ModelPartMixin implements ModelPartAccess {
         info.cancel();
     }
 
-    @Inject(at = @At("TAIL"), method = "copyPositionAndRotation(Lnet/minecraft/client/model/ModelPart;)V")
+    @Inject(at = @At("RETURN"), method = "copyPositionAndRotation(Lnet/minecraft/client/model/ModelPart;)V")
     public void copyPositionAndRotation(ModelPart modelPart, CallbackInfo ci) {
         setAdditionalPos(((ModelPartAccess)(Object)modelPart).getAdditionalPos());
         setAdditionalRot(((ModelPartAccess)(Object)modelPart).getAdditionalRot());

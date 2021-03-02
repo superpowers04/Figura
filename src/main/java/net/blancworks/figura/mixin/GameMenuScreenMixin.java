@@ -27,7 +27,7 @@ public class GameMenuScreenMixin extends Screen {
         if(figuraScreen == null)
             figuraScreen = new FiguraGuiScreen(this);
         
-        addButton(new ButtonWidget(5, this.height / 4 + 10, 64, 20, new LiteralText("Figura"), (buttonWidgetx) -> {
+        addButton(new ButtonWidget(this.width - 64 - 5, this.height - 20 - 5, 64, 20, new LiteralText("Figura"), (buttonWidgetx) -> {
             this.client.openScreen(figuraScreen);
         }));
         

@@ -1,7 +1,11 @@
 package net.blancworks.figura.network;
 
+import com.google.gson.JsonObject;
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
@@ -13,7 +17,14 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 
 import java.awt.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
+import java.net.URL;
+import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
 // Used to manage the network operations for Figura.
@@ -102,6 +113,58 @@ public class FiguraNetworkManager {
     
     public static boolean hasAuthKey() {
         return hasObtainedAuth;
+    }
+    
+    public static void postModel(){
+        String uuidString = MinecraftClient.getInstance().player.getUuid().toString();
+
+        try {
+            URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.GetServerURL(), uuidString, figuraSessionKey));
+
+            System.out.println(url.toString());
+
+            CompletableFuture.runAsync(() -> {
+                HttpURLConnection httpURLConnection = null;
+
+                try {
+                    PlayerData data = PlayerDataManager.localPlayer;
+
+                    CompoundTag infoTag = new CompoundTag();
+                    data.toNBT(infoTag);
+
+                    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+                    DataOutputStream nbtDataStream = new DataOutputStream(byteStream);
+                    infoTag.write(nbtDataStream);
+
+                    JsonObject finalObject = new JsonObject();
+
+                    finalObject.addProperty("data", Base64.getEncoder().encodeToString(byteStream.toByteArray()));
+
+                    String finalResult = finalObject.toString();
+
+                    httpURLConnection = (HttpURLConnection) url.openConnection();
+                    httpURLConnection.setRequestMethod("PUT");
+                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
+
+                    httpURLConnection.setDoOutput(true);
+                    httpURLConnection.setDoInput(true);
+
+                    //httpURLConnection.connect();
+                    OutputStream outStream = httpURLConnection.getOutputStream();
+                    OutputStreamWriter outWriter = new OutputStreamWriter(outStream);
+
+                    outWriter.write(finalResult);
+                    outWriter.close();
+
+                    System.out.println(httpURLConnection.getResponseMessage());
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }, Util.getMainWorkerExecutor());
+        } catch (Exception e) {
+            System.out.println(e.toString());
+        }
+
     }
 
 }

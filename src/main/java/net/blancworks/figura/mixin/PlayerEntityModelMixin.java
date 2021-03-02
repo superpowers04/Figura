@@ -46,7 +46,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     @Shadow
     private List<ModelPart> parts;
     private HashSet<String> disabled_parts = new HashSet<String>();
-
+    
     public PlayerEntityModelMixin(float scale) {
         super(scale);
     }
@@ -64,6 +64,36 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                     mpa.setAdditionalPos(new Vector3f());
                     mpa.setAdditionalRot(new Vector3f());
                 }
+
+                
+                
+                ModelPartAccess mpa = (ModelPartAccess) (Object) head;
+                mpa.setAdditionalPos(new Vector3f());
+                mpa.setAdditionalRot(new Vector3f());
+
+                mpa = (ModelPartAccess) (Object) helmet;
+                mpa.setAdditionalPos(new Vector3f());
+                mpa.setAdditionalRot(new Vector3f());
+
+                mpa = (ModelPartAccess) (Object) torso;
+                mpa.setAdditionalPos(new Vector3f());
+                mpa.setAdditionalRot(new Vector3f());
+
+                mpa = (ModelPartAccess) (Object) rightArm;
+                mpa.setAdditionalPos(new Vector3f());
+                mpa.setAdditionalRot(new Vector3f());
+
+                mpa = (ModelPartAccess) (Object) leftArm;
+                mpa.setAdditionalPos(new Vector3f());
+                mpa.setAdditionalRot(new Vector3f());
+
+                mpa = (ModelPartAccess) (Object) rightLeg;
+                mpa.setAdditionalPos(new Vector3f());
+                mpa.setAdditionalRot(new Vector3f());
+
+                mpa = (ModelPartAccess) (Object) leftLeg;
+                mpa.setAdditionalPos(new Vector3f());
+                mpa.setAdditionalRot(new Vector3f());
             }
 
             super.render(matrices, vertices, light, overlay, red, green, blue, alpha);

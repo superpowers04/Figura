@@ -149,65 +149,15 @@ public class FiguraCommands {
     }
 
     public static int post_model_command(CommandContext ctx) {
-        int key = FiguraNetworkManager.figuraSessionKey;
-
-        String uuidString = MinecraftClient.getInstance().player.getUuid().toString();
-
-        try {
-            URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.GetServerURL(), uuidString, key));
-
-            System.out.println(url.toString());
-
-            CompletableFuture.runAsync(() -> {
-                HttpURLConnection httpURLConnection = null;
-
-                try {
-                    PlayerData data = PlayerDataManager.localPlayer;
-
-                    CompoundTag infoTag = new CompoundTag();
-                    data.toNBT(infoTag);
-            
-                    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-                    DataOutputStream nbtDataStream = new DataOutputStream(byteStream);
-                    infoTag.write(nbtDataStream);
-                    
-                    JsonObject finalObject = new JsonObject();
-
-                    finalObject.addProperty("data", Base64.getEncoder().encodeToString(byteStream.toByteArray()));
-                    
-                    String finalResult = finalObject.toString();
-
-                    httpURLConnection = (HttpURLConnection) url.openConnection();
-                    httpURLConnection.setRequestMethod("PUT");
-                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
-
-                    httpURLConnection.setDoOutput(true);
-                    httpURLConnection.setDoInput(true);
-
-                    //httpURLConnection.connect();
-                    OutputStream outStream = httpURLConnection.getOutputStream();
-                    OutputStreamWriter outWriter = new OutputStreamWriter(outStream);
-
-                    outWriter.write(finalResult);
-                    outWriter.close();
-
-                    System.out.println(httpURLConnection.getResponseMessage());
-                } catch (Exception e) {
-                    System.out.println(e);
-                }
-            }, Util.getMainWorkerExecutor());
-        } catch (Exception e) {
-            System.out.println(e.toString());
-        }
-
+        FiguraNetworkManager.postModel();
         return 1;
     }
 
     public static int clear_cache_command(CommandContext ctx) {
-        
+
         System.out.println("CLEAR");
         PlayerDataManager.clearCache();
-        
+
         return 1;
     }
 
