@@ -11,6 +11,7 @@ import net.minecraft.util.Util;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.nio.file.*;
@@ -65,7 +66,7 @@ public class LocalPlayerData extends PlayerData {
             try {
                 watchKeys.put(contentDirectory.toString(), contentDirectory.register(ws, StandardWatchEventKinds.ENTRY_MODIFY));
             } catch (Exception e) {
-                System.out.println(e);
+                FiguraMod.LOGGER.log(Level.ERROR, e);
             }
         }
 
@@ -83,7 +84,7 @@ public class LocalPlayerData extends PlayerData {
             model = mdl;
             mdl.owner = this;
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
             return;
         }
 
@@ -98,7 +99,7 @@ public class LocalPlayerData extends PlayerData {
             texturePath = texturePath;
             didTextureLoad = true;
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
 
         //Load script.
@@ -107,7 +108,7 @@ public class LocalPlayerData extends PlayerData {
 
             script = new CustomScript(this, contents);
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
             return;
         }
     }
@@ -127,7 +128,7 @@ public class LocalPlayerData extends PlayerData {
             
             fromNBT(nbtTag);
         } catch (Exception e){
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
 
@@ -135,7 +136,7 @@ public class LocalPlayerData extends PlayerData {
         try {
             super.loadFromNBT(stream);
         } catch (Exception e){
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
     
@@ -149,7 +150,7 @@ public class LocalPlayerData extends PlayerData {
                     texture.load(texturePath);
                     texture.ready = true;
                 } catch (Exception e) {
-                    System.out.println(e);
+                    FiguraMod.LOGGER.log(Level.ERROR, e);
                     return;
                 }
             }, Util.getMainWorkerExecutor());

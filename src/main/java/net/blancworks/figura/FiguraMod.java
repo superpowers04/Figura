@@ -12,6 +12,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.blancworks.figura.commands.FiguraCommands;
 import net.blancworks.figura.models.lua.FiguraLuaManager;
+import org.apache.logging.log4j.*;
 
 import java.nio.file.Path;
 import java.nio.file.WatchKey;
@@ -19,6 +20,8 @@ import java.nio.file.WatchKey;
 public class FiguraMod implements ClientModInitializer {
 
     public static final Gson builder = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BlockbenchModelDeserializer()).setPrettyPrinting().create();
+
+    public static final Logger LOGGER = LogManager.getLogger();
 
     //Used during rendering.
     public static AbstractClientPlayerEntity curr_player;

@@ -1,6 +1,7 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.fabricmc.loader.api.FabricLoader;
@@ -14,14 +15,20 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.Quaternion;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.Level;
 import org.lwjgl.system.MathUtil;
 
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 
 public class FiguraGuiScreen extends Screen {
 
@@ -32,15 +39,18 @@ public class FiguraGuiScreen extends Screen {
     public Identifier uploadTexture = new Identifier("figura", "gui/menu/upload.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "gui/menu/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "gui/menu/scalable_box.png");
-    
+
     public TexturedButtonWidget connectionStatusButton;
     public TexturedButtonWidget disconnectedStatusButton;
     public TexturedButtonWidget uploadButton;
-    
+
     public ArrayList<ButtonWidget> avatar_load_buttons = new ArrayList<>();
     public ArrayList<String> all_valid_loads = new ArrayList<>();
     public int curr_load_list_index = 0;
 
+    public MutableText name_text;
+    public MutableText file_size_text;
+    public MutableText model_complexity_text;
 
     public FiguraGuiScreen(Screen parentScreen) {
         super(new LiteralText("Figura Menu"));
@@ -85,15 +95,20 @@ public class FiguraGuiScreen extends Screen {
                 32, 32,
                 0, 0, 32,
                 uploadTexture, 32, 64,
-                (bx)->{
+                (bx) -> {
                     FiguraNetworkManager.postModel();
                 }
         );
         this.addButton(uploadButton);
         uploadButton.active = false;
         uploadButton.visible = false;
-        
+
         generateValidAvatarButtons();
+
+        if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
+            model_complexity_text = new LiteralText(String.format("Complexity : %d", PlayerDataManager.localPlayer.model.getRenderComplexity()));
+            file_size_text = new LiteralText(String.format("File Size : %d", PlayerDataManager.localPlayer.getFileSize()));
+        }
     }
 
     @Override
@@ -126,6 +141,18 @@ public class FiguraGuiScreen extends Screen {
         {
             MinecraftClient.getInstance().getTextureManager().bindTexture(playerBackgroundTexture);
             drawTexture(matrices, this.width / 2 - (128 / 2), this.height / 2, 0, 0, 128, 128, 128, 128);
+
+            int currY = this.height / 2 + 4 - 12;
+
+            if (name_text != null)
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, name_text, this.width / 2 - (128 / 2) + 4, currY += 12, 16777215);
+            if (file_size_text != null)
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, file_size_text, this.width / 2 - (128 / 2) + 4, currY += 12, 16777215);
+            if (model_complexity_text != null)
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, model_complexity_text, this.width / 2 - (128 / 2) + 4, currY += 12, 16777215);
+            
+            if(this.getFocused() != null)
+                FiguraMod.LOGGER.debug(this.getFocused().toString());
         }
 
         //Draw list of valid models
@@ -159,7 +186,7 @@ public class FiguraGuiScreen extends Screen {
         for (int i = 0; i < buttonCount; i++) {
             int fileNameIndex = (curr_load_list_index * buttonCount) + i;
 
-            if(fileNameIndex >= valid_loads.size())
+            if (fileNameIndex >= valid_loads.size())
                 continue;
 
             int finalI = i;
@@ -178,8 +205,44 @@ public class FiguraGuiScreen extends Screen {
 
     }
 
+    private static int filesize_warning_threshold = 75000;
+    private static int filesize_large_threshold = 100000;
+
     public void click_button(String file_name) {
         PlayerDataManager.localPlayer.loadModelFile(file_name);
+
+        name_text = new LiteralText(String.format("Name : %s", file_name.substring(0, Math.min(15, file_name.length()))));
+
+        CompletableFuture.runAsync(() -> {
+
+            for (int i = 0; i < 1000; i++) {
+                if (PlayerDataManager.localPlayer.texture.ready == true) {
+                    break;
+                }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    FiguraMod.LOGGER.log(Level.ERROR, e);
+                }
+            }
+
+            model_complexity_text = new LiteralText(String.format("Complexity : %d", PlayerDataManager.localPlayer.model.getRenderComplexity()));
+
+            int fileSize = PlayerDataManager.localPlayer.getFileSize();
+
+
+            MutableText fsText = new LiteralText(String.format("File Size : %.2fkB", fileSize/1000.0f));
+
+            if (fileSize >= filesize_large_threshold)
+                fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("red")));
+            else if (fileSize >= filesize_warning_threshold)
+                fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("orange")));
+            else
+                fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("white")));
+            
+            file_size_text = fsText;
+        }, Util.getMainWorkerExecutor());
+
     }
     
     /*public void drawScaledTexture(MatrixStack stack, int x, int y, int width, int height, int textureWidth, int textureHeight, int borderSize){
@@ -201,7 +264,7 @@ public class FiguraGuiScreen extends Screen {
         matrixStack.translate(0.0D, 0.0D, 1000.0D);
         matrixStack.scale((float) size, (float) size, (float) size);
         Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
-        Quaternion quaternion2 = Vector3f.POSITIVE_X.getDegreesQuaternion(g * 20.0F);
+        Quaternion quaternion2 = Vector3f.POSITIVE_X.getDegreesQuaternion((g * 20.0F) - 15);
         quaternion.hamiltonProduct(quaternion2);
         matrixStack.multiply(quaternion);
         float h = entity.bodyYaw;

@@ -1,6 +1,7 @@
 package net.blancworks.figura.models;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.FiguraMod;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
@@ -9,6 +10,7 @@ import net.minecraft.client.texture.TextureUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import org.apache.logging.log4j.Level;
 import org.lwjgl.system.MemoryUtil;
 
 import java.io.*;
@@ -62,7 +64,7 @@ public class FiguraTexture extends ResourceTexture {
                 filePath = target_path;
                 ready = true;
             } catch (Exception e) {
-                System.out.println(e);
+                FiguraMod.LOGGER.log(Level.ERROR, e);
             }
         });
     }
@@ -110,7 +112,7 @@ public class FiguraTexture extends ResourceTexture {
 
             tag.putString("img", result);
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR,e);
         }
     }
 
@@ -139,7 +141,7 @@ public class FiguraTexture extends ResourceTexture {
                             }
                         });
                     } catch (Exception e) {
-                        System.out.println(e);
+                        FiguraMod.LOGGER.log(Level.ERROR, e);
                     }
                 },
                 Util.getMainWorkerExecutor()

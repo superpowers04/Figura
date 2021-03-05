@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Util;
+import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -70,9 +71,7 @@ public class PlayerDataManager {
         try {
 
             URL url = new URL(String.format("%s/api/avatar/%s", FiguraNetworkManager.GetServerURL(), id));
-
-            System.out.println(url);
-
+            
             CompletableFuture.runAsync(() -> {
                 HttpURLConnection httpURLConnection = null;
 
@@ -111,14 +110,11 @@ public class PlayerDataManager {
                         InputStream dataAsStream = new ByteArrayInputStream(dataAsBytes);
                         DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
                         receivedDataToStream.reset();
-
-                        System.out.println(dataString);
-
+                        
                         targetData.loadFromNBT(receivedDataToStream);
-                        System.out.println("LOADED NBT MODEL FOR PLAYER FROM SERVER");
                     }
                 } catch (Exception e) {
-                    System.out.println(e);
+                    FiguraMod.LOGGER.log(Level.ERROR, e);
                     httpURLConnection.disconnect();
                 }
 
@@ -126,7 +122,7 @@ public class PlayerDataManager {
                 
             }, Util.getMainWorkerExecutor());
         } catch (Exception e) {
-            System.out.println(e.toString());
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
 

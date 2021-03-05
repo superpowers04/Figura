@@ -94,7 +94,7 @@ public class CustomModelPartMesh extends CustomModelPart {
                 }
             }
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(e);
         }
 
         matrices.pop();
@@ -183,7 +183,7 @@ public class CustomModelPartMesh extends CustomModelPart {
 
         }
 
-        //System.out.println(meshComponents.size() / 7);
+        //FiguraMod.LOGGER.log(meshComponents.size() / 7);
         is_ready = true;
     }
 

@@ -143,7 +143,7 @@ public class ObjReader
 
             line = line.trim();
 
-            //System.out.println("read line: "+line);
+            //FiguraMod.LOGGER.log("read line: "+line);
 
             // Combine lines that have been broken
             boolean finished = false;

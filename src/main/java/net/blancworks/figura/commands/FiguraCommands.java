@@ -8,6 +8,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.network.FiguraNetworkManager;
@@ -19,6 +20,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -103,7 +105,7 @@ public class FiguraCommands {
             FileOutputStream outputStream = new FileOutputStream(outputPath.toFile());
             infoTag.write(new DataOutputStream(outputStream));
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
         return 1;
     }
@@ -141,7 +143,7 @@ public class FiguraCommands {
                 }
                 httpURLConnection.disconnect();
             } catch (Exception e) {
-                System.out.println(e);
+                FiguraMod.LOGGER.log(Level.ERROR, e);
             }
         }, Util.getMainWorkerExecutor());
 
@@ -155,7 +157,6 @@ public class FiguraCommands {
 
     public static int clear_cache_command(CommandContext ctx) {
 
-        System.out.println("CLEAR");
         PlayerDataManager.clearCache();
 
         return 1;

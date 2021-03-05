@@ -41,8 +41,8 @@ import java.util.function.Consumer;
  * are read from an OBJ file, the following may be used:
  * <pre><code>
  * BasicWritableObj obj = new BasicWritableObj();
- * obj.setVertexConsumer(t -&gt; System.out.println(t));
- * obj.setFaceConsumer(t -&gt; System.out.println(t));
+ * obj.setVertexConsumer(t -&gt; FiguraMod.LOGGER.log(t));
+ * obj.setFaceConsumer(t -&gt; FiguraMod.LOGGER.log(t));
  * ObjReader.read(inputStream, obj);
  * </code></pre> 
  */

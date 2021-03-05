@@ -1,5 +1,6 @@
 package net.blancworks.figura.mixin;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -14,6 +15,7 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -42,7 +44,7 @@ public abstract class ElytraFeatureRendererMixin<T extends LivingEntity, M exten
             if(additionalMove != null)
                 matrixStack.translate(additionalMove.getX() / 16.0f, additionalMove.getY() / 16.0f, additionalMove.getZ() / 16.0f);
         } catch (Exception e){
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
 

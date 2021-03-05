@@ -12,6 +12,7 @@ import net.minecraft.entity.LivingEntity;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.PlayerEntityModelAccess;
+import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -109,7 +110,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                 }
             }
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
 

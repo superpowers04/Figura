@@ -19,6 +19,28 @@ public class CustomModel {
     public float texWidth = 64, texHeight = 64;
     
 
+    public int getRenderComplexity(){
+        
+        int ret = 0;
+
+        for (CustomModelPart all_part : all_parts) {
+            ret += getComplexityRecursive(all_part);
+        }
+        
+        return ret;
+    }
+    private int getComplexityRecursive(CustomModelPart part){
+        int ret = 0;
+        
+        ret += part.vertexCount;
+
+        for (CustomModelPart child : part.children) {
+            ret += getComplexityRecursive(child);
+        }
+        
+        return ret;
+    }
+    
     public int getMaxRenderAmount() {
         return 128;
     }

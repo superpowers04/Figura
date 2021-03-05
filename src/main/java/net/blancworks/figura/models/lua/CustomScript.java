@@ -1,11 +1,13 @@
 package net.blancworks.figura.models.lua;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.models.lua.representations.CustomModelRepresentation;
 import net.blancworks.figura.models.lua.representations.PlayerRepresentation;
 import net.blancworks.figura.models.lua.representations.VanillaModelRepresentation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Util;
 import net.blancworks.figura.PlayerData;
+import org.apache.logging.log4j.Level;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.CoerceJavaToLua;
@@ -28,9 +30,6 @@ public class CustomScript {
     public static final int max_lua_instructions_init = 1024 * 16;
 
     public PlayerData playerData;
-
-    //The chunk of data used to hold all the script instructions.
-    public LuaValue chunk;
 
     public Globals scriptGlobals = new Globals();
     public LuaValue setHook;
@@ -75,7 +74,7 @@ public class CustomScript {
             public LuaValue call() {
                 // A simple lua error may be caught by the script, but a
                 // Java Error will pass through to top and stop the script.
-                System.out.println("Script overran resource limits.");
+                FiguraMod.LOGGER.log(Level.WARN, "Script overran resource limits.");
                 throw new Error("Script overran resource limits.");
             }
         };
@@ -111,7 +110,7 @@ public class CustomScript {
                 function.call(args);
             }
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
     
@@ -141,7 +140,7 @@ public class CustomScript {
                             runFunctionAsync(nextTask, max_lua_instructions);
                         }
                     } catch (Exception e) {
-                        System.out.println(e);
+                        FiguraMod.LOGGER.log(Level.ERROR, e);
                     }
                 },
                 Util.getMainWorkerExecutor()
@@ -178,7 +177,7 @@ public class CustomScript {
     private static class LuaLog extends OneArgFunction {
         @Override
         public LuaValue call(LuaValue arg) {
-            System.out.println(arg.toString());
+            FiguraMod.LOGGER.log(Level.DEBUG, arg.toString());
             return NIL;
         }
     }

@@ -90,7 +90,7 @@ public class FiguraModelManager {
             if (loadModelFromDisk(player_key))
                 return customModels.get(player_key);
         } catch (Exception e) {
-            System.out.println(e.toString());
+            FiguraMod.LOGGER.log(e.toString());
         }
 
         //Load a model from the server
@@ -163,7 +163,7 @@ public class FiguraModelManager {
                     return;
                 }
             } catch (Exception e) {
-                System.out.println(e);
+                FiguraMod.LOGGER.log(e);
                 netNoModelPlayers.add(uuid);
                 return;
             } finally {
@@ -206,7 +206,7 @@ public class FiguraModelManager {
             if (loadTextureFromDisk(player_key))
                 return customTextures.get(player_key);
         } catch (Exception e) {
-            System.out.println(e.toString());
+            FiguraMod.LOGGER.log(e.toString());
         }
 
         if (loadTextureFromServer(player_key))
@@ -254,7 +254,7 @@ public class FiguraModelManager {
         if (current_texture_load_task != null && current_texture_load_task.isDone() == false) {
             if (loaded_texture_id != null) {
                 customTextures.put(loaded_texture_uuid, loaded_texture_id);
-                System.out.println("LOADED TEXTURE " + loaded_texture_id.toString() + " FROM NETWORK");
+                FiguraMod.LOGGER.log("LOADED TEXTURE " + loaded_texture_id.toString() + " FROM NETWORK");
             }
 
             loaded_texture_uuid = null;
@@ -293,7 +293,7 @@ public class FiguraModelManager {
                     return;
                 }
             } catch (Exception e) {
-                System.out.println(e);
+                FiguraMod.LOGGER.log(e);
                 netNoModelPlayers.add(uuid);
                 return;
             } finally {
@@ -358,7 +358,7 @@ public class FiguraModelManager {
                     if (customTextures.containsKey(id))
                         customTextures.remove(id);
 
-                    System.out.println("RELOADED UUID " + id.toString());
+                    FiguraMod.LOGGER.log("RELOADED UUID " + id.toString());
                 } catch (Exception e) {
                     System.err.println(e);
                     continue;

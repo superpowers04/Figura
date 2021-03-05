@@ -1,6 +1,7 @@
 package net.blancworks.figura.network;
 
 import com.google.gson.JsonObject;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.minecraft.client.MinecraftClient;
@@ -15,6 +16,7 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
+import org.apache.logging.log4j.Level;
 
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
@@ -70,7 +72,7 @@ public class FiguraNetworkManager {
             InetAddress inetAddress = InetAddress.getByName("localhost");
             ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
             connection.setPacketListener(new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
-                System.out.println(text.toString());
+                FiguraMod.LOGGER.log(Level.ERROR, text.toString());
             }));
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
@@ -85,7 +87,7 @@ public class FiguraNetworkManager {
                 parseAuthKeyFromDisconnectMessage(tc);
             }
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
         //Auth all done :D
         currentAuthTask = null;
@@ -107,7 +109,7 @@ public class FiguraNetworkManager {
             }
         }
         catch (Exception e){
-            System.out.println(e.toString());
+            FiguraMod.LOGGER.log(Level.ERROR, e.toString());
         }
     }
     
@@ -121,7 +123,6 @@ public class FiguraNetworkManager {
         try {
             URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.GetServerURL(), uuidString, figuraSessionKey));
 
-            System.out.println(url.toString());
 
             CompletableFuture.runAsync(() -> {
                 HttpURLConnection httpURLConnection = null;
@@ -156,13 +157,13 @@ public class FiguraNetworkManager {
                     outWriter.write(finalResult);
                     outWriter.close();
 
-                    System.out.println(httpURLConnection.getResponseMessage());
+                    //FiguraMod.LOGGER.log(Level.ERROR, httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
-                    System.out.println(e);
+                    FiguraMod.LOGGER.log(Level.ERROR, e);
                 }
             }, Util.getMainWorkerExecutor());
         } catch (Exception e) {
-            System.out.println(e.toString());
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
 
     }

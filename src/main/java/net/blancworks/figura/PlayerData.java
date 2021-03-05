@@ -10,6 +10,7 @@ import net.minecraft.client.texture.TextureManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
+import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -67,7 +68,7 @@ public class PlayerData {
             texture.toNBT(textureTag);
             tag.put("texture", textureTag);
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
             return false;
         }
 
@@ -113,10 +114,29 @@ public class PlayerData {
                 script.fromNBT(this, scriptTag);
             }
         } catch (Exception e) {
-            System.out.println(e);
+            FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
 
+    
+    //Returns the file size, in bytes.
+    public int getFileSize(){
+        CompoundTag writtenTag = new CompoundTag();
+        toNBT(writtenTag);
+
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream w = new DataOutputStream(baos);
+
+            writtenTag.write(w);
+            
+            return w.size();
+        } catch (Exception e){
+            
+        }
+        
+        return -1;
+    }
 
     //Ticks from client.
     public void tick() {
