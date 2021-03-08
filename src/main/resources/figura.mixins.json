@@ -11,7 +11,8 @@
     "ClientLoginNetworkHandlerMixin",
     "ModelPartMixin",
     "ElytraFeatureRendererMixin",
-    "GameMenuScreenMixin"
+    "GameMenuScreenMixin",
+    "MatrixStackMixin"
   ],
   "injectors": {
     "defaultRequire": 1

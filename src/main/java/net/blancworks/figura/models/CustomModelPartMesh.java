@@ -1,106 +1,30 @@
 package net.blancworks.figura.models;
 
+import de.javagl.obj.FloatTuple;
+import de.javagl.obj.Obj;
+import de.javagl.obj.ObjFace;
+import de.javagl.obj.ObjReader;
+import net.blancworks.figura.FiguraMod;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.util.math.Matrix3f;
+import net.minecraft.util.math.Matrix4f;
 
-@Deprecated
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.nio.file.Path;
+
+
 public class CustomModelPartMesh extends CustomModelPart {
 
-
-
-    public void fromNBT(CompoundTag partTag) {
-
-    }
-
-    /*//All the mesh components.
-    //Sorted in sets of 8.
-    //Vertex X,Y,Z
-    //UV X,Y
-    //Normal X,Y,Z
-    public FloatList meshComponents = new FloatArrayList();
-    public int faceCount;
-
     public boolean is_ready = false;
-
-    public CustomModelPartMesh() {
-        super(64, 64, 0, 0);
-    }
-
-    @Override
-    public int render(int left, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
-        //Render this as we would normally render a modelPart.
-        super.render(left, matrices, vertices, light, overlay, red, green, blue, alpha);
-
-        //Checks if the mesh part is finished.
-        if (!is_ready)
-            return left;
-
-        matrices.push();
-        rotate(matrices);
-
-        Matrix4f transformation = matrices.peek().getModel();
-        Matrix3f normalTransformation = matrices.peek().getNormal();
-
-        Vector4f vert = null;
-        Vector3f normal = null;
-
-        int face_number = 0;
-        int currIndex = 0;
-
-        try {
-
-            for (int i = 0; i < faceCount; i++) {
-
-                face_number++;
-
-                if (face_number == 4) {
-                    left--;
-                    face_number = 0;
-                }
-                if (left <= 0)
-                    break;
-
-                for (int j = 0; j < 4; j++) {
-
-                    vert = new Vector4f(
-                            meshComponents.getFloat(currIndex++),
-                            meshComponents.getFloat(currIndex++),
-                            meshComponents.getFloat(currIndex++),
-                            1.0f
-                    );
-                    float u = meshComponents.getFloat(currIndex++);
-                    float v = meshComponents.getFloat(currIndex++);
-                    normal = new Vector3f(
-                            meshComponents.getFloat(currIndex++),
-                            meshComponents.getFloat(currIndex++),
-                            meshComponents.getFloat(currIndex++)
-                    );
-
-                    vert.transform(transformation);
-                    normal.transform(normalTransformation);
-
-                    //Add vertex.
-                    vertices.vertex(
-                            //Vertex
-                            vert.getX(), vert.getY(), vert.getZ(),
-                            //Color
-                            red, green, blue, alpha,
-                            //UV
-                            u, v,
-                            //Overlay/light
-                            overlay, light,
-                            //Normal
-                            normal.getX(), normal.getY(), normal.getZ()
-                    );
-                }
-            }
-        } catch (Exception e) {
-            FiguraMod.LOGGER.log(e);
-        }
-
-        matrices.pop();
-        return left;
-    }
-
+    
     public static CustomModelPartMesh loadFromObj(Path path) {
         CustomModelPartMesh newPart = new CustomModelPartMesh();
 
@@ -117,7 +41,7 @@ public class CustomModelPartMesh extends CustomModelPart {
 
     public void parseObj(Path path) throws Exception {
         is_ready = false;
-        meshComponents.clear();
+        vertexData.clear();
 
         InputStream fileStream = new FileInputStream(path.toString());
         Obj object_file = ObjReader.read(fileStream);
@@ -130,60 +54,61 @@ public class CustomModelPartMesh extends CustomModelPart {
             int vertCount = face.getNumVertices();
 
             if (vertCount == 4) {
-                faceCount++;
                 for (int j = vertCount - 1; j >= 0; j--) {
                     FloatTuple vertex = object_file.getVertex(face.getVertexIndex(j));
-                    meshComponents.add(vertex.getX());
-                    meshComponents.add(-vertex.getY());
-                    meshComponents.add(vertex.getZ());
+                    vertexData.add(vertex.getX());
+                    vertexData.add(-vertex.getY());
+                    vertexData.add(vertex.getZ());
 
                     FloatTuple uv = object_file.getTexCoord(face.getTexCoordIndex(j));
-                    meshComponents.add(uv.getX());
-                    meshComponents.add(1 - uv.getY());
+                    vertexData.add(uv.getX());
+                    vertexData.add(1 - uv.getY());
 
                     FloatTuple normal = object_file.getNormal(face.getNormalIndex(j));
-                    meshComponents.add(-normal.getX());
-                    meshComponents.add(-normal.getY());
-                    meshComponents.add(-normal.getZ());
+                    vertexData.add(normal.getX());
+                    vertexData.add(-normal.getY());
+                    vertexData.add(normal.getZ());
+
+                    vertexCount++;
                 }
             } else if (vertCount == 3) {
-                faceCount++;
                 for (int j = vertCount - 1; j >= 0; j--) {
                     FloatTuple vertex = object_file.getVertex(face.getVertexIndex(j));
-                    meshComponents.add(vertex.getX());
-                    meshComponents.add(-vertex.getY());
-                    meshComponents.add(vertex.getZ());
+                    vertexData.add(vertex.getX());
+                    vertexData.add(-vertex.getY());
+                    vertexData.add(vertex.getZ());
 
                     FloatTuple uv = object_file.getTexCoord(face.getTexCoordIndex(j));
-                    meshComponents.add(uv.getX());
-                    meshComponents.add(1 - uv.getY());
+                    vertexData.add(uv.getX());
+                    vertexData.add(1 - uv.getY());
 
                     FloatTuple normal = object_file.getNormal(face.getNormalIndex(j));
-                    meshComponents.add(-normal.getX());
-                    meshComponents.add(-normal.getY());
-                    meshComponents.add(-normal.getZ());
+                    vertexData.add(normal.getX());
+                    vertexData.add(-normal.getY());
+                    vertexData.add(normal.getZ());
 
                     if (j == vertCount - 1) {
                         vertex = object_file.getVertex(face.getVertexIndex(j));
-                        meshComponents.add(vertex.getX());
-                        meshComponents.add(-vertex.getY());
-                        meshComponents.add(vertex.getZ());
+                        vertexData.add(vertex.getX());
+                        vertexData.add(-vertex.getY());
+                        vertexData.add(vertex.getZ());
 
                         uv = object_file.getTexCoord(face.getTexCoordIndex(j));
-                        meshComponents.add(uv.getX());
-                        meshComponents.add(1 - uv.getY());
+                        vertexData.add(uv.getX());
+                        vertexData.add(1 - uv.getY());
 
                         normal = object_file.getNormal(face.getNormalIndex(j));
-                        meshComponents.add(-normal.getX());
-                        meshComponents.add(-normal.getY());
-                        meshComponents.add(-normal.getZ());
+                        vertexData.add(normal.getX());
+                        vertexData.add(-normal.getY());
+                        vertexData.add(normal.getZ());
                     }
+                    
+                    vertexCount++;
                 }
             }
 
         }
-
-        //FiguraMod.LOGGER.log(meshComponents.size() / 7);
+        
         is_ready = true;
     }
 
@@ -193,8 +118,8 @@ public class CustomModelPartMesh extends CustomModelPart {
         super.toNBT(tag);
         ListTag geometryData = new ListTag();
 
-        for (int i = 0; i < meshComponents.size(); i++) {
-            geometryData.add(FloatTag.of(meshComponents.getFloat(i)));
+        for (int i = 0; i < vertexData.size(); i++) {
+            geometryData.add(FloatTag.of(vertexData.getFloat(i)));
         }
         tag.put("geo", geometryData);
         tag.putInt("type", 1);
@@ -206,7 +131,7 @@ public class CustomModelPartMesh extends CustomModelPart {
         ListTag geometryData = (ListTag) tag.get("geo");
 
         for (int i = 0; i < geometryData.size(); i++) {
-            meshComponents.add(geometryData.getFloat(i));
+            vertexData.add(geometryData.getFloat(i));
         }
-    }*/
+    }
 }

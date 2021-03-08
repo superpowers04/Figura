@@ -268,6 +268,7 @@ public class CustomModelPart {
     public static HashMap<String, Supplier<CustomModelPart>> model_part_types = new HashMap<String, Supplier<CustomModelPart>>(){{
         put("na", CustomModelPart::new);
         put("cub", CustomModelPartCuboid::new);
+        put("msh", CustomModelPartMesh::new);
     }};
     
     //Get a CustomModelPart from a tag, automatically reading the type from that tag.

@@ -4,6 +4,8 @@ import com.google.gson.*;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
+import net.blancworks.figura.models.CustomModelPartMesh;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.CompoundTag;
@@ -11,6 +13,8 @@ import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
 
 import java.lang.reflect.Type;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel> {
@@ -64,10 +68,18 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
     public void buildGroup(JsonObject group, CustomModel target, HashMap<UUID, CustomModelPart> allParts, CustomModelPart parent) {
         CustomModelPart groupPart = new CustomModelPart();
 
-
         if (group.has("name")) {
             groupPart.name = group.get("name").getAsString();
+            
+            if(groupPart.name.startsWith("MESH_")){
+                Path meshFilePath = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files").resolve(groupPart.name.substring(5) + ".obj");
 
+                if (Files.exists(meshFilePath)) {
+                    groupPart = CustomModelPartMesh.loadFromObj(meshFilePath);
+                    groupPart.name = group.get("name").getAsString();
+                }
+            }
+            
             //Find parent type.
             for (Map.Entry<String, CustomModelPart.ParentType> entry : nameParentTypeTags.entrySet()) {
                 if (groupPart.name.contains(entry.getKey())) {
@@ -75,6 +87,8 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     break;
                 }
             }
+            
+
         }
         if (group.has("visibility")) groupPart.visible = group.get("visibility").getAsBoolean();
         if (group.has("origin")) groupPart.pivot = v3fFromJArray(group.get("origin").getAsJsonArray());
@@ -109,6 +123,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         put("RIGHT_ARM", CustomModelPart.ParentType.RightArm);
         put("LEFT_LEG", CustomModelPart.ParentType.LeftLeg);
         put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg);
+        put("NO_PARENT", CustomModelPart.ParentType.None);
     }};
 
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
