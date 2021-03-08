@@ -8,6 +8,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
@@ -128,7 +129,7 @@ public class PlayerData {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             DataOutputStream w = new DataOutputStream(baos);
 
-            writtenTag.write(w);
+            NbtIo.writeCompressed(writtenTag, w);
             
             return w.size();
         } catch (Exception e){
@@ -205,8 +206,7 @@ public class PlayerData {
     }
 
     public void loadFromNBT(DataInputStream input) throws Exception {
-        PositionTracker positionTracker = new PositionTracker(999999999);
-        CompoundTag nbtTag = CompoundTag.READER.read(input, 0, positionTracker);
+        CompoundTag nbtTag = NbtIo.readCompressed(input);
 
         fromNBT(nbtTag);
     }

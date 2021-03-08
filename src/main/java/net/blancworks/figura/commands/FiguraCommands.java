@@ -17,6 +17,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.argument.NbtCompoundTagArgumentType;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
@@ -103,7 +104,7 @@ public class FiguraCommands {
             }
 
             FileOutputStream outputStream = new FileOutputStream(outputPath.toFile());
-            infoTag.write(new DataOutputStream(outputStream));
+            NbtIo.writeCompressed(infoTag, outputStream);
         } catch (Exception e) {
             FiguraMod.LOGGER.log(Level.ERROR, e);
         }

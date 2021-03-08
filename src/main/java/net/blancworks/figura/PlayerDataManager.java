@@ -1,6 +1,5 @@
 package net.blancworks.figura;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.network.FiguraNetworkManager;
@@ -70,7 +69,7 @@ public class PlayerDataManager {
 
         try {
 
-            URL url = new URL(String.format("%s/api/avatar/%s", FiguraNetworkManager.GetServerURL(), id));
+            URL url = new URL(String.format("%s/api/avatar/%s", FiguraNetworkManager.getServerURL(), id));
             
             CompletableFuture.runAsync(() -> {
                 HttpURLConnection httpURLConnection = null;
@@ -129,6 +128,7 @@ public class PlayerDataManager {
     
     public static void clearCache(){
         loadedPlayerData.clear();
+        localPlayer = null;
         didInitLocalPlayer = false;
     }
 

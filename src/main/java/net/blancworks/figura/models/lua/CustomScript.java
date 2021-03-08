@@ -109,7 +109,7 @@ public class CustomScript {
             if (function.isnil() == false && function.isfunction() == true) {
                 function.call(args);
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }

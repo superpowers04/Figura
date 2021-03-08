@@ -39,9 +39,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier uploadTexture = new Identifier("figura", "gui/menu/upload.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "gui/menu/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "gui/menu/scalable_box.png");
-
-    public TexturedButtonWidget connectionStatusButton;
-    public TexturedButtonWidget disconnectedStatusButton;
+    
     public TexturedButtonWidget uploadButton;
 
     public ArrayList<ButtonWidget> avatar_load_buttons = new ArrayList<>();
@@ -65,33 +63,9 @@ public class FiguraGuiScreen extends Screen {
             this.client.openScreen((Screen) parentScreen);
             //this.client.mouse.lockCursor();
         }));
-
-        connectionStatusButton = new TexturedButtonWidget(
-                this.width - 32 - 5, 5,
-                32, 32,
-                0, 0, 32,
-                connectedTexture, 32, 64,
-                (bx) -> {
-                    FiguraNetworkManager.authUser();
-                }
-        );
-        this.addButton(connectionStatusButton);
-        connectionStatusButton.active = false;
-
-        disconnectedStatusButton = new TexturedButtonWidget(
-                this.width - 32 - 5, 5,
-                32, 32,
-                0, 0, 32,
-                disconnectedTexture, 32, 64,
-                (bx) -> {
-                    FiguraNetworkManager.authUser();
-                }
-        );
-        this.addButton(disconnectedStatusButton);
-        disconnectedStatusButton.active = false;
-
+        
         uploadButton = new TexturedButtonWidget(
-                this.width - 64 - 10, 5,
+                this.width - 32 - 10, 5,
                 32, 32,
                 0, 0, 32,
                 uploadTexture, 32, 64,
@@ -100,34 +74,18 @@ public class FiguraGuiScreen extends Screen {
                 }
         );
         this.addButton(uploadButton);
-        uploadButton.active = false;
-        uploadButton.visible = false;
-
+        
         generateValidAvatarButtons();
 
         if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
             model_complexity_text = new LiteralText(String.format("Complexity : %d", PlayerDataManager.localPlayer.model.getRenderComplexity()));
-            file_size_text = new LiteralText(String.format("File Size : %d", PlayerDataManager.localPlayer.getFileSize()));
+            file_size_text = getFileSizeText();
         }
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         renderBackground(matrices);
-
-        if (FiguraNetworkManager.hasAuthKey()) {
-            connectionStatusButton.active = true;
-            connectionStatusButton.visible = true;
-            uploadButton.active = true;
-            uploadButton.visible = true;
-            disconnectedStatusButton.active = false;
-            disconnectedStatusButton.visible = false;
-        } else {
-            disconnectedStatusButton.active = true;
-            disconnectedStatusButton.visible = true;
-            connectionStatusButton.active = false;
-            connectionStatusButton.visible = false;
-        }
 
         //Draw player preview.
         {
@@ -159,8 +117,7 @@ public class FiguraGuiScreen extends Screen {
         {
             //drawScaledTexture(stack, 0, 0, 100, 100, 14, 14, 2);
         }
-
-
+        
         super.render(matrices, mouseX, mouseY, delta);
     }
 
@@ -227,32 +184,27 @@ public class FiguraGuiScreen extends Screen {
             }
 
             model_complexity_text = new LiteralText(String.format("Complexity : %d", PlayerDataManager.localPlayer.model.getRenderComplexity()));
-
-            int fileSize = PlayerDataManager.localPlayer.getFileSize();
-
-
-            MutableText fsText = new LiteralText(String.format("File Size : %.2fkB", fileSize/1000.0f));
-
-            if (fileSize >= filesize_large_threshold)
-                fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("red")));
-            else if (fileSize >= filesize_warning_threshold)
-                fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("orange")));
-            else
-                fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("white")));
             
-            file_size_text = fsText;
+            file_size_text = getFileSizeText();
         }, Util.getMainWorkerExecutor());
 
     }
     
-    /*public void drawScaledTexture(MatrixStack stack, int x, int y, int width, int height, int textureWidth, int textureHeight, int borderSize){
-        MinecraftClient.getInstance().getTextureManager().bindTexture(scalableBoxTexture);
+    public MutableText getFileSizeText(){
+        int fileSize = PlayerDataManager.localPlayer.getFileSize();
+
+
+        MutableText fsText = new LiteralText(String.format("File Size : %.2fkB", fileSize/1000.0f));
+
+        if (fileSize >= filesize_large_threshold)
+            fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("red")));
+        else if (fileSize >= filesize_warning_threshold)
+            fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("orange")));
+        else
+            fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("white")));
         
-        //tl, tm, tr
-        drawTexture(stack, x, x, 0, 0, borderSize, borderSize, textureWidth, textureHeight);
-        drawTexture(stack, x, x, borderSize, 0, width - (borderSize * 2), borderSize, textureWidth, textureHeight);
-        drawTexture(stack, x, x, textureWidth - borderSize, 0, borderSize, borderSize, textureWidth, textureHeight);
-    }*/
+        return fsText;
+    }
 
     public static void drawEntity(int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
         float f = (float) Math.atan((double) (mouseX / 40.0F));
@@ -294,6 +246,4 @@ public class FiguraGuiScreen extends Screen {
         entity.headYaw = l;
         RenderSystem.popMatrix();
     }
-
-
 }
