@@ -26,12 +26,7 @@
  */
 package de.javagl.obj;
 
-import java.nio.BufferOverflowException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.nio.ShortBuffer;
+import java.nio.*;
 
 /**
  * Methods to obtain the data from {@link ReadableObj}s as plain arrays

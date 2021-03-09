@@ -2,14 +2,14 @@ package net.blancworks.figura;
 
 
 import com.google.common.io.CharStreams;
+import net.blancworks.figura.models.CustomModel;
+import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.lua.CustomScript;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
-import net.blancworks.figura.models.CustomModel;
-import net.blancworks.figura.models.FiguraTexture;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.Level;
 

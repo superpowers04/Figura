@@ -4,17 +4,11 @@ import de.javagl.obj.FloatTuple;
 import de.javagl.obj.Obj;
 import de.javagl.obj.ObjFace;
 import de.javagl.obj.ObjReader;
-import net.blancworks.figura.FiguraMod;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.IntTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.util.math.Matrix3f;
-import net.minecraft.util.math.Matrix4f;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -121,8 +115,8 @@ public class CustomModelPartMesh extends CustomModelPart {
         for (int i = 0; i < vertexData.size(); i++) {
             geometryData.add(FloatTag.of(vertexData.getFloat(i)));
         }
+        tag.put("vc", IntTag.of(vertexCount));
         tag.put("geo", geometryData);
-        tag.putInt("type", 1);
     }
 
     @Override
@@ -133,5 +127,10 @@ public class CustomModelPartMesh extends CustomModelPart {
         for (int i = 0; i < geometryData.size(); i++) {
             vertexData.add(geometryData.getFloat(i));
         }
+        vertexCount = tag.getInt("vc");
+    }
+
+    public String getPartType() {
+        return "msh";
     }
 }

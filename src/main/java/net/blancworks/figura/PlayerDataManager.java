@@ -3,6 +3,7 @@ package net.blancworks.figura;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.network.FiguraNetworkManager;
+import net.blancworks.figura.trust.PlayerTrustData;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
@@ -21,6 +22,7 @@ public class PlayerDataManager {
 
     //Players that we're currently queued up to grab data for.
     private static HashSet<UUID> serverRequestedPlayers = new HashSet<UUID>();
+    private static ArrayList<UUID> toClear = new ArrayList<>();
 
     public static LocalPlayerData localPlayer;
 
@@ -35,7 +37,7 @@ public class PlayerDataManager {
                 PlayerDataManager.loadedPlayerData.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
                 didInitLocalPlayer = true;
 
-                GetPlayerAvatarFromServer(localPlayer.playerId, localPlayer);
+                getPlayerAvatarFromServer(localPlayer.playerId, localPlayer);
                 return localPlayer;
             }
         }
@@ -44,7 +46,7 @@ public class PlayerDataManager {
             getData = new PlayerData();
             getData.playerId = id;
 
-            GetPlayerAvatarFromServer(id, getData);
+            getPlayerAvatarFromServer(id, getData);
 
             loadedPlayerData.put(id, getData);
         } else {
@@ -60,7 +62,7 @@ public class PlayerDataManager {
 
 
     //Attempts to get the data for a player from the server.
-    public static void GetPlayerAvatarFromServer(UUID id, PlayerData targetData) {
+    public static void getPlayerAvatarFromServer(UUID id, PlayerData targetData) {
 
         //Prevent this from running more than once at a time per player.
          if (serverRequestedPlayers.contains(id))
@@ -105,12 +107,16 @@ public class PlayerDataManager {
                     //Attempt to load data from the JSON we just got from the server
                     if (targetObject != null) {
                         String dataString = targetObject.get("data").getAsString();
-                        byte[] dataAsBytes = Base64.getDecoder().decode(dataString);
-                        InputStream dataAsStream = new ByteArrayInputStream(dataAsBytes);
-                        DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
-                        receivedDataToStream.reset();
-                        
-                        targetData.loadFromNBT(receivedDataToStream);
+                        if(dataString.length() != 0) {
+                            byte[] dataAsBytes = Base64.getDecoder().decode(dataString);
+                            InputStream dataAsStream = new ByteArrayInputStream(dataAsBytes);
+                            DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
+                            receivedDataToStream.reset();
+
+
+                            targetData.loadFromNBT(receivedDataToStream);
+                            targetData.lastHash = FiguraNetworkManager.getAvatarHash(id).get();
+                        }
                     }
                 } catch (Exception e) {
                     FiguraMod.LOGGER.log(Level.ERROR, e);
@@ -125,6 +131,14 @@ public class PlayerDataManager {
         }
     }
 
+    public static void clearPlayer(UUID id){
+        toClear.add(id);
+        
+        if(id == localPlayer.playerId){
+            localPlayer = null;
+            didInitLocalPlayer = false;
+        }
+    }
     
     public static void clearCache(){
         loadedPlayerData.clear();
@@ -136,6 +150,11 @@ public class PlayerDataManager {
     public static void tick() {
         if (MinecraftClient.getInstance().world == null)
             return;
+
+        for (UUID uuid : toClear) {
+            loadedPlayerData.remove(uuid);
+        }
+        toClear.clear();
 
         for (Map.Entry<UUID, PlayerData> entry : loadedPlayerData.entrySet()) {
             entry.getValue().tick();

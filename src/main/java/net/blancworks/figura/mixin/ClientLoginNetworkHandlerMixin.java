@@ -2,9 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

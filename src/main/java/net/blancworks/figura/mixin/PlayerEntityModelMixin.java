@@ -1,6 +1,9 @@
 package net.blancworks.figura.mixin;
 
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -9,9 +12,6 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.LivingEntity;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.access.PlayerEntityModelAccess;
 import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;

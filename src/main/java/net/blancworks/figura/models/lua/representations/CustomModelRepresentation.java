@@ -1,10 +1,7 @@
 package net.blancworks.figura.models.lua.representations;
 
-import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.lua.CustomScript;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.Vector3f;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaNumber;

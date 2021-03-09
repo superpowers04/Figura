@@ -2,19 +2,19 @@ package net.blancworks.figura;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.blancworks.figura.commands.FiguraCommands;
 import net.blancworks.figura.models.CustomModel;
+import net.blancworks.figura.models.lua.FiguraLuaManager;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.blancworks.figura.commands.FiguraCommands;
-import net.blancworks.figura.models.lua.FiguraLuaManager;
-import org.apache.logging.log4j.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.file.Path;
 import java.nio.file.WatchKey;

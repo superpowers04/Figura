@@ -1,16 +1,12 @@
 package net.blancworks.figura.models.parsers;
 
-import com.google.gson.*;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import net.blancworks.figura.models.CustomModel;
-import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.CustomModelPartMesh;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.math.MathHelper;
 
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
 
 @Deprecated
 public class BedrockModelDeserializer implements JsonDeserializer<CustomModel> {

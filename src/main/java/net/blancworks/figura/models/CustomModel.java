@@ -6,8 +6,6 @@ import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.models.lua.CustomScript;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.CompoundTag;
@@ -106,8 +104,6 @@ public class CustomModel {
                         
                         tempStack.translate(-d/2,-e/2,-f/2);
                         tempStack.push();
-                        
-                        FiguraMod.LOGGER.debug("MESSSAGE");
 
                         break;
                 }

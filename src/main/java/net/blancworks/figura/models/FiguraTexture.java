@@ -13,7 +13,10 @@ import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Base64;

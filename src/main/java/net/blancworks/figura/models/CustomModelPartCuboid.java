@@ -1,6 +1,5 @@
 package net.blancworks.figura.models;
 
-import com.google.gson.JsonObject;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.CompoundTag;

@@ -3,20 +3,26 @@ package net.blancworks.figura;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.lua.CustomScript;
+import net.blancworks.figura.network.FiguraNetworkManager;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 
 //Responsible for storing all the data associated with the player on this client.
@@ -38,7 +44,10 @@ public class PlayerData {
 
     public boolean isLoaded = false;
     public LoadType loadType = LoadType.NONE;
-
+    
+    public Date lastHashCheckTime = new Date();
+    public String lastHash = "";
+    
     public static TextureManager getTextureManager() {
         if (textureManager == null)
             textureManager = MinecraftClient.getInstance().getTextureManager();
@@ -146,8 +155,29 @@ public class PlayerData {
             tickLoads();
             return;
         }
+        
+        if(PlayerDataManager.localPlayer.equals(this) == false) {
+            //Every 60 seconds
+            long diff = new Date().getTime() - lastHashCheckTime.getTime();
+            if (diff > 1000 * 1) {
+                lastHashCheckTime = new Date();
 
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        String hash = FiguraNetworkManager.getAvatarHash(playerId).get();
 
+                        if (hash.equals(lastHash) == false) {
+                            PlayerDataManager.clearPlayer(playerId);
+                            
+                            FiguraMod.LOGGER.debug("CLEARING PLAYER " + playerId.toString());
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }, Util.getMainWorkerExecutor());
+            }
+        }
+        
         if (script != null) {
             script.runFunction("tick", CustomScript.max_lua_instructions_tick);
         }

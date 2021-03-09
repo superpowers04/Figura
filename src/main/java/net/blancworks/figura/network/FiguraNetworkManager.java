@@ -1,7 +1,6 @@
 package net.blancworks.figura.network;
 
 import com.google.gson.JsonObject;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -106,6 +105,7 @@ public class FiguraNetworkManager {
         } catch (Exception e) {
             FiguraMod.LOGGER.log(Level.ERROR, e);
         }
+        
         //Auth all done :D
         currentAuthTask = null;
     }
@@ -196,7 +196,7 @@ public class FiguraNetworkManager {
 
             CompletableFuture.runAsync(() -> {
                 HttpURLConnection httpURLConnection = null;
-
+                
                 //If not authed, auth.
                 if (!hasAuthKey) {
                     CompletableFuture future = authUser();
@@ -256,7 +256,7 @@ public class FiguraNetworkManager {
     private static String getAvatarHashSync(UUID id) {
 
         try {
-            String uuidString = MinecraftClient.getInstance().player.getUuid().toString();
+            String uuidString = id.toString();
             HttpURLConnection httpURLConnection = createReadConnection(String.format("%s/api/avatar/hash/%s", FiguraNetworkManager.getServerURL(), uuidString));
             httpURLConnection.connect();
 
@@ -266,7 +266,7 @@ public class FiguraNetworkManager {
             }
             return "";
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             return "";
         }
     }
@@ -323,7 +323,7 @@ public class FiguraNetworkManager {
     public static HttpURLConnection createReadConnection(String destination) throws Exception {
         HttpURLConnection c = createConnection(destination);
         c.setDoInput(true);
-        c.setDoInput(false);
+        c.setDoOutput(false);
         return c;
     }
 

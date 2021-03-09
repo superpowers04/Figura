@@ -1,12 +1,12 @@
 package net.blancworks.figura.models.lua;
 
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.models.lua.representations.CustomModelRepresentation;
 import net.blancworks.figura.models.lua.representations.PlayerRepresentation;
 import net.blancworks.figura.models.lua.representations.VanillaModelRepresentation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Util;
-import net.blancworks.figura.PlayerData;
 import org.apache.logging.log4j.Level;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
@@ -14,7 +14,8 @@ import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 public class CustomScript {
