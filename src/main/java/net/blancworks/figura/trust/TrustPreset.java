@@ -1,5 +1,7 @@
 package net.blancworks.figura.trust;
 
+import net.blancworks.figura.trust.settings.PermissionSetting;
+
 import java.util.HashMap;
 
 public class TrustPreset {

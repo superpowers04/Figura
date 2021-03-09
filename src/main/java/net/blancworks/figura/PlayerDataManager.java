@@ -19,7 +19,7 @@ public class PlayerDataManager {
     public static boolean didInitLocalPlayer = false;
     public static HashMap<UUID, PlayerData> loadedPlayerData = new HashMap<UUID, PlayerData>();
     public static HashMap<UUID, PlayerTrustData> playerTrustData = new HashMap<UUID, PlayerTrustData>();
-
+    
     //Players that we're currently queued up to grab data for.
     private static HashSet<UUID> serverRequestedPlayers = new HashSet<UUID>();
     private static ArrayList<UUID> toClear = new ArrayList<>();
@@ -57,6 +57,14 @@ public class PlayerDataManager {
     }
 
     public static PlayerTrustData getTrustDataForPlayer(UUID id) {
+        
+        if(!playerTrustData.containsKey(id)){
+            PlayerTrustData newData = new PlayerTrustData();
+            newData.preset = PlayerTrustData.allPresets.get("UNTRUSTED");
+            playerTrustData.put(id, newData);
+            return newData;
+        }
+        
         return playerTrustData.get(id);
     }
 

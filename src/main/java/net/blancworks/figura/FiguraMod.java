@@ -7,6 +7,7 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.lua.FiguraLuaManager;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.network.FiguraNetworkManager;
+import net.blancworks.figura.trust.PlayerTrustData;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.minecraft.client.MinecraftClient;
@@ -65,6 +66,7 @@ public class FiguraMod implements ClientModInitializer {
     public void onInitializeClient() {
         FiguraLuaManager.initialize();
         FiguraCommands.initialize();
+        PlayerTrustData.init();
         
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
     }

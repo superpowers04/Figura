@@ -24,6 +24,8 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
     private CustomListWidgetState state;
     public TextFieldWidget searchBox;
     
+    public boolean allowSelection = true;
+    
     public CustomListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
         super(client, width, height, y1, y2, entryHeight);
         this.state = state;
@@ -32,9 +34,14 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
             this.objectList = list.objectList;
         }
         this.searchBox = searchBox;
-        this.filter(searchBox.getText(), false);
+        if(searchBox != null)
+            this.filter(searchBox.getText(), false);
         setScrollAmount(0 * Math.max(0, this.getMaxPosition() - (this.bottom - this.top - 4)));
         
+    }
+
+    public int getItemHeight(){
+        return itemHeight;
     }
 
     @Override
@@ -60,6 +67,7 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
     @Override
     public void setSelected(@Nullable CustomListEntry entry) {
         super.setSelected(entry);
+        state.selected = entry.getEntryObject();
         selectedplayerId = entry.getIdentifier();
     }
 
@@ -95,7 +103,8 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
     }
 
     public void reloadFilters() {
-        filter(searchBox.getText(), true, false);
+        if(searchBox != null)
+            filter(searchBox.getText(), true, false);
     }
     
     public void filter(String searchTerm, boolean refresh) {
@@ -197,16 +206,19 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
         if (!this.isMouseOver(double_1, double_2)) {
             return false;
         } else {
-            CustomListEntry entry = this.getEntryAtPos(double_1, double_2);
-            if (entry != null) {
-                if (entry.mouseClicked(double_1, double_2, int_1)) {
-                    this.setFocused(entry);
-                    this.setDragging(true);
+            
+            if(allowSelection) {
+                CustomListEntry entry = this.getEntryAtPos(double_1, double_2);
+                if (entry != null) {
+                    if (entry.mouseClicked(double_1, double_2, int_1)) {
+                        this.setFocused(entry);
+                        this.setDragging(true);
+                        return true;
+                    }
+                } else if (int_1 == 0) {
+                    this.clickedHeader((int) (double_1 - (double) (this.left + this.width / 2 - this.getRowWidth() / 2)), (int) (double_2 - (double) this.top) + (int) this.getScrollAmount() - 4);
                     return true;
                 }
-            } else if (int_1 == 0) {
-                this.clickedHeader((int) (double_1 - (double) (this.left + this.width / 2 - this.getRowWidth() / 2)), (int) (double_2 - (double) this.top) + (int) this.getScrollAmount() - 4);
-                return true;
             }
 
             return this.scrolling;
@@ -216,12 +228,16 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
     public final CustomListEntry getEntryAtPos(double x, double y) {
         int int_5 = MathHelper.floor(y - (double) this.top) - this.headerHeight + (int) this.getScrollAmount() - 4;
         int index = int_5 / this.itemHeight;
-        return x < (double) this.getScrollbarPositionX() && x >= (double) getRowLeft() && x <= (double) (getRowLeft() + getRowWidth()) && index >= 0 && int_5 >= 0 && index < this.getEntryCount() ? this.children().get(index) : null;
+        return (x >= (double) getRowLeft() &&
+                x <= (double) (getRowLeft() + getRowWidth()) &&
+                index >= 0 &&
+                int_5 >= 0 &&
+                index < this.getEntryCount()) ? this.children().get(index) : null;
     }
 
     @Override
     protected int getScrollbarPositionX() {
-        return this.width - 6;
+        return this.left +  this.width - 6;
     }
 
     @Override

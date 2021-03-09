@@ -1,10 +1,7 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.gui.widgets.CustomListEntry;
-import net.blancworks.figura.gui.widgets.CustomListWidget;
-import net.blancworks.figura.gui.widgets.CustomListWidgetState;
-import net.blancworks.figura.gui.widgets.PlayerListWidget;
+import net.blancworks.figura.gui.widgets.*;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
@@ -29,7 +26,7 @@ public class FiguraTrustScreen extends Screen {
     public Screen parentScreen;
 
     private TextFieldWidget searchBox;
-    private PlayerListWidget playerList;
+
     private Text tooltip;
     private boolean init = false;
     private boolean filterOptionsShown = false;
@@ -41,7 +38,9 @@ public class FiguraTrustScreen extends Screen {
     private int filtersWidth;
     private int searchRowWidth;
     public final Set<String> showModChildren = new HashSet<>();
-    
+
+    public PlayerListWidget playerList;
+    public PermissionListWidget permissionList;
     public CustomListWidgetState playerListState = new CustomListWidgetState();
     public CustomListWidgetState permissionListState = new CustomListWidgetState();
 
@@ -53,39 +52,47 @@ public class FiguraTrustScreen extends Screen {
     @Override
     protected void init() {
         super.init();
-        
+
         paneY = 48;
         paneWidth = this.width / 2 - 8;
         rightPaneX = width - paneWidth;
 
-        this.addButton(new ButtonWidget(this.width - 64 - 5, this.height - 20 - 5, 64, 20, new LiteralText("Back"), (buttonWidgetx) -> {
-            this.client.openScreen((Screen) parentScreen);
-        }));
-
-        int searchBoxWidth = paneWidth - 32 - 22;
-        searchBoxX = paneWidth / 2 - searchBoxWidth / 2 - 22 / 2;
+        int searchBoxWidth = paneWidth - 5;
+        searchBoxX = 7;
         this.searchBox = new TextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("modmenu.search"));
         this.searchBox.setChangedListener((string_1) -> this.playerList.filter(string_1, false));
         this.playerList = new PlayerListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 14, this.searchBox, this.playerList, this, playerListState);
-        this.playerList.setLeftPos(0);
+        this.playerList.setLeftPos(5);
         playerList.reloadFilters();
+        
+        this.permissionList = new PermissionListWidget(
+                this.client,
+                paneWidth - 5, this.height,
+                paneY + 19, this.height - 36
+                , 24,
+                null,
+                this.permissionList, this, permissionListState
+        );
+        permissionList.setLeftPos(rightPaneX);
 
         this.addChild(this.playerList);
+        this.addChild(this.permissionList);
         this.setInitialFocus(this.searchBox);
+
+        this.addButton(new ButtonWidget(this.width - 64 - 5, this.height - 20 - 5, 64, 20, new LiteralText("Back"), (buttonWidgetx) -> {
+            this.client.openScreen((Screen) parentScreen);
+        }));
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         renderBackground(matrices);
-        super.render(matrices, mouseX, mouseY, delta);
-
-        IntegratedServer server = MinecraftClient.getInstance().getServer();
-
-        int y = 0;
 
         this.playerList.render(matrices, mouseX, mouseY, delta);
+        this.permissionList.render(matrices, mouseX, mouseY, delta);
         this.searchBox.render(matrices, mouseX, mouseY, delta);
 
+        super.render(matrices, mouseX, mouseY, delta);
     }
 
     @Override
@@ -126,16 +133,29 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean keyPressed(int int_1, int int_2, int int_3) {
+        if (getFocused() == permissionList) {
+            return permissionList.keyPressed(int_1, int_2, int_3);
+        }
         return super.keyPressed(int_1, int_2, int_3) || this.searchBox.keyPressed(int_1, int_2, int_3);
     }
 
     @Override
     public boolean charTyped(char char_1, int int_1) {
+        if (getFocused() == permissionList) {
+            return permissionList.charTyped(char_1, int_1);
+        }
         return this.searchBox.charTyped(char_1, int_1);
     }
 
     @Override
     public void tick() {
+
+        if (getFocused() == permissionList) {
+            searchBox.setTextFieldFocused(false);
+        } else {
+            searchBox.setTextFieldFocused(true);
+        }
+
         this.searchBox.tick();
     }
 

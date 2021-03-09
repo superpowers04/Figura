@@ -20,9 +20,17 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
         for (PlayerListEntry listEntry : client.getNetworkHandler().getPlayerList()) {
             if (listEntry.getProfile().getName().contains(searchTerm)) {
-                addEntry(new PlayerListWidgetEntry(listEntry, this));
+                for(int i = 0; i < 100; i++)
+                    addEntry(new PlayerListWidgetEntry(listEntry, this));
             }
         }
+    }
+
+    @Override
+    public void select(PlayerListWidgetEntry entry) {
+        super.select(entry);
+        
+        ((FiguraTrustScreen)getParent()).permissionList.rebuild();
     }
 
     public class PlayerListWidgetEntry extends CustomListEntry {
