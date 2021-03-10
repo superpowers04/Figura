@@ -109,6 +109,7 @@ public class FiguraCommands {
 
     public static int load_model_command(CommandContext ctx) {
         String fileName = (String) ctx.getArgument("file", String.class);
+        PlayerDataManager.lastLoadedFileName = fileName;
         PlayerDataManager.localPlayer.loadModelFile(fileName);
         return 1;
     }

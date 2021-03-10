@@ -25,10 +25,6 @@ public class CustomScript {
     //Represents the player's data inside the script's code.
     public PlayerRepresentation playerRepresentation;
     public CustomModelRepresentation customModelRepresentation;
-    
-    public static final int max_lua_instructions_render = 1024 * 2;
-    public static final int max_lua_instructions_tick = 1024 * 4;
-    public static final int max_lua_instructions_init = 1024 * 16;
 
     public PlayerData playerData;
 
@@ -82,7 +78,7 @@ public class CustomScript {
 
         curr_task = CompletableFuture.runAsync(
                 () -> {
-                    setInstructionLimit(max_lua_instructions_init);
+                    setInstructionLimit((int)playerData.getTrustData().getPermissionFloat("maxInitInstructions"));
                     Varargs result = scriptThread.resume(LuaValue.NIL);
                     curr_task = null;
                 },

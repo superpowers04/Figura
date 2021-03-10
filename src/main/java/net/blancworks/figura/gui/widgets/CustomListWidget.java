@@ -17,11 +17,11 @@ import java.util.*;
 
 public class CustomListWidget<T extends Object, T2 extends CustomListEntry> extends AlwaysSelectedEntryListWidget<CustomListEntry> implements AutoCloseable {
     private final Screen parent;
-    private final Set<T> addedObjects = new HashSet<>();
+    protected final Set<T> addedObjects = new HashSet<>();
     private List<T> objectList = null;
     private String selectedplayerId = null;
     private boolean scrolling;
-    private CustomListWidgetState state;
+    public CustomListWidgetState state;
     public TextFieldWidget searchBox;
     
     public boolean allowSelection = true;
@@ -76,7 +76,7 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
         CustomListEntry selected = getSelected();
         return selected != null && selected.getIdentifier().equals(getEntry(index).getIdentifier());
     }
-
+    
     @Override
     public int addEntry(CustomListEntry entry) {
         if (addedObjects.contains(entry.getEntryObject())) {
@@ -197,7 +197,9 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
     @Override
     protected void updateScrollingState(double double_1, double double_2, int int_1) {
         super.updateScrollingState(double_1, double_2, int_1);
-        this.scrolling = int_1 == 0 && double_1 >= (double) this.getScrollbarPositionX() && double_1 < (double) (this.getScrollbarPositionX() + 6);
+        this.scrolling = int_1 == 0 &&
+                double_1 >= (double) this.getScrollbarPositionX() &&
+                double_1 < (double) (this.getScrollbarPositionX() + 6);
     }
 
     @Override
@@ -206,6 +208,11 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
         if (!this.isMouseOver(double_1, double_2)) {
             return false;
         } else {
+            
+            if(this.scrolling){
+                setFocused(null);
+                return true;
+            }
             
             if(allowSelection) {
                 CustomListEntry entry = this.getEntryAtPos(double_1, double_2);

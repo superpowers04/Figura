@@ -1,22 +1,38 @@
 package net.blancworks.figura.trust.settings;
 
+import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
+import net.blancworks.figura.trust.PlayerTrustData;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.nbt.CompoundTag;
 
-public interface PermissionSetting<T extends PermissionSetting> {
+public abstract class PermissionSetting<T extends PermissionSetting> {
+
+    public PlayerTrustData parentData;
+
     //Gets the name of the setting.
-    String getName();
+    public String getName() {
+        return null;
+    }
 
     //Reads from NBT
-    void fromNBT(CompoundTag tag);
+    public void fromNBT(CompoundTag tag) {
+    }
 
     //Writes to NBT.
-    void toNBT(CompoundTag tag);
+    public void toNBT(CompoundTag tag) {
+    }
+
+    public void fromJson(JsonElement element) {
+    }
 
     //Gets a copy of the permission, used for cloning settings from presets.
-    T getCopy();
-    
-    PermissionListWidget.PermissionListEntry getEntry(PermissionSetting obj, CustomListWidget list);
+    public T getCopy(PlayerTrustData parentData) {
+        return null;
+    }
+
+    public PermissionListWidget.PermissionListEntry getEntry(PermissionSetting obj, CustomListWidget list) {
+        return null;
+    }
 }

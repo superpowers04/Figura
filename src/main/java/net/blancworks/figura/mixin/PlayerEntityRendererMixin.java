@@ -37,7 +37,7 @@ public class PlayerEntityRendererMixin {
         PlayerEntityModel model = realRenderer.getModel();
 
         if(playerData.script != null) {
-            playerData.script.runFunctionImmediate("render", CustomScript.max_lua_instructions_render, LuaNumber.valueOf(FiguraMod.deltaTime));
+            playerData.script.runFunctionImmediate("render", (int)playerData.getTrustData().getPermissionFloat("maxRenderInstructions"), LuaNumber.valueOf(FiguraMod.deltaTime));
         }
 
         if (playerData != null && playerData.script != null && playerData.script.vanillaModelRepresentation != null) {
@@ -75,14 +75,14 @@ public class PlayerEntityRendererMixin {
                         matrices.push();
                         
                         model.rightArm.rotate(matrices);
-                        part.render(99999, matrices, vc, light, OverlayTexture.DEFAULT_UV);
+                        part.render((int)playerData.getTrustData().getPermissionFloat("maxComplexity"), matrices, vc, light, OverlayTexture.DEFAULT_UV);
                         
                         matrices.pop();
                     } else if(part.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm){
                         matrices.push();
 
                         model.leftArm.rotate(matrices);
-                        part.render(99999, matrices, vc, light, OverlayTexture.DEFAULT_UV);
+                        part.render((int)playerData.getTrustData().getPermissionFloat("maxComplexity"), matrices, vc, light, OverlayTexture.DEFAULT_UV);
 
                         matrices.pop();
                     }

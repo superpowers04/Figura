@@ -5,6 +5,8 @@ import com.google.gson.JsonParser;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustData;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.structure.MineshaftGenerator;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 
@@ -19,29 +21,49 @@ public class PlayerDataManager {
     public static boolean didInitLocalPlayer = false;
     public static HashMap<UUID, PlayerData> loadedPlayerData = new HashMap<UUID, PlayerData>();
     public static HashMap<UUID, PlayerTrustData> playerTrustData = new HashMap<UUID, PlayerTrustData>();
-    
+
     //Players that we're currently queued up to grab data for.
     private static HashSet<UUID> serverRequestedPlayers = new HashSet<UUID>();
     private static ArrayList<UUID> toClear = new ArrayList<>();
 
     public static LocalPlayerData localPlayer;
 
+    public static String lastLoadedFileName;
+
+    public static boolean hasPlayerData(UUID id) {
+        return loadedPlayerData.containsKey(id);
+    }
+
     public static PlayerData getDataForPlayer(UUID id) {
-        
+
         PlayerData getData = null;
-        
-        if(!didInitLocalPlayer){
-            if(id == MinecraftClient.getInstance().player.getUuid()){
+
+        if (toClear.contains(id)) {
+            toClear.remove(id);
+            loadedPlayerData.remove(id);
+        }
+
+        if (!didInitLocalPlayer) {
+            if (id == MinecraftClient.getInstance().player.getUuid()) {
                 localPlayer = new LocalPlayerData();
                 localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
-                PlayerDataManager.loadedPlayerData.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
+                loadedPlayerData.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
                 didInitLocalPlayer = true;
+
+                if (lastLoadedFileName != null) {
+                    localPlayer.vanillaModel = ((PlayerEntityRenderer)MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
+                    localPlayer.loadModelFile(lastLoadedFileName);
+                    localPlayer.getFileSize();
+                }
 
                 getPlayerAvatarFromServer(localPlayer.playerId, localPlayer);
                 return localPlayer;
             }
         }
-        
+
+        if (id == MinecraftClient.getInstance().player.getUuid())
+            return localPlayer;
+
         if (loadedPlayerData.containsKey(id) == false) {
             getData = new PlayerData();
             getData.playerId = id;
@@ -52,19 +74,23 @@ public class PlayerDataManager {
         } else {
             getData = loadedPlayerData.get(id);
         }
-        
+
         return getData;
     }
 
     public static PlayerTrustData getTrustDataForPlayer(UUID id) {
-        
-        if(!playerTrustData.containsKey(id)){
+
+        if (!playerTrustData.containsKey(id)) {
             PlayerTrustData newData = new PlayerTrustData();
-            newData.preset = PlayerTrustData.allPresets.get("UNTRUSTED");
+            newData.preset = PlayerTrustData.allPresets.get("untrusted");
+            
+            if(id == MinecraftClient.getInstance().player.getUuid())
+                newData.preset = PlayerTrustData.allPresets.get("friend");
+
             playerTrustData.put(id, newData);
             return newData;
         }
-        
+
         return playerTrustData.get(id);
     }
 
@@ -73,14 +99,14 @@ public class PlayerDataManager {
     public static void getPlayerAvatarFromServer(UUID id, PlayerData targetData) {
 
         //Prevent this from running more than once at a time per player.
-         if (serverRequestedPlayers.contains(id))
+        if (serverRequestedPlayers.contains(id))
             return;
         serverRequestedPlayers.add(id);
 
         try {
 
             URL url = new URL(String.format("%s/api/avatar/%s", FiguraNetworkManager.getServerURL(), id));
-            
+
             CompletableFuture.runAsync(() -> {
                 HttpURLConnection httpURLConnection = null;
 
@@ -94,7 +120,7 @@ public class PlayerDataManager {
                     httpURLConnection.connect();
 
                     if (httpURLConnection.getResponseCode() / 100 == 2) {
-                        
+
                         //Put JSON into string
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(httpURLConnection.getInputStream()));
@@ -111,16 +137,15 @@ public class PlayerDataManager {
 
                     httpURLConnection.disconnect();
 
-                    
+
                     //Attempt to load data from the JSON we just got from the server
                     if (targetObject != null) {
                         String dataString = targetObject.get("data").getAsString();
-                        if(dataString.length() != 0) {
+                        if (dataString.length() != 0) {
                             byte[] dataAsBytes = Base64.getDecoder().decode(dataString);
                             InputStream dataAsStream = new ByteArrayInputStream(dataAsBytes);
                             DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
                             receivedDataToStream.reset();
-
 
                             targetData.loadFromNBT(receivedDataToStream);
                             targetData.lastHash = FiguraNetworkManager.getAvatarHash(id).get();
@@ -132,26 +157,29 @@ public class PlayerDataManager {
                 }
 
                 serverRequestedPlayers.remove(id);
-                
+
             }, Util.getMainWorkerExecutor());
         } catch (Exception e) {
             FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
 
-    public static void clearPlayer(UUID id){
+    public static void clearPlayer(UUID id) {
         toClear.add(id);
-        
-        if(id == localPlayer.playerId){
-            localPlayer = null;
-            didInitLocalPlayer = false;
+
+        if(localPlayer != null) {
+            if (id == localPlayer.playerId) {
+                localPlayer = null;
+                didInitLocalPlayer = false;
+            }
         }
     }
-    
-    public static void clearCache(){
+
+    public static void clearCache() {
         loadedPlayerData.clear();
         localPlayer = null;
         didInitLocalPlayer = false;
+        lastLoadedFileName = null;
     }
 
     //Tick function for the client. Basically dispatches all the other functions in the mod.

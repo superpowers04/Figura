@@ -84,8 +84,7 @@ public class LocalPlayerData extends PlayerData {
             model = mdl;
             mdl.owner = this;
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
-            return;
+            e.printStackTrace();
         }
 
 
@@ -94,12 +93,13 @@ public class LocalPlayerData extends PlayerData {
             Identifier id = new Identifier("figura", playerId.toString());
             texture = new FiguraTexture();
             texture.id = id;
+            texture.filePath = texturePath;
             getTextureManager().registerTexture(id, texture);
 
             texturePath = texturePath;
             didTextureLoad = true;
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
 
         //Load script.
@@ -108,8 +108,7 @@ public class LocalPlayerData extends PlayerData {
 
             script = new CustomScript(this, contents);
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
-            return;
+            e.printStackTrace();
         }
     }
 
@@ -203,6 +202,7 @@ public class LocalPlayerData extends PlayerData {
         if (doReload == true) {
             watchKeys.clear();
 
+            PlayerDataManager.lastLoadedFileName = loadedName;
             loadModelFile(loadedName);
         }
 

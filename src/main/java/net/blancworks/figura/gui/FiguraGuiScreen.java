@@ -73,12 +73,14 @@ public class FiguraGuiScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.addButton(new ButtonWidget(this.width - 64 - 5, this.height - 20 - 5, 64, 20, new LiteralText("Back"), (buttonWidgetx) -> {
+        int width = (this.width / 2) - 10 - 128;
+        
+        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new LiteralText("Back"), (buttonWidgetx) -> {
             this.client.openScreen(parentScreen);
             //this.client.mouse.lockCursor();
         }));
 
-        this.addButton(new ButtonWidget(this.width - 64 - 5, this.height - 42 - 5, 64, 20, new LiteralText("Trust Menu"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 42 - 5, width, 20, new LiteralText("Trust Menu"), (buttonWidgetx) -> {
             this.client.openScreen(trustScreen);
             //this.client.mouse.lockCursor();
         }));
@@ -169,6 +171,7 @@ public class FiguraGuiScreen extends Screen {
     private static int filesize_large_threshold = 100000;
 
     public void click_button(String file_name) {
+        PlayerDataManager.lastLoadedFileName = file_name;
         PlayerDataManager.localPlayer.loadModelFile(file_name);
 
         name_text = new LiteralText(String.format("Name : %s", file_name.substring(0, Math.min(15, file_name.length()))));

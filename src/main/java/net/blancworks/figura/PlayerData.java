@@ -4,6 +4,7 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.lua.CustomScript;
 import net.blancworks.figura.network.FiguraNetworkManager;
+import net.blancworks.figura.trust.PlayerTrustData;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -47,6 +48,8 @@ public class PlayerData {
     
     public Date lastHashCheckTime = new Date();
     public String lastHash = "";
+    
+    private PlayerTrustData trustData;
     
     public static TextureManager getTextureManager() {
         if (textureManager == null)
@@ -129,6 +132,12 @@ public class PlayerData {
     }
 
     
+    public PlayerTrustData getTrustData(){
+        if(trustData == null)
+            trustData = PlayerDataManager.getTrustDataForPlayer(playerId);
+        return trustData;
+    }
+    
     //Returns the file size, in bytes.
     public int getFileSize(){
         CompoundTag writtenTag = new CompoundTag();
@@ -140,6 +149,7 @@ public class PlayerData {
 
             NbtIo.writeCompressed(writtenTag, w);
             
+            model.totalSize = w.size();
             return w.size();
         } catch (Exception e){
             
@@ -148,6 +158,8 @@ public class PlayerData {
         return -1;
     }
 
+    public boolean isInvalidated = false;
+    
     //Ticks from client.
     public void tick() {
 
@@ -156,7 +168,7 @@ public class PlayerData {
             return;
         }
         
-        if(PlayerDataManager.localPlayer.equals(this) == false) {
+        if(this.equals(PlayerDataManager.localPlayer) == false) {
             //Every 60 seconds
             long diff = new Date().getTime() - lastHashCheckTime.getTime();
             if (diff > 1000 * 1) {
@@ -167,9 +179,7 @@ public class PlayerData {
                         String hash = FiguraNetworkManager.getAvatarHash(playerId).get();
 
                         if (hash.equals(lastHash) == false) {
-                            PlayerDataManager.clearPlayer(playerId);
-                            
-                            FiguraMod.LOGGER.debug("CLEARING PLAYER " + playerId.toString());
+                            isInvalidated = true;
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -178,8 +188,15 @@ public class PlayerData {
             }
         }
         
+        if(isInvalidated)
+            PlayerDataManager.clearPlayer(playerId);
+        
         if (script != null) {
-            script.runFunction("tick", CustomScript.max_lua_instructions_tick);
+            try {
+                script.runFunction("tick", (int) trustData.getPermissionFloat("maxTickInstructions"));
+            } catch (Exception e){
+                e.printStackTrace();
+            }
         }
     }
 
@@ -239,6 +256,8 @@ public class PlayerData {
         CompoundTag nbtTag = NbtIo.readCompressed(input);
 
         fromNBT(nbtTag);
+        
+        getFileSize();
     }
     
     

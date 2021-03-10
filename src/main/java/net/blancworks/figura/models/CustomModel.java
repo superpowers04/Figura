@@ -21,6 +21,9 @@ public class CustomModel {
     public ArrayList<CustomModelPart> all_parts = new ArrayList<CustomModelPart>();
 
     public float texWidth = 64, texHeight = 64;
+    
+    //The size of the avatar in bytes, either from when it was downloaded, or otherwise.
+    public long totalSize = 0;
 
 
     public int getRenderComplexity() {
@@ -47,14 +50,14 @@ public class CustomModel {
     }
 
     public int getMaxRenderAmount() {
-        return 128;
+        return ((int)owner.getTrustData().getPermissionFloat("maxComplexity")) / 4;
     }
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         int left_to_render = getMaxRenderAmount();
 
         if (owner.script != null) {
-            owner.script.runFunctionImmediate("render", CustomScript.max_lua_instructions_render, LuaNumber.valueOf(FiguraMod.deltaTime));
+            owner.script.runFunctionImmediate("render", (int)owner.getTrustData().getPermissionFloat("maxRenderInstructions"), LuaNumber.valueOf(FiguraMod.deltaTime));
         }
 
         for (CustomModelPart part : all_parts) {

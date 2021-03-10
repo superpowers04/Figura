@@ -192,8 +192,6 @@ public class FiguraNetworkManager {
         String uuidString = MinecraftClient.getInstance().player.getUuid().toString();
 
         try {
-            URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.getServerURL(), uuidString, figuraSessionKey));
-
             CompletableFuture.runAsync(() -> {
                 HttpURLConnection httpURLConnection = null;
                 
@@ -204,6 +202,7 @@ public class FiguraNetworkManager {
                 }
 
                 try {
+                    URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.getServerURL(), uuidString, figuraSessionKey));
                     PlayerData data = PlayerDataManager.localPlayer;
 
                     CompoundTag infoTag = new CompoundTag();
@@ -258,6 +257,7 @@ public class FiguraNetworkManager {
         try {
             String uuidString = id.toString();
             HttpURLConnection httpURLConnection = createReadConnection(String.format("%s/api/avatar/hash/%s", FiguraNetworkManager.getServerURL(), uuidString));
+            httpURLConnection.setConnectTimeout(100);
             httpURLConnection.connect();
 
             //Only continue if response was OK.

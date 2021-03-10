@@ -1,0 +1,37 @@
+{
+  "base": {
+    "maxInitInstructions" : 16384,
+    "maxTickInstructions" : 4096,
+    "maxRenderInstructions": 1024,
+    "maxComplexity" : 256,
+    "allowVanillaEdit" : false,
+    "preset" : "base"
+  },
+  "blocked": {
+    "maxInitInstructions" : 0,
+    "maxTickInstructions" : 0,
+    "maxRenderInstructions" : 0,
+    "maxComplexity" : 0,
+    "allowVanillaEdit" : false,
+    "preset" : "blocked"
+  },
+  "untrusted": {
+    "preset" : "untrusted"
+  },
+  "trusted": {
+    "maxInitInstructions" : 16384,
+    "maxTickInstructions" : 8192,
+    "maxRenderInstructions": 2048,
+    "maxComplexity" : 512,
+    "allowVanillaEdit" : true,
+    "preset" : "trusted"
+  },
+  "friend": {
+    "maxInitInstructions" : 99999,
+    "maxTickInstructions" : 99999,
+    "maxRenderInstructions": 99999,
+    "maxComplexity" : 99999,
+    "allowVanillaEdit" : true,
+    "preset" : "friend"
+  }
+}
