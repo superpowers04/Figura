@@ -3,7 +3,6 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.MatrixStackAccess;
-import net.blancworks.figura.models.lua.CustomScript;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;

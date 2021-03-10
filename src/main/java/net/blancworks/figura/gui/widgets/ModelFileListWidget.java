@@ -1,9 +1,6 @@
 package net.blancworks.figura.gui.widgets;
 
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraGuiScreen;
-import net.blancworks.figura.gui.FiguraTrustScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;

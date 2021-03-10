@@ -6,7 +6,6 @@ import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.PlayerTrustData;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.FloatTag;
 
 public class PermissionBooleanSetting extends PermissionSetting {
     public String name;

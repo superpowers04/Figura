@@ -6,7 +6,6 @@ import net.blancworks.figura.network.FiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustData;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.structure.MineshaftGenerator;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 

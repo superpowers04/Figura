@@ -1,10 +1,11 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.gui.widgets.*;
+import net.blancworks.figura.gui.widgets.CustomListWidgetState;
+import net.blancworks.figura.gui.widgets.PermissionListWidget;
+import net.blancworks.figura.gui.widgets.PlayerListWidget;
 import net.blancworks.figura.trust.PlayerTrustData;
 import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionStringSetting;
@@ -18,7 +19,6 @@ import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.server.integrated.IntegratedServer;
 import net.minecraft.text.*;
 import net.minecraft.util.math.MathHelper;
 

@@ -1,23 +1,17 @@
 package net.blancworks.figura.trust;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.gui.widgets.PermissionListWidget;
-import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
 import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.blancworks.figura.trust.settings.PermissionStringSetting;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;

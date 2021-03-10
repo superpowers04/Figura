@@ -1,7 +1,5 @@
 package net.blancworks.figura.gui.widgets;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraTrustScreen;
 import net.blancworks.figura.trust.PlayerTrustData;
@@ -15,8 +13,6 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 
-import java.lang.reflect.Array;
-import java.security.acl.Group;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;

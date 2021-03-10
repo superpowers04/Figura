@@ -6,7 +6,6 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
 import net.blancworks.figura.gui.widgets.ModelFileListWidget;
 import net.blancworks.figura.network.FiguraNetworkManager;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
@@ -28,12 +27,8 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.Quaternion;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.logging.log4j.Level;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 

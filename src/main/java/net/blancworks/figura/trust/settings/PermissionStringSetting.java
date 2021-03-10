@@ -5,11 +5,8 @@ import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.PlayerTrustData;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 

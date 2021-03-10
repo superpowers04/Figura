@@ -4,7 +4,6 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.lua.CustomScript;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;

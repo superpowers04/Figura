@@ -3,16 +3,12 @@ package net.blancworks.figura.gui.widgets;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.StringVisitable;
 import net.minecraft.text.Text;
 import net.minecraft.util.Language;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomListEntry>{
     protected final MinecraftClient client;

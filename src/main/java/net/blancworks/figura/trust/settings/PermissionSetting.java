@@ -4,7 +4,6 @@ import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.PlayerTrustData;
-import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.nbt.CompoundTag;
 
 public abstract class PermissionSetting<T extends PermissionSetting> {
