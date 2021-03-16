@@ -6,8 +6,6 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.gui.widgets.PlayerListWidget;
-import net.blancworks.figura.trust.PlayerTrustData;
-import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionStringSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
@@ -113,9 +111,9 @@ public class FiguraTrustScreen extends Screen {
 
             if (entry != null) {
                 PlayerData data = PlayerDataManager.getDataForPlayer(entry.getProfile().getId());
-                PlayerTrustData trustData = PlayerDataManager.getTrustDataForPlayer(entry.getProfile().getId());
 
-                trustData.reset();
+
+
                 permissionList.rebuild();
             }
         });
@@ -145,7 +143,7 @@ public class FiguraTrustScreen extends Screen {
 
             if (PlayerDataManager.hasPlayerData(entry.getProfile().getId())) {
                 PlayerData data = PlayerDataManager.getDataForPlayer(entry.getProfile().getId());
-                PlayerTrustData trustData = PlayerDataManager.getTrustDataForPlayer(entry.getProfile().getId());
+                //PlayerTrustData trustData = PlayerDataManager.getTrustDataForPlayer(entry.getProfile().getId());
 
                 if (data.model != null) {
                     int currX = paneWidth + 13;
@@ -154,11 +152,11 @@ public class FiguraTrustScreen extends Screen {
                         int complexity = data.model.getRenderComplexity();
                         MutableText complexityText = new LiteralText(String.format("Complexity:%d", complexity)).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
 
-                        if (trustData != null) {
+                        /*if (trustData != null) {
                             if (complexity >= ((PermissionFloatSetting) trustData.getPermission("maxComplexity")).value) {
                                 complexityText = complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
                             }
-                        }
+                        }*/
 
                         drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, TextColor.parse("white").getRgb());
                         currX += textRenderer.getWidth(complexityText) + 10;
@@ -288,23 +286,6 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(shiftPressed){
-            if(permissionListState.selected instanceof PermissionStringSetting){
-                if(((PermissionStringSetting) permissionListState.selected).getName().equals("preset")){
-                    
-                    PlayerListWidget.PlayerListWidgetEntry e = (PlayerListWidget.PlayerListWidgetEntry) playerList.getEntryAtPos(mouseX, mouseY);
-                    
-                    if(e instanceof PlayerListWidget.GroupListWidgetEntry){
-
-                        PlayerTrustData.moveToPreset(((PermissionStringSetting) permissionListState.selected).parentData, ((PlayerListWidget.GroupListWidgetEntry) e).identifier);
-                        playerList.reloadFilters();
-                        permissionList.rebuild();
-                        
-                        return false;
-                    }
-                }
-            }
-        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 

@@ -78,7 +78,7 @@ public class CustomScript {
 
         curr_task = CompletableFuture.runAsync(
                 () -> {
-                    setInstructionLimit((int)playerData.getTrustData().getPermissionFloat("maxInitInstructions"));
+                    setInstructionLimit(999);
                     Varargs result = scriptThread.resume(LuaValue.NIL);
                     curr_task = null;
                 },

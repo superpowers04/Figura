@@ -3,7 +3,6 @@ package net.blancworks.figura;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.network.FiguraNetworkManager;
-import net.blancworks.figura.trust.PlayerTrustData;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.util.Util;
@@ -19,7 +18,6 @@ public class PlayerDataManager {
 
     public static boolean didInitLocalPlayer = false;
     public static HashMap<UUID, PlayerData> loadedPlayerData = new HashMap<UUID, PlayerData>();
-    public static HashMap<UUID, PlayerTrustData> playerTrustData = new HashMap<UUID, PlayerTrustData>();
 
     //Players that we're currently queued up to grab data for.
     private static HashSet<UUID> serverRequestedPlayers = new HashSet<UUID>();
@@ -76,23 +74,6 @@ public class PlayerDataManager {
 
         return getData;
     }
-
-    public static PlayerTrustData getTrustDataForPlayer(UUID id) {
-
-        if (!playerTrustData.containsKey(id)) {
-            PlayerTrustData newData = new PlayerTrustData();
-            newData.preset = PlayerTrustData.allPresets.get("untrusted");
-            
-            if(id == MinecraftClient.getInstance().player.getUuid())
-                newData.preset = PlayerTrustData.allPresets.get("friend");
-
-            playerTrustData.put(id, newData);
-            return newData;
-        }
-
-        return playerTrustData.get(id);
-    }
-
 
     //Attempts to get the data for a player from the server.
     public static void getPlayerAvatarFromServer(UUID id, PlayerData targetData) {

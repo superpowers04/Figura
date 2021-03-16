@@ -37,7 +37,7 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
         font.draw(matrices, Language.getInstance().reorder(trimmedName), x + 3, y + (rowHeight / 2) - (font.fontHeight/2), 0xFFFFFF);
     }
 
-    public boolean mouseClicked(double v, double v1, int i) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
         list.select(this);
         return true;
     }
@@ -57,4 +57,6 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
     public Object getEntryObject(){
         return entryValue;
     }
+
+    public void tick(double mouseX, double mouseY){}
 }

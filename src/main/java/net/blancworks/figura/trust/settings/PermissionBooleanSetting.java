@@ -2,28 +2,27 @@ package net.blancworks.figura.trust.settings;
 
 import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
-import net.blancworks.figura.gui.widgets.PermissionListWidget;
-import net.blancworks.figura.trust.PlayerTrustData;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListToggleEntry;
 import net.minecraft.nbt.ByteTag;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Identifier;
 
 public class PermissionBooleanSetting extends PermissionSetting {
-    public String name;
     public boolean value;
-    
-    @Override
-    public String getName() {
-        return name;
+
+    public PermissionBooleanSetting(Identifier id) {
+        super(id);
     }
 
     @Override
     public void fromNBT(CompoundTag tag) {
-        value = tag.getBoolean(name);
+        value = tag.getBoolean(id.getPath());
     }
 
     @Override
     public void toNBT(CompoundTag tag) {
-        tag.put(name, ByteTag.of(value));
+        tag.put(id.getPath(), ByteTag.of(value));
     }
 
     @Override
@@ -32,17 +31,22 @@ public class PermissionBooleanSetting extends PermissionSetting {
     }
 
     @Override
-    public PermissionSetting getCopy(PlayerTrustData trustData) {
+    public PermissionSetting getCopy() {
         PermissionBooleanSetting pfs = this;
-        return new PermissionBooleanSetting(){{
-            name = pfs.name;
+        return new PermissionBooleanSetting(id){{
             value = pfs.value;
-            parentData = trustData;
         }};
     }
 
     @Override
-    public PermissionListWidget.PermissionListEntry getEntry(PermissionSetting obj, CustomListWidget list) {
-        return new PermissionListWidget.PermissionToggleEntry((PermissionBooleanSetting) obj, list);
+    public PermissionListEntry getEntry(CustomListWidget list) {
+        return new PermissionListToggleEntry(this, list);
+    }
+
+    @Override
+    public boolean isDifferent(PermissionSetting other) {
+        if (other instanceof PermissionBooleanSetting && ((PermissionBooleanSetting) other).value == value)
+            return true;
+        return false;
     }
 }

@@ -17,7 +17,7 @@ public class TrustPreset {
         newSet.name = name + " - COPY";
 
         for (Map.Entry<String, PermissionSetting> entry : permissions.entrySet()) {
-            newSet.permissions.put(entry.getKey(), entry.getValue().getCopy(null));
+            newSet.permissions.put(entry.getKey(), entry.getValue().getCopy());
         }
         return newSet;
     }

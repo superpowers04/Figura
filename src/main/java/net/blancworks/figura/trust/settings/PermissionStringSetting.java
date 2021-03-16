@@ -2,33 +2,28 @@ package net.blancworks.figura.trust.settings;
 
 import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
-import net.blancworks.figura.gui.widgets.PermissionListWidget;
-import net.blancworks.figura.trust.PlayerTrustData;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListStringEntry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.StringTag;
-import net.minecraft.text.Text;
-
-import java.util.function.Consumer;
+import net.minecraft.util.Identifier;
 
 public class PermissionStringSetting extends PermissionSetting {
-    public String name;
-    public Text displayText;
-    public String value;
-    public Consumer<String> listener;
 
-    @Override
-    public String getName() {
-        return name;
+    public String value;
+
+    public PermissionStringSetting(Identifier id) {
+        super(id);
     }
 
     @Override
     public void fromNBT(CompoundTag tag) {
-        value = tag.getString(name);
+        value = tag.getString(id.getPath());
     }
 
     @Override
     public void toNBT(CompoundTag tag) {
-        tag.put(name, StringTag.of(value));
+        tag.put(id.getPath(), StringTag.of(value));
     }
 
     @Override
@@ -37,27 +32,27 @@ public class PermissionStringSetting extends PermissionSetting {
     }
 
     @Override
-    public PermissionSetting getCopy(PlayerTrustData pDat) {
-        super.getCopy(pDat);
+    public PermissionSetting getCopy() {
+        super.getCopy();
         PermissionStringSetting pfs = this;
-        return new PermissionStringSetting() {{
-            name = pfs.name;
+        return new PermissionStringSetting(id) {{
             value = pfs.value;
-            displayText = pfs.displayText;
-            listener = pfs.listener;
-            parentData = pDat;
         }};
     }
 
     @Override
-    public PermissionListWidget.PermissionListEntry getEntry(PermissionSetting obj, CustomListWidget list) {
+    public PermissionListEntry getEntry(CustomListWidget list) {
         PermissionStringSetting pfs = this;
-        return new PermissionListWidget.PermissionStringEntry((PermissionStringSetting) obj, list) {{
+        return new PermissionListStringEntry(this, list) {{
             widget.setText(pfs.value);
             value = pfs.value;
-            displayText = pfs.displayText;
-            changedListeners.add(listener);
-            parentData = pfs.parentData;
         }};
+    }
+
+    @Override
+    public boolean isDifferent(PermissionSetting other) {
+        if(other instanceof PermissionStringSetting && ((PermissionStringSetting) other).value.equals(value))
+            return true;
+        return false;
     }
 }

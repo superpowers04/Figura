@@ -2,37 +2,35 @@ package net.blancworks.figura.trust.settings;
 
 import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
-import net.blancworks.figura.gui.widgets.PermissionListWidget;
-import net.blancworks.figura.trust.PlayerTrustData;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListSliderEntry;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.FloatTag;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 public class PermissionFloatSetting extends PermissionSetting {
-    public String name;
-    public Text displayText;
     public float value;
-    
+
     public boolean isSlider = false;
     public double min, max;
     public boolean integer = false;
     public boolean allowInfinity = false;
-    public int multiplier = 1;
+    public int stepSize = 1;
 
-    @Override
-    public String getName() {
-        return name;
+    public PermissionFloatSetting(Identifier id) {
+        super(id);
     }
 
     @Override
     public void fromNBT(CompoundTag tag) {
-        value = tag.getFloat(name);
+        value = tag.getFloat(id.getPath());
     }
 
     @Override
     public void toNBT(CompoundTag tag) {
-        tag.put(name, FloatTag.of(value));
+        tag.put(id.getPath(), FloatTag.of(value));
     }
 
     @Override
@@ -41,29 +39,61 @@ public class PermissionFloatSetting extends PermissionSetting {
     }
 
     @Override
-    public PermissionSetting getCopy(PlayerTrustData pData) {
+    public PermissionSetting getCopy() {
         PermissionFloatSetting pfs = this;
-        return new PermissionFloatSetting(){{ 
-            name = pfs.name;
+        return new PermissionFloatSetting(id) {{
             value = pfs.value;
             isSlider = pfs.isSlider;
             min = pfs.min;
             max = pfs.max;
             allowInfinity = pfs.allowInfinity;
             integer = pfs.integer;
-            multiplier = pfs.multiplier;
-            displayText = pfs.displayText.copy();
-            parentData = pData;
+            stepSize = pfs.stepSize;
         }};
     }
 
     @Override
-    public PermissionListWidget.PermissionListEntry getEntry(PermissionSetting obj, CustomListWidget list) {
+    public PermissionListEntry getEntry(CustomListWidget list) {
         PermissionFloatSetting pfs = this;
-        return new PermissionListWidget.PermissionSliderEntry((PermissionFloatSetting) obj, list){{
-            double setVal = MathHelper.getLerpProgress(value / multiplier, min, max);
-            widget.setValue( setVal );
-            widget.refreshMessage();
+        return new PermissionListSliderEntry(this, list) {{
+
         }};
+    }
+
+    @Override
+    public boolean isDifferent(PermissionSetting other) {
+        if (other instanceof PermissionFloatSetting && ((PermissionFloatSetting) other).value == value)
+            return true;
+        return false;
+    }
+
+    public void setFromSlider(double value) {
+
+        this.value = (float) MathHelper.lerp((float) value, min, max);
+
+        if (allowInfinity && this.value >= max)
+            this.value = Float.MAX_VALUE;
+
+        if (stepSize > 0)
+            this.value = (float) (Math.floor(this.value / stepSize) * stepSize);
+
+        if (integer)
+            this.value = (float) Math.floor(this.value);
+
+        //Finally, clamp value.
+        this.value = (float) MathHelper.clamp(this.value, min, max);
+    }
+
+    public Text getValueText() {
+
+        if (allowInfinity && value >= max) {
+            return Text.of("INFINITY");
+        }
+
+        if (integer)
+            return Text.of(String.format("%d", (int) value));
+        else
+            return Text.of(String.format("%.2f", value));
+
     }
 }

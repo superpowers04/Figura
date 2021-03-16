@@ -49,14 +49,14 @@ public class CustomModel {
     }
 
     public int getMaxRenderAmount() {
-        return ((int)owner.getTrustData().getPermissionFloat("maxComplexity")) / 4;
+        return ((int)999) / 4;
     }
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         int left_to_render = getMaxRenderAmount();
 
         if (owner.script != null) {
-            owner.script.runFunctionImmediate("render", (int)owner.getTrustData().getPermissionFloat("maxRenderInstructions"), LuaNumber.valueOf(FiguraMod.deltaTime));
+            owner.script.runFunctionImmediate("render", (int)999, LuaNumber.valueOf(FiguraMod.deltaTime));
         }
 
         for (CustomModelPart part : all_parts) {

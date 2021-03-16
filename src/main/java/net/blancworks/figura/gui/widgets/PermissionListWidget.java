@@ -1,9 +1,9 @@
 package net.blancworks.figura.gui.widgets;
 
-import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraTrustScreen;
-import net.blancworks.figura.trust.PlayerTrustData;
-import net.blancworks.figura.trust.TrustPreset;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
+import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
 import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionSetting;
@@ -16,17 +16,15 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
-import java.util.UUID;
 import java.util.function.Consumer;
 
-public class PermissionListWidget extends CustomListWidget<PermissionSetting, PermissionListWidget.PermissionListEntry> {
+public class PermissionListWidget extends CustomListWidget<PermissionSetting, PermissionListEntry> {
 
     public PermissionListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
@@ -58,53 +56,39 @@ public class PermissionListWidget extends CustomListWidget<PermissionSetting, Pe
         clear();
         FiguraTrustScreen trustScreen = (FiguraTrustScreen) getParent();
 
-        if (trustScreen.playerListState.selected != null) {
-            if (trustScreen.playerListState.selected instanceof String) {
-                String entry = (String) trustScreen.playerListState.selected;
+        TrustContainer tc = getCurrentContainer();
+        if(tc != null)
+            buildForTrustContainer(tc);
+    }
 
-                TrustPreset preset = PlayerTrustData.allPresets.get(entry);
+    private TrustContainer getCurrentContainer(){
+        FiguraTrustScreen trustScreen = (FiguraTrustScreen) getParent();
 
-                for (String permissionKey : PlayerTrustData.permissionRegistry.keySet()) {
-                    PermissionSetting pSetting = preset.permissions.get(permissionKey);
+        if(trustScreen.playerListState.selected instanceof Identifier){
+            Identifier groupId = (Identifier) trustScreen.playerListState.selected;
+            TrustContainer tc = PlayerTrustManager.getContainer(groupId);
 
-                    if (permissionKey.equals("preset"))
-                        continue;
+            return tc;
+        } else if(trustScreen.playerListState.selected instanceof PlayerListEntry){
+            PlayerListEntry listEntry = (PlayerListEntry) trustScreen.playerListState.selected;
+            Identifier id = new Identifier("players", listEntry.getProfile().getId().toString());
+            TrustContainer tc = PlayerTrustManager.getContainer(id);
 
-                    addEntry(pSetting.getEntry(pSetting, this));
-                }
-            } else {
-                PlayerListEntry entry = (PlayerListEntry) trustScreen.playerListState.selected;
-                UUID id = entry.getProfile().getId();
+            return tc;
+        }
 
-                PlayerTrustData trustData = PlayerDataManager.getTrustDataForPlayer(id);
-                TrustPreset preset = trustData.preset;
+        return null;
+    }
 
-                for (String permissionKey : PlayerTrustData.permissionRegistry.keySet()) {
-                    PermissionSetting pSetting = trustData.getPermission(permissionKey);
+    private void buildForTrustContainer(TrustContainer tc){
 
-                    if (pSetting instanceof PermissionStringSetting) {
-                        PermissionStringEntry newEntry = (PermissionStringEntry) pSetting.getEntry(pSetting, this);
-                        if (permissionKey.equals("preset")) {
-                            newEntry.changedListeners.add((str) -> {
-                                PlayerTrustData.moveToPreset(newEntry.parentData, str);
-                            });
-                        }
-                        newEntry.changedListeners.add((str) -> {
-                            newEntry.parentData.reset();
-                            trustScreen.playerList.reloadFilters();
-                            rebuild();
-                        });
-                        
-                        newEntry.tooltipText.add(new LiteralText("Press enter to confirm group change."));
-                        newEntry.tooltipText.add(new LiteralText("You can also shift-click a group with this option selected to change the group."));
-                        newEntry.tooltipText.add(new LiteralText("NOTE: Changing groups will reset values").setStyle(Style.EMPTY.withColor(TextColor.parse("yellow"))));
+        for (Identifier identifier : PlayerTrustManager.permissionDisplayOrder) {
+            PermissionSetting ps = tc.getSetting(identifier);
 
-                        addEntry(newEntry);
-                    } else {
-                        addEntry(pSetting.getEntry(pSetting, this));
-                    }
-                }
-            }
+            if(ps == null)
+                continue;
+
+            addEntry(ps.getEntry(this));
         }
     }
 
@@ -141,237 +125,13 @@ public class PermissionListWidget extends CustomListWidget<PermissionSetting, Pe
         lastFocus.changeFocus(true);
     }
 
-    public static class PermissionListEntry extends CustomListEntry {
 
-        public PlayerTrustData parentData;
-        public Element matchingElement;
-        
-        public ArrayList<Text> tooltipText = new ArrayList<Text>();
+    public void setPermissionValue(PermissionSetting newSetting){
+        TrustContainer tc = getCurrentContainer();
 
-        public PermissionListEntry(PermissionSetting obj, CustomListWidget list) {
-            super(obj, list);
-        }
-    }
+        if(tc == null)
+            return;
 
-    public static class PermissionStringEntry extends PermissionListEntry {
-
-        public TextFieldWidget widget;
-        public ArrayList<Consumer<String>> changedListeners = new ArrayList<>();
-
-        public PermissionStringEntry(PermissionStringSetting obj, CustomListWidget list) {
-            super(obj, list);
-            matchingElement = widget = new TextFieldWidget(MinecraftClient.getInstance().textRenderer, 50, 0, list.getWidth() - 60, 14, new LiteralText("Test"));
-            widget.setChangedListener((str) -> {
-                PermissionStringSetting val = ((PermissionStringSetting) getEntryObject());
-                val.value = str;
-            });
-        }
-
-        @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
-            super.render(matrices, index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
-            widget.x = x + (rowWidth / 2);
-            widget.y = y + 3;
-            widget.setWidth((rowWidth / 2) - 2);
-            widget.render(matrices, mouseX, mouseY, delta);
-        }
-
-        @Override
-        public String getIdentifier() {
-            return ((PermissionStringSetting) getEntryObject()).name;
-        }
-
-        @Override
-        public Text getDisplayText() {
-            PermissionStringSetting val = ((PermissionStringSetting) getEntryObject());
-            return val.displayText;
-        }
-
-        @Override
-        public boolean mouseClicked(double v, double v1, int i) {
-            super.mouseClicked(v, v1, i);
-            return true;
-        }
-
-        @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            if (keyCode == GLFW.GLFW_KEY_ENTER) {
-                PermissionStringSetting val = ((PermissionStringSetting) getEntryObject());
-
-                for (Consumer<String> changedListener : changedListeners) {
-                    if(changedListener != null)
-                        changedListener.accept(val.value);
-                }
-            }
-            return widget.keyPressed(keyCode, scanCode, modifiers);
-        }
-
-        @Override
-        public boolean charTyped(char chr, int modifiers) {
-            return widget.charTyped(chr, modifiers);
-        }
-
-        @Override
-        public boolean changeFocus(boolean lookForwards) {
-            return widget.changeFocus(lookForwards);
-        }
-    }
-
-    public static class PermissionSliderEntry extends PermissionListEntry {
-
-        public CustomSliderWidget widget;
-
-        public PermissionSliderEntry(PermissionFloatSetting obj, CustomListWidget list) {
-            super(obj, list);
-            matchingElement = widget = new CustomSliderWidget(0, 0, 0, 20, new LiteralText("0.00"), 0) {
-                @Override
-                public void updateMessage() {
-                    PermissionFloatSetting val = ((PermissionFloatSetting) getEntryObject());
-
-                    if (val.allowInfinity && value > 0.999) {
-                        setMessage(Text.of("INFINITY"));
-                        return;
-                    }
-
-                    if (val.integer) {
-                        setMessage(Text.of(String.format("%d", (int) getRealValue())));
-                    } else {
-                        setMessage(Text.of(String.format("%.2f", getRealValue())));
-                    }
-                }
-
-                @Override
-                public void applyValue() {
-                    PermissionFloatSetting val = ((PermissionFloatSetting) getEntryObject());
-
-                    if (val.allowInfinity && value > 0.999) {
-                        val.value = Float.MAX_VALUE;
-                    } else {
-                        val.value = (float) getRealValue();
-                    }
-                }
-
-                public double getRealValue() {
-                    PermissionFloatSetting val = ((PermissionFloatSetting) getEntryObject());
-
-                    if (val.integer)
-                        return MathHelper.floor(MathHelper.lerp(value, val.min, val.max)) * val.multiplier;
-                    return MathHelper.lerp(value, val.min, val.max) * val.multiplier;
-                }
-            };
-        }
-
-        @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
-            super.render(matrices, index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
-            widget.x = x + (rowWidth / 2);
-            widget.y = y;
-            widget.setWidth(rowWidth / 2);
-            widget.render(matrices, mouseX, mouseY, delta);
-        }
-
-        @Override
-        public String getIdentifier() {
-            return ((PermissionFloatSetting) getEntryObject()).name;
-        }
-
-        @Override
-        public Text getDisplayText() {
-            PermissionFloatSetting val = ((PermissionFloatSetting) getEntryObject());
-            return val.displayText;
-        }
-
-        @Override
-        public boolean mouseClicked(double v, double v1, int i) {
-            super.mouseClicked(v, v1, i);
-            widget.mouseClicked(v, v1, i);
-            return true;
-        }
-
-        @Override
-        public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-            return widget.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-        }
-
-        @Override
-        public boolean mouseReleased(double mouseX, double mouseY, int button) {
-            return widget.mouseReleased(mouseX, mouseY, button);
-        }
-
-        @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            return widget.keyPressed(keyCode, scanCode, modifiers);
-        }
-
-        @Override
-        public boolean charTyped(char chr, int modifiers) {
-            return widget.charTyped(chr, modifiers);
-        }
-
-        @Override
-        public boolean changeFocus(boolean lookForwards) {
-            return widget.changeFocus(lookForwards);
-        }
-    }
-
-    public static class PermissionToggleEntry extends PermissionListEntry {
-
-        public ButtonWidget widget;
-
-        public PermissionToggleEntry(PermissionBooleanSetting obj, CustomListWidget list) {
-            super(obj, list);
-            matchingElement = widget = new ButtonWidget(0, 0, 0, 20, getDisplayText(), (ctx) -> {
-                PermissionBooleanSetting val = ((PermissionBooleanSetting) getEntryObject());
-                val.value = !val.value;
-            });
-        }
-
-        @Override
-        public void render(MatrixStack matrices, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
-            super.render(matrices, index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
-
-            PermissionBooleanSetting val = ((PermissionBooleanSetting) getEntryObject());
-
-            widget.x = x + (rowWidth / 2);
-            widget.y = y;
-            widget.setWidth(rowWidth / 2);
-
-            widget.setMessage(new LiteralText(val.value ? "ON" : "OFF"));
-
-            widget.render(matrices, mouseX, mouseY, delta);
-        }
-
-        @Override
-        public String getIdentifier() {
-            return ((PermissionBooleanSetting) getEntryObject()).name;
-        }
-
-        @Override
-        public Text getDisplayText() {
-            PermissionBooleanSetting val = ((PermissionBooleanSetting) getEntryObject());
-            return new LiteralText(val.name);
-        }
-
-        @Override
-        public boolean mouseClicked(double v, double v1, int i) {
-            super.mouseClicked(v, v1, i);
-            widget.mouseClicked(v, v1, i);
-            return true;
-        }
-
-        @Override
-        public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-            return widget.keyPressed(keyCode, scanCode, modifiers);
-        }
-
-        @Override
-        public boolean charTyped(char chr, int modifiers) {
-            return widget.charTyped(chr, modifiers);
-        }
-
-        @Override
-        public boolean changeFocus(boolean lookForwards) {
-            return widget.changeFocus(lookForwards);
-        }
+        tc.setSetting(newSetting.getCopy());
     }
 }

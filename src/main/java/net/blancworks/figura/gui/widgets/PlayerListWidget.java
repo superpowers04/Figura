@@ -1,8 +1,8 @@
 package net.blancworks.figura.gui.widgets;
 
-import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraTrustScreen;
-import net.blancworks.figura.trust.PlayerTrustData;
+import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.trust.TrustPreset;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -12,7 +12,9 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
+import net.minecraft.util.Identifier;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,47 +29,52 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
     protected void doFiltering(String searchTerm) {
         super.doFiltering(searchTerm);
 
-        HashMap<String, ArrayList<PlayerListEntry>> sortedEntries = new HashMap<String, ArrayList<PlayerListEntry>>();
+        HashMap<Identifier, ArrayList<PlayerListEntry>> sortedEntries = new HashMap<Identifier, ArrayList<PlayerListEntry>>();
+        ArrayList<Identifier> sortedEntriesOrdered = new ArrayList<Identifier>();
 
-        for (String preset : PlayerTrustData.defaultPresets) {
+        for (Identifier preset : PlayerTrustManager.defaultGroups) {
             sortedEntries.put(preset, new ArrayList<>());
+            sortedEntriesOrdered.add(preset);
         }
-        
+
+        //Foreach player
         for (PlayerListEntry listEntry : client.getNetworkHandler().getPlayerList()) {
             if (listEntry.getProfile().getName().contains(searchTerm)) {
 
-                PlayerTrustData trustData = PlayerDataManager.getTrustDataForPlayer(listEntry.getProfile().getId());
-                String groupName = trustData.getPermissionString("preset");
+                //Get trust container for that player
+                TrustContainer container = PlayerTrustManager.getContainer(new Identifier("players", listEntry.getProfile().getId().toString()));
+                Identifier groupName = container.getParentIdentifier();
 
+                //Create sorting group if need be
                 if (!sortedEntries.containsKey(groupName)) {
                     sortedEntries.put(groupName, new ArrayList<PlayerListEntry>());
+                    sortedEntriesOrdered.add(groupName);
                 }
 
+                //Add to sorting group
                 ArrayList<PlayerListEntry> list = sortedEntries.get(groupName);
                 list.add(listEntry);
             }
         }
-        
-        for (Map.Entry<String, ArrayList<PlayerListEntry>> stringArrayListEntry : sortedEntries.entrySet()) {
 
-            String key = stringArrayListEntry.getKey();
-            ArrayList<PlayerListEntry> list = stringArrayListEntry.getValue();
+        //For all the sorted entries
+        for (Identifier id : sortedEntriesOrdered) {
+            TrustContainer tc = PlayerTrustManager.getContainer(id);
+            ArrayList<PlayerListEntry> list = sortedEntries.get(id);
 
-            TrustPreset preset = PlayerTrustData.allPresets.get(key);
-            
-            if(preset.displayList) {
-                addEntry(new GroupListWidgetEntry(key, this) {{
-                    identifier = key;
-                    displayText = new LiteralText(key).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+            if(tc.displayChildren) {
+                addEntry(new GroupListWidgetEntry(id, this) {{
+                    identifier = id.toString();
+                    displayText = new LiteralText(id.getPath()).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
                 }});
 
                 for (PlayerListEntry playerListEntry : list) {
                     addEntry(new PlayerListWidgetEntry(playerListEntry, this));
                 }
             } else {
-                addEntry(new GroupListWidgetEntry(key, this) {{
-                    identifier = key;
-                    displayText = new LiteralText(key).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
+                addEntry(new GroupListWidgetEntry(id, this) {{
+                    identifier = id.toString();
+                    displayText = new LiteralText(id.getPath()).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
                 }});
             }
         }
@@ -79,9 +86,9 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
         if(entry instanceof GroupListWidgetEntry){
             if(state.selected == entry.entryValue){
-                TrustPreset preset = PlayerTrustData.allPresets.get(state.selected.toString());
-                
-                preset.displayList = !preset.displayList;
+                TrustContainer tc = PlayerTrustManager.getContainer((Identifier) state.selected);
+
+                tc.displayChildren = !tc.displayChildren;
                 
                 reloadFilters();
                 return;
