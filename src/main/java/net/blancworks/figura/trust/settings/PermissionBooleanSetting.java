@@ -46,7 +46,7 @@ public class PermissionBooleanSetting extends PermissionSetting {
     @Override
     public boolean isDifferent(PermissionSetting other) {
         if (other instanceof PermissionBooleanSetting && ((PermissionBooleanSetting) other).value == value)
-            return true;
-        return false;
+            return false;
+        return true;
     }
 }

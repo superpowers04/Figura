@@ -41,8 +41,10 @@ public class TrustContainer {
 
         TrustContainer parent = PlayerTrustManager.getContainer(parentIdentifier);
 
-        if(parent != null && parent != this)
-            return parent.getSetting(id).getCopy();
+        if(parent != null && parent != this) {
+            PermissionSetting ps = parent.getSetting(id);
+            return ps.getCopy();
+        }
 
         return null;
     }

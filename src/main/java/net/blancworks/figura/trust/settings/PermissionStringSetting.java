@@ -52,7 +52,7 @@ public class PermissionStringSetting extends PermissionSetting {
     @Override
     public boolean isDifferent(PermissionSetting other) {
         if(other instanceof PermissionStringSetting && ((PermissionStringSetting) other).value.equals(value))
-            return true;
-        return false;
+            return false;
+        return true;
     }
 }

@@ -63,8 +63,8 @@ public class PermissionFloatSetting extends PermissionSetting {
     @Override
     public boolean isDifferent(PermissionSetting other) {
         if (other instanceof PermissionFloatSetting && ((PermissionFloatSetting) other).value == value)
-            return true;
-        return false;
+            return false;
+        return true;
     }
 
     public void setFromSlider(double value) {
@@ -82,6 +82,10 @@ public class PermissionFloatSetting extends PermissionSetting {
 
         //Finally, clamp value.
         this.value = (float) MathHelper.clamp(this.value, min, max);
+    }
+    
+    public float getSliderValue(){
+        return (float) MathHelper.getLerpProgress(value, min, max);
     }
 
     public Text getValueText() {

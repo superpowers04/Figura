@@ -21,12 +21,7 @@ public class PlayerTrustManager {
     public static ArrayList<Identifier> allGroups = new ArrayList<Identifier>();
     public static ArrayList<Identifier> defaultGroups = new ArrayList<Identifier>();
     public static HashMap<Identifier, PermissionSetting> permissionSettings = new HashMap<>();
-    public static ArrayList<Identifier> permissionDisplayOrder = new ArrayList<Identifier>() {{
-        add(maxInitID);
-        add(maxTickID);
-        add(maxRenderID);
-        add(maxComplexityID);
-    }};
+    public static ArrayList<Identifier> permissionDisplayOrder = new ArrayList<Identifier>();
 
     //Loads all the default groups from the json config file.
     public static void init() {
@@ -35,12 +30,40 @@ public class PlayerTrustManager {
     }
 
     public static void registerPermissions() {
+        registerPermissionSetting(new PermissionFloatSetting(maxInitID) {{
+            min = 0;
+            max = 1024 * 11;
+            value = 1024 * 10;
+            integer = true;
+            stepSize = 256;
+            isSlider = true;
+        }});
+
         registerPermissionSetting(new PermissionFloatSetting(maxTickID) {{
             min = 0;
-            max = 1024 * 10;
+            max = 1024 * 11;
             value = 1024 * 5;
             integer = true;
             stepSize = 256;
+            isSlider = true;
+        }});
+
+        registerPermissionSetting(new PermissionFloatSetting(maxRenderID) {{
+            min = 0;
+            max = 1024 * 11;
+            value = 1024 * 2;
+            integer = true;
+            stepSize = 256;
+            isSlider = true;
+        }});
+
+        registerPermissionSetting(new PermissionFloatSetting(maxComplexityID) {{
+            min = 0;
+            max = 64 * 257;
+            value = 64 * 256;
+            integer = true;
+            stepSize = 32;
+            isSlider = true;
         }});
     }
 

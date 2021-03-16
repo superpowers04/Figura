@@ -122,7 +122,8 @@ public class PermissionListWidget extends CustomListWidget<PermissionSetting, Pe
             lastFocus.changeFocus(true);
 
         lastFocus = entry.matchingElement;
-        lastFocus.changeFocus(true);
+        if(lastFocus != null)
+            lastFocus.changeFocus(true);
     }
 
 
@@ -133,5 +134,17 @@ public class PermissionListWidget extends CustomListWidget<PermissionSetting, Pe
             return;
 
         tc.setSetting(newSetting.getCopy());
+    }
+    
+    public boolean isDifferent(PermissionSetting setting){
+        TrustContainer tc = getCurrentContainer();
+
+        if(tc == null)
+            return false;
+        
+        if(tc.getParentIdentifier() == null)
+            return false;
+        
+        return tc.permissionSet.containsKey(setting.id);
     }
 }

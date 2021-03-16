@@ -6,6 +6,8 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.gui.widgets.PlayerListWidget;
+import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.trust.settings.PermissionStringSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
@@ -18,6 +20,7 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.HashSet;
@@ -110,10 +113,10 @@ public class FiguraTrustScreen extends Screen {
             PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
 
             if (entry != null) {
-                PlayerData data = PlayerDataManager.getDataForPlayer(entry.getProfile().getId());
+                TrustContainer tc = PlayerTrustManager.getContainer(new Identifier("players", entry.getProfile().getId().toString()));
 
-
-
+                tc.reset();
+                
                 permissionList.rebuild();
             }
         });
@@ -280,7 +283,7 @@ public class FiguraTrustScreen extends Screen {
         if(tickCount > 20){
             tickCount = 0;
             playerList.reloadFilters();
-            permissionList.rebuild();
+            //permissionList.rebuild();
         }
     }
 

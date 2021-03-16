@@ -1,0 +1,7 @@
+{
+  "gui.figura.untrusted": "Untrusted",
+  "gui.figura.maxinitinstructions": "Max Init Instructions",
+  "gui.figura.maxtickinstructions": "Max Tick Instructions",
+  "gui.figura.maxrenderinstructions": "Max Render Instructions",
+  "gui.figura.maxcomplexity": "Max Complexity"
+}

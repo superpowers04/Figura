@@ -66,35 +66,20 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                     mpa.setAdditionalRot(new Vector3f());
                 }
 
+
+                resetModelPartAdditionalValues(head);
+                resetModelPartAdditionalValues(helmet);
+                resetModelPartAdditionalValues(torso);
+                resetModelPartAdditionalValues(jacket);
+                resetModelPartAdditionalValues(rightArm);
+                resetModelPartAdditionalValues(leftArm);
+                resetModelPartAdditionalValues(rightLeg);
+                resetModelPartAdditionalValues(leftLeg);
                 
-                
-                ModelPartAccess mpa = (ModelPartAccess) (Object) head;
-                mpa.setAdditionalPos(new Vector3f());
-                mpa.setAdditionalRot(new Vector3f());
-
-                mpa = (ModelPartAccess) (Object) helmet;
-                mpa.setAdditionalPos(new Vector3f());
-                mpa.setAdditionalRot(new Vector3f());
-
-                mpa = (ModelPartAccess) (Object) torso;
-                mpa.setAdditionalPos(new Vector3f());
-                mpa.setAdditionalRot(new Vector3f());
-
-                mpa = (ModelPartAccess) (Object) rightArm;
-                mpa.setAdditionalPos(new Vector3f());
-                mpa.setAdditionalRot(new Vector3f());
-
-                mpa = (ModelPartAccess) (Object) leftArm;
-                mpa.setAdditionalPos(new Vector3f());
-                mpa.setAdditionalRot(new Vector3f());
-
-                mpa = (ModelPartAccess) (Object) rightLeg;
-                mpa.setAdditionalPos(new Vector3f());
-                mpa.setAdditionalRot(new Vector3f());
-
-                mpa = (ModelPartAccess) (Object) leftLeg;
-                mpa.setAdditionalPos(new Vector3f());
-                mpa.setAdditionalRot(new Vector3f());
+                resetModelPartAdditionalValues(rightSleeve);
+                resetModelPartAdditionalValues(leftSleeve);
+                resetModelPartAdditionalValues(rightPantLeg);
+                resetModelPartAdditionalValues(leftPantLeg);
             }
 
             super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
@@ -151,5 +136,11 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     @Override
     public HashSet<String> getDisabledParts() {
         return disabled_parts;
+    }
+    
+    public void resetModelPartAdditionalValues(ModelPart part){
+        ModelPartAccess mpa = (ModelPartAccess) (Object) part;
+        mpa.setAdditionalPos(new Vector3f());
+        mpa.setAdditionalRot(new Vector3f());
     }
 }

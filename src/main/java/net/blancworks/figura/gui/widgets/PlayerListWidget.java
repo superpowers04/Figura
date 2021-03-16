@@ -8,10 +8,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
 
 import java.lang.reflect.Array;
@@ -62,10 +59,15 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             TrustContainer tc = PlayerTrustManager.getContainer(id);
             ArrayList<PlayerListEntry> list = sortedEntries.get(id);
 
-            if(tc.displayChildren) {
+            if (tc.displayChildren) {
                 addEntry(new GroupListWidgetEntry(id, this) {{
                     identifier = id.toString();
-                    displayText = new LiteralText(id.getPath()).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+                    if (PlayerTrustManager.defaultGroups.contains(id)) {
+                        String key = "gui.figura." + id.getPath();
+                        displayText = new TranslatableText(key).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+                    } else {
+                        displayText = new LiteralText(id.getPath()).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+                    }
                 }});
 
                 for (PlayerListEntry playerListEntry : list) {
@@ -74,7 +76,13 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             } else {
                 addEntry(new GroupListWidgetEntry(id, this) {{
                     identifier = id.toString();
-                    displayText = new LiteralText(id.getPath()).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
+
+                    if (PlayerTrustManager.defaultGroups.contains(id)) {
+                        String key = "gui.figura." + id.getPath();
+                        displayText = new TranslatableText(key).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
+                    } else {
+                        displayText = new LiteralText(id.getPath()).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
+                    }
                 }});
             }
         }
@@ -84,22 +92,22 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
     @Override
     public void select(PlayerListWidgetEntry entry) {
 
-        if(entry instanceof GroupListWidgetEntry){
-            if(state.selected == entry.entryValue){
+        if (entry instanceof GroupListWidgetEntry) {
+            if (state.selected == entry.entryValue) {
                 TrustContainer tc = PlayerTrustManager.getContainer((Identifier) state.selected);
 
                 tc.displayChildren = !tc.displayChildren;
-                
+
                 reloadFilters();
                 return;
             }
         }
-        
+
         super.select(entry);
-        
+
         ((FiguraTrustScreen) getParent()).permissionList.rebuild();
     }
-    
+
     public class PlayerListWidgetEntry extends CustomListEntry {
 
         public PlayerListWidgetEntry(Object obj, CustomListWidget list) {
