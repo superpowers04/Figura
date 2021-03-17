@@ -16,7 +16,7 @@ public class PermissionListSliderEntry extends PermissionListEntry {
 
     public PermissionListSliderEntry(PermissionFloatSetting obj, CustomListWidget list) {
         super(obj, list);
-
+        
         matchingElement = widget = new SliderWidget(0, 0, 0, 20, obj.getValueText(), obj.getSliderValue()) {
             @Override
             public void updateMessage() {
@@ -32,6 +32,8 @@ public class PermissionListSliderEntry extends PermissionListEntry {
                 realList.setPermissionValue(obj);
             }
         };
+        if(((PermissionListWidget) list).getCurrentContainer().isLocked)
+            widget.active = false;
     }
 
     @Override
@@ -39,8 +41,8 @@ public class PermissionListSliderEntry extends PermissionListEntry {
         super.render(matrices, index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
         
         matrices.push();
-        widget.setWidth((rowWidth / 2) - 6);
-        widget.x = x + 3 + (rowWidth / 2);
+        widget.setWidth((rowWidth / 2) - 2);
+        widget.x = x + 2 + (rowWidth / 2);
         widget.y = y;
         widget.render(matrices, mouseX, mouseY, delta);
         matrices.pop();
@@ -50,14 +52,14 @@ public class PermissionListSliderEntry extends PermissionListEntry {
     public Text getDisplayText() {
         PermissionListWidget realList = (PermissionListWidget) list;
 
-        if(realList.isDifferent(((PermissionFloatSetting)entryValue)))
-            return new TranslatableText("gui.figura." + ((PermissionFloatSetting)entryValue).id.getPath()).append("*").setStyle(Style.EMPTY.withBold(true).withUnderline(true));
+        if(realList.isDifferent(getEntrySetting()))
+            return new TranslatableText("gui.figura." + getEntrySetting().id.getPath()).append("*").setStyle(Style.EMPTY.withBold(true).withUnderline(true));
         
-        return new TranslatableText("gui.figura." + ((PermissionFloatSetting)entryValue).id.getPath());
+        return new TranslatableText("gui.figura." + getEntrySetting().id.getPath());
     }
 
     @Override
     public String getIdentifier() {
-        return ((PermissionFloatSetting)entryValue).id.toString();
+        return getEntrySetting().id.toString();
     }
 }

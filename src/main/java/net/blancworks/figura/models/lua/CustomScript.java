@@ -5,7 +5,11 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.models.lua.representations.CustomModelRepresentation;
 import net.blancworks.figura.models.lua.representations.PlayerRepresentation;
 import net.blancworks.figura.models.lua.representations.VanillaModelRepresentation;
+import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 import org.luaj.vm2.*;
@@ -78,7 +82,7 @@ public class CustomScript {
 
         curr_task = CompletableFuture.runAsync(
                 () -> {
-                    setInstructionLimit(999);
+                    setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
                     Varargs result = scriptThread.resume(LuaValue.NIL);
                     curr_task = null;
                 },
@@ -91,6 +95,15 @@ public class CustomScript {
             return;
 
         runFunctionAsync(name, max_lua_instructions);
+    }
+    
+    public int getTrustInstructionLimit(Identifier settingID){
+        Identifier playerID = new Identifier("players", playerData.playerId.toString());
+
+        TrustContainer tc = PlayerTrustManager.getContainer(playerID);
+        PermissionFloatSetting setting = (PermissionFloatSetting) tc.getSetting(settingID);
+        
+        return (int)setting.value;
     }
     
     public void runFunctionImmediate(String name, int max_lua_instructions) {

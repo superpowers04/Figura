@@ -4,6 +4,7 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.lua.CustomScript;
 import net.blancworks.figura.network.FiguraNetworkManager;
+import net.blancworks.figura.trust.PlayerTrustManager;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -183,7 +184,7 @@ public class PlayerData {
         
         if (script != null) {
             try {
-                script.runFunction("tick", (int) 999);
+                script.runFunction("tick", script.getTrustInstructionLimit(PlayerTrustManager.maxTickID));
             } catch (Exception e){
                 e.printStackTrace();
             }

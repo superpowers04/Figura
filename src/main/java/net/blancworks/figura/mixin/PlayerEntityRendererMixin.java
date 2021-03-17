@@ -4,6 +4,9 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
@@ -14,6 +17,7 @@ import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaNumber;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -36,11 +40,13 @@ public class PlayerEntityRendererMixin {
         PlayerEntityModel model = realRenderer.getModel();
 
         if(playerData.script != null) {
-            playerData.script.runFunctionImmediate("render", (int)999, LuaNumber.valueOf(FiguraMod.deltaTime));
+            playerData.script.runFunctionImmediate("render", playerData.script.getTrustInstructionLimit(PlayerTrustManager.maxRenderID), LuaNumber.valueOf(FiguraMod.deltaTime));
         }
 
-        if (playerData != null && playerData.script != null && playerData.script.vanillaModelRepresentation != null) {
-            playerData.script.vanillaModelRepresentation.applyModelTransforms(model);
+        TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", playerData.playerId.toString()));
+
+        if (playerData != null && playerData.script != null && playerData.script.vanillaModelRepresentation != null && ((PermissionBooleanSetting)trustData.getSetting(PlayerTrustManager.allowVanillaModID)).value) {
+                playerData.script.vanillaModelRepresentation.applyModelTransforms(model);
         } else {
             ModelPartAccess mpa = (ModelPartAccess) (Object) model.rightArm;
             mpa.setAdditionalPos(new Vector3f());

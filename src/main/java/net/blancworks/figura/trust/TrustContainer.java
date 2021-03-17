@@ -18,9 +18,11 @@ public class TrustContainer {
     //The set of permissions contained/modified by this trust container.
     public HashMap<Identifier, PermissionSetting> permissionSet = new HashMap<Identifier, PermissionSetting>();
 
-    //Used for UI
+    //--UI Related--
+    public boolean isHidden = false;
     public boolean displayChildren = true;
-
+    public boolean isLocked = false;
+    
 
     public TrustContainer(Identifier id, Text nameText) {
         this(id, nameText, null);
@@ -64,14 +66,28 @@ public class TrustContainer {
     }
 
     public void setSetting(PermissionSetting setting){
+        if(isLocked)
+            return;
+        
         PermissionSetting currSetting = getSetting(setting.id);
 
-        if(currSetting.isDifferent(setting))
+        if(currSetting != null && currSetting.isDifferent(setting))
             permissionSet.put(setting.id, setting);
     }
 
-    public void reset(){
+    public void resetAll(){
+        if(isLocked)
+            return;
+        
         permissionSet.clear();
     }
 
+    public void reset(Identifier id){
+        if(isLocked)
+            return;
+        
+        if(permissionSet.containsKey(id))
+            permissionSet.remove(id);
+    }
+    
 }

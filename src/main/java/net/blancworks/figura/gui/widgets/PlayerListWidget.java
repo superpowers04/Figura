@@ -1,5 +1,6 @@
 package net.blancworks.figura.gui.widgets;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.gui.FiguraTrustScreen;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -7,7 +8,9 @@ import net.blancworks.figura.trust.TrustPreset;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
 
@@ -18,6 +21,8 @@ import java.util.Map;
 
 public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerListWidget.PlayerListWidgetEntry> {
 
+    public static final Identifier lockTextureID = new Identifier("figura", "gui/menu/lock.png");
+
     public PlayerListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
     }
@@ -25,6 +30,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
     @Override
     protected void doFiltering(String searchTerm) {
         super.doFiltering(searchTerm);
+        FiguraTrustScreen realScreen = (FiguraTrustScreen) getParent();
 
         HashMap<Identifier, ArrayList<PlayerListEntry>> sortedEntries = new HashMap<Identifier, ArrayList<PlayerListEntry>>();
         ArrayList<Identifier> sortedEntriesOrdered = new ArrayList<Identifier>();
@@ -36,7 +42,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
         //Foreach player
         for (PlayerListEntry listEntry : client.getNetworkHandler().getPlayerList()) {
-            if (listEntry.getProfile().getName().contains(searchTerm)) {
+            if (listEntry.getProfile().getName().contains(searchTerm) && listEntry.getProfile().getId() != realScreen.draggedId) {
 
                 //Get trust container for that player
                 TrustContainer container = PlayerTrustManager.getContainer(new Identifier("players", listEntry.getProfile().getId().toString()));
@@ -57,6 +63,9 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         //For all the sorted entries
         for (Identifier id : sortedEntriesOrdered) {
             TrustContainer tc = PlayerTrustManager.getContainer(id);
+            
+            if(tc.isHidden)
+                continue;
             ArrayList<PlayerListEntry> list = sortedEntries.get(id);
 
             if (tc.displayChildren) {
@@ -110,8 +119,53 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
     public class PlayerListWidgetEntry extends CustomListEntry {
 
+        public ToggleButtonWidget toggleButton;
+
         public PlayerListWidgetEntry(Object obj, CustomListWidget list) {
             super(obj, list);
+
+            Identifier id;
+
+            if (obj instanceof PlayerListEntry)
+                id = new Identifier("players", ((PlayerListEntry) obj).getProfile().getId().toString());
+            else 
+                id = (Identifier) obj;
+
+            TrustContainer tc = PlayerTrustManager.getContainer(id);
+
+            toggleButton = new ToggleButtonWidget(0, 0, 16, 16, !tc.isLocked) {
+                @Override
+                public void onClick(double mouseX, double mouseY) {
+                    tc.isLocked = !tc.isLocked;
+                    toggled = !tc.isLocked;
+
+                    FiguraTrustScreen trustScreen = (FiguraTrustScreen) list.getParent();
+                    trustScreen.permissionList.rebuild();
+                }
+
+                @Override
+                public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
+                    MinecraftClient minecraftClient = MinecraftClient.getInstance();
+                    minecraftClient.getTextureManager().bindTexture(this.texture);
+                    RenderSystem.disableDepthTest();
+                    int i = this.u;
+                    int j = this.v;
+                    if (this.toggled) {
+                        i += this.pressedUOffset;
+                    }
+
+                    if (this.isHovered()) {
+                        j += this.hoverVOffset;
+                    }
+
+                    matrices.push();
+                    this.drawTexture(matrices, this.x, this.y, i, j, this.width, this.height, 32, 32);
+                    matrices.pop();
+                    RenderSystem.enableDepthTest();
+                }
+            };
+
+            toggleButton.setTextureUV(0, 0, 16, 16, lockTextureID);
         }
 
         @Override
@@ -125,10 +179,31 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             PlayerListEntry entry = (PlayerListEntry) getEntryObject();
             return new LiteralText("  " + entry.getProfile().getName());
         }
+
+        @Override
+        public void mouseMoved(double mouseX, double mouseY) {
+            toggleButton.mouseMoved(mouseX, mouseY);
+            super.mouseMoved(mouseX, mouseY);
+        }
+
+        @Override
+        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+            if (toggleButton.isMouseOver(mouseX, mouseY))
+                return toggleButton.mouseClicked(mouseX, mouseY, button);
+            return super.mouseClicked(mouseX, mouseY, button);
+        }
+
+        @Override
+        public void render(MatrixStack matrices, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
+            super.render(matrices, index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
+
+            toggleButton.x = (x + rowWidth) - 16;
+            toggleButton.y = y;
+            toggleButton.render(matrices, mouseX, mouseY, delta);
+        }
     }
 
     public class GroupListWidgetEntry extends PlayerListWidgetEntry {
-
         public String identifier;
         public Text displayText;
 

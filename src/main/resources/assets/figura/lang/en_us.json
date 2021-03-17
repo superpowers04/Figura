@@ -1,7 +1,12 @@
 {
+  "gui.figura.blocked": "Blocked",
   "gui.figura.untrusted": "Untrusted",
+  "gui.figura.trusted": "Trusted",
+  "gui.figura.friend": "Friend",
+
   "gui.figura.maxinitinstructions": "Max Init Instructions",
   "gui.figura.maxtickinstructions": "Max Tick Instructions",
   "gui.figura.maxrenderinstructions": "Max Render Instructions",
-  "gui.figura.maxcomplexity": "Max Complexity"
+  "gui.figura.maxcomplexity": "Max Complexity",
+  "gui.figura.allowvanillaedit" : "Vanilla Avatar Changes"
 }

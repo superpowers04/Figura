@@ -11,6 +11,7 @@ import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec2f;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -240,6 +241,16 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
                 index >= 0 &&
                 int_5 >= 0 &&
                 index < this.getEntryCount()) ? this.children().get(index) : null;
+    }
+    
+    public Vec2f getOffsetFromNearestEntry(double x, double y){
+        int correctedY = MathHelper.floor(y - (double) this.top) - this.headerHeight + (int) this.getScrollAmount() - 4;
+        int index = correctedY / this.itemHeight;
+        
+        float entryY = (float) (index * (this.itemHeight) + this.top + this.headerHeight + this.getScrollAmount() + 4);
+        float entryX = this.getRowLeft();
+        
+        return new Vec2f((float)x - entryX, (float)y - entryY);
     }
 
     @Override

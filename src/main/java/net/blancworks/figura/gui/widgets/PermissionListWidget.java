@@ -61,7 +61,7 @@ public class PermissionListWidget extends CustomListWidget<PermissionSetting, Pe
             buildForTrustContainer(tc);
     }
 
-    private TrustContainer getCurrentContainer(){
+    public TrustContainer getCurrentContainer(){
         FiguraTrustScreen trustScreen = (FiguraTrustScreen) getParent();
 
         if(trustScreen.playerListState.selected instanceof Identifier){

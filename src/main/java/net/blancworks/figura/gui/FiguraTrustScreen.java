@@ -8,8 +8,10 @@ import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.gui.widgets.PlayerListWidget;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionStringSetting;
+import net.blancworks.figura.trust.settings.PermissionFloatSetting;
+import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -22,10 +24,13 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
+import org.lwjgl.glfw.GLFW;
 
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 public class FiguraTrustScreen extends Screen {
 
@@ -50,11 +55,17 @@ public class FiguraTrustScreen extends Screen {
     public CustomListWidgetState playerListState = new CustomListWidgetState();
     public CustomListWidgetState permissionListState = new CustomListWidgetState();
 
-    public ButtonWidget resetPermissionsButton;
+    public ButtonWidget resetPermissionButton;
+    public ButtonWidget resetAllPermissionsButton;
+
     public ButtonWidget clearCacheButton;
+
+    public double pressStartX, pressStartY;
+    public UUID draggedId;
 
 
     public boolean shiftPressed = false;
+    public boolean altPressed = false;
 
     protected FiguraTrustScreen(Screen parentScreen) {
         super(new LiteralText("Figura Trust Menu"));
@@ -75,15 +86,15 @@ public class FiguraTrustScreen extends Screen {
         searchBoxX = 7;
         this.searchBox = new TextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("modmenu.search"));
         this.searchBox.setChangedListener((string_1) -> this.playerList.filter(string_1, false));
-        this.playerList = new PlayerListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 14, this.searchBox, this.playerList, this, playerListState);
+        this.playerList = new PlayerListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, this.playerList, this, playerListState);
         this.playerList.setLeftPos(5);
         playerList.reloadFilters();
 
         this.permissionList = new PermissionListWidget(
                 this.client,
                 this.width - rightPaneX - 5, this.height,
-                paneY + 19, this.height - 36
-                , 24,
+                paneY + 19, this.height - 36,
+                24,
                 null,
                 this.permissionList, this, permissionListState
         );
@@ -101,7 +112,7 @@ public class FiguraTrustScreen extends Screen {
             PlayerDataManager.clearCache();
         }));
 
-        this.addButton(new ButtonWidget(this.width - 100 - 5, 15, 100, 20, new LiteralText("Reload Avatar"), (btx) -> {
+        this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new LiteralText("Reload Avatar"), (btx) -> {
             PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
 
             if (entry != null) {
@@ -109,19 +120,36 @@ public class FiguraTrustScreen extends Screen {
             }
         }));
 
-        resetPermissionsButton = new ButtonWidget(this.width - 100 - 5, 40, 100, 20, new LiteralText("Reset Permissions"), (btx) -> {
-            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
+        resetPermissionButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new LiteralText("Reset Permission"), (btx) -> {
+            if (playerListState.selected != null) {
+                TrustContainer tc = permissionList.getCurrentContainer();
 
-            if (entry != null) {
-                TrustContainer tc = PlayerTrustManager.getContainer(new Identifier("players", entry.getProfile().getId().toString()));
+                try {
+                    tc.reset(((PermissionSetting) permissionListState.selected).id);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
 
-                tc.reset();
-                
                 permissionList.rebuild();
             }
         });
 
-        this.addButton(resetPermissionsButton);
+        resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new LiteralText("Reset All Permissions"), (btx) -> {
+            if (playerListState.selected != null) {
+                TrustContainer tc = permissionList.getCurrentContainer();
+
+                tc.resetAll();
+
+                permissionList.rebuild();
+            }
+        });
+        resetAllPermissionsButton.visible = false;
+
+        this.addButton(resetPermissionButton);
+        this.addButton(resetAllPermissionsButton);
+
+        playerList.reloadFilters();
+        permissionList.rebuild();
     }
 
     @Override
@@ -146,7 +174,7 @@ public class FiguraTrustScreen extends Screen {
 
             if (PlayerDataManager.hasPlayerData(entry.getProfile().getId())) {
                 PlayerData data = PlayerDataManager.getDataForPlayer(entry.getProfile().getId());
-                //PlayerTrustData trustData = PlayerDataManager.getTrustDataForPlayer(entry.getProfile().getId());
+                TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", entry.getProfile().getId().toString()));
 
                 if (data.model != null) {
                     int currX = paneWidth + 13;
@@ -155,11 +183,11 @@ public class FiguraTrustScreen extends Screen {
                         int complexity = data.model.getRenderComplexity();
                         MutableText complexityText = new LiteralText(String.format("Complexity:%d", complexity)).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
 
-                        /*if (trustData != null) {
-                            if (complexity >= ((PermissionFloatSetting) trustData.getPermission("maxComplexity")).value) {
+                        if (trustData != null) {
+                            if (complexity >= ((PermissionFloatSetting) trustData.getSetting(PlayerTrustManager.maxComplexityID)).value) {
                                 complexityText = complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
                             }
-                        }*/
+                        }
 
                         drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, TextColor.parse("white").getRgb());
                         currX += textRenderer.getWidth(complexityText) + 10;
@@ -175,21 +203,30 @@ public class FiguraTrustScreen extends Screen {
                 }
             }
         } else if (playerListState.selected instanceof String) {
-            
+
         }
 
         super.render(matrices, mouseX, mouseY, delta);
 
 
-        if (!resetPermissionsButton.active) {
-            resetPermissionsButton.active = true;
-            if (resetPermissionsButton.isMouseOver(mouseX, mouseY)) {
-                if(playerListState.selected instanceof PlayerListEntry)
+        if (!resetPermissionButton.active) {
+            resetPermissionButton.active = true;
+
+            if (resetPermissionButton.isMouseOver(mouseX, mouseY)) {
+                if (playerListState.selected instanceof PlayerListEntry) {
                     renderTooltip(matrices, Text.of("Hold LEFT SHIFT and press to reset the permissions for this user."), mouseX, mouseY);
-                else
-                    renderTooltip(matrices, Text.of("Cannot reset a Preset."), mouseX, mouseY);
+                } else if (playerListState.selected instanceof Identifier) {
+                    TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
+
+                    if (tc.isHidden) {
+                        renderTooltip(matrices, Text.of("Cannot reset a Preset."), mouseX, mouseY);
+                    } else {
+                        renderTooltip(matrices, Text.of("Hold LEFT SHIFT and press to reset the permissions for this user."), mouseX, mouseY);
+                    }
+                }
             }
-            resetPermissionsButton.active = false;
+
+            resetPermissionButton.active = false;
         }
 
         if (!clearCacheButton.active) {
@@ -198,6 +235,26 @@ public class FiguraTrustScreen extends Screen {
                 renderTooltip(matrices, Text.of("Hold LEFT SHIFT and press to clear all loaded avatar data."), mouseX, mouseY);
             }
             clearCacheButton.active = false;
+        }
+
+
+        if (draggedId != null) {
+            PlayerListEntry entry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(draggedId);
+            
+            if(entry == null){
+                draggedId = null;
+                return;
+            }
+            
+            TextRenderer tr = MinecraftClient.getInstance().textRenderer;
+            Text displayText = Text.of(entry.getProfile().getName());
+
+            drawTextWithShadow(matrices,
+                    tr,
+                    displayText,
+                    (int)(mouseX - tr.getWidth(displayText) / 2.0f),
+                    (int)(mouseY - tr.fontHeight / 2.0f),
+                    TextColor.parse("white").getRgb());
         }
 
     }
@@ -220,37 +277,24 @@ public class FiguraTrustScreen extends Screen {
         tessellator.draw();
     }
 
-    public String getSearchInput() {
-        return searchBox.getText();
-    }
-
-    private boolean updateFiltersX() {
-        if ((filtersWidth + textRenderer.getWidth(computeModCountText(true)) + 20) >= searchRowWidth && ((filtersWidth + textRenderer.getWidth(computeModCountText(false)) + 20) >= searchRowWidth || (filtersWidth + 150 + 20) >= searchRowWidth)) {
-            filtersX = paneWidth / 2 - filtersWidth / 2;
-            return !filterOptionsShown;
-        } else {
-            filtersX = searchRowWidth - filtersWidth + 1;
-            return true;
-        }
-    }
-
-    private Text computeModCountText(boolean includeLibs) {
-        return new LiteralText("DUMMY");
-    }
-
     @Override
-    public boolean keyPressed(int int_1, int int_2, int int_3) {
-        shiftPressed = int_1 == 340;
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT)
+            shiftPressed = true;
+        if (keyCode == GLFW.GLFW_KEY_LEFT_ALT)
+            altPressed = true;
         if (getFocused() == permissionList) {
-            return permissionList.keyPressed(int_1, int_2, int_3);
+            return permissionList.keyPressed(keyCode, scanCode, modifiers);
         }
-        return super.keyPressed(int_1, int_2, int_3) || this.searchBox.keyPressed(int_1, int_2, int_3);
+        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchBox.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
     public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == 340)
+        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT)
             shiftPressed = false;
+        if (keyCode == GLFW.GLFW_KEY_LEFT_ALT)
+            altPressed = false;
         return super.keyReleased(keyCode, scanCode, modifiers);
     }
 
@@ -262,25 +306,45 @@ public class FiguraTrustScreen extends Screen {
         return this.searchBox.charTyped(char_1, int_1);
     }
 
-    
+
     int tickCount = 0;
+
     @Override
     public void tick() {
 
         tickCount++;
-        
+
         if (getFocused() == permissionList) {
             searchBox.setTextFieldFocused(false);
         } else {
             searchBox.setTextFieldFocused(true);
         }
 
-        resetPermissionsButton.active = shiftPressed && playerListState.selected instanceof PlayerListEntry;
+        if (playerListState.selected instanceof PlayerListEntry) {
+            resetPermissionButton.active = shiftPressed;
+        } else if (playerListState.selected instanceof Identifier) {
+            TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
+
+            if (!tc.isHidden)
+                resetPermissionButton.active = shiftPressed;
+        } else {
+            resetPermissionButton.active = false;
+        }
+
+        if (altPressed) {
+            resetAllPermissionsButton.active = resetPermissionButton.active;
+            resetPermissionButton.visible = false;
+            resetAllPermissionsButton.visible = true;
+        } else {
+            resetAllPermissionsButton.visible = false;
+            resetPermissionButton.visible = true;
+        }
+
         clearCacheButton.active = shiftPressed;
 
         this.searchBox.tick();
-        
-        if(tickCount > 20){
+
+        if (tickCount > 20) {
             tickCount = 0;
             playerList.reloadFilters();
             //permissionList.rebuild();
@@ -289,6 +353,10 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if (button == 0) {
+            pressStartX = mouseX;
+            pressStartY = mouseY;
+        }
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
@@ -305,12 +373,67 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        
+        if(playerList.isMouseOver(mouseX, mouseY) && playerList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
+            return true;
+        
+        if (playerList.isMouseOver(mouseX, mouseY) && playerListState.selected instanceof PlayerListEntry) {
+            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
+
+
+            if (draggedId == null) {
+                if (Math.abs(mouseX - pressStartX) + Math.abs(mouseY - pressStartY) > 2) {
+                    draggedId = entry.getProfile().getId();
+
+                    Vec2f v = playerList.getOffsetFromNearestEntry(mouseX, mouseY);
+
+                    pressStartX = v.x;
+                    pressStartY = v.y;
+
+                    playerList.reloadFilters();
+                }
+            }
+
+            return true;
+        }
+
         if (permissionList.isMouseOver(mouseX, mouseY)) {
             return this.permissionList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
         }
-        if (playerList.isMouseOver(mouseX, mouseY)) {
-            return this.playerList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return false;
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        
+        if(draggedId != null) {
+            if (playerList.isMouseOver(mouseX, mouseY)) {
+                PlayerListWidget.PlayerListWidgetEntry listEntry = (PlayerListWidget.PlayerListWidgetEntry) playerList.getEntryAtPos(mouseX, mouseY);
+                
+                if(listEntry != null) {
+                    Object obj = listEntry.getEntryObject();
+
+                    if (obj instanceof Identifier) {
+                        Identifier playerID = new Identifier("players", draggedId.toString());
+                        TrustContainer tc = PlayerTrustManager.getContainer(playerID);
+
+                        tc.setParent((Identifier) obj);
+                    } else if (obj instanceof PlayerListEntry) {
+                        Identifier playerID = new Identifier("players", draggedId.toString());
+                        TrustContainer tc = PlayerTrustManager.getContainer(playerID);
+                        Identifier droppedID = new Identifier("players", ((PlayerListEntry) obj).getProfile().getId().toString());
+                        TrustContainer droppedTC = PlayerTrustManager.getContainer(droppedID);
+
+                        tc.setParent(droppedTC.getParentIdentifier());
+                    }
+                }
+            }
         }
+        draggedId = null;
+
+        
+        playerList.reloadFilters();
+        permissionList.rebuild();
         return false;
     }
 }

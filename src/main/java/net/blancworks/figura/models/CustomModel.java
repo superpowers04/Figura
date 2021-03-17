@@ -3,12 +3,16 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.MatrixStackAccess;
+import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.luaj.vm2.LuaNumber;
@@ -49,14 +53,18 @@ public class CustomModel {
     }
 
     public int getMaxRenderAmount() {
-        return ((int)999) / 4;
+        Identifier playerID = new Identifier("players", owner.playerId.toString());
+        TrustContainer tc = PlayerTrustManager.getContainer(playerID);
+        PermissionFloatSetting setting = (PermissionFloatSetting) tc.getSetting(PlayerTrustManager.maxComplexityID);
+
+        return (int) setting.value;
     }
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         int left_to_render = getMaxRenderAmount();
 
         if (owner.script != null) {
-            owner.script.runFunctionImmediate("render", (int)999, LuaNumber.valueOf(FiguraMod.deltaTime));
+            owner.script.runFunctionImmediate("render", owner.script.getTrustInstructionLimit(PlayerTrustManager.maxRenderID), LuaNumber.valueOf(FiguraMod.deltaTime));
         }
 
         for (CustomModelPart part : all_parts) {

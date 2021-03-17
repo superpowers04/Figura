@@ -22,6 +22,10 @@ public class PermissionListEntry extends CustomListEntry {
         super(obj, list);
     }
 
+    public PermissionSetting getEntrySetting(){
+        return (PermissionSetting) entryValue;
+    }
+    
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if(matchingElement != null && matchingElement.isMouseOver(mouseX, mouseY))
