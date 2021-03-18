@@ -5,12 +5,17 @@ import com.google.gson.JsonParser;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -48,9 +53,10 @@ public class PlayerDataManager {
                 didInitLocalPlayer = true;
 
                 if (lastLoadedFileName != null) {
-                    localPlayer.vanillaModel = ((PlayerEntityRenderer)MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
+                    localPlayer.vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
                     localPlayer.loadModelFile(lastLoadedFileName);
                     localPlayer.getFileSize();
+                    return localPlayer;
                 }
 
                 getPlayerAvatarFromServer(localPlayer.playerId, localPlayer);
@@ -88,6 +94,50 @@ public class PlayerDataManager {
             URL url = new URL(String.format("%s/api/avatar/%s", FiguraNetworkManager.getServerURL(), id));
 
             CompletableFuture.runAsync(() -> {
+
+                Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
+
+                String[] splitID = id.toString().split("-");
+
+                for (int i = 0; i < splitID.length; i++) {
+                    if (i != splitID.length - 1)
+                        destinationPath = destinationPath.resolve(splitID[i]);
+                }
+
+                Path nbtFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".nbt");
+                Path hashFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".hsh");
+
+                try {
+                    if (Files.exists(nbtFilePath) && Files.exists(hashFilePath)) {
+                        String hash = Files.readAllLines(hashFilePath).get(0);
+                        String serverHash = hash;
+
+                        try {
+                            serverHash = FiguraNetworkManager.getAvatarHash(id).get();
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        
+                        if(serverHash.length() == 0)
+                            serverHash = hash;
+
+                        if (serverHash.equals(hash)) {
+                            FileInputStream fis = new FileInputStream(nbtFilePath.toFile());
+                            DataInputStream dis = new DataInputStream(fis);
+
+                            targetData.loadFromNBT(dis);
+                            targetData.lastHash = hash;
+                            targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
+
+                            serverRequestedPlayers.remove(id);
+
+                            return;
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
                 HttpURLConnection httpURLConnection = null;
 
                 //Object to fill data with
@@ -129,6 +179,12 @@ public class PlayerDataManager {
 
                             targetData.loadFromNBT(receivedDataToStream);
                             targetData.lastHash = FiguraNetworkManager.getAvatarHash(id).get();
+                            targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
+
+
+                            while (targetData.texture.ready == false)
+                                Thread.sleep(50);
+                            saveToCache(targetData, nbtFilePath, hashFilePath);
                         }
                     }
                 } catch (Exception e) {
@@ -144,10 +200,23 @@ public class PlayerDataManager {
         }
     }
 
+    public static void saveToCache(PlayerData data, Path targetPath, Path targetHashPath) {
+        try {
+            CompoundTag targetTag = new CompoundTag();
+            data.toNBT(targetTag);
+
+            Files.createDirectories(targetPath.getParent());
+            NbtIo.writeCompressed(targetTag, new FileOutputStream(targetPath.toFile()));
+            Files.write(targetHashPath, data.lastHash.getBytes(StandardCharsets.UTF_8));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void clearPlayer(UUID id) {
         toClear.add(id);
 
-        if(localPlayer != null) {
+        if (localPlayer != null) {
             if (id == localPlayer.playerId) {
                 localPlayer = null;
                 didInitLocalPlayer = false;

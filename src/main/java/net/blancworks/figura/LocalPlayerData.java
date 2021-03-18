@@ -43,6 +43,9 @@ public class LocalPlayerData extends PlayerData {
     @Override
     public void tick() {
         isLoaded = true;
+        
+        if(loadedName != null)
+            lastHash = "";
         super.tick();
 
         lateLoadTexture();
@@ -50,13 +53,22 @@ public class LocalPlayerData extends PlayerData {
     }
     
 
+    public static Path getContentDirectory(){
+        return FiguraMod.getModContentDirectory().resolve("model_files");
+    }
     
     //Loads a model file at a specific directory.
     public void loadModelFile(String fileName) {
-        Path contentDirectory = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files");
+        Path contentDirectory = getContentDirectory();
         Path jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
         texturePath = contentDirectory.resolve(fileName + ".png");
         Path scriptPath = contentDirectory.resolve(fileName + ".lua");
+        
+        try {
+            Files.createDirectories(contentDirectory);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
 
         //Custom models can exist without scripts, but not without a texture and a json file.
         if (!Files.exists(jsonPath) || !Files.exists(texturePath))
@@ -113,7 +125,7 @@ public class LocalPlayerData extends PlayerData {
     }
 
     public void loadModelFileNBT(String fileName){
-        Path contentDirectory = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files");
+        Path contentDirectory = getContentDirectory();
         Path filePath = contentDirectory.resolve(fileName);
         
         if(!Files.exists(filePath))

@@ -48,8 +48,8 @@ public class FiguraNetworkManager {
     //Checks after 20 minutes, attempt to get a fresh key with our previously valid one.
     //Repeat re-grab for fresh key 10 times, or until server returns unauthorized 
     public static void tickNetwork() {
-        
-        if(lastAuthDate != null) {
+
+        if (lastAuthDate != null) {
             Date now = new Date();
             long diff = now.getTime() - lastAuthDate.getTime();
 
@@ -105,7 +105,7 @@ public class FiguraNetworkManager {
         } catch (Exception e) {
             FiguraMod.LOGGER.log(Level.ERROR, e);
         }
-        
+
         //Auth all done :D
         currentAuthTask = null;
     }
@@ -139,7 +139,8 @@ public class FiguraNetworkManager {
                 () -> {
                     //Don't do anything if we know we have no valid key already.
                     if (!hasAuthKey) {
-                        onFinished.run();
+                        if (onFinished != null)
+                            onFinished.run();
                         return;
                     }
                     try {
@@ -154,13 +155,16 @@ public class FiguraNetworkManager {
                             hasAuthKey = true;
                             lastAuthDate = new Date();
                             figuraSessionKey = result;
+                        } else {
+                            hasAuthKey = false;
                         }
                         connection.disconnect();
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
 
-                    onFinished.run();
+                    if (onFinished != null)
+                        onFinished.run();
                 }, Util.getMainWorkerExecutor()
         );
     }
@@ -194,7 +198,9 @@ public class FiguraNetworkManager {
         try {
             CompletableFuture.runAsync(() -> {
                 HttpURLConnection httpURLConnection = null;
-                
+
+                refreshKeyValidity(null).join();
+
                 //If not authed, auth.
                 if (!hasAuthKey) {
                     CompletableFuture future = authUser();

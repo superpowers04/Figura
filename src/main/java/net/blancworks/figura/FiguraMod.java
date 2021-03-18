@@ -10,6 +10,7 @@ import net.blancworks.figura.network.FiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.loader.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -17,6 +18,7 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchKey;
 
@@ -75,5 +77,15 @@ public class FiguraMod implements ClientModInitializer {
     public static void ClientEndTick(MinecraftClient client) {
         PlayerDataManager.tick();
         FiguraNetworkManager.tickNetwork();
+    }
+    
+    public static Path getModContentDirectory(){
+        Path p = FabricLoader.INSTANCE.getGameDir().resolve("figura");
+        try {
+            Files.createDirectories(p);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+        return p;
     }
 }

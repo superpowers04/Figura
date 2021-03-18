@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.util.Identifier;
 
 public abstract class PermissionSetting<T extends PermissionSetting> {
@@ -19,9 +20,11 @@ public abstract class PermissionSetting<T extends PermissionSetting> {
 
     //Writes to NBT.
     public void toNBT(CompoundTag tag) {
+        
     }
 
     public void fromJson(JsonElement element) {
+        
     }
 
     //Gets a copy of the permission, used for cloning settings from presets.

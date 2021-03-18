@@ -8,15 +8,18 @@ import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
 import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import org.lwjgl.system.CallbackI;
 
-import java.io.FileInputStream;
-import java.io.FileReader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -41,6 +44,8 @@ public class PlayerTrustManager {
     public static void init() {
         registerPermissions();
         loadDefaultGroups();
+        
+        loadFromDisk();
     }
 
     public static void registerPermissions() {
@@ -76,8 +81,8 @@ public class PlayerTrustManager {
 
         registerPermissionSetting(new PermissionFloatSetting(maxComplexityID) {{
             min = 0;
-            max = 32 * 21;
-            value = 32 * 20;
+            max = 32 * 65;
+            value = 32 * 64;
             integer = true;
             stepSize = 32;
             isSlider = true;
@@ -106,7 +111,7 @@ public class PlayerTrustManager {
                 trueBase.isHidden = true;
                 trueBase.isLocked = true;
                 trueBase.displayChildren = false;
-                
+
                 fillOutGroup(trueBase, baseObj);
 
                 for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
@@ -118,21 +123,24 @@ public class PlayerTrustManager {
 
                     //This is the base container, use as the parent of any given default group to allow them to be properly reset
                     TrustContainer baseGroupContainer = new TrustContainer(new Identifier("group", "base" + key), new LiteralText("base" + key));
-                    fillOutGroup(baseGroupContainer, value);
-                    baseGroupContainer.isHidden = true;
-                    baseGroupContainer.isLocked = true;
-                    baseGroupContainer.displayChildren = false;
                     
+                    fillOutGroup(baseGroupContainer, value);
+
+
                     baseGroupContainer.setParent(trueBase.getIdentifier());
 
                     allContainers.put(baseGroupContainer.getIdentifier(), baseGroupContainer);
-                    
+
                     TrustContainer realContainer = new TrustContainer(new Identifier("group", key), new TranslatableText(key));
                     realContainer.setParent(baseGroupContainer.getIdentifier());
                     addGroup(realContainer);
                     realContainer.isLocked = true;
+                    realContainer.isHidden = baseGroupContainer.isHidden;
+
+                    baseGroupContainer.isHidden = true;
+                    baseGroupContainer.isLocked = true;
+                    baseGroupContainer.displayChildren = false;
                     
-                    FiguraMod.LOGGER.debug(value.toString());
                 }
 
             } catch (Exception e) {
@@ -154,12 +162,17 @@ public class PlayerTrustManager {
         for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
 
             try {
-                
+
                 if (entry.getKey().equals("parent")) {
                     tc.setParent(new Identifier("group", entry.getValue().getAsString()));
                     continue;
                 }
                 
+                if(entry.getKey().equals("hidden")){
+                    tc.isHidden = true;
+                    continue;
+                }
+
                 Identifier settingID = new Identifier("setting", entry.getKey().toLowerCase());
                 if (permissionSettings.containsKey(settingID)) {
                     PermissionSetting newSetting = permissionSettings.get(settingID).getCopy();
@@ -182,7 +195,12 @@ public class PlayerTrustManager {
         if (!allContainers.containsKey(id)) {
             TrustContainer newContainer = new TrustContainer(id, Text.of(id.getPath()));
 
-            newContainer.setParent(new Identifier("group", "untrusted"));
+            if (id.equals(new Identifier("players", MinecraftClient.getInstance().player.getUuid().toString()))) {
+                newContainer.setParent(new Identifier("group", "local"));
+                newContainer.isHidden = true;
+            } else {
+                newContainer.setParent(new Identifier("group", "untrusted"));
+            }
             allContainers.put(id, newContainer);
             return newContainer;
         }
@@ -194,10 +212,76 @@ public class PlayerTrustManager {
 
     public static void fromNBT(CompoundTag tag) {
 
+        ListTag list = (ListTag) tag.get("containers");
+
+        for (Tag listTag : list) {
+            CompoundTag ct = (CompoundTag) listTag;
+
+            String idString = ct.getString("id");
+            Identifier id = Identifier.tryParse(idString);
+
+            if (allContainers.containsKey(id)) {
+                TrustContainer targetContainer = allContainers.get(id);
+
+                targetContainer.fromNbt(ct);
+            }
+        }
+
     }
 
     public static void toNBT(CompoundTag tag) {
+        ListTag containerList = new ListTag();
 
+        for (Map.Entry<Identifier, TrustContainer> entry : allContainers.entrySet()) {
+
+            if (entry.getKey().equals(new Identifier("players", MinecraftClient.getInstance().player.getUuid().toString()))) {
+                continue;
+            }
+
+            CompoundTag containerTag = new CompoundTag();
+            entry.getValue().toNbt(containerTag);
+            containerList.add(containerTag);
+        }
+
+        tag.put("containers", containerList);
+    }
+
+
+    public static void saveToDisk() {
+        try {
+            CompoundTag targetTag = new CompoundTag();
+            toNBT(targetTag);
+
+            Path targetPath = net.fabricmc.loader.FabricLoader.INSTANCE.getGameDir().resolve("figura");
+            Files.createDirectories(targetPath);
+            targetPath = targetPath.resolve("trustSettings.nbt");
+
+            if (!Files.exists(targetPath))
+                Files.createFile(targetPath);
+
+            FileOutputStream fs = new FileOutputStream(targetPath.toFile());
+            NbtIo.writeCompressed(targetTag, fs);
+
+            fs.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void loadFromDisk() {
+        try {
+            Path targetPath = net.fabricmc.loader.FabricLoader.INSTANCE.getGameDir().resolve("figura").resolve("trustSettings.nbt");
+
+            if (!Files.exists(targetPath))
+                return;
+
+            FileInputStream fis = new FileInputStream(targetPath.toFile());
+            CompoundTag getTag = NbtIo.readCompressed(fis);
+            fromNBT(getTag);
+            fis.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

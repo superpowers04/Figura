@@ -32,5 +32,13 @@
     "maxComplexity" : 99999,
     "allowVanillaEdit" : true,
     "parent" : "base"
+  },
+  "local": {
+    "maxTickInstructions" : 99999,
+    "maxRenderInstructions": 99999,
+    "maxComplexity" : 99999,
+    "allowVanillaEdit" : true,
+    "parent" : "base",
+    "hidden" : true
   }
 }

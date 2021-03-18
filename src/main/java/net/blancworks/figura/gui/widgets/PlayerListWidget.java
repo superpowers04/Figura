@@ -47,6 +47,9 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
                 //Get trust container for that player
                 TrustContainer container = PlayerTrustManager.getContainer(new Identifier("players", listEntry.getProfile().getId().toString()));
                 Identifier groupName = container.getParentIdentifier();
+                
+                if(container.isHidden)
+                    continue;
 
                 //Create sorting group if need be
                 if (!sortedEntries.containsKey(groupName)) {

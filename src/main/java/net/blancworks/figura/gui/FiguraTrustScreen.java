@@ -26,6 +26,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import org.lwjgl.glfw.GLFW;
+import org.lwjgl.opengl.GL11;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -76,6 +77,8 @@ public class FiguraTrustScreen extends Screen {
     protected void init() {
         super.init();
 
+        PlayerTrustManager.loadFromDisk();
+        
         int width = (this.width / 2) - 10 - 128;
 
         paneY = 48;
@@ -105,6 +108,9 @@ public class FiguraTrustScreen extends Screen {
         this.setInitialFocus(this.searchBox);
 
         this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new LiteralText("Back"), (buttonWidgetx) -> {
+            
+            PlayerTrustManager.saveToDisk();
+            
             this.client.openScreen((Screen) parentScreen);
         }));
 
@@ -305,8 +311,7 @@ public class FiguraTrustScreen extends Screen {
         }
         return this.searchBox.charTyped(char_1, int_1);
     }
-
-
+    
     int tickCount = 0;
 
     @Override
@@ -353,6 +358,9 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        if(draggedId != null)
+            return true;
+        
         if (button == 0) {
             pressStartX = mouseX;
             pressStartY = mouseY;
@@ -362,6 +370,9 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        if(draggedId != null)
+            return true;
+        
         if (permissionList.isMouseOver(mouseX, mouseY)) {
             return this.permissionList.mouseScrolled(mouseX, mouseY, amount);
         }
@@ -373,6 +384,9 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        
+        if(draggedId != null)
+            return true;
         
         if(playerList.isMouseOver(mouseX, mouseY) && playerList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
             return true;

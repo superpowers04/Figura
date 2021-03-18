@@ -10,13 +10,11 @@ import net.minecraft.client.texture.TextureUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Level;
 import org.lwjgl.system.MemoryUtil;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Base64;
@@ -24,6 +22,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class FiguraTexture extends ResourceTexture {
 
+    public byte[] data;
     public Path filePath;
     public Identifier id;
 
@@ -52,10 +51,14 @@ public class FiguraTexture extends ResourceTexture {
     public void load(Path target_path) {
         MinecraftClient.getInstance().execute(() -> {
             try {
-                InputStream stream = new FileInputStream(new File(target_path.toString()));
-
+                InputStream stream = new FileInputStream(target_path.toFile());
                 NativeImage image = NativeImage.read(stream);
+                stream.close();
                 image.writeFile(new File(FabricLoader.getInstance().getGameDir().resolve("OUTPUT_TEXTURE.png").toString()));
+
+                stream = new FileInputStream(target_path.toFile());
+                data = IOUtils.toByteArray(stream);
+                stream.close();
 
                 if (!RenderSystem.isOnRenderThread()) {
                     RenderSystem.recordRenderCall(() -> {
@@ -97,14 +100,13 @@ public class FiguraTexture extends ResourceTexture {
 
     public void toNBT(CompoundTag tag) throws Exception {
 
-        if (filePath == null) {
-            tag.putString("note", "Texture was not loaded from disk, unable to save locally. Identifier is " + id);
+        if (data == null) {
+            tag.putString("note", "Texture has no data, cannot save : " + id);
             return;
         }
 
         try {
-
-            InputStream stream = new FileInputStream(new File(filePath.toString()));
+            InputStream stream = new ByteArrayInputStream(data);
             String result = null;
 
             ByteBuffer byteBuffer = TextureUtil.readAllToByteBuffer(stream);
@@ -128,9 +130,9 @@ public class FiguraTexture extends ResourceTexture {
                     try {
                         Thread.sleep(250);
                         String dataString = tag.getString("img");
-                        byte[] result = Base64.getDecoder().decode(dataString);
-                        ByteBuffer wrapper = MemoryUtil.memAlloc(result.length);
-                        wrapper.put(result);
+                        data = Base64.getDecoder().decode(dataString);
+                        ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
+                        wrapper.put(data);
                         wrapper.rewind();
                         NativeImage image = NativeImage.read(wrapper);
 

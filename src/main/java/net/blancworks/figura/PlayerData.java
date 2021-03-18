@@ -159,7 +159,8 @@ public class PlayerData {
             return;
         }
         
-        if(this.equals(PlayerDataManager.localPlayer) == false) {
+        
+        if(lastHash.length() != 0) {
             //Every 60 seconds
             long diff = new Date().getTime() - lastHashCheckTime.getTime();
             if (diff > 1000 * 1) {
@@ -169,7 +170,7 @@ public class PlayerData {
                     try {
                         String hash = FiguraNetworkManager.getAvatarHash(playerId).get();
 
-                        if (hash.equals(lastHash) == false) {
+                        if (hash.equals(lastHash) == false && hash.length() > 0) {
                             isInvalidated = true;
                         }
                     } catch (Exception e) {

@@ -1,6 +1,7 @@
 package net.blancworks.figura.models.parsers;
 
 import com.google.gson.*;
+import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
@@ -74,7 +75,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             groupPart.name = group.get("name").getAsString();
             
             if(groupPart.name.startsWith("MESH_")){
-                Path meshFilePath = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files").resolve(groupPart.name.substring(5) + ".obj");
+                Path meshFilePath = LocalPlayerData.getContentDirectory().resolve(groupPart.name.substring(5) + ".obj");
 
                 if (Files.exists(meshFilePath)) {
                     groupPart = CustomModelPartMesh.loadFromObj(meshFilePath);
@@ -89,8 +90,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     break;
                 }
             }
-            
-
         }
         if (group.has("visibility")) groupPart.visible = group.get("visibility").getAsBoolean();
         if (group.has("origin")) groupPart.pivot = v3fFromJArray(group.get("origin").getAsJsonArray());

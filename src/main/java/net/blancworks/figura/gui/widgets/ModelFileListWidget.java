@@ -1,5 +1,6 @@
 package net.blancworks.figura.gui.widgets;
 
+import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
@@ -25,7 +26,13 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
     protected void doFiltering(String searchTerm) {
         super.doFiltering(searchTerm);
 
-        File contentDirectory = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files").toFile();
+        File contentDirectory = LocalPlayerData.getContentDirectory().toFile();
+
+        try {
+            Files.createDirectories(contentDirectory.toPath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         ArrayList<String> valid_loads = new ArrayList<String>();
 
@@ -33,8 +40,8 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
 
         for (File file : files) {
             String fileName = FilenameUtils.removeExtension(file.getName());
-            
-            if(!fileName.contains(searchTerm))
+
+            if (!fileName.contains(searchTerm))
                 continue;
 
             if (Files.exists(contentDirectory.toPath().resolve(fileName + ".bbmodel")) && Files.exists(contentDirectory.toPath().resolve(fileName + ".png"))) {
@@ -54,7 +61,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
         super.select(entry);
 
         FiguraGuiScreen parent = (FiguraGuiScreen) getParent();
-        
+
         parent.click_button(entry.getEntryObject().toString());
     }
 
