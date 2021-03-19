@@ -4,6 +4,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.models.lua.representations.*;
+import net.blancworks.figura.models.lua.representations.world.entity.PlayerRepresentation;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
@@ -95,13 +96,13 @@ public class CustomScript {
 
         runFunctionAsync(name, max_lua_instructions);
     }
-    
-    public int getTrustInstructionLimit(Identifier settingID){
+
+    public int getTrustInstructionLimit(Identifier settingID) {
         TrustContainer tc = playerData.getTrustContainer();
-        
+
         return tc.getIntSetting(settingID);
     }
-    
+
     public void runFunctionImmediate(String name, int max_lua_instructions) {
         runFunctionImmediate(name, max_lua_instructions, LuaValue.NIL);
     }
@@ -119,7 +120,7 @@ public class CustomScript {
             FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
-    
+
     public void queueTask(String name, int max_lua_instructions) {
         if (curr_task == null) {
             curr_task = runFunctionAsync(name, max_lua_instructions);
@@ -127,7 +128,7 @@ public class CustomScript {
             queued_tasks.add(name);
         }
     }
-    
+
     public CompletableFuture runFunctionAsync(String name, int max_lua_instructions) {
         return CompletableFuture.runAsync(
                 () -> {
@@ -172,38 +173,39 @@ public class CustomScript {
     }
 
     public void setupInterfaceGlobals() {
-        
+
         //Log! Only for local player.
         scriptGlobals.set("log", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue arg) {
-                if(playerData == PlayerDataManager.localPlayer)
+                if (playerData == PlayerDataManager.localPlayer)
                     FiguraMod.LOGGER.warn(arg.toString());
                 return NIL;
             }
         });
 
-        vanillaModelRepresentation = new VanillaModelRepresentation(this);
-        reps.add(vanillaModelRepresentation);
-        
-        customModelRepresentation = new CustomModelRepresentation(this);
-        reps.add(customModelRepresentation);
+        registerRepresentation(vanillaModelRepresentation = new VanillaModelRepresentation(this));
+        registerRepresentation(customModelRepresentation = new CustomModelRepresentation(this));
+        registerRepresentation(playerRepresentation = new PlayerRepresentation(this));
+        registerRepresentation(particleRepresentation = new ParticleRepresentation(this));
+    }
 
-        playerRepresentation = new PlayerRepresentation(this);
-        reps.add(playerRepresentation);
-
-        particleRepresentation = new ParticleRepresentation(this);
-        reps.add(particleRepresentation);
+    public void registerRepresentation(LuaRepresentation lp) {
+        reps.add(lp);
     }
 
     public void tick() {
-        
-        if(MinecraftClient.getInstance().isPaused()){
+
+        if (MinecraftClient.getInstance().isPaused()) {
             return;
         }
-        
-        runFunction("tick", getTrustInstructionLimit(PlayerTrustManager.maxTickID));
 
+        runFunction("tick", getTrustInstructionLimit(PlayerTrustManager.maxTickID));
+        
+        for (LuaRepresentation rep : reps) {
+            rep.getReferences();
+        }
+        
         for (LuaRepresentation rep : reps) {
             rep.tick();
         }
