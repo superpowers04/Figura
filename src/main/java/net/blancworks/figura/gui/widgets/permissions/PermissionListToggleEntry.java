@@ -4,8 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
-import net.blancworks.figura.trust.settings.PermissionFloatSetting;
-import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;

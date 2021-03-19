@@ -8,7 +8,6 @@ import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.gui.widgets.PlayerListWidget;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -26,7 +25,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.opengl.GL11;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -180,7 +178,7 @@ public class FiguraTrustScreen extends Screen {
 
             if (PlayerDataManager.hasPlayerData(entry.getProfile().getId())) {
                 PlayerData data = PlayerDataManager.getDataForPlayer(entry.getProfile().getId());
-                TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", entry.getProfile().getId().toString()));
+                TrustContainer trustData = data.getTrustContainer();
 
                 if (data.model != null) {
                     int currX = paneWidth + 13;
@@ -190,7 +188,7 @@ public class FiguraTrustScreen extends Screen {
                         MutableText complexityText = new LiteralText(String.format("Complexity:%d", complexity)).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
 
                         if (trustData != null) {
-                            if (complexity >= ((PermissionFloatSetting) trustData.getSetting(PlayerTrustManager.maxComplexityID)).value) {
+                            if (complexity >= trustData.getFloatSetting(PlayerTrustManager.maxComplexityID)) {
                                 complexityText = complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
                             }
                         }

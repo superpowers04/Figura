@@ -2,33 +2,33 @@ package net.blancworks.figura.models.lua;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.models.lua.representations.CustomModelRepresentation;
-import net.blancworks.figura.models.lua.representations.PlayerRepresentation;
-import net.blancworks.figura.models.lua.representations.VanillaModelRepresentation;
+import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.models.lua.representations.*;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionFloatSetting;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
-import org.luaj.vm2.lib.jse.CoerceJavaToLua;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 public class CustomScript {
 
+    ArrayList<LuaRepresentation> reps = new ArrayList<LuaRepresentation>();
     //Represents the vanilla model inside the script's code
     public VanillaModelRepresentation vanillaModelRepresentation;
     //Represents the player's data inside the script's code.
     public PlayerRepresentation playerRepresentation;
     public CustomModelRepresentation customModelRepresentation;
+    public ParticleRepresentation particleRepresentation;
 
     public PlayerData playerData;
 
@@ -85,8 +85,7 @@ public class CustomScript {
                     setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
                     Varargs result = scriptThread.resume(LuaValue.NIL);
                     curr_task = null;
-                },
-                Util.getMainWorkerExecutor()
+                }
         );
     }
 
@@ -98,12 +97,9 @@ public class CustomScript {
     }
     
     public int getTrustInstructionLimit(Identifier settingID){
-        Identifier playerID = new Identifier("players", playerData.playerId.toString());
-
-        TrustContainer tc = PlayerTrustManager.getContainer(playerID);
-        PermissionFloatSetting setting = (PermissionFloatSetting) tc.getSetting(settingID);
+        TrustContainer tc = playerData.getTrustContainer();
         
-        return (int)setting.value;
+        return tc.getIntSetting(settingID);
     }
     
     public void runFunctionImmediate(String name, int max_lua_instructions) {
@@ -152,8 +148,7 @@ public class CustomScript {
                     } catch (Exception e) {
                         FiguraMod.LOGGER.log(Level.ERROR, e);
                     }
-                },
-                Util.getMainWorkerExecutor()
+                }
         );
     }
 
@@ -177,18 +172,40 @@ public class CustomScript {
     }
 
     public void setupInterfaceGlobals() {
-        scriptGlobals.set("log", CoerceJavaToLua.coerce(new LuaLog()));
+        
+        //Log! Only for local player.
+        scriptGlobals.set("log", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg) {
+                if(playerData == PlayerDataManager.localPlayer)
+                    FiguraMod.LOGGER.warn(arg.toString());
+                return NIL;
+            }
+        });
 
         vanillaModelRepresentation = new VanillaModelRepresentation(this);
+        reps.add(vanillaModelRepresentation);
+        
         customModelRepresentation = new CustomModelRepresentation(this);
+        reps.add(customModelRepresentation);
+
         playerRepresentation = new PlayerRepresentation(this);
+        reps.add(playerRepresentation);
+
+        particleRepresentation = new ParticleRepresentation(this);
+        reps.add(particleRepresentation);
     }
 
-    private static class LuaLog extends OneArgFunction {
-        @Override
-        public LuaValue call(LuaValue arg) {
-            FiguraMod.LOGGER.log(Level.DEBUG, arg.toString());
-            return NIL;
+    public void tick() {
+        
+        if(MinecraftClient.getInstance().isPaused()){
+            return;
+        }
+        
+        runFunction("tick", getTrustInstructionLimit(PlayerTrustManager.maxTickID));
+
+        for (LuaRepresentation rep : reps) {
+            rep.tick();
         }
     }
 }

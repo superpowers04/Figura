@@ -4,25 +4,14 @@ import net.blancworks.figura.gui.FiguraTrustScreen;
 import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
-import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionSetting;
-import net.blancworks.figura.trust.settings.PermissionStringSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import org.lwjgl.glfw.GLFW;
-
-import java.util.ArrayList;
-import java.util.function.Consumer;
 
 public class PermissionListWidget extends CustomListWidget<PermissionSetting, PermissionListEntry> {
 

@@ -59,7 +59,7 @@ public class PlayerDataManager {
                     return localPlayer;
                 }
 
-                getPlayerAvatarFromServer(localPlayer.playerId, localPlayer);
+                getPlayerAvatarFromServerOrCache(localPlayer.playerId, localPlayer);
                 return localPlayer;
             }
         }
@@ -71,7 +71,7 @@ public class PlayerDataManager {
             getData = new PlayerData();
             getData.playerId = id;
 
-            getPlayerAvatarFromServer(id, getData);
+            getPlayerAvatarFromServerOrCache(id, getData);
 
             loadedPlayerData.put(id, getData);
         } else {
@@ -82,7 +82,7 @@ public class PlayerDataManager {
     }
 
     //Attempts to get the data for a player from the server.
-    public static void getPlayerAvatarFromServer(UUID id, PlayerData targetData) {
+    public static void getPlayerAvatarFromServerOrCache(UUID id, PlayerData targetData) {
 
         //Prevent this from running more than once at a time per player.
         if (serverRequestedPlayers.contains(id))
@@ -117,8 +117,8 @@ public class PlayerDataManager {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                        
-                        if(serverHash.length() == 0)
+
+                        if (serverHash.length() == 0)
                             serverHash = hash;
 
                         if (serverHash.equals(hash)) {
@@ -231,6 +231,8 @@ public class PlayerDataManager {
         lastLoadedFileName = null;
     }
 
+    private static int hashCheckCooldown = 0;
+
     //Tick function for the client. Basically dispatches all the other functions in the mod.
     public static void tick() {
         if (MinecraftClient.getInstance().world == null)
@@ -241,8 +243,49 @@ public class PlayerDataManager {
         }
         toClear.clear();
 
+        if (hashCheckCooldown > 0) {
+            hashCheckCooldown--;
+        }
+
+        Date checkDate = new Date();
         for (Map.Entry<UUID, PlayerData> entry : loadedPlayerData.entrySet()) {
             entry.getValue().tick();
+
+            if (hashCheckCooldown == 0) {
+                if (checkDate.getTime() - entry.getValue().lastHashCheckTime.getTime() > 1000 * 10) {
+                    checkPlayerDataHash(entry.getValue().playerId);
+                    break;
+                }
+            }
         }
+    }
+
+    public static void checkPlayerDataHash(UUID id) {
+        PlayerData dat = getDataForPlayer(id);
+
+        if (dat instanceof LocalPlayerData) {
+            if (((LocalPlayerData) dat).loadedName != null) {
+                return;
+            }
+        }
+
+        if (dat.lastHash.length() != 0) {
+            dat.lastHashCheckTime = new Date();
+
+            hashCheckCooldown = 4;
+
+            CompletableFuture.runAsync(() -> {
+                try {
+                    String hash = FiguraNetworkManager.getAvatarHash(id).get();
+
+                    if (hash.equals(dat.lastHash) == false && hash.length() > 0) {
+                        toClear.add(id);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
     }
 }

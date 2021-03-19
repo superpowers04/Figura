@@ -6,7 +6,6 @@ import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -15,7 +14,6 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -60,9 +58,9 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         try {
             PlayerData playerData = FiguraMod.getCurrData();
-            TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", playerData.playerId.toString()));
+            TrustContainer trustData = playerData.getTrustContainer();
             
-            if (playerData != null && playerData.script != null && playerData.script.vanillaModelRepresentation != null && ((PermissionBooleanSetting)trustData.getSetting(PlayerTrustManager.allowVanillaModID)).value) {
+            if (playerData != null && playerData.script != null && playerData.script.vanillaModelRepresentation != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
                 playerData.script.vanillaModelRepresentation.applyModelTransforms((PlayerEntityModel) (Object) this);
             } else {
                 for (ModelPart part : parts) {

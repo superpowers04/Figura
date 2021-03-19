@@ -12,4 +12,7 @@ public class LuaRepresentation {
         script = targetScript;
         scriptGlobals = targetScript.scriptGlobals;
     }
+    
+    public void tick(){}
+    public void onRender(){}
 }

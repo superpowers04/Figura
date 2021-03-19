@@ -3,16 +3,16 @@ package net.blancworks.figura;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.lua.CustomScript;
-import net.blancworks.figura.network.FiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 
 import java.io.ByteArrayOutputStream;
@@ -23,7 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 
 //Responsible for storing all the data associated with the player on this client.
@@ -48,6 +47,15 @@ public class PlayerData {
     
     public Date lastHashCheckTime = new Date();
     public String lastHash = "";
+    public boolean isInvalidated = false;
+
+    private Identifier trustIdentifier;
+
+    public Identifier getTrustIdentifier(){
+        if(trustIdentifier == null)
+            trustIdentifier = new Identifier("players", playerId.toString());
+        return trustIdentifier;
+    }
 
     public static TextureManager getTextureManager() {
         if (textureManager == null)
@@ -149,7 +157,6 @@ public class PlayerData {
         return -1;
     }
 
-    public boolean isInvalidated = false;
     
     //Ticks from client.
     public void tick() {
@@ -159,33 +166,12 @@ public class PlayerData {
             return;
         }
         
-        
-        if(lastHash.length() != 0) {
-            //Every 60 seconds
-            long diff = new Date().getTime() - lastHashCheckTime.getTime();
-            if (diff > 1000 * 1) {
-                lastHashCheckTime = new Date();
-
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        String hash = FiguraNetworkManager.getAvatarHash(playerId).get();
-
-                        if (hash.equals(lastHash) == false && hash.length() > 0) {
-                            isInvalidated = true;
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }, Util.getMainWorkerExecutor());
-            }
-        }
-        
         if(isInvalidated)
             PlayerDataManager.clearPlayer(playerId);
         
         if (script != null) {
             try {
-                script.runFunction("tick", script.getTrustInstructionLimit(PlayerTrustManager.maxTickID));
+                script.tick();
             } catch (Exception e){
                 e.printStackTrace();
             }
@@ -278,6 +264,14 @@ public class PlayerData {
         return true;
     }
 
+    public TrustContainer getTrustContainer() {
+        return PlayerTrustManager.getContainer(getTrustIdentifier());
+    }
+
+    public PlayerEntity getEntityIfLoaded(){
+        return MinecraftClient.getInstance().world.getPlayerByUuid(playerId);
+    }
+    
     public enum LoadType {
         NONE,
         LOCAL,

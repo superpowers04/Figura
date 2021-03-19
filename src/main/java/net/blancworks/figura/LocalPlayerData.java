@@ -5,7 +5,6 @@ import com.google.common.io.CharStreams;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.lua.CustomScript;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
@@ -28,7 +27,7 @@ public class LocalPlayerData extends PlayerData {
     private Path texturePath = null;
     private boolean didTextureLoad = false;
 
-    private String loadedName;
+    public String loadedName;
     private HashMap<String, WatchKey> watchKeys = new HashMap<String, WatchKey>();
     public static WatchService ws;
 

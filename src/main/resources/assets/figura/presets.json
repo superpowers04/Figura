@@ -4,7 +4,8 @@
     "maxTickInstructions" : 4096,
     "maxRenderInstructions": 1024,
     "maxComplexity" : 256,
-    "allowVanillaEdit" : false
+    "allowVanillaEdit" : false,
+    "maxparticles" : 4
   },
   "blocked": {
     "maxInitInstructions" : 0,
@@ -12,6 +13,7 @@
     "maxRenderInstructions" : 0,
     "maxComplexity" : 0,
     "allowVanillaEdit" : false,
+    "maxparticles" : 0,
     "parent" : "base"
   },
   "untrusted": {
@@ -23,6 +25,7 @@
     "maxRenderInstructions": 2048,
     "maxComplexity" : 512,
     "allowVanillaEdit" : true,
+    "maxparticles" : 16,
     "parent" : "base"
   },
   "friend": {
@@ -31,6 +34,7 @@
     "maxRenderInstructions": 99999,
     "maxComplexity" : 99999,
     "allowVanillaEdit" : true,
+    "maxparticles" : 99999,
     "parent" : "base"
   },
   "local": {
@@ -39,6 +43,7 @@
     "maxComplexity" : 99999,
     "allowVanillaEdit" : true,
     "parent" : "base",
+    "maxparticles" : 99999,
     "hidden" : true
   }
 }

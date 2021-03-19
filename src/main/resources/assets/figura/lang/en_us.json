@@ -8,5 +8,7 @@
   "gui.figura.maxtickinstructions": "Max Tick Instructions",
   "gui.figura.maxrenderinstructions": "Max Render Instructions",
   "gui.figura.maxcomplexity": "Max Complexity",
-  "gui.figura.allowvanillaedit" : "Vanilla Avatar Changes"
+  "gui.figura.allowvanillaedit" : "Vanilla Avatar Changes",
+  "gui.figura.maxparticles" : "Maximum Particles Per Second"
+
 }

@@ -2,7 +2,6 @@ package net.blancworks.figura.gui.widgets;
 
 import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.gui.FiguraGuiScreen;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;

@@ -17,9 +17,10 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
-import org.lwjgl.system.CallbackI;
 
-import java.io.*;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -33,6 +34,7 @@ public class PlayerTrustManager {
     public static final Identifier maxRenderID = new Identifier("setting", "maxrenderinstructions");
     public static final Identifier maxComplexityID = new Identifier("setting", "maxcomplexity");
     public static final Identifier allowVanillaModID = new Identifier("setting", "allowvanillaedit");
+    public static final Identifier maxParticlesID = new Identifier("setting", "maxparticles");
 
     public static HashMap<Identifier, TrustContainer> allContainers = new HashMap<Identifier, TrustContainer>();
     public static ArrayList<Identifier> allGroups = new ArrayList<Identifier>();
@@ -85,6 +87,16 @@ public class PlayerTrustManager {
             value = 32 * 64;
             integer = true;
             stepSize = 32;
+            isSlider = true;
+            allowInfinity = true;
+        }});
+        
+        registerPermissionSetting(new PermissionFloatSetting(maxParticlesID){{
+            min = 0;
+            max = 65;
+            value = 5;
+            integer = true;
+            stepSize = 1;
             isSlider = true;
             allowInfinity = true;
         }});
@@ -283,5 +295,5 @@ public class PlayerTrustManager {
             e.printStackTrace();
         }
     }
-
+    
 }

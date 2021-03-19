@@ -1,9 +1,12 @@
 package net.blancworks.figura.trust;
 
-import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
+import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionSetting;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.*;
+import net.blancworks.figura.trust.settings.PermissionStringSetting;
+import net.minecraft.nbt.ByteTag;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +41,12 @@ public class TrustContainer {
         parentIdentifier = parent;
     }
 
+    /**
+     * Gets a setting
+     * @deprecated
+     * Use the helper functions for types instead of this function.
+    **/
+    @Deprecated
     public PermissionSetting getSetting(Identifier id) {
         if (permissionSet.containsKey(id))
             return permissionSet.get(id).getCopy();
@@ -141,5 +150,43 @@ public class TrustContainer {
         }
 
         tag.put("perms", permissions);
+    }
+    
+    
+
+    //---Helper functions---
+
+    public float getFloatSetting(Identifier id){
+        PermissionSetting setting = getSetting(id);
+        
+        if(setting instanceof PermissionFloatSetting){
+            return ((PermissionFloatSetting) setting).value;
+        }
+        
+        return 0;
+    }
+    
+    public int getIntSetting(Identifier id){
+        return (int)getFloatSetting(id);
+    }
+    
+    public boolean getBoolSetting(Identifier id){
+        PermissionSetting setting = getSetting(id);
+
+        if(setting instanceof PermissionBooleanSetting){
+            return ((PermissionBooleanSetting) setting).value;
+        }
+
+        return false;
+    }
+    
+    public String getStringSetting(Identifier id){
+        PermissionSetting setting = getSetting(id);
+
+        if(setting instanceof PermissionStringSetting){
+            return ((PermissionStringSetting) setting).value;
+        }
+
+        return "";
     }
 }

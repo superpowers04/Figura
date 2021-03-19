@@ -5,7 +5,6 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -55,9 +54,7 @@ public class CustomModel {
     public int getMaxRenderAmount() {
         Identifier playerID = new Identifier("players", owner.playerId.toString());
         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
-        PermissionFloatSetting setting = (PermissionFloatSetting) tc.getSetting(PlayerTrustManager.maxComplexityID);
-
-        return (int) setting.value;
+        return tc.getIntSetting(PlayerTrustManager.maxComplexityID);
     }
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {

@@ -84,8 +84,8 @@ public class FiguraNetworkManager {
     private static void asyncAuthUser() {
 
         try {
-            String address = getServerAddress();
-            InetAddress inetAddress = InetAddress.getByName("localhost");
+            String address = getMinecraftAuthServerAddress();
+            InetAddress inetAddress = InetAddress.getByName(address);
             ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
             connection.setPacketListener(new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
                 FiguraMod.LOGGER.log(Level.ERROR, text.toString());
@@ -298,12 +298,15 @@ public class FiguraNetworkManager {
     //figura.blancworks.org for proper online use.
     //TODO - Add support for a server list later for people who want to have their own avatar servers
     private static String getServerAddress() {
-        return "localhost";
+        return "figura.blancworks.org";
+    }
+    private static String getMinecraftAuthServerAddress() {
+        return "mc.blancworks.org";
     }
 
     //This is set to 
     public static String getServerURL() {
-        return String.format("http://%s:5001", getServerAddress());
+        return String.format("http://%s", getServerAddress());
     }
 
     public static String readStringFromStream(InputStream stream) throws IOException {

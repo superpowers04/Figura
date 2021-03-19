@@ -6,7 +6,6 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.blancworks.figura.models.CustomModelPartMesh;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.CompoundTag;

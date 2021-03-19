@@ -5,7 +5,6 @@ import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.minecraft.client.gui.widget.SliderWidget;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;

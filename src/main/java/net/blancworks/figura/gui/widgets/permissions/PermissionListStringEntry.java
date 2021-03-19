@@ -2,7 +2,6 @@ package net.blancworks.figura.gui.widgets.permissions;
 
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
-import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.blancworks.figura.trust.settings.PermissionStringSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.TextFieldWidget;
