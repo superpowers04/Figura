@@ -9,7 +9,7 @@ Figura is specifically build to allow creators as much creative freedom as possi
 # Creation
 
 Model Creation is primarily achived through five steps:
-1. Bedrock Models created in blockbench, and then imported into the game while using the mod. Special names are used to assign model parts to specific vanilla body parts for animation syncing, as well as rending some parts with/without certain armor or held items, during certain animations, etc. This enables a lot of customization with **little to no scripting**.
+1. Blockbench Projects imported into the game while using the mod. Special names are used to assign model parts to specific vanilla body parts for animation syncing, as well as rending some parts with/without certain armor or held items, during certain animations, etc. This enables a lot of customization with **little to no scripting**.
 2. Texture files created as one would normally create a .png file. No limit on size for the image itself, though it is included under the maximum 100kb file size limit for any avatar.
 3. [OPTIONAL] .Obj files created through Blender or similar programs. These allow for non-cube models to be added to your avatar, for more creativity. Note that importing these is typically significantly more expensive than using Blockbench parts.
 4. [OPTIONAL] Creating a .lua script file to indicate any custom behaviour your avatar may have.
@@ -50,4 +50,4 @@ Plans for the future of Figura (sorted more or less by priority) include
 4. Player Worlds
   - Allow players to upload a structure file generated using structure blocks to the Figura server, and allow other players to "visit" those structures in an empty world. These worlds could be used for showing off avatars, or just builds, or anything else.
 5. Part Browser/Avatar Stitching
-  - The final planned feature for moving Figura out of alpha/beta will be the ability for players to use an in-game browser to pick "parts" from publicly avaliable sets, and automatically use those parts together into a single avatar.
+  - The final planned feature for moving Figura out of alpha/beta will be the ability for players to use an in-game browser to pick "parts" from publicly avaliable sets, and automatically use those parts together, merging them into a single avatar.
