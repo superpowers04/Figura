@@ -4,7 +4,7 @@ The Figura Project is dedicated to re-imagining the way avatars in minecraft wor
 
 The goal is to achieve this in a purely client-side mod, using an external server to store and serve avatars, and to create a mod that enables users to create custom, interesting avatars that do not risk the safety or performance of other users.
 
-Figura is specifically build to allow creators as much creative freedom as possible. This comes in the form of an extremely easy to use creation pipeline, and a verbose, extensive lua API for reading data from Minecraft.
+Figura is specifically built to allow creators as much creative freedom as possible. This comes in the form of an extremely easy to use creation pipeline, and a verbose, extensive lua API for reading data from Minecraft. The file size limit is 100kb, which doesn't sound like much, but goes a long way when it comes to creating a minecraft avatar.
 
 # Creation
 
