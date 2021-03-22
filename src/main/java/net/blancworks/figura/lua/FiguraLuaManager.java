@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
+import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
@@ -45,6 +46,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(ParticleAPI.getID(), ParticleAPI::getForScript);
         apiSuppliers.put(CustomModelAPI.getID(), CustomModelAPI::getForScript);
         apiSuppliers.put(VanillaModelAPI.getID(), VanillaModelAPI::getForScript);
+        apiSuppliers.put(PlayerEntityAPI.getID(), PlayerEntityAPI::getForScript);
     }
     
     public static void loadScript(PlayerData data, String content){

@@ -12,6 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
 import org.luaj.vm2.*;
@@ -179,8 +180,10 @@ public class CustomScript {
         scriptGlobals.set("log", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue arg) {
-                if (playerData == PlayerDataManager.localPlayer)
+                if (playerData == PlayerDataManager.localPlayer) {
                     FiguraMod.LOGGER.warn(arg.toString());
+                    MinecraftClient.getInstance().player.sendMessage(new LiteralText(arg.toString()), false);
+                }
                 return NIL;
             }
         });
