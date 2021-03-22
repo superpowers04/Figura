@@ -3,6 +3,7 @@ package net.blancworks.figura.lua;
 import com.sun.javafx.geom.Vec3f;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.luaj.vm2.LuaDouble;
 import org.luaj.vm2.LuaNumber;
@@ -17,6 +18,18 @@ public class LuaUtils {
 
         return null;
     }
+
+    public static BlockPos getBlockPosFromTable(LuaTable table) {
+        if (table.length() != 3)
+            return null;
+        
+        return new BlockPos(
+                table.get(1).checkint(),
+                table.get(2).checkint(),
+                table.get(3).checkint()
+        );
+    }
+
 
     public static FloatArrayList getFloatsFromTable(LuaTable table) {
         FloatArrayList ret = new FloatArrayList();

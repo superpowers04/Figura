@@ -188,7 +188,37 @@ public class CustomScript {
             }
         });
 
+        scriptGlobals.set("logTableContent", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg) {
+                LuaTable table = arg.checktable();
+
+                logTableContents(table, 0, "");
+
+                return NIL;
+            }
+        });
+
         FiguraLuaManager.setupScriptAPI(this);
+    }
+
+    public void logTableContents(LuaTable table, int depth, String depthString) {
+        String nextDepthString = depthString + "    ";
+        MinecraftClient.getInstance().player.sendMessage(new LiteralText(depthString + "{"), false);
+
+        for (LuaValue key : table.keys()) {
+            LuaValue value = table.get(key);
+            
+            String valString = depthString + '"' + key.toString() + '"' + " : " + value.toString();
+            
+            if (value.istable()) {
+                MinecraftClient.getInstance().player.sendMessage(new LiteralText(valString), false);
+                logTableContents(value.checktable(), depth + 1, nextDepthString);
+            } else {
+                MinecraftClient.getInstance().player.sendMessage(new LiteralText(valString + ","), false);
+            }
+        }
+        MinecraftClient.getInstance().player.sendMessage(new LiteralText(depthString + "},"), false);
     }
 
     public void tick() {
@@ -234,7 +264,7 @@ public class CustomScript {
             access.setAdditionalPos(customization.pos);
         if (customization.rot != null)
             access.setAdditionalRot(customization.rot);
-        if(customization.visible != null && !customization.visible)
+        if (customization.visible != null && !customization.visible)
             disabledParts.add(part);
     }
 }
