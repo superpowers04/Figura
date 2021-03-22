@@ -1,13 +1,16 @@
-package net.blancworks.figura.models.lua;
+package net.blancworks.figura.lua;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.models.lua.representations.*;
-import net.blancworks.figura.models.lua.representations.world.entity.PlayerRepresentation;
+import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.access.PlayerEntityModelAccess;
+import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
@@ -17,19 +20,11 @@ import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
 
 public class CustomScript {
-
-    ArrayList<LuaRepresentation> reps = new ArrayList<LuaRepresentation>();
-    //Represents the vanilla model inside the script's code
-    public VanillaModelRepresentation vanillaModelRepresentation;
-    //Represents the player's data inside the script's code.
-    public PlayerRepresentation playerRepresentation;
-    public CustomModelRepresentation customModelRepresentation;
-    public ParticleRepresentation particleRepresentation;
 
     public PlayerData playerData;
 
@@ -42,6 +37,8 @@ public class CustomScript {
     private CompletableFuture curr_task;
     private Queue<String> queued_tasks = new ArrayDeque<String>();
     private LuaThread scriptThread;
+
+    public VanillaModelPartCustomization[] vanillaModifications = new VanillaModelPartCustomization[12];
 
     public CustomScript() {
     }
@@ -67,7 +64,7 @@ public class CustomScript {
         setHook = scriptGlobals.get("debug").get("sethook");
         scriptGlobals.set("debug", LuaValue.NIL);
 
-        setupInterfaceGlobals();
+        setupGlobals();
 
         LuaValue chunk = FiguraLuaManager.modGlobals.load(source, "main", scriptGlobals);
         scriptThread = new LuaThread(scriptGlobals, chunk);
@@ -172,7 +169,11 @@ public class CustomScript {
         load(data, tag.getString("src"));
     }
 
-    public void setupInterfaceGlobals() {
+    public void setupGlobals() {
+
+        for (int i = 0; i < vanillaModifications.length; i++) {
+            vanillaModifications[i] = new VanillaModelPartCustomization();
+        }
 
         //Log! Only for local player.
         scriptGlobals.set("log", new OneArgFunction() {
@@ -184,14 +185,7 @@ public class CustomScript {
             }
         });
 
-        registerRepresentation(vanillaModelRepresentation = new VanillaModelRepresentation(this));
-        registerRepresentation(customModelRepresentation = new CustomModelRepresentation(this));
-        registerRepresentation(playerRepresentation = new PlayerRepresentation(this));
-        registerRepresentation(particleRepresentation = new ParticleRepresentation(this));
-    }
-
-    public void registerRepresentation(LuaRepresentation lp) {
-        reps.add(lp);
+        FiguraLuaManager.setupScriptAPI(this);
     }
 
     public void tick() {
@@ -201,13 +195,43 @@ public class CustomScript {
         }
 
         runFunction("tick", getTrustInstructionLimit(PlayerTrustManager.maxTickID));
-        
-        for (LuaRepresentation rep : reps) {
-            rep.getReferences();
-        }
-        
-        for (LuaRepresentation rep : reps) {
-            rep.tick();
-        }
+
+    }
+
+
+    public void applyCustomValues(PlayerEntityModel model) {
+
+        PlayerEntityModelAccess access = (PlayerEntityModelAccess) (Object) model;
+        HashSet<ModelPart> parts = access.getDisabledParts();
+
+        applyCustomValues(parts, model.head, 0);
+        applyCustomValues(parts, model.torso, 1);
+
+        applyCustomValues(parts, model.leftArm, 2);
+        applyCustomValues(parts, model.rightArm, 3);
+
+        applyCustomValues(parts, model.leftLeg, 4);
+        applyCustomValues(parts, model.rightLeg, 5);
+
+        applyCustomValues(parts, model.helmet, 0);
+        applyCustomValues(parts, model.jacket, 1);
+
+        applyCustomValues(parts, model.leftSleeve, 2);
+        applyCustomValues(parts, model.rightSleeve, 3);
+
+        applyCustomValues(parts, model.leftPantLeg, 4);
+        applyCustomValues(parts, model.rightPantLeg, 5);
+    }
+
+    private void applyCustomValues(HashSet<ModelPart> disabledParts, ModelPart part, int index) {
+        ModelPartAccess access = (ModelPartAccess) (Object) part;
+        VanillaModelPartCustomization customization = vanillaModifications[index];
+
+        if (customization.pos != null)
+            access.setAdditionalPos(customization.pos);
+        if (customization.rot != null)
+            access.setAdditionalRot(customization.rot);
+        if(customization.visible != null && !customization.visible)
+            disabledParts.add(part);
     }
 }

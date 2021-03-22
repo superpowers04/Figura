@@ -6,7 +6,6 @@ import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
@@ -45,8 +44,9 @@ public class PlayerEntityRendererMixin {
 
         TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", playerData.playerId.toString()));
 
-        if (playerData != null && playerData.script != null && playerData.script.vanillaModelRepresentation != null && ((PermissionBooleanSetting)trustData.getSetting(PlayerTrustManager.allowVanillaModID)).value) {
-                playerData.script.vanillaModelRepresentation.applyModelTransforms(model);
+        //TODO - Reimplement
+        if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
+                playerData.script.applyCustomValues(model);
         } else {
             ModelPartAccess mpa = (ModelPartAccess) (Object) model.rightArm;
             mpa.setAdditionalPos(new Vector3f());

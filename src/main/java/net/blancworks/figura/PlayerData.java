@@ -2,7 +2,7 @@ package net.blancworks.figura;
 
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
-import net.blancworks.figura.models.lua.CustomScript;
+import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.fabricmc.loader.api.FabricLoader;

@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.blancworks.figura.commands.FiguraCommands;
 import net.blancworks.figura.models.CustomModel;
-import net.blancworks.figura.models.lua.FiguraLuaManager;
+import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -50,8 +50,9 @@ public class FiguraMod implements ClientModInitializer {
         curr_player = player;
         curr_data = PlayerDataManager.getDataForPlayer(player.getUuid());
         
-        if(curr_data != null && curr_data.script != null && curr_data.script.vanillaModelRepresentation != null)
-            curr_data.script.vanillaModelRepresentation.applyModelTransforms(mdl);
+        //TODO - Re-implement
+        /*if(curr_data != null && curr_data.script != null && curr_data.script.vanillaModelRepresentation != null)
+            curr_data.script.vanillaModelRepresentation.applyModelTransforms(mdl);*/
         
         curr_data.vanillaModel = mdl;
         vertex_consumer_provider = vertexConsumerProvider;

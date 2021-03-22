@@ -48,7 +48,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     private ModelPart ears;
     @Shadow
     private List<ModelPart> parts;
-    private HashSet<String> disabled_parts = new HashSet<String>();
+    private HashSet<ModelPart> disabled_parts = new HashSet<ModelPart>();
     
     public PlayerEntityModelMixin(float scale) {
         super(scale);
@@ -60,8 +60,9 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
             PlayerData playerData = FiguraMod.getCurrData();
             TrustContainer trustData = playerData.getTrustContainer();
             
-            if (playerData != null && playerData.script != null && playerData.script.vanillaModelRepresentation != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
-                playerData.script.vanillaModelRepresentation.applyModelTransforms((PlayerEntityModel) (Object) this);
+            //TODO - Re-implement
+            if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
+                playerData.script.applyCustomValues((PlayerEntityModel) (Object) this);
             } else {
                 for (ModelPart part : parts) {
                     ModelPartAccess mpa = (ModelPartAccess) (Object) part;
@@ -106,38 +107,13 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     public void setVisible(boolean visible, CallbackInfo ci) {
         PlayerEntityModel mdl = (PlayerEntityModel) (Object) this;
 
-        for (String part : disabled_parts) {
-            switch (part) {
-                case "HEAD":
-                    head.visible = false;
-                    ears.visible = false;
-                    break;
-                case "TORSO":
-                    torso.visible = false;
-                    jacket.visible = false;
-                    break;
-                case "LEFT_ARM":
-                    leftArm.visible = false;
-                    leftSleeve.visible = false;
-                    break;
-                case "RIGHT_ARM":
-                    rightArm.visible = false;
-                    rightSleeve.visible = false;
-                    break;
-                case "LEFT_LEG":
-                    leftLeg.visible = false;
-                    leftPantLeg.visible = false;
-                    break;
-                case "RIGHT_LEG":
-                    rightLeg.visible = false;
-                    rightPantLeg.visible = false;
-                    break;
-            }
+        for (ModelPart part : disabled_parts) {
+            part.visible = false;
         }
     }
 
     @Override
-    public HashSet<String> getDisabledParts() {
+    public HashSet<ModelPart> getDisabledParts() {
         return disabled_parts;
     }
     

@@ -1,6 +1,5 @@
 package net.blancworks.figura.network;
 
-import com.google.gson.JsonObject;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -23,7 +22,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
-import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -214,31 +212,21 @@ public class FiguraNetworkManager {
                     CompoundTag infoTag = new CompoundTag();
                     data.toNBT(infoTag);
 
-                    ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-                    DataOutputStream nbtDataStream = new DataOutputStream(byteStream);
-
-                    NbtIo.writeCompressed(infoTag, nbtDataStream);
-                    //infoTag.write(nbtDataStream);
-
-                    JsonObject finalObject = new JsonObject();
-
-                    finalObject.addProperty("data", Base64.getEncoder().encodeToString(byteStream.toByteArray()));
-
-                    String finalResult = finalObject.toString();
 
                     httpURLConnection = (HttpURLConnection) url.openConnection();
                     httpURLConnection.setRequestMethod("PUT");
-                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
+                    httpURLConnection.setRequestProperty("Content-Type", "application/octet-stream");
 
                     httpURLConnection.setDoOutput(true);
                     httpURLConnection.setDoInput(true);
 
-                    //httpURLConnection.connect();
+                    
                     OutputStream outStream = httpURLConnection.getOutputStream();
-                    OutputStreamWriter outWriter = new OutputStreamWriter(outStream);
+                    DataOutputStream nbtDataStream = new DataOutputStream(outStream);
 
-                    outWriter.write(finalResult);
-                    outWriter.close();
+                    NbtIo.writeCompressed(infoTag, nbtDataStream);
+
+                    outStream.close();
 
                     FiguraMod.LOGGER.log(Level.DEBUG, httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
@@ -294,14 +282,14 @@ public class FiguraNetworkManager {
     //--UTILITY FUNCTIONS--
 
 
-    //Localhost for local testing
+    //localhost for local testing
     //figura.blancworks.org for proper online use.
     //TODO - Add support for a server list later for people who want to have their own avatar servers
     private static String getServerAddress() {
-        return "figura.blancworks.org";
+        return "localhost:5001";
     }
     private static String getMinecraftAuthServerAddress() {
-        return "mc.blancworks.org";
+        return "localhost";
     }
 
     //This is set to 
