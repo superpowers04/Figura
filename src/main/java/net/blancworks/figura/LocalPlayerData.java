@@ -2,9 +2,9 @@ package net.blancworks.figura;
 
 
 import com.google.common.io.CharStreams;
+import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
-import net.blancworks.figura.lua.CustomScript;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;

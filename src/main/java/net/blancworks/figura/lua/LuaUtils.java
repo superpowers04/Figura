@@ -1,6 +1,5 @@
 package net.blancworks.figura.lua;
 
-import com.sun.javafx.geom.Vec3f;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.BlockPos;
@@ -53,23 +52,6 @@ public class LuaUtils {
         LuaNumber x = LuaDouble.valueOf(v.getX());
         LuaNumber y = LuaDouble.valueOf(v.getY());
         LuaNumber z = LuaDouble.valueOf(v.getZ());
-
-        targetTable.set(1, x);
-        targetTable.set("x", x);
-
-        targetTable.set(2, y);
-        targetTable.set("y", y);
-
-        targetTable.set(3, z);
-        targetTable.set("z", z);
-        return targetTable;
-    }
-
-    public static LuaTable getTableFromVec3f(Vec3f v){
-        LuaTable targetTable = new LuaTable();
-        LuaNumber x = LuaDouble.valueOf(v.x);
-        LuaNumber y = LuaDouble.valueOf(v.y);
-        LuaNumber z = LuaDouble.valueOf(v.z);
 
         targetTable.set(1, x);
         targetTable.set("x", x);

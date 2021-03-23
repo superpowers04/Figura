@@ -44,7 +44,6 @@ public class PlayerEntityRendererMixin {
 
         TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", playerData.playerId.toString()));
 
-        //TODO - Reimplement
         if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
                 playerData.script.applyCustomValues(model);
         } else {

@@ -60,7 +60,6 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
             PlayerData playerData = FiguraMod.getCurrData();
             TrustContainer trustData = playerData.getTrustContainer();
             
-            //TODO - Re-implement
             if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
                 playerData.script.applyCustomValues((PlayerEntityModel) (Object) this);
             } else {

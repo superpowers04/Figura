@@ -3,6 +3,7 @@ package net.blancworks.figura.network;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.nbt.CompoundTag;
@@ -22,6 +23,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -286,10 +288,16 @@ public class FiguraNetworkManager {
     //figura.blancworks.org for proper online use.
     //TODO - Add support for a server list later for people who want to have their own avatar servers
     private static String getServerAddress() {
-        return "localhost:5001";
+        if(FabricLoader.getInstance().isDevelopmentEnvironment() && Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))){
+            return "localhost:5001";
+        }
+        return "figura.blancworks.net";
     }
     private static String getMinecraftAuthServerAddress() {
-        return "localhost";
+        if(FabricLoader.getInstance().isDevelopmentEnvironment()&& Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))){
+            return "localhost";
+        }
+        return "mc.blancworks.net";
     }
 
     //This is set to 

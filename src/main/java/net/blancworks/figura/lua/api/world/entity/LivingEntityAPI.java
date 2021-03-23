@@ -1,6 +1,5 @@
 package net.blancworks.figura.lua.api.world.entity;
 
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;

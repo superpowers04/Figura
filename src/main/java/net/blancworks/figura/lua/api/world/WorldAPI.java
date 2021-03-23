@@ -1,24 +1,19 @@
 package net.blancworks.figura.lua.api.world;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.NbtHelper;
-import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.BuiltinRegistries;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class WorldAPI {
@@ -44,6 +39,38 @@ public class WorldAPI {
                 BlockState state = w.getBlockState(pos);
                 
                 return BlockStateAPI.getTable(state);
+            }
+        });
+
+        set("getRedstonePower", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg) {
+                LuaTable getPosTable = arg.checktable();
+                BlockPos pos = LuaUtils.getBlockPosFromTable(getPosTable);
+
+                if(pos == null) return NIL;
+
+                World w = getWorld();
+
+                if(!w.isChunkLoaded(pos)) return NIL;
+
+                return LuaNumber.valueOf(w.getReceivedRedstonePower(pos));
+            }
+        });
+
+        set("getStrongRedstonePower", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg) {
+                LuaTable getPosTable = arg.checktable();
+                BlockPos pos = LuaUtils.getBlockPosFromTable(getPosTable);
+
+                if(pos == null) return NIL;
+
+                World w = getWorld();
+
+                if(!w.isChunkLoaded(pos)) return NIL;
+
+                return LuaNumber.valueOf(w.getReceivedStrongRedstonePower(pos));
             }
         });
 
@@ -84,10 +111,10 @@ public class WorldAPI {
             }
         });
 
-        set("getThunderGradient", new OneArgFunction() {
+        set("isLightning", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue a) {
-                return LuaNumber.valueOf(getWorld().getThunderGradient((float)(a.checkdouble())));
+                return LuaBoolean.valueOf(getWorld().isThundering());
             }
         });
 
@@ -98,15 +125,40 @@ public class WorldAPI {
                 
                 if(pos == null)
                     return LuaInteger.valueOf(0);
-                
-                int block = getWorld().getLightLevel(LightType.BLOCK, pos);
-                int sky = getWorld().getLightLevel(LightType.SKY, pos);
-                
-                int ambientDark = getWorld().getAmbientDarkness();
-                
-                
-                
-                return LuaInteger.valueOf(Math.max(block, sky));
+                if(!getWorld().isChunkLoaded(pos)) return NIL;
+
+
+                getWorld().calculateAmbientDarkness();
+                int dark = getWorld().getAmbientDarkness();
+                int realLight = getWorld().getLightingProvider().getLight(pos, dark);
+
+                return LuaInteger.valueOf(realLight);
+            }
+        });
+
+        set("getSkyLightLevel", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue a) {
+                BlockPos pos = LuaUtils.getBlockPosFromTable(a.checktable());
+
+                if(pos == null)
+                    return LuaInteger.valueOf(0);
+                if(!getWorld().isChunkLoaded(pos)) return NIL;
+
+                return LuaInteger.valueOf(getWorld().getLightLevel(LightType.SKY, pos));
+            }
+        });
+
+        set("getBlockLightLevel", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue a) {
+                BlockPos pos = LuaUtils.getBlockPosFromTable(a.checktable());
+
+                if(pos == null)
+                    return LuaInteger.valueOf(0);
+                if(!getWorld().isChunkLoaded(pos)) return NIL;
+
+                return LuaInteger.valueOf(getWorld().getLightLevel(LightType.BLOCK, pos));
             }
         });
 
@@ -118,7 +170,8 @@ public class WorldAPI {
 
                 if(pos == null)
                     return NIL;
-                
+                if(!getWorld().isChunkLoaded(pos)) return NIL;
+
                 Biome b = getWorld().getBiome(pos);
                 
                 if(b == null)
