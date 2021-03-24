@@ -42,17 +42,19 @@ public class PlayerData {
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel vanillaModel;
 
+    public PlayerEntity lastEntity;
+
     public boolean isLoaded = false;
     public LoadType loadType = LoadType.NONE;
-    
+
     public Date lastHashCheckTime = new Date();
     public String lastHash = "";
     public boolean isInvalidated = false;
 
     private Identifier trustIdentifier;
 
-    public Identifier getTrustIdentifier(){
-        if(trustIdentifier == null)
+    public Identifier getTrustIdentifier() {
+        if (trustIdentifier == null)
             trustIdentifier = new Identifier("players", playerId.toString());
         return trustIdentifier;
     }
@@ -70,7 +72,7 @@ public class PlayerData {
         //You cannot save a model that is incomplete.
         if (model == null || texture == null || script == null)
             return false;
-        
+
         tag.putIntArray("version", current_version);
 
         //Put ID.
@@ -101,19 +103,19 @@ public class PlayerData {
 
     //Loads a PlayerData from the given NBT tag.
     public void fromNBT(CompoundTag tag) {
-        
+
         int[] version = tag.getIntArray("version");
-        
+
         playerId = tag.getUuid("id");
-        
+
         //VERSION CHECKING.
-        if(version != null) {
+        if (version != null) {
             boolean success = compareVersions(version);
-            
-            if(!success)
+
+            if (!success)
                 return;
         }
-        
+
         try {
             CompoundTag modelTag = (CompoundTag) tag.get("model");
             model = new CustomModel();
@@ -128,7 +130,7 @@ public class PlayerData {
 
             if (tag.contains("script")) {
                 CompoundTag scriptTag = (CompoundTag) tag.get("script");
-                
+
                 script = new CustomScript();
                 script.fromNBT(this, scriptTag);
             }
@@ -136,9 +138,9 @@ public class PlayerData {
             FiguraMod.LOGGER.log(Level.ERROR, e);
         }
     }
-    
+
     //Returns the file size, in bytes.
-    public int getFileSize(){
+    public int getFileSize() {
         CompoundTag writtenTag = new CompoundTag();
         toNBT(writtenTag);
 
@@ -147,17 +149,17 @@ public class PlayerData {
             DataOutputStream w = new DataOutputStream(baos);
 
             NbtIo.writeCompressed(writtenTag, w);
-            
+
             model.totalSize = w.size();
             return w.size();
-        } catch (Exception e){
-            
+        } catch (Exception e) {
+
         }
-        
+
         return -1;
     }
 
-    
+
     //Ticks from client.
     public void tick() {
 
@@ -165,15 +167,31 @@ public class PlayerData {
             tickLoads();
             return;
         }
-        
-        if(isInvalidated)
+
+        if (isInvalidated)
             PlayerDataManager.clearPlayer(playerId);
+
+        PlayerEntity newEnt = MinecraftClient.getInstance().world.getPlayerByUuid(playerId);
+        if(lastEntity != newEnt){
+            lastEntity = newEnt;
+            
+            if(lastEntity != null) {
+                if (script != null) {
+                    CustomScript reloadedScript = new CustomScript();
+                    reloadedScript.load(this, script.source);
+
+                    script = reloadedScript;
+                }
+            }
+        }
         
-        if (script != null) {
-            try {
-                script.tick();
-            } catch (Exception e){
-                e.printStackTrace();
+        if (lastEntity != null) {
+            if (script != null) {
+                try {
+                    script.tick();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -234,31 +252,31 @@ public class PlayerData {
         CompoundTag nbtTag = NbtIo.readCompressed(input);
 
         fromNBT(nbtTag);
-        
+
         getFileSize();
     }
-    
-    
+
+
     //VERSION
     //FORMAT IS
     //0 = mega version for huge api changes to the fundamentals of the loading system
     //1 = major version, for compatibility-breaking api changes
     //2 = minor version, for non-compat breaking api changes
     static final int[] current_version = new int[3];
-    
+
     static {
         current_version[0] = 0;
         current_version[1] = 0;
         current_version[2] = 1;
     }
-    
-    public boolean compareVersions(int[] version){
-        if(version[0] != current_version[0]){
-            System.out.printf("MEGA VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)",version[0],version[1],version[2],current_version[0],current_version[1],current_version[2]);
+
+    public boolean compareVersions(int[] version) {
+        if (version[0] != current_version[0]) {
+            System.out.printf("MEGA VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)", version[0], version[1], version[2], current_version[0], current_version[1], current_version[2]);
             return false;
         }
-        if(version[1] != current_version[1]){
-            System.out.printf("MAJOR VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)",version[0],version[1],version[2],current_version[0],current_version[1],current_version[2]);
+        if (version[1] != current_version[1]) {
+            System.out.printf("MAJOR VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)", version[0], version[1], version[2], current_version[0], current_version[1], current_version[2]);
             return false;
         }
         return true;
@@ -268,10 +286,10 @@ public class PlayerData {
         return PlayerTrustManager.getContainer(getTrustIdentifier());
     }
 
-    public PlayerEntity getEntityIfLoaded(){
+    public PlayerEntity getEntityIfLoaded() {
         return MinecraftClient.getInstance().world.getPlayerByUuid(playerId);
     }
-    
+
     public enum LoadType {
         NONE,
         LOCAL,

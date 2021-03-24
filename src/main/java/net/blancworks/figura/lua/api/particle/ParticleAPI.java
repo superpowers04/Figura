@@ -9,6 +9,7 @@ import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.ThreeArgFunction;
@@ -44,7 +45,9 @@ public class ParticleAPI {
                 if(floats.size() != 6)
                     return NIL;
                 
-                MinecraftClient.getInstance().world.addParticle(targetType,
+                World w = MinecraftClient.getInstance().world;
+
+                w.addParticle(targetType,
                         floats.getFloat(0),floats.getFloat(1),floats.getFloat(2),
                         floats.getFloat(3),floats.getFloat(4),floats.getFloat(5)
                 );

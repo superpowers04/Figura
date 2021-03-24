@@ -11,6 +11,7 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
@@ -28,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 public class CustomScript {
 
     public PlayerData playerData;
-
+    
     public Globals scriptGlobals = new Globals();
     public LuaValue setHook;
     public LuaValue hookFunction;
@@ -279,6 +280,9 @@ public class CustomScript {
         ModelPartAccess access = (ModelPartAccess) (Object) part;
         VanillaModelPartCustomization customization = vanillaModifications[index];
 
+        if(customization == null)
+            return;
+        
         if (customization.pos != null)
             access.setAdditionalPos(customization.pos);
         if (customization.rot != null)

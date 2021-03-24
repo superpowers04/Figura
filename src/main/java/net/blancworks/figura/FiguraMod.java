@@ -61,7 +61,9 @@ public class FiguraMod implements ClientModInitializer {
     //Returns the current custom model for rendering. 
     //Set earlier by the player render function, used in the renderer mixin.
     public static PlayerData getCurrData() {
-        return curr_data;
+        PlayerData ret = curr_data;
+        curr_data = null;
+        return ret;
     }
 
     @Override

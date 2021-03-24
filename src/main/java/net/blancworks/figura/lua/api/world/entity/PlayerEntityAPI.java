@@ -34,6 +34,7 @@ public class PlayerEntityAPI {
     }
 
     public static class PlayerEntityLuaAPITable extends LivingEntityAPI.LivingEntityAPITable<PlayerEntity> {
+        
         public PlayerEntityLuaAPITable(PlayerEntity targetEntity) {
             super(targetEntity);
             super.setTable(getTable());
@@ -45,6 +46,7 @@ public class PlayerEntityAPI {
             superTable.set("getHeldItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
+                    
                     int hand = arg.checkint();
 
                     ItemStack targetStack = null;
