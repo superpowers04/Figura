@@ -1,3 +1,8 @@
+# ***Downloads***
+Modrinth : https://modrinth.com/mod/figura
+
+Curseforge : https://www.curseforge.com/minecraft/mc-mods/figura
+
 # Figura
 
 The Figura Project is dedicated to re-imagining the way avatars in minecraft work, as a way to allow players to more creatively express themselves.
