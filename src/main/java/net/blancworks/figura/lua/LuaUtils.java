@@ -3,6 +3,7 @@ package net.blancworks.figura.lua;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.luaj.vm2.LuaDouble;
 import org.luaj.vm2.LuaNumber;
@@ -78,6 +79,19 @@ public class LuaUtils {
 
         targetTable.set(3, z);
         targetTable.set("z", z);
+        return targetTable;
+    }
+
+    public static LuaTable getTableFromVec2f(Vec2f v){
+        LuaTable targetTable = new LuaTable();
+        LuaNumber x = LuaDouble.valueOf(v.x);
+        LuaNumber y = LuaDouble.valueOf(v.y);
+
+        targetTable.set(1, x);
+        targetTable.set("x", x);
+
+        targetTable.set(2, y);
+        targetTable.set("y", y);
         return targetTable;
     }
 

@@ -8,6 +8,7 @@ import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
@@ -83,6 +84,26 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
                     targetPart.rot = new Vector3f(fas.getFloat(0), fas.getFloat(1), fas.getFloat(2));
+                    return NIL;
+                }
+            });
+
+            ret.set("getUV", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    LuaTable getTable = LuaUtils.getTableFromVec2f(new Vec2f(targetPart.uOffset, targetPart.vOffset));
+                    getTable.set("u", getTable.get("x"));
+                    getTable.set("v", getTable.get("y"));
+                    return getTable;
+                }
+            });
+
+            ret.set("setUV", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
+                    targetPart.uOffset = fas.getFloat(0);
+                    targetPart.vOffset = fas.getFloat(1);
                     return NIL;
                 }
             });

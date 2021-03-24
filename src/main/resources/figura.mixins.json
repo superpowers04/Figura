@@ -12,7 +12,8 @@
     "ModelPartMixin",
     "ElytraFeatureRendererMixin",
     "GameMenuScreenMixin",
-    "MatrixStackMixin"
+    "MatrixStackMixin",
+    "MixinDebugHud"
   ],
   "injectors": {
     "defaultRequire": 1

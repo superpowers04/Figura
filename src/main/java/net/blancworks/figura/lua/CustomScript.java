@@ -39,6 +39,9 @@ public class CustomScript {
     private Queue<String> queued_tasks = new ArrayDeque<String>();
     private LuaThread scriptThread;
 
+    public int tickInstructionCount = 0;
+    public int renderInstructionCount = 0;
+
     public VanillaModelPartCustomization[] vanillaModifications = new VanillaModelPartCustomization[12];
 
     public CustomScript() {
@@ -114,6 +117,14 @@ public class CustomScript {
             if (function.isnil() == false && function.isfunction() == true) {
                 function.call(args);
             }
+
+            if(name == "tick"){
+                tickInstructionCount = scriptGlobals.running.state.bytecodes;
+            }
+
+            if(name == "render"){
+                renderInstructionCount = scriptGlobals.running.state.bytecodes;
+            }
         } catch (Throwable e) {
             FiguraMod.LOGGER.log(Level.ERROR, e);
         }
@@ -138,7 +149,15 @@ public class CustomScript {
                         if (function.isnil() == false && function.isfunction() == true) {
                             function.call();
                         }
+                        
+                        if(name == "tick"){
+                            tickInstructionCount = scriptGlobals.running.state.bytecodes;
+                        }
 
+                        if(name == "render"){
+                            renderInstructionCount = scriptGlobals.running.state.bytecodes;
+                        }
+                        
                         curr_task = null;
                         if (queued_tasks.size() > 0) {
                             String nextTask = queued_tasks.remove();

@@ -22,6 +22,7 @@ import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import org.lwjgl.glfw.GLFW;
@@ -110,6 +111,11 @@ public class FiguraTrustScreen extends Screen {
             PlayerTrustManager.saveToDisk();
             
             this.client.openScreen((Screen) parentScreen);
+        }));
+
+        this.addButton(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new LiteralText("Help"), (buttonWidgetx) -> {
+            //Open the trust menu from the Figura Wiki
+            Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
         }));
 
         this.addButton(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, width, 20, new LiteralText("Clear All Avatars"), (buttonWidgetx) -> {
@@ -218,7 +224,7 @@ public class FiguraTrustScreen extends Screen {
 
             if (resetPermissionButton.isMouseOver(mouseX, mouseY)) {
                 if (playerListState.selected instanceof PlayerListEntry) {
-                    renderTooltip(matrices, Text.of("Hold LEFT SHIFT and press to reset the permissions for this user."), mouseX, mouseY);
+                    renderTooltip(matrices, Text.of("Hold LEFT SHIFT and press to reset the selected permission for this user."), mouseX, mouseY);
                 } else if (playerListState.selected instanceof Identifier) {
                     TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
 

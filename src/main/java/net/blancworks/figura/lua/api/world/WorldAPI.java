@@ -97,6 +97,7 @@ public class WorldAPI {
             }
         });
 
+        //Looks like this just... Gets the time??? Confused on this one.
         set("getLunarTime", new ZeroArgFunction() {
             @Override
             public LuaValue call() {

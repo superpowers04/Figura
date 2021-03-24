@@ -72,12 +72,14 @@ public class FiguraGuiScreen extends Screen {
         
         this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new LiteralText("Back"), (buttonWidgetx) -> {
             this.client.openScreen(parentScreen);
-            //this.client.mouse.lockCursor();
         }));
 
         this.addButton(new ButtonWidget(this.width - width - 5, this.height - 42 - 5, width, 20, new LiteralText("Trust Menu"), (buttonWidgetx) -> {
             this.client.openScreen(trustScreen);
-            //this.client.mouse.lockCursor();
+        }));
+
+        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 64 - 5, width, 20, new LiteralText("Help"), (buttonWidgetx) -> {
+            Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
         }));
 
         uploadButton = new TexturedButtonWidget(

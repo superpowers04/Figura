@@ -41,7 +41,7 @@ public class CustomModelPart {
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
     public int render(int left_to_render, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
-        
+
         //Don't render invisible parts.
         if (!visible) {
             return left_to_render;
@@ -80,7 +80,7 @@ public class CustomModelPart {
             vertices.vertex(
                     fullVert.getX(), fullVert.getY(), fullVert.getZ(),
                     1, 1, 1, 1,
-                    u, v,
+                    u + uOffset, v + vOffset,
                     overlay, light,
                     normal.getX(), normal.getY(), normal.getZ()
             );
@@ -119,8 +119,9 @@ public class CustomModelPart {
     }
 
     //Re-builds the mesh data for a custom model part.
-    public void rebuild(){ }
-    
+    public void rebuild() {
+    }
+
     public void addVertex(Vector3f vert, float u, float v, Vector3f normal) {
         vertexData.add(vert.getX() / 16.0f);
         vertexData.add(vert.getY() / 16.0f);
@@ -137,8 +138,8 @@ public class CustomModelPart {
 
         //Name
         name = partTag.get("nm").asString();
-        
-        if(partTag.contains("pos")) {
+
+        if (partTag.contains("pos")) {
             ListTag list = (ListTag) partTag.get("pos");
             pos = new Vector3f(
                     list.getFloat(0),
@@ -146,7 +147,7 @@ public class CustomModelPart {
                     list.getFloat(2)
             );
         }
-        if(partTag.contains("rot")) {
+        if (partTag.contains("rot")) {
             ListTag list = (ListTag) partTag.get("rot");
             rot = new Vector3f(
                     list.getFloat(0),
@@ -154,7 +155,7 @@ public class CustomModelPart {
                     list.getFloat(2)
             );
         }
-        if(partTag.contains("scl")) {
+        if (partTag.contains("scl")) {
             ListTag list = (ListTag) partTag.get("scl");
             scale = new Vector3f(
                     list.getFloat(0),
@@ -162,7 +163,7 @@ public class CustomModelPart {
                     list.getFloat(2)
             );
         }
-        if(partTag.contains("piv")) {
+        if (partTag.contains("piv")) {
             ListTag list = (ListTag) partTag.get("piv");
             pivot = new Vector3f(
                     list.getFloat(0),
@@ -170,20 +171,26 @@ public class CustomModelPart {
                     list.getFloat(2)
             );
         }
-        
-        if(partTag.contains("ptype")){
+
+        if (partTag.contains("ptype")) {
             parentType = ParentType.valueOf(partTag.get("ptype").asString());
         }
-        
-        if(partTag.contains("vsb")){
+
+        if (partTag.contains("vsb")) {
             visible = partTag.getBoolean("vsb");
         }
-        
-        if(partTag.contains("chld")){
+
+        if (partTag.contains("uv")) {
+            ListTag uvOffsetTag = (ListTag) partTag.get("uv");
+            uOffset = uvOffsetTag.getFloat(0);
+            vOffset = uvOffsetTag.getFloat(1);
+        }
+
+        if (partTag.contains("chld")) {
             ListTag childTag = (ListTag) partTag.get("chld");
 
             for (Tag child : childTag) {
-                CompoundTag ct = (CompoundTag)child;
+                CompoundTag ct = (CompoundTag) child;
                 CustomModelPart part = getFromNbtTag(ct);
                 part.rebuild();
                 children.add(part);
@@ -193,7 +200,7 @@ public class CustomModelPart {
 
     public void toNBT(CompoundTag partTag) {
         partTag.put("nm", StringTag.of(name));
-        
+
         if (!pos.equals(new Vector3f(0, 0, 0))) {
             ListTag posTag = new ListTag() {{
                 add(FloatTag.of(pos.getX()));
@@ -226,15 +233,25 @@ public class CustomModelPart {
             }};
             partTag.put("piv", pivTag);
         }
+        
+        if(Math.abs(uOffset) > 0.0001f && Math.abs(vOffset) > 0.0001f){
+            ListTag uvOffsetTag = new ListTag(){{
+                add(FloatTag.of(uOffset));
+                add(FloatTag.of(vOffset));
+            }};
+            partTag.put("uv", uvOffsetTag);
+        }
 
         if (parentType != ParentType.None) {
             partTag.put("ptype", StringTag.of(parentType.toString()));
         }
-        
-        if(visible == false){ partTag.put("vsb", ByteTag.of(false)); }
-        
+
+        if (visible == false) {
+            partTag.put("vsb", ByteTag.of(false));
+        }
+
         //Parse children.
-        if(children.size() > 0){
+        if (children.size() > 0) {
             ListTag childrenTag = new ListTag();
 
             for (CustomModelPart child : children) {
@@ -242,16 +259,16 @@ public class CustomModelPart {
                 writeToCompoundTag(tag, child);
                 childrenTag.add(tag);
             }
-            
+
             partTag.put("chld", childrenTag);
         }
     }
 
-    public String getPartType(){
+    public String getPartType() {
         //Default part type is N/A
         return "na";
     }
-    
+
     public enum ParentType {
         None,
         Custom,
@@ -262,38 +279,38 @@ public class CustomModelPart {
         RightLeg,
         Torso
     }
-    
+
     //---------MODEL PART TYPES---------
-    
-    public static HashMap<String, Supplier<CustomModelPart>> model_part_types = new HashMap<String, Supplier<CustomModelPart>>(){{
+
+    public static HashMap<String, Supplier<CustomModelPart>> model_part_types = new HashMap<String, Supplier<CustomModelPart>>() {{
         put("na", CustomModelPart::new);
         put("cub", CustomModelPartCuboid::new);
         put("msh", CustomModelPartMesh::new);
     }};
-    
+
     //Get a CustomModelPart from a tag, automatically reading the type from that tag.
-    public static <T extends CustomModelPart> CustomModelPart getFromNbtTag(CompoundTag tag){
-        
-        if(tag.contains("pt") == false)
+    public static <T extends CustomModelPart> CustomModelPart getFromNbtTag(CompoundTag tag) {
+
+        if (tag.contains("pt") == false)
             return null;
         String partType = tag.get("pt").asString();
-        
-        if(!model_part_types.containsKey(partType))
+
+        if (!model_part_types.containsKey(partType))
             return null;
-        
+
         Supplier sup = model_part_types.get(partType);
         CustomModelPart part = (CustomModelPart) sup.get();
-        
+
         part.fromNBT(tag);
         return part;
     }
-    
+
     //Write a model part to an NBT Compound Tag
-    public static void writeToCompoundTag(CompoundTag tag, CustomModelPart part){
+    public static void writeToCompoundTag(CompoundTag tag, CustomModelPart part) {
         String partType = part.getPartType();
-        if(!model_part_types.containsKey(partType))
+        if (!model_part_types.containsKey(partType))
             return;
-        
+
         tag.put("pt", StringTag.of(partType));
         part.toNBT(tag);
     }

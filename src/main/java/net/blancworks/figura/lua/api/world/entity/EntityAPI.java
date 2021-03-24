@@ -82,7 +82,7 @@ public class EntityAPI {
                     }
                 });
 
-                set("getName", new ZeroArgFunction() {
+                set("getUUID", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
                         return LuaString.valueOf(targetEntity.getEntityName());
@@ -130,7 +130,7 @@ public class EntityAPI {
                 set("getEquipmentItem", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
-                        int index = arg.checkint();
+                        int index = arg.checkint() - 1;
                         ItemStack stack = retrieveItemByIndex(targetEntity.getItemsEquipped(), index);
                         return ItemStackAPI.getTable(stack);
                     }

@@ -12,6 +12,7 @@ import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.ThreeArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 
 import java.util.HashMap;
 
@@ -28,10 +29,10 @@ public class ParticleAPI {
     }};
     
     private static final ReadOnlyLuaTable globalLuaTable = new ReadOnlyLuaTable(new LuaTable() {{
-        set("addParticle", new ThreeArgFunction() {
+        set("addParticle", new TwoArgFunction() {
             @Override
-            public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                if(!arg1.isstring() || !arg2.istable() || ! arg3.istable())
+            public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                if(!arg1.isstring() || !arg2.istable())
                     return NIL;
 
                 DefaultParticleType targetType = particleTypes.get(arg1.checkjstring());
