@@ -291,13 +291,13 @@ public class FiguraNetworkManager {
         if(FabricLoader.getInstance().isDevelopmentEnvironment() && Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))){
             return "localhost:5001";
         }
-        return "figura.blancworks.net";
+        return "figura.blancworks.org";
     }
     private static String getMinecraftAuthServerAddress() {
-        if(FabricLoader.getInstance().isDevelopmentEnvironment()&& Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))){
+        if(FabricLoader.getInstance().isDevelopmentEnvironment() && Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))){
             return "localhost";
         }
-        return "mc.blancworks.net";
+        return "mc.blancworks.org";
     }
 
     //This is set to 

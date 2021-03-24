@@ -20,7 +20,8 @@ import net.minecraft.util.Identifier;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -108,11 +109,14 @@ public class PlayerTrustManager {
 
     public static void loadDefaultGroups() {
 
-        Path p = FabricLoader.getInstance().getModContainer("figura").get().getPath("assets").resolve("figura").resolve("presets.json");
+        Path p = FabricLoader.getInstance().getModContainer("figura").get().getRootPath().resolve("presets.json");
 
-        if (Files.exists(p)) {
+        //if (Files.exists(p)) {
             try {
-                FileReader fileReader = new FileReader(p.toString());
+                System.out.println(p);
+                InputStream s = Files.newInputStream(p);
+                System.out.println(s);
+                InputStreamReader fileReader = new InputStreamReader(s);
                 JsonParser parser = new JsonParser();
                 JsonObject rootObject = (JsonObject) parser.parse(fileReader);
 
@@ -158,7 +162,7 @@ public class PlayerTrustManager {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }
+        //}
 
         FiguraMod.LOGGER.debug("Loaded presets from assets");
 
