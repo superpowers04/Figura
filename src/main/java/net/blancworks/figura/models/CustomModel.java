@@ -42,7 +42,7 @@ public class CustomModel {
     private int getComplexityRecursive(CustomModelPart part) {
         int ret = 0;
 
-        ret += part.vertexCount;
+        ret += part.vertexCount / 4;
 
         for (CustomModelPart child : part.children) {
             ret += getComplexityRecursive(child);

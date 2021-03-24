@@ -34,6 +34,15 @@ public class VanillaModelAPI {
 
             set("LEFT_LEG", getTableForPart(mdl.leftLeg, 4, script));
             set("RIGHT_LEG", getTableForPart(mdl.rightLeg, 5, script));
+
+            set("HAT", getTableForPart(mdl.helmet, 0, script));
+            set("JACKET", getTableForPart(mdl.jacket, 1, script));
+
+            set("LEFT_SLEEVE", getTableForPart(mdl.leftSleeve, 2, script));
+            set("RIGHT_SLEEVE", getTableForPart(mdl.rightSleeve, 3, script));
+
+            set("LEFT_PANTS", getTableForPart(mdl.leftPantLeg, 4, script));
+            set("RIGHT_PANTS", getTableForPart(mdl.rightPantLeg, 5, script));
         }});
 
         return producedTable;
@@ -127,6 +136,11 @@ public class VanillaModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+
+                    if(arg.isnil()) {
+                        customization.visible = null;
+                        return NIL;
+                    }
 
                     customization.visible = arg.checkboolean();
                     
