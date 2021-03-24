@@ -82,6 +82,10 @@ public class FiguraGuiScreen extends Screen {
             Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
         }));
 
+        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 86 - 5, width, 20, new LiteralText("Open Files Folder"), (buttonWidgetx) -> {
+            Util.getOperatingSystem().open(String.format("file://%s", FiguraMod.getModContentDirectory().toString().replace('\\', '/')));
+        }));
+
         uploadButton = new TexturedButtonWidget(
                 this.width - 32 - 10, 5,
                 32, 32,
