@@ -1,9 +1,11 @@
 # ***Downloads***
-Modrinth : https://modrinth.com/mod/figura
+[Modrinth](https://modrinth.com/mod/figura)
 
-Curseforge : https://www.curseforge.com/minecraft/mc-mods/figura
+[Curseforge](https://www.curseforge.com/minecraft/mc-mods/figura)
 
-**Figura REQUIRES the Fabric API to run.** You can find the Fabric API here : https://www.curseforge.com/minecraft/mc-mods/fabric-api
+[Join the Discord!](https://discord.gg/ekHGHcH8Af)
+
+**Figura REQUIRES the Fabric API to run.** You can find the Fabric API [here](https://www.curseforge.com/minecraft/mc-mods/fabric-api).
 
 # Figura
 
