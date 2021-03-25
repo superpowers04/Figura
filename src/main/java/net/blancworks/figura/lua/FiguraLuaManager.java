@@ -58,7 +58,12 @@ public class FiguraLuaManager {
     
     public static void setupScriptAPI(CustomScript script){
         for (Map.Entry<Identifier, Function<CustomScript,? extends ReadOnlyLuaTable>>  entry : apiSuppliers.entrySet()) {
-            script.scriptGlobals.set(entry.getKey().getPath(), entry.getValue().apply(script));
+            try {
+                script.scriptGlobals.set(entry.getKey().getPath(), entry.getValue().apply(script));
+            } catch (Exception e){
+                System.out.println("Failed to initialize script global " + entry.getKey().toString());
+                e.printStackTrace();
+            }
         }
     }
     

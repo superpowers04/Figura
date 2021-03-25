@@ -78,7 +78,7 @@ public class FiguraTrustScreen extends Screen {
 
         PlayerTrustManager.loadFromDisk();
         
-        int width = (this.width / 2) - 10 - 128;
+        int width = Math.min((this.width / 2) - 10 - 128, 128);
 
         paneY = 48;
         paneWidth = this.width / 3 - 8;
@@ -123,34 +123,41 @@ public class FiguraTrustScreen extends Screen {
         }));
 
         this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new LiteralText("Reload Avatar"), (btx) -> {
-            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
+            
+            if(playerListState.selected instanceof PlayerListEntry) {
+                PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
 
-            if (entry != null) {
-                PlayerDataManager.clearPlayer(entry.getProfile().getId());
+                if (entry != null) {
+                    PlayerDataManager.clearPlayer(entry.getProfile().getId());
+                }
             }
         }));
 
         resetPermissionButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new LiteralText("Reset Permission"), (btx) -> {
-            if (playerListState.selected != null) {
-                TrustContainer tc = permissionList.getCurrentContainer();
+            if(playerListState.selected instanceof PlayerListEntry) {
+                if (playerListState.selected != null) {
+                    TrustContainer tc = permissionList.getCurrentContainer();
 
-                try {
-                    tc.reset(((PermissionSetting) permissionListState.selected).id);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    try {
+                        tc.reset(((PermissionSetting) permissionListState.selected).id);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    permissionList.rebuild();
                 }
-
-                permissionList.rebuild();
             }
         });
 
         resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new LiteralText("Reset All Permissions"), (btx) -> {
-            if (playerListState.selected != null) {
-                TrustContainer tc = permissionList.getCurrentContainer();
+            if(playerListState.selected instanceof PlayerListEntry) {
+                if (playerListState.selected != null) {
+                    TrustContainer tc = permissionList.getCurrentContainer();
 
-                tc.resetAll();
+                    tc.resetAll();
 
-                permissionList.rebuild();
+                    permissionList.rebuild();
+                }
             }
         });
         resetAllPermissionsButton.visible = false;

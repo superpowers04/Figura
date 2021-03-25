@@ -256,6 +256,7 @@ public class CustomScript {
 
         PlayerEntityModelAccess access = (PlayerEntityModelAccess) (Object) model;
         HashSet<ModelPart> parts = access.getDisabledParts();
+        parts.clear();
 
         applyCustomValues(parts, model.head, 0);
         applyCustomValues(parts, model.torso, 1);
@@ -266,14 +267,14 @@ public class CustomScript {
         applyCustomValues(parts, model.leftLeg, 4);
         applyCustomValues(parts, model.rightLeg, 5);
 
-        applyCustomValues(parts, model.helmet, 0);
-        applyCustomValues(parts, model.jacket, 1);
+        applyCustomValues(parts, model.helmet, 6);
+        applyCustomValues(parts, model.jacket, 7);
 
-        applyCustomValues(parts, model.leftSleeve, 2);
-        applyCustomValues(parts, model.rightSleeve, 3);
+        applyCustomValues(parts, model.leftSleeve, 8);
+        applyCustomValues(parts, model.rightSleeve, 9);
 
-        applyCustomValues(parts, model.leftPantLeg, 4);
-        applyCustomValues(parts, model.rightPantLeg, 5);
+        applyCustomValues(parts, model.leftPantLeg, 10);
+        applyCustomValues(parts, model.rightPantLeg, 11);
     }
 
     private void applyCustomValues(HashSet<ModelPart> disabledParts, ModelPart part, int index) {

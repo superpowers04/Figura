@@ -1,6 +1,7 @@
 package net.blancworks.figura.lua.api.model;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -35,14 +36,14 @@ public class VanillaModelAPI {
             set("LEFT_LEG", getTableForPart(mdl.leftLeg, 4, script));
             set("RIGHT_LEG", getTableForPart(mdl.rightLeg, 5, script));
 
-            set("HAT", getTableForPart(mdl.helmet, 0, script));
-            set("JACKET", getTableForPart(mdl.jacket, 1, script));
+            set("HAT", getTableForPart(mdl.helmet, 6, script));
+            set("JACKET", getTableForPart(mdl.jacket, 7, script));
 
-            set("LEFT_SLEEVE", getTableForPart(mdl.leftSleeve, 2, script));
-            set("RIGHT_SLEEVE", getTableForPart(mdl.rightSleeve, 3, script));
+            set("LEFT_SLEEVE", getTableForPart(mdl.leftSleeve, 8, script));
+            set("RIGHT_SLEEVE", getTableForPart(mdl.rightSleeve, 9, script));
 
-            set("LEFT_PANTS", getTableForPart(mdl.leftPantLeg, 4, script));
-            set("RIGHT_PANTS", getTableForPart(mdl.rightPantLeg, 5, script));
+            set("LEFT_PANTS", getTableForPart(mdl.leftPantLeg, 10, script));
+            set("RIGHT_PANTS", getTableForPart(mdl.rightPantLeg, 11, script));
         }});
 
         return producedTable;

@@ -68,7 +68,7 @@ public class FiguraGuiScreen extends Screen {
     protected void init() {
         super.init();
 
-        int width = (this.width / 2) - 10 - 128;
+        int width = Math.min((this.width / 2) - 10 - 128, 128);
         
         this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new LiteralText("Back"), (buttonWidgetx) -> {
             this.client.openScreen(parentScreen);

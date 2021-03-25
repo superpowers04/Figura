@@ -4,21 +4,37 @@ import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.util.math.MathHelper;
 
 public class CustomModelPartCuboid extends CustomModelPart {
 
     //Used to store the data for a cuboid, so that we can re-build it later if need be.
     public CompoundTag cuboidProperties = new CompoundTag();
 
+    public float inflate = 0;
+
     @Override
     public void rebuild() {
-        
+
         vertexData.clear();
         vertexCount = 0;
-        
+
         Vector3f from = v3fFromNbtList((ListTag) cuboidProperties.get("f"));
         Vector3f to = v3fFromNbtList((ListTag) cuboidProperties.get("t"));
-        
+        Vector3f mid = new Vector3f(
+                MathHelper.lerp(0.5f, from.getX(), to.getX()),
+                MathHelper.lerp(0.5f, from.getY(), to.getY()),
+                MathHelper.lerp(0.5f, from.getZ(), to.getZ())
+        );
+
+        from.subtract(mid);
+        from.add(-inflate, -inflate, -inflate);
+        from.add(mid);
+
+        to.subtract(mid);
+        to.add(inflate, inflate, inflate);
+        to.add(mid);
+
         float texWidth = cuboidProperties.getFloat("tw");
         float texHeight = cuboidProperties.getFloat("th");
 
@@ -30,7 +46,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     new Vector3f(-to.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), from.getZ()),
-                    v4fFromNbtList((ListTag)faceData),
+                    v4fFromNbtList((ListTag) faceData),
                     texWidth, texHeight
             );
         }
@@ -43,7 +59,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     new Vector3f(-from.getX(), -from.getY(), to.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), to.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), to.getZ()),
-                    v4fFromNbtList((ListTag)faceData),
+                    v4fFromNbtList((ListTag) faceData),
                     texWidth, texHeight
             );
         }
@@ -56,7 +72,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     new Vector3f(-to.getX(), -from.getY(), to.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), to.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    v4fFromNbtList((ListTag)faceData),
+                    v4fFromNbtList((ListTag) faceData),
                     texWidth, texHeight
             );
         }
@@ -69,7 +85,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     new Vector3f(-from.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), to.getZ()),
-                    v4fFromNbtList((ListTag)faceData),
+                    v4fFromNbtList((ListTag) faceData),
                     texWidth, texHeight
             );
         }
@@ -82,7 +98,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     new Vector3f(-from.getX(), -to.getY(), to.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), from.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    v4fFromNbtList((ListTag)faceData),
+                    v4fFromNbtList((ListTag) faceData),
                     texWidth, texHeight
             );
         }
@@ -95,7 +111,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     new Vector3f(-from.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -from.getY(), to.getZ()),
                     new Vector3f(-to.getX(), -from.getY(), to.getZ()),
-                    v4fFromNbtList((ListTag)faceData),
+                    v4fFromNbtList((ListTag) faceData),
                     texWidth, texHeight
             );
         }
@@ -109,12 +125,17 @@ public class CustomModelPartCuboid extends CustomModelPart {
         nA.cross(nB);
         nA.normalize();
 
+        a.scale(1);
+        b.scale(1);
+        c.scale(1);
+        d.scale(1);
+
         addVertex(b, uv.getX() / texWidth, uv.getW() / texHeight, nA);
         addVertex(a, uv.getZ() / texWidth, uv.getW() / texHeight, nA);
         addVertex(d, uv.getZ() / texWidth, uv.getY() / texHeight, nA);
         addVertex(c, uv.getX() / texWidth, uv.getY() / texHeight, nA);
     }
-    
+
 
     @Override
     public void fromNBT(CompoundTag partTag) {
@@ -133,11 +154,12 @@ public class CustomModelPartCuboid extends CustomModelPart {
     public String getPartType() {
         return "cub";
     }
-    
-    public Vector3f v3fFromNbtList(ListTag list){
+
+    public Vector3f v3fFromNbtList(ListTag list) {
         return new Vector3f(list.getFloat(0), list.getFloat(1), list.getFloat(2));
     }
-    public Vector4f v4fFromNbtList(ListTag list){
+
+    public Vector4f v4fFromNbtList(ListTag list) {
         return new Vector4f(list.getFloat(0), list.getFloat(1), list.getFloat(2), list.getFloat(3));
     }
 }

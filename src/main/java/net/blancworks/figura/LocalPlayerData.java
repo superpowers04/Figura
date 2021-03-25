@@ -83,6 +83,7 @@ public class LocalPlayerData extends PlayerData {
 
         loadedName = fileName;
 
+        model = null;
         //Load JSON file for model.
         String text = null;
         try {
@@ -98,7 +99,7 @@ public class LocalPlayerData extends PlayerData {
             e.printStackTrace();
         }
 
-
+        texture = null;
         //Load texture.
         try {
             Identifier id = new Identifier("figura", playerId.toString());
@@ -113,6 +114,7 @@ public class LocalPlayerData extends PlayerData {
             e.printStackTrace();
         }
 
+        script = null;
         //Load script.
         try {
             String contents = new String(Files.readAllBytes(scriptPath));

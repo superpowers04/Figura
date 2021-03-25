@@ -82,6 +82,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 }
             }
             
+            groupPart.parentType = CustomModelPart.ParentType.Model;
             //Find parent type.
             for (Map.Entry<String, CustomModelPart.ParentType> entry : nameParentTypeTags.entrySet()) {
                 if (groupPart.name.contains(entry.getKey())) {
@@ -140,7 +141,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             elementPart.pivot = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
         if (elementObject.has("rotation"))
             elementPart.rot = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
-
+        if(elementObject.has("inflate"))
+            elementPart.inflate = elementObject.get("inflate").getAsFloat();
+        
 
         Vector3f size = to.copy();
         size.subtract(from);
@@ -165,7 +168,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             add(FloatTag.of(to.getY()));
             add(FloatTag.of(to.getZ()));
         }});
-
+        
         cuboidPropertiesTag.put("tw", FloatTag.of(target.texWidth));
         cuboidPropertiesTag.put("th", FloatTag.of(target.texHeight));
         

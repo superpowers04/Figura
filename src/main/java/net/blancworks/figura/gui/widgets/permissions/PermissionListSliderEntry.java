@@ -40,7 +40,7 @@ public class PermissionListSliderEntry extends PermissionListEntry {
         super.render(matrices, index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
         
         matrices.push();
-        widget.setWidth((rowWidth / 2) - 2);
+        widget.setWidth(Math.min((rowWidth / 2) - 2, 128));
         widget.x = x + 2 + (rowWidth / 2);
         widget.y = y;
         widget.render(matrices, mouseX, mouseY, delta);

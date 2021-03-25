@@ -6,4 +6,6 @@ import java.util.HashSet;
 
 public interface PlayerEntityModelAccess {
     HashSet<ModelPart> getDisabledParts();
+
+    ModelPart getEars();
 }

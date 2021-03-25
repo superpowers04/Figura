@@ -100,16 +100,15 @@ public class CustomModel {
                         //Push to be sure we don't modify the original stack values.
                         tempStack.pop();
                         tempStack.pop();
-                        //tempStack.pop();
+                        tempStack.push();
                         
-                        Vec3d camPos = MinecraftClient.getInstance().getEntityRenderDispatcher().camera.getPos();
-
-
                         double d = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.curr_player.lastRenderX, FiguraMod.curr_player.getX());
                         double e = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.curr_player.lastRenderY, FiguraMod.curr_player.getY());
                         double f = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.curr_player.lastRenderZ, FiguraMod.curr_player.getZ());
-                        
-                        tempStack.translate(-d/2,-e/2,-f/2);
+
+                        tempStack.translate(-d, -e, -f);
+                        tempStack.push();
+                        tempStack.scale(-1,-1,1);
                         tempStack.push();
 
                         break;
@@ -119,7 +118,7 @@ public class CustomModel {
                     left_to_render = part.render(left_to_render, tempStack, vertices, light, overlay);
                 else
                     left_to_render = part.render(left_to_render, matrices, vertices, light, overlay);
-
+                
             } catch (Exception e){
                 e.printStackTrace();
             }

@@ -271,7 +271,7 @@ public class CustomModelPart {
 
     public enum ParentType {
         None,
-        Custom,
+        Model,
         Head,
         LeftArm,
         RightArm,
