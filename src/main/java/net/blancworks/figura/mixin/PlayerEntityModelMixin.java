@@ -117,18 +117,11 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
             if(part == helmet)
                 ears.visible = part.visible;
         }
-        
-        disabled_parts.clear();
     }
 
     @Override
     public HashSet<ModelPart> getDisabledParts() {
         return disabled_parts;
-    }
-
-    @Override
-    public ModelPart getEars() {
-        return ears;
     }
 
     public void resetModelPartAdditionalValues(ModelPart part){

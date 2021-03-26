@@ -3,6 +3,7 @@ package net.blancworks.figura.mixin;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -12,6 +13,8 @@ import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
@@ -19,13 +22,21 @@ import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaNumber;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerEntityRenderer.class)
-public class PlayerEntityRendererMixin {
+public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
 
+    public PlayerEntityRendererMixin(EntityRenderDispatcher dispatcher, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) { super(dispatcher, model, shadowRadius); }
+
+    @Shadow
+    public Identifier getTexture(AbstractClientPlayerEntity entity) {
+        return null;
+    }
+    
     @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     public void render(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo info) {
         FiguraMod.setRenderingMode(abstractClientPlayerEntity, vertexConsumerProvider, ((PlayerEntityRenderer) (Object) this).getModel(), g);
@@ -95,4 +106,22 @@ public class PlayerEntityRendererMixin {
             }
         }
     }
+    
+    
+    @Inject(at = @At("RETURN"), method = "Lnet/minecraft/client/render/entity/PlayerEntityRenderer;setModelPose(Lnet/minecraft/client/network/AbstractClientPlayerEntity;)V")
+    public void setModelPose(AbstractClientPlayerEntity abstractClientPlayerEntity, CallbackInfo inf){
+        PlayerEntityModel model = this.getModel();
+        PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
+
+        if(playerEntityModel.getDisabledParts().contains(model.helmet)) model.helmet.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.jacket)) model.jacket.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.leftPantLeg)) model.leftPantLeg.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.rightPantLeg)) model.rightPantLeg.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.leftSleeve)) model.leftSleeve.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.rightSleeve)) model.rightSleeve.visible = false;
+        
+        playerEntityModel.getDisabledParts().clear();
+    }
+
+
 }
