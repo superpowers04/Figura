@@ -83,7 +83,7 @@ public class FiguraGuiScreen extends Screen {
         }));
 
         this.addButton(new ButtonWidget(this.width - width - 5, this.height - 86 - 5, width, 20, new LiteralText("Open Files Folder"), (buttonWidgetx) -> {
-            Util.getOperatingSystem().open(String.format("file://%s", FiguraMod.getModContentDirectory().toString().replace('\\', '/')));
+            Util.getOperatingSystem().open(FiguraMod.getModContentDirectory().toUri());
         }));
 
         uploadButton = new TexturedButtonWidget(
