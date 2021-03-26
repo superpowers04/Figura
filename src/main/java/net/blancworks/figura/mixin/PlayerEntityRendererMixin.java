@@ -105,6 +105,9 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
                 
             }
         }
+
+        PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
+        playerEntityModel.getDisabledParts().clear();
     }
     
     
