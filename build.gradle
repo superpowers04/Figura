@@ -24,9 +24,13 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	//luaj
+	// LuaJ
 	implementation group: 'org.luaj', name: 'luaj-jse', version: '3.0.1'
 	include group: 'org.luaj', name: 'luaj-jse', version: '3.0.1'
+
+	// OBJ Loader
+	implementation group: 'de.javagl', name: 'obj', version: '0.3.0'
+	include group: 'de.javagl', name: 'obj', version: '0.3.0'
 }
 
 processResources {
