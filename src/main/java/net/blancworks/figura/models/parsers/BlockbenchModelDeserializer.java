@@ -8,9 +8,7 @@ import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.blancworks.figura.models.CustomModelPartMesh;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.FloatTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.*;
 
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -72,8 +70,8 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         if (group.has("name")) {
             groupPart.name = group.get("name").getAsString();
-            
-            if(groupPart.name.startsWith("MESH_")){
+
+            if (groupPart.name.startsWith("MESH_")) {
                 Path meshFilePath = LocalPlayerData.getContentDirectory().resolve(groupPart.name.substring(5) + ".obj");
 
                 if (Files.exists(meshFilePath)) {
@@ -81,7 +79,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     groupPart.name = group.get("name").getAsString();
                 }
             }
-            
+
             groupPart.parentType = CustomModelPart.ParentType.Model;
             //Find parent type.
             for (Map.Entry<String, CustomModelPart.ParentType> entry : nameParentTypeTags.entrySet()) {
@@ -141,9 +139,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             elementPart.pivot = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
         if (elementObject.has("rotation"))
             elementPart.rot = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
-        if(elementObject.has("inflate"))
+        if (elementObject.has("inflate"))
             elementPart.inflate = elementObject.get("inflate").getAsFloat();
-        
+
 
         Vector3f size = to.copy();
         size.subtract(from);
@@ -157,36 +155,32 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         CompoundTag cuboidPropertiesTag = new CompoundTag();
 
-        cuboidPropertiesTag.put("f", new ListTag(){{
+        cuboidPropertiesTag.put("f", new ListTag() {{
             add(FloatTag.of(from.getX()));
             add(FloatTag.of(from.getY()));
             add(FloatTag.of(from.getZ()));
         }});
 
-        cuboidPropertiesTag.put("t", new ListTag(){{
+        cuboidPropertiesTag.put("t", new ListTag() {{
             add(FloatTag.of(to.getX()));
             add(FloatTag.of(to.getY()));
             add(FloatTag.of(to.getZ()));
         }});
-        
+
         cuboidPropertiesTag.put("tw", FloatTag.of(target.texWidth));
         cuboidPropertiesTag.put("th", FloatTag.of(target.texHeight));
-        
-        cuboidPropertiesTag.put("n", JsonArrayToListTag(facesObject.get("north").getAsJsonObject().get("uv").getAsJsonArray()));
-        cuboidPropertiesTag.put("s", JsonArrayToListTag(facesObject.get("south").getAsJsonObject().get("uv").getAsJsonArray()));
-        cuboidPropertiesTag.put("e", JsonArrayToListTag(facesObject.get("east").getAsJsonObject().get("uv").getAsJsonArray()));
-        cuboidPropertiesTag.put("w", JsonArrayToListTag(facesObject.get("west").getAsJsonObject().get("uv").getAsJsonArray()));
-        cuboidPropertiesTag.put("u", JsonArrayToListTag(facesObject.get("up").getAsJsonObject().get("uv").getAsJsonArray()));
-        cuboidPropertiesTag.put("d", JsonArrayToListTag(facesObject.get("down").getAsJsonObject().get("uv").getAsJsonArray()));
-        
+
+        cuboidPropertiesTag.put("n", getTagFromJsonElement(facesObject.get("north")));
+        cuboidPropertiesTag.put("s", getTagFromJsonElement(facesObject.get("south")));
+        cuboidPropertiesTag.put("e", getTagFromJsonElement(facesObject.get("east")));
+        cuboidPropertiesTag.put("w", getTagFromJsonElement(facesObject.get("west")));
+        cuboidPropertiesTag.put("u", getTagFromJsonElement(facesObject.get("up")));
+        cuboidPropertiesTag.put("d", getTagFromJsonElement(facesObject.get("down")));
+
         elementPart.cuboidProperties = cuboidPropertiesTag;
         elementPart.rebuild();
 
         return elementPart;
-    }
-
-    public void generateFace(CustomModelPartCuboid part, Vector3f a, Vector3f b, Vector3f c, Vector3f d, Vector4f uv, float texWidth, float texHeight) {
-        part.generateFace(a, b, c, d, uv, texWidth, texHeight);
     }
 
     public Vector3f v3fFromJArray(JsonArray array) {
@@ -197,14 +191,45 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         return new Vector4f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat(), array.get(3).getAsFloat());
     }
 
-    public ListTag JsonArrayToListTag(JsonArray array){
-        return new ListTag(){{
+    public CompoundTag jsonObjectToCompoundTag(JsonObject obj) {
+        return new CompoundTag() {{
+            for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                JsonElement element = entry.getValue();
+                String key = entry.getKey();
+                put(key, getTagFromJsonElement(element));
+            }
+        }};
+    }
+
+    public ListTag jsonArrayToListTag(JsonArray array) {
+        return new ListTag() {{
             for (JsonElement element : array) {
-                add(FloatTag.of(element.getAsFloat()));
+                add(getTagFromJsonElement(element));
             }
         }};
     }
     
+    public Tag getTagFromJsonElement(JsonElement element){
+        
+        if(element instanceof JsonArray)
+            return jsonArrayToListTag(element.getAsJsonArray());
+        
+        if(element instanceof JsonObject)
+            return jsonObjectToCompoundTag(element.getAsJsonObject());
+        
+        
+        if(element instanceof JsonPrimitive) {
+            JsonPrimitive primitive = element.getAsJsonPrimitive();
+            if (primitive.isBoolean())
+                return ByteTag.of(primitive.getAsBoolean());
+            if (primitive.isNumber())
+                return FloatTag.of(primitive.getAsNumber().floatValue());
+            if (primitive.isString())
+                return StringTag.of(primitive.getAsString());
+        }
+        return null;
+    }
+
     //Sorts out all the things in a json array out by UUID.
     public HashMap<UUID, JsonObject> sortElements(JsonArray elementContainer) {
         HashMap<UUID, JsonObject> objects = new HashMap<>();

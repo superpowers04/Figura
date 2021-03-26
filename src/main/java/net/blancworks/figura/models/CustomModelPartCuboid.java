@@ -3,8 +3,13 @@ package net.blancworks.figura.models;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
+import org.lwjgl.system.MathUtil;
+
+import java.util.ArrayList;
 
 public class CustomModelPartCuboid extends CustomModelPart {
 
@@ -40,84 +45,145 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
         //North
         {
-            ListTag faceData = (ListTag) cuboidProperties.get("n");
+            CompoundTag faceData = (CompoundTag) cuboidProperties.get("n");
+            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
+
+            float rotation = 0;
+
+            if (faceData.contains("rotation")) {
+                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+            }
+
+            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
             generateFace(
                     new Vector3f(-from.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-to.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), from.getZ()),
-                    v4fFromNbtList((ListTag) faceData),
+                    cornerUVs,
                     texWidth, texHeight
             );
         }
 
         //South
         {
-            ListTag faceData = (ListTag) cuboidProperties.get("s");
+
+            CompoundTag faceData = (CompoundTag) cuboidProperties.get("s");
+            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
+
+            float rotation = 0;
+
+            if (faceData.contains("rotation")) {
+                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+            }
+
+            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
             generateFace(
                     new Vector3f(-to.getX(), -from.getY(), to.getZ()),
                     new Vector3f(-from.getX(), -from.getY(), to.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), to.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), to.getZ()),
-                    v4fFromNbtList((ListTag) faceData),
+                    cornerUVs,
                     texWidth, texHeight
             );
         }
 
         //East
         {
-            ListTag faceData = (ListTag) cuboidProperties.get("e");
+            CompoundTag faceData = (CompoundTag) cuboidProperties.get("e");
+            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
+
+            float rotation = 0;
+
+            if (faceData.contains("rotation")) {
+                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+            }
+
+            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
             generateFace(
                     new Vector3f(-to.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-to.getX(), -from.getY(), to.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), to.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    v4fFromNbtList((ListTag) faceData),
+                    cornerUVs,
                     texWidth, texHeight
             );
         }
 
         //West
         {
-            ListTag faceData = (ListTag) cuboidProperties.get("w");
+            CompoundTag faceData = (CompoundTag) cuboidProperties.get("w");
+            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
+
+            float rotation = 0;
+
+            if (faceData.contains("rotation")) {
+                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+            }
+
+            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
             generateFace(
                     new Vector3f(-from.getX(), -from.getY(), to.getZ()),
                     new Vector3f(-from.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), to.getZ()),
-                    v4fFromNbtList((ListTag) faceData),
+                    cornerUVs,
                     texWidth, texHeight
             );
         }
 
         //Top
         {
-            ListTag faceData = (ListTag) cuboidProperties.get("u");
+            CompoundTag faceData = (CompoundTag) cuboidProperties.get("u");
+            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
+
+            float rotation = 0;
+
+            if (faceData.contains("rotation")) {
+                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+            }
+
+            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
             generateFace(
                     new Vector3f(-to.getX(), -to.getY(), to.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), to.getZ()),
                     new Vector3f(-from.getX(), -to.getY(), from.getZ()),
                     new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    v4fFromNbtList((ListTag) faceData),
+                    cornerUVs,
                     texWidth, texHeight
             );
         }
 
         //Bottom
         {
-            ListTag faceData = (ListTag) cuboidProperties.get("d");
+            CompoundTag faceData = (CompoundTag) cuboidProperties.get("d");
+            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
+
+            float rotation = 0;
+
+            if (faceData.contains("rotation")) {
+                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+            }
+
+            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
             generateFace(
                     new Vector3f(-to.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -from.getY(), from.getZ()),
                     new Vector3f(-from.getX(), -from.getY(), to.getZ()),
                     new Vector3f(-to.getX(), -from.getY(), to.getZ()),
-                    v4fFromNbtList((ListTag) faceData),
+                    cornerUVs,
                     texWidth, texHeight
             );
         }
     }
 
-    public void generateFace(Vector3f a, Vector3f b, Vector3f c, Vector3f d, Vector4f uv, float texWidth, float texHeight) {
+    public void generateFace(Vector3f a, Vector3f b, Vector3f c, Vector3f d, ArrayList<Vec2f> uv, float texWidth, float texHeight) {
         Vector3f nA = b.copy();
         nA.subtract(a);
         Vector3f nB = c.copy();
@@ -130,10 +196,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         c.scale(1);
         d.scale(1);
 
-        addVertex(b, uv.getX() / texWidth, uv.getW() / texHeight, nA);
-        addVertex(a, uv.getZ() / texWidth, uv.getW() / texHeight, nA);
-        addVertex(d, uv.getZ() / texWidth, uv.getY() / texHeight, nA);
-        addVertex(c, uv.getX() / texWidth, uv.getY() / texHeight, nA);
+        addVertex(b, uv.get(0).x / texWidth, uv.get(0).y / texHeight, nA);
+        addVertex(a, uv.get(1).x / texWidth, uv.get(1).y / texHeight, nA);
+        addVertex(d, uv.get(2).x / texWidth, uv.get(2).y / texHeight, nA);
+        addVertex(c, uv.get(3).x / texWidth, uv.get(3).y / texHeight, nA);
     }
 
 
@@ -161,5 +227,37 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
     public Vector4f v4fFromNbtList(ListTag list) {
         return new Vector4f(list.getFloat(0), list.getFloat(1), list.getFloat(2), list.getFloat(3));
+    }
+
+    public static ArrayList<Vec2f> rotateUV(Vector4f v, float rotation) {
+
+        ArrayList<Vec2f> cornerUVs = new ArrayList<Vec2f>();
+        cornerUVs.add(new Vec2f(v.getX(), v.getW())); //0,1
+        cornerUVs.add(new Vec2f(v.getZ(), v.getW())); //1,1
+        cornerUVs.add(new Vec2f(v.getZ(), v.getY())); //1,0
+        cornerUVs.add(new Vec2f(v.getX(), v.getY())); //0,0
+
+        int rotationAmount = Math.round(rotation / 90.0f);
+
+        for (int i = 0; i < rotationAmount; i++) {
+            Vec2f last = cornerUVs.get(0);
+            cornerUVs.remove(0);
+            cornerUVs.add(last);
+        }
+
+        return cornerUVs;
+    }
+
+    public static Vec2f rotateVec2f(Vec2f v, float degrees) {
+        float sin = (float) Math.sin(Math.toRadians(degrees));
+        float cos = (float) Math.cos(Math.toRadians(degrees));
+
+        float tx = v.x;
+        float ty = v.y;
+        v = new Vec2f(
+                (cos * tx) - (sin * ty),
+                (sin * tx) + (cos * ty)
+        );
+        return v;
     }
 }
