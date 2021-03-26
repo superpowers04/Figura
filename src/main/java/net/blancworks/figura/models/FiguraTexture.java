@@ -2,7 +2,6 @@ package net.blancworks.figura.models;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.ResourceTexture;
@@ -16,6 +15,7 @@ import org.lwjgl.system.MemoryUtil;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
@@ -40,25 +40,16 @@ public class FiguraTexture extends ResourceTexture {
         return tex;
     }
 
-    public static FiguraTexture load(InputStream stream, Identifier id) throws IOException {
-        FiguraTexture tex = new FiguraTexture();
-        tex.load(stream);
-        tex.id = id;
-        return null;
-    }
-
-
     public void load(Path target_path) {
         MinecraftClient.getInstance().execute(() -> {
             try {
-                InputStream stream = new FileInputStream(target_path.toFile());
-                NativeImage image = NativeImage.read(stream);
-                stream.close();
-                image.writeFile(new File(FabricLoader.getInstance().getGameDir().resolve("OUTPUT_TEXTURE.png").toString()));
-
-                stream = new FileInputStream(target_path.toFile());
+                InputStream stream = Files.newInputStream(target_path);
                 data = IOUtils.toByteArray(stream);
                 stream.close();
+                ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
+                wrapper.put(data);
+                wrapper.rewind();
+                NativeImage image = NativeImage.read(wrapper);
 
                 if (!RenderSystem.isOnRenderThread()) {
                     RenderSystem.recordRenderCall(() -> {
@@ -75,22 +66,6 @@ public class FiguraTexture extends ResourceTexture {
         });
     }
 
-    public void load(InputStream inputStream) throws IOException {
-        NativeImage image = NativeImage.read(inputStream);
-
-        image.writeFile(new File(FabricLoader.getInstance().getGameDir().resolve("OUTPUT_TEXTURE.png").toString()));
-
-        MinecraftClient.getInstance().execute(() -> {
-            if (!RenderSystem.isOnRenderThread()) {
-                RenderSystem.recordRenderCall(() -> {
-                    uploadTexture(image);
-                });
-            } else {
-                uploadTexture(image);
-            }
-        });
-    }
-
     private void uploadTexture(NativeImage image) {
         TextureUtil.allocate(this.getGlId(), image.getWidth(), image.getHeight());
         image.upload(0, 0, 0, true);
@@ -98,37 +73,47 @@ public class FiguraTexture extends ResourceTexture {
     }
 
 
-    public void toNBT(CompoundTag tag) throws Exception {
-
-        if (data == null) {
-            tag.putString("note", "Texture has no data, cannot save : " + id);
-            return;
-        }
-
+    public void toNBT(CompoundTag tag) {
         try {
-            InputStream stream = new ByteArrayInputStream(data);
-            String result = null;
-
-            ByteBuffer byteBuffer = TextureUtil.readAllToByteBuffer(stream);
-            byteBuffer.rewind();
-            byte[] arr = new byte[byteBuffer.remaining()];
-            byteBuffer.get(arr);
-            result = Base64.getEncoder().encodeToString(arr);
-
-            tag.putString("img", result);
+            if (data == null) {
+                tag.putString("note", "Texture has no data, cannot save : " + id);
+                return;
+            }
+            tag.putByteArray("img2", data);
         } catch (Exception e) {
             FiguraMod.LOGGER.log(Level.ERROR,e);
         }
     }
 
-    public void fromNBT(CompoundTag tag) throws Exception {
-        if (!tag.contains("img"))
-            return;
-        
-        CompletableFuture.runAsync(
+    public void fromNBT(CompoundTag tag) {
+        if (tag.contains("img2")) {
+            CompletableFuture.runAsync(
                 () -> {
                     try {
-                        Thread.sleep(250);
+                        ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
+                        wrapper.put(tag.getByteArray("img2"));
+                        wrapper.rewind();
+                        NativeImage image = NativeImage.read(wrapper);
+
+                        MinecraftClient.getInstance().execute(() -> {
+                            if (!RenderSystem.isOnRenderThread()) {
+                                RenderSystem.recordRenderCall(() -> {
+                                    uploadTexture(image);
+                                });
+                            } else {
+                                uploadTexture(image);
+                            }
+                        });
+                    } catch (Exception e) {
+                        FiguraMod.LOGGER.log(Level.ERROR, e);
+                    }
+                },
+                Util.getMainWorkerExecutor()
+            );
+        } else if (tag.contains("img")) { //legacy bloat
+            CompletableFuture.runAsync(
+                () -> {
+                    try {
                         String dataString = tag.getString("img");
                         data = Base64.getDecoder().decode(dataString);
                         ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
@@ -150,7 +135,7 @@ public class FiguraTexture extends ResourceTexture {
                     }
                 },
                 Util.getMainWorkerExecutor()
-        );
-
+            );
+        }
     }
 }

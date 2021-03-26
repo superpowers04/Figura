@@ -246,7 +246,7 @@ public class CustomModelPart {
             partTag.put("ptype", StringTag.of(parentType.toString()));
         }
 
-        if (visible == false) {
+        if (!visible) {
             partTag.put("vsb", ByteTag.of(false));
         }
 
@@ -291,7 +291,7 @@ public class CustomModelPart {
     //Get a CustomModelPart from a tag, automatically reading the type from that tag.
     public static <T extends CustomModelPart> CustomModelPart getFromNbtTag(CompoundTag tag) {
 
-        if (tag.contains("pt") == false)
+        if (!tag.contains("pt"))
             return null;
         String partType = tag.get("pt").asString();
 

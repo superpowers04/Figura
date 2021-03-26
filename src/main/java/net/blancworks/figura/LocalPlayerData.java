@@ -203,7 +203,7 @@ public class LocalPlayerData extends PlayerData {
                 String realName = FilenameUtils.removeExtension(child.getFileName().toString());
 
                 try {
-                    if (realName.equals(loadedName) && doReload == false)
+                    if (realName.equals(loadedName) && !doReload)
                         doReload = true;
                 } catch (Exception e) {
                     System.err.println(e);
@@ -212,7 +212,7 @@ public class LocalPlayerData extends PlayerData {
             }
         }
 
-        if (doReload == true) {
+        if (doReload) {
             watchKeys.clear();
 
             PlayerDataManager.lastLoadedFileName = loadedName;

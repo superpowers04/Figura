@@ -58,7 +58,7 @@ public class PermissionListToggleEntry extends PermissionListEntry{
         
         widget.x = x + 2 + (rowWidth / 2);
         widget.y = y + 2;
-        if(widget.active == false)
+        if(!widget.active)
             widget.setTextureUV(32, 0, 16, 16, new Identifier("figura", "gui/menu/togglebox.png"));
         
         widget.render(matrices, mouseX, mouseY, delta);

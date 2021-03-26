@@ -67,7 +67,7 @@ public class PlayerDataManager {
         if (id == MinecraftClient.getInstance().player.getUuid())
             return localPlayer;
 
-        if (loadedPlayerData.containsKey(id) == false) {
+        if (!loadedPlayerData.containsKey(id)) {
             getData = new PlayerData();
             getData.playerId = id;
 
@@ -182,7 +182,7 @@ public class PlayerDataManager {
                             targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
 
 
-                            while (targetData.texture.ready == false)
+                            while (!targetData.texture.ready)
                                 Thread.sleep(50);
                             saveToCache(targetData, nbtFilePath, hashFilePath);
                         }
@@ -278,7 +278,7 @@ public class PlayerDataManager {
                 try {
                     String hash = FiguraNetworkManager.getAvatarHash(id).get();
 
-                    if (hash.equals(dat.lastHash) == false && hash.length() > 0) {
+                    if (!hash.equals(dat.lastHash) && hash.length() > 0) {
                         toClear.add(id);
                     }
                 } catch (Exception e) {
