@@ -1,13 +1,13 @@
 package net.blancworks.figura.access;
 
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 
 public interface ModelPartAccess {
-    void setAdditionalPos(Vector3f v);
+    void setAdditionalPos(Vec3f v);
 
-    void setAdditionalRot(Vector3f v);
+    void setAdditionalRot(Vec3f v);
 
-    Vector3f getAdditionalPos();
+    Vec3f getAdditionalPos();
 
-    Vector3f getAdditionalRot();
+    Vec3f getAdditionalRot();
 }

@@ -12,7 +12,7 @@ import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.LivingEntity;
 import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Final;
@@ -33,7 +33,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     public ModelPart jacket;
     @Shadow
     @Final
-    public ModelPart leftPantLeg;
+    public ModelPart leftPants;
     @Shadow
     @Final
     public ModelPart leftSleeve;
@@ -42,16 +42,16 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     public ModelPart rightSleeve;
     @Shadow
     @Final
-    public ModelPart rightPantLeg;
+    public ModelPart rightPants;
     @Shadow
     @Final
-    private ModelPart ears;
+    private ModelPart ear;
     @Shadow
     private List<ModelPart> parts;
     private HashSet<ModelPart> disabled_parts = new HashSet<ModelPart>();
     
-    public PlayerEntityModelMixin(float scale) {
-        super(scale);
+    public PlayerEntityModelMixin(ModelPart root) {
+        super(root);
     }
 
     @Override
@@ -71,14 +71,14 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
             } else {
                 for (ModelPart part : parts) {
                     ModelPartAccess mpa = (ModelPartAccess) (Object) part;
-                    mpa.setAdditionalPos(new Vector3f());
-                    mpa.setAdditionalRot(new Vector3f());
+                    mpa.setAdditionalPos(new Vec3f());
+                    mpa.setAdditionalRot(new Vec3f());
                 }
 
 
                 resetModelPartAdditionalValues(head);
-                resetModelPartAdditionalValues(helmet);
-                resetModelPartAdditionalValues(torso);
+                resetModelPartAdditionalValues(hat);
+                resetModelPartAdditionalValues(body);
                 resetModelPartAdditionalValues(jacket);
                 resetModelPartAdditionalValues(rightArm);
                 resetModelPartAdditionalValues(leftArm);
@@ -87,8 +87,8 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                 
                 resetModelPartAdditionalValues(rightSleeve);
                 resetModelPartAdditionalValues(leftSleeve);
-                resetModelPartAdditionalValues(rightPantLeg);
-                resetModelPartAdditionalValues(leftPantLeg);
+                resetModelPartAdditionalValues(rightPants);
+                resetModelPartAdditionalValues(leftPants);
             }
 
             super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
@@ -114,8 +114,8 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
         for (ModelPart part : disabled_parts) {
             part.visible = false;
-            if(part == helmet)
-                ears.visible = part.visible;
+            if(part == hat)
+                ear.visible = part.visible;
         }
     }
 
@@ -126,7 +126,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
     public void resetModelPartAdditionalValues(ModelPart part){
         ModelPartAccess mpa = (ModelPartAccess) (Object) part;
-        mpa.setAdditionalPos(new Vector3f());
-        mpa.setAdditionalRot(new Vector3f());
+        mpa.setAdditionalPos(new Vec3f());
+        mpa.setAdditionalRot(new Vec3f());
     }
 }

@@ -5,8 +5,8 @@ import com.google.common.io.CharStreams;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.PositionTracker;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtTagSizeTracker;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
@@ -135,8 +135,8 @@ public class LocalPlayerData extends PlayerData {
         try {
             FileInputStream fis = new FileInputStream(filePath.toFile());
             DataInputStream dis = new DataInputStream(fis);
-            PositionTracker positionTracker = new PositionTracker(999999999);
-            CompoundTag nbtTag = CompoundTag.READER.read(dis, 0, positionTracker);
+            NbtTagSizeTracker positionTracker = new NbtTagSizeTracker(999999999);
+            NbtCompound nbtTag = NbtCompound.TYPE.read(dis, 0, positionTracker);
             
             fromNBT(nbtTag);
         } catch (Exception e){

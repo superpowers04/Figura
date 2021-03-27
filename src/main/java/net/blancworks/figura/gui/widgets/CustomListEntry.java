@@ -25,7 +25,7 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
         x += getXOffset();
         rowWidth -= getXOffset();
         int iconSize = 32;
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.clearColor(1.0F, 1.0F, 1.0F, 1.0F);
         Text name = getDisplayText();
         StringVisitable trimmedName = name;
         int maxNameWidth = rowWidth - 3;

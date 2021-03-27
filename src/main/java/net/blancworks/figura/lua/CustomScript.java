@@ -12,7 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
@@ -182,11 +182,11 @@ public class CustomScript {
         );
     }
 
-    public void toNBT(CompoundTag tag) {
+    public void toNBT(NbtCompound tag) {
         tag.putString("src", source);
     }
 
-    public void fromNBT(PlayerData data, CompoundTag tag) {
+    public void fromNBT(PlayerData data, NbtCompound tag) {
         load(data, tag.getString("src"));
     }
 
@@ -259,7 +259,7 @@ public class CustomScript {
         parts.clear();
 
         applyCustomValues(parts, model.head, 0);
-        applyCustomValues(parts, model.torso, 1);
+        applyCustomValues(parts, model.body, 1);
 
         applyCustomValues(parts, model.leftArm, 2);
         applyCustomValues(parts, model.rightArm, 3);
@@ -267,14 +267,14 @@ public class CustomScript {
         applyCustomValues(parts, model.leftLeg, 4);
         applyCustomValues(parts, model.rightLeg, 5);
 
-        applyCustomValues(parts, model.helmet, 6);
+        applyCustomValues(parts, model.hat, 6);
         applyCustomValues(parts, model.jacket, 7);
 
         applyCustomValues(parts, model.leftSleeve, 8);
         applyCustomValues(parts, model.rightSleeve, 9);
 
-        applyCustomValues(parts, model.leftPantLeg, 10);
-        applyCustomValues(parts, model.rightPantLeg, 11);
+        applyCustomValues(parts, model.leftPants, 10);
+        applyCustomValues(parts, model.rightPants, 11);
     }
 
     private void applyCustomValues(HashSet<ModelPart> disabledParts, ModelPart part, int index) {

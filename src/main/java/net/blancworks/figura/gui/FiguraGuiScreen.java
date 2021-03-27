@@ -12,13 +12,10 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
@@ -159,15 +156,15 @@ public class FiguraGuiScreen extends Screen {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
         Objects.requireNonNull(MinecraftClient.getInstance()).getTextureManager().bindTexture(DrawableHelper.OPTIONS_BACKGROUND_TEXTURE);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        buffer.begin(7, VertexFormats.POSITION_TEXTURE_COLOR);
+        RenderSystem.clearColor(1.0F, 1.0F, 1.0F, 1.0F);
+        buffer.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE_COLOR);
         buffer.vertex(x1, y2, 0.0D).texture(x1 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
         buffer.vertex(x2, y2, 0.0D).texture(x2 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
         buffer.vertex(x2, y1, 0.0D).texture(x2 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
         buffer.vertex(x1, y1, 0.0D).texture(x1 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
         tessellator.draw();
     }
-    
+
     private static int filesize_warning_threshold = 75000;
     private static int filesize_large_threshold = 100000;
 
@@ -215,14 +212,14 @@ public class FiguraGuiScreen extends Screen {
     public static void drawEntity(int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
         float f = (float) Math.atan((double) (mouseX / 40.0F));
         float g = (float) Math.atan((double) (mouseY / 40.0F));
-        RenderSystem.pushMatrix();
-        RenderSystem.translatef((float) x, (float) y, 1050.0F);
-        RenderSystem.scalef(1.0F, 1.0F, -1.0F);
+        RenderSystem.getModelViewStack().push();
+        RenderSystem.getModelViewStack().translate((float) x, (float) y, 1050.0F);
+        RenderSystem.getModelViewStack().scale(1.0F, 1.0F, -1.0F);
         MatrixStack matrixStack = new MatrixStack();
         matrixStack.translate(0.0D, 0.0D, 1000.0D);
         matrixStack.scale((float) size, (float) size, (float) size);
-        Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
-        Quaternion quaternion2 = Vector3f.POSITIVE_X.getDegreesQuaternion((g * 20.0F) - 15);
+        Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
+        Quaternion quaternion2 = Vec3f.POSITIVE_X.getDegreesQuaternion((g * 20.0F) - 15);
         quaternion.hamiltonProduct(quaternion2);
         matrixStack.multiply(quaternion);
         float h = entity.bodyYaw;
@@ -250,6 +247,6 @@ public class FiguraGuiScreen extends Screen {
         entity.pitch = j;
         entity.prevHeadYaw = k;
         entity.headYaw = l;
-        RenderSystem.popMatrix();
+        RenderSystem.getModelViewStack().pop();
     }
 }

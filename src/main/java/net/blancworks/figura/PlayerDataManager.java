@@ -5,7 +5,7 @@ import com.google.gson.JsonParser;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
@@ -202,7 +202,7 @@ public class PlayerDataManager {
 
     public static void saveToCache(PlayerData data, Path targetPath, Path targetHashPath) {
         try {
-            CompoundTag targetTag = new CompoundTag();
+            NbtCompound targetTag = new NbtCompound();
             data.toNBT(targetTag);
 
             Files.createDirectories(targetPath.getParent());

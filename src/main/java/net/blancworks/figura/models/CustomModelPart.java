@@ -4,8 +4,8 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
@@ -19,10 +19,10 @@ public class CustomModelPart {
     public String name = "NULL";
 
     //Transform data
-    public Vector3f pivot = new Vector3f();
-    public Vector3f pos = new Vector3f();
-    public Vector3f rot = new Vector3f();
-    public Vector3f scale = new Vector3f(1, 1, 1);
+    public Vec3f pivot = new Vec3f();
+    public Vec3f pos = new Vec3f();
+    public Vec3f rot = new Vec3f();
+    public Vec3f scale = new Vec3f(1, 1, 1);
 
     //Offsets
     public float uOffset = 0;
@@ -67,7 +67,7 @@ public class CustomModelPart {
             float u = vertexData.getFloat(startIndex++);
             float v = vertexData.getFloat(startIndex++);
 
-            Vector3f normal = new Vector3f(
+            Vec3f normal = new Vec3f(
                     vertexData.getFloat(startIndex++),
                     vertexData.getFloat(startIndex++),
                     vertexData.getFloat(startIndex++)
@@ -107,9 +107,9 @@ public class CustomModelPart {
     public void applyTransforms(MatrixStack stack) {
         stack.translate(-pivot.getX() / 16.0f, -pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
 
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
-        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(-rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(-rot.getZ()));
 
         stack.translate(pos.getX() / 16.0f, pos.getY() / 16.0f, pos.getZ() / 16.0f);
 
@@ -122,7 +122,7 @@ public class CustomModelPart {
     public void rebuild() {
     }
 
-    public void addVertex(Vector3f vert, float u, float v, Vector3f normal) {
+    public void addVertex(Vec3f vert, float u, float v, Vec3f normal) {
         vertexData.add(vert.getX() / 16.0f);
         vertexData.add(vert.getY() / 16.0f);
         vertexData.add(vert.getZ() / 16.0f);
@@ -134,38 +134,38 @@ public class CustomModelPart {
         vertexCount++;
     }
 
-    public void fromNBT(CompoundTag partTag) {
+    public void fromNBT(NbtCompound partTag) {
 
         //Name
         name = partTag.get("nm").asString();
 
         if (partTag.contains("pos")) {
-            ListTag list = (ListTag) partTag.get("pos");
-            pos = new Vector3f(
+            NbtList list = (NbtList) partTag.get("pos");
+            pos = new Vec3f(
                     list.getFloat(0),
                     list.getFloat(1),
                     list.getFloat(2)
             );
         }
         if (partTag.contains("rot")) {
-            ListTag list = (ListTag) partTag.get("rot");
-            rot = new Vector3f(
+            NbtList list = (NbtList) partTag.get("rot");
+            rot = new Vec3f(
                     list.getFloat(0),
                     list.getFloat(1),
                     list.getFloat(2)
             );
         }
         if (partTag.contains("scl")) {
-            ListTag list = (ListTag) partTag.get("scl");
-            scale = new Vector3f(
+            NbtList list = (NbtList) partTag.get("scl");
+            scale = new Vec3f(
                     list.getFloat(0),
                     list.getFloat(1),
                     list.getFloat(2)
             );
         }
         if (partTag.contains("piv")) {
-            ListTag list = (ListTag) partTag.get("piv");
-            pivot = new Vector3f(
+            NbtList list = (NbtList) partTag.get("piv");
+            pivot = new Vec3f(
                     list.getFloat(0),
                     list.getFloat(1),
                     list.getFloat(2)
@@ -181,16 +181,16 @@ public class CustomModelPart {
         }
 
         if (partTag.contains("uv")) {
-            ListTag uvOffsetTag = (ListTag) partTag.get("uv");
+            NbtList uvOffsetTag = (NbtList) partTag.get("uv");
             uOffset = uvOffsetTag.getFloat(0);
             vOffset = uvOffsetTag.getFloat(1);
         }
 
         if (partTag.contains("chld")) {
-            ListTag childTag = (ListTag) partTag.get("chld");
+            NbtList childTag = (NbtList) partTag.get("chld");
 
-            for (Tag child : childTag) {
-                CompoundTag ct = (CompoundTag) child;
+            for (NbtElement child : childTag) {
+                NbtCompound ct = (NbtCompound) child;
                 CustomModelPart part = getFromNbtTag(ct);
                 part.rebuild();
                 children.add(part);
@@ -198,64 +198,64 @@ public class CustomModelPart {
         }
     }
 
-    public void toNBT(CompoundTag partTag) {
-        partTag.put("nm", StringTag.of(name));
+    public void toNBT(NbtCompound partTag) {
+        partTag.put("nm", NbtString.of(name));
 
-        if (!pos.equals(new Vector3f(0, 0, 0))) {
-            ListTag posTag = new ListTag() {{
-                add(FloatTag.of(pos.getX()));
-                add(FloatTag.of(pos.getY()));
-                add(FloatTag.of(pos.getZ()));
+        if (!pos.equals(new Vec3f(0, 0, 0))) {
+            NbtList posTag = new NbtList() {{
+                add(NbtFloat.of(pos.getX()));
+                add(NbtFloat.of(pos.getY()));
+                add(NbtFloat.of(pos.getZ()));
             }};
             partTag.put("pos", posTag);
         }
-        if (!rot.equals(new Vector3f(0, 0, 0))) {
-            ListTag rotTag = new ListTag() {{
-                add(FloatTag.of(rot.getX()));
-                add(FloatTag.of(rot.getY()));
-                add(FloatTag.of(rot.getZ()));
+        if (!rot.equals(new Vec3f(0, 0, 0))) {
+            NbtList rotTag = new NbtList() {{
+                add(NbtFloat.of(rot.getX()));
+                add(NbtFloat.of(rot.getY()));
+                add(NbtFloat.of(rot.getZ()));
             }};
             partTag.put("rot", rotTag);
         }
-        if (!scale.equals(new Vector3f(1, 1, 1))) {
-            ListTag scaleTag = new ListTag() {{
-                add(FloatTag.of(scale.getX()));
-                add(FloatTag.of(scale.getY()));
-                add(FloatTag.of(scale.getZ()));
+        if (!scale.equals(new Vec3f(1, 1, 1))) {
+            NbtList scaleTag = new NbtList() {{
+                add(NbtFloat.of(scale.getX()));
+                add(NbtFloat.of(scale.getY()));
+                add(NbtFloat.of(scale.getZ()));
             }};
             partTag.put("scl", scaleTag);
         }
-        if (!pivot.equals(new Vector3f(0, 0, 0))) {
-            ListTag pivTag = new ListTag() {{
-                add(FloatTag.of(pivot.getX()));
-                add(FloatTag.of(pivot.getY()));
-                add(FloatTag.of(pivot.getZ()));
+        if (!pivot.equals(new Vec3f(0, 0, 0))) {
+            NbtList pivTag = new NbtList() {{
+                add(NbtFloat.of(pivot.getX()));
+                add(NbtFloat.of(pivot.getY()));
+                add(NbtFloat.of(pivot.getZ()));
             }};
             partTag.put("piv", pivTag);
         }
         
         if(Math.abs(uOffset) > 0.0001f && Math.abs(vOffset) > 0.0001f){
-            ListTag uvOffsetTag = new ListTag(){{
-                add(FloatTag.of(uOffset));
-                add(FloatTag.of(vOffset));
+            NbtList uvOffsetTag = new NbtList(){{
+                add(NbtFloat.of(uOffset));
+                add(NbtFloat.of(vOffset));
             }};
             partTag.put("uv", uvOffsetTag);
         }
 
         if (parentType != ParentType.None) {
-            partTag.put("ptype", StringTag.of(parentType.toString()));
+            partTag.put("ptype", NbtString.of(parentType.toString()));
         }
 
         if (visible == false) {
-            partTag.put("vsb", ByteTag.of(false));
+            partTag.put("vsb", NbtByte.of(false));
         }
 
         //Parse children.
         if (children.size() > 0) {
-            ListTag childrenTag = new ListTag();
+            NbtList childrenTag = new NbtList();
 
             for (CustomModelPart child : children) {
-                CompoundTag tag = new CompoundTag();
+                NbtCompound tag = new NbtCompound();
                 writeToCompoundTag(tag, child);
                 childrenTag.add(tag);
             }
@@ -289,7 +289,7 @@ public class CustomModelPart {
     }};
 
     //Get a CustomModelPart from a tag, automatically reading the type from that tag.
-    public static <T extends CustomModelPart> CustomModelPart getFromNbtTag(CompoundTag tag) {
+    public static <T extends CustomModelPart> CustomModelPart getFromNbtTag(NbtCompound tag) {
 
         if (tag.contains("pt") == false)
             return null;
@@ -306,12 +306,12 @@ public class CustomModelPart {
     }
 
     //Write a model part to an NBT Compound Tag
-    public static void writeToCompoundTag(CompoundTag tag, CustomModelPart part) {
+    public static void writeToCompoundTag(NbtCompound tag, CustomModelPart part) {
         String partType = part.getPartType();
         if (!model_part_types.containsKey(partType))
             return;
 
-        tag.put("pt", StringTag.of(partType));
+        tag.put("pt", NbtString.of(partType));
         part.toNBT(tag);
     }
 }
