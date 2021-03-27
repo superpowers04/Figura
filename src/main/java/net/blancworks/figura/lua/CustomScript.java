@@ -87,24 +87,24 @@ public class CustomScript {
         };
 
         curr_task = CompletableFuture.runAsync(
-                () -> {
-                    setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
-                    Varargs result = scriptThread.resume(LuaValue.NIL);
-                    curr_task = null;
+            () -> {
+                setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
+                scriptThread.resume(LuaValue.NIL);
+                try {
+                    tick = scriptGlobals.get("tick").checkfunction();
+                } catch (LuaError error) {
+                    FiguraMod.LOGGER.warn(error);
                 }
+        
+                try {
+                    render = scriptGlobals.get("render").checkfunction();
+                } catch (LuaError error) {
+                    FiguraMod.LOGGER.warn(error);
+                }
+                curr_task = null;
+            }
         );
-
-        try {
-            tick = scriptGlobals.get("tick").checkfunction();
-        } catch (LuaError error) {
-            //noop
-        }
-
-        try {
-            render = scriptGlobals.get("render").checkfunction();
-        } catch (LuaError error) {
-            //noop
-        }
+        
     }
 
     public void runFunction(LuaFunction func, int max_lua_instructions) {
