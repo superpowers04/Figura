@@ -90,8 +90,9 @@ public class FiguraTexture extends ResourceTexture {
             CompletableFuture.runAsync(
                 () -> {
                     try {
+                        data = tag.getByteArray("img2");
                         ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
-                        wrapper.put(tag.getByteArray("img2"));
+                        wrapper.put(data);
                         wrapper.rewind();
                         NativeImage image = NativeImage.read(wrapper);
 
