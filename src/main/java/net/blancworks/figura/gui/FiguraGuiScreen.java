@@ -119,15 +119,19 @@ public class FiguraGuiScreen extends Screen {
         
         //Draw player preview.
         {
-            MinecraftClient.getInstance().getTextureManager().bindTexture(playerBackgroundTexture);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            RenderSystem.setShaderTexture(0, playerBackgroundTexture);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             drawTexture(matrices, this.width / 2, this.height / 2 - (128), 0, 0, 128, 128, 128, 128);
 
-            drawEntity(this.width / 2 + 64, this.height / 2 - 32, 32, 0, 0, MinecraftClient.getInstance().player);
+            drawEntity(this.width / 2 + 64, this.height / 2 - 32, 32, (this.width / 2.0F + 64) - mouseX, (this.height / 2.0F - 32 - 50) - mouseY, MinecraftClient.getInstance().player);
         }
 
         //Draw avatar info
         {
-            MinecraftClient.getInstance().getTextureManager().bindTexture(playerBackgroundTexture);
+            RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+            RenderSystem.setShaderTexture(0, playerBackgroundTexture);
+            RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
             drawTexture(matrices, this.width / 2, this.height / 2, 0, 0, 128, 128, 128, 128);
 
             int currY = this.height / 2 + 4 - 12;
@@ -155,16 +159,17 @@ public class FiguraGuiScreen extends Screen {
     static void overlayBackground(int x1, int y1, int x2, int y2, int red, int green, int blue, int startAlpha, int endAlpha) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        Objects.requireNonNull(MinecraftClient.getInstance()).getTextureManager().bindTexture(DrawableHelper.OPTIONS_BACKGROUND_TEXTURE);
-        RenderSystem.clearColor(1.0F, 1.0F, 1.0F, 1.0F);
-        buffer.begin(VertexFormat.DrawMode.TRIANGLES, VertexFormats.POSITION_TEXTURE_COLOR);
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderTexture(0, OPTIONS_BACKGROUND_TEXTURE);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
         buffer.vertex(x1, y2, 0.0D).texture(x1 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
         buffer.vertex(x2, y2, 0.0D).texture(x2 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
         buffer.vertex(x2, y1, 0.0D).texture(x2 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
         buffer.vertex(x1, y1, 0.0D).texture(x1 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
         tessellator.draw();
     }
-
+    
     private static int filesize_warning_threshold = 75000;
     private static int filesize_large_threshold = 100000;
 
@@ -212,16 +217,18 @@ public class FiguraGuiScreen extends Screen {
     public static void drawEntity(int x, int y, int size, float mouseX, float mouseY, LivingEntity entity) {
         float f = (float) Math.atan((double) (mouseX / 40.0F));
         float g = (float) Math.atan((double) (mouseY / 40.0F));
-        RenderSystem.getModelViewStack().push();
-        RenderSystem.getModelViewStack().translate((float) x, (float) y, 1050.0F);
-        RenderSystem.getModelViewStack().scale(1.0F, 1.0F, -1.0F);
-        MatrixStack matrixStack = new MatrixStack();
-        matrixStack.translate(0.0D, 0.0D, 1000.0D);
-        matrixStack.scale((float) size, (float) size, (float) size);
+        MatrixStack matrixStack = RenderSystem.getModelViewStack();
+        matrixStack.push();
+        matrixStack.translate((float) x, (float) y, 1050.0F);
+        matrixStack.scale(1.0F, 1.0F, -1.0F);
+        RenderSystem.applyModelViewMatrix();
+        MatrixStack matrixStack2 = new MatrixStack();
+        matrixStack2.translate(0.0D, 0.0D, 1000.0D);
+        matrixStack2.scale((float) size, (float) size, (float) size);
         Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
-        Quaternion quaternion2 = Vec3f.POSITIVE_X.getDegreesQuaternion((g * 20.0F) - 15);
+        Quaternion quaternion2 = Vec3f.POSITIVE_X.getDegreesQuaternion(g * 20.0F);
         quaternion.hamiltonProduct(quaternion2);
-        matrixStack.multiply(quaternion);
+        matrixStack2.multiply(quaternion);
         float h = entity.bodyYaw;
         float i = entity.yaw;
         float j = entity.pitch;
@@ -232,13 +239,14 @@ public class FiguraGuiScreen extends Screen {
         entity.pitch = -g * 20.0F;
         entity.headYaw = entity.yaw;
         entity.prevHeadYaw = entity.yaw;
+        DiffuseLighting.method_34742();
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
         entityRenderDispatcher.setRotation(quaternion2);
         entityRenderDispatcher.setRenderShadows(false);
         VertexConsumerProvider.Immediate immediate = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
         RenderSystem.runAsFancy(() -> {
-            entityRenderDispatcher.render(entity, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F, matrixStack, immediate, 15728880);
+            entityRenderDispatcher.render(entity, 0.0D, 0.0D, 0.0D, 0.0F, 1.0F, matrixStack2, immediate, 15728880);
         });
         immediate.draw();
         entityRenderDispatcher.setRenderShadows(true);
@@ -247,6 +255,8 @@ public class FiguraGuiScreen extends Screen {
         entity.pitch = j;
         entity.prevHeadYaw = k;
         entity.headYaw = l;
-        RenderSystem.getModelViewStack().pop();
+        matrixStack.pop();
+        RenderSystem.applyModelViewMatrix();
+        DiffuseLighting.enableGuiDepthLighting();
     }
 }
