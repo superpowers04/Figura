@@ -28,6 +28,10 @@ public class PlayerDataManager {
     private static HashSet<UUID> serverRequestedPlayers = new HashSet<UUID>();
     private static ArrayList<UUID> toClear = new ArrayList<>();
 
+    //Hash checking stuff
+    public static Queue<UUID> toRefresh = new ArrayDeque<UUID>();
+    public static HashSet<UUID> toRefreshSet = new HashSet<UUID>();
+
     public static LocalPlayerData localPlayer;
 
     public static String lastLoadedFileName;
@@ -243,25 +247,35 @@ public class PlayerDataManager {
         }
         toClear.clear();
 
-        if (hashCheckCooldown > 0) {
-            hashCheckCooldown--;
-        }
-
-        Date checkDate = new Date();
         for (Map.Entry<UUID, PlayerData> entry : loadedPlayerData.entrySet()) {
             entry.getValue().tick();
+        }
 
-            if (hashCheckCooldown == 0) {
-                if (checkDate.getTime() - entry.getValue().lastHashCheckTime.getTime() > 1000 * 10) {
-                    checkPlayerDataHash(entry.getValue().playerId);
-                    break;
-                }
+        if(hashCheckCooldown > 0)
+            hashCheckCooldown--;
+
+        if(hashCheckCooldown == 0 && toRefresh.size() > 0){
+            UUID nextID = toRefresh.remove();
+            toRefreshSet.remove(nextID);
+
+            checkPlayerDataHash(nextID);
+            hashCheckCooldown += 4;
+        }
+    }
+
+    public static void checkForPlayerDataRefresh(PlayerData data){
+        Date checkDate = new Date();
+        if (checkDate.getTime() - data.lastHashCheckTime.getTime() > 1000 * 10) {
+            if(!toRefreshSet.contains(data.playerId)) {
+                toRefreshSet.add(data.playerId);
+                toRefresh.add(data.playerId);
             }
         }
     }
 
     public static void checkPlayerDataHash(UUID id) {
         PlayerData dat = getDataForPlayer(id);
+        dat.lastHashCheckTime = new Date();
 
         if (dat instanceof LocalPlayerData) {
             if (((LocalPlayerData) dat).loadedName != null) {
@@ -270,8 +284,6 @@ public class PlayerDataManager {
         }
 
         if (dat.lastHash.length() != 0) {
-            dat.lastHashCheckTime = new Date();
-
             hashCheckCooldown = 4;
 
             CompletableFuture.runAsync(() -> {

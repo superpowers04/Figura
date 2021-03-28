@@ -181,7 +181,7 @@ public class FiguraGuiScreen extends Screen {
 
         CompletableFuture.runAsync(() -> {
 
-            for (int i = 0; i < 1000; i++) {
+            for (int i = 0; i < 10; i++) {
                 if (PlayerDataManager.localPlayer.texture.ready == true) {
                     break;
                 }
