@@ -125,7 +125,7 @@ public class FiguraGuiScreen extends Screen {
             MinecraftClient.getInstance().getTextureManager().bindTexture(playerBackgroundTexture);
             drawTexture(matrices, this.width / 2, this.height / 2 - (128), 0, 0, 128, 128, 128, 128);
 
-            drawEntity(this.width / 2 + 64, this.height / 2 - 32, 32, 0, 0, MinecraftClient.getInstance().player);
+            drawEntity(this.width / 2 + 64, this.height / 2 - 32, 32, (this.width / 2 + 64) - mouseX, (this.height / 2 - 32 - 50) - mouseY, MinecraftClient.getInstance().player);
         }
 
         //Draw avatar info
@@ -222,7 +222,7 @@ public class FiguraGuiScreen extends Screen {
         matrixStack.translate(0.0D, 0.0D, 1000.0D);
         matrixStack.scale((float) size, (float) size, (float) size);
         Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
-        Quaternion quaternion2 = Vector3f.POSITIVE_X.getDegreesQuaternion((g * 20.0F) - 15);
+        Quaternion quaternion2 = Vector3f.POSITIVE_X.getDegreesQuaternion(g * 20.0F);
         quaternion.hamiltonProduct(quaternion2);
         matrixStack.multiply(quaternion);
         float h = entity.bodyYaw;
