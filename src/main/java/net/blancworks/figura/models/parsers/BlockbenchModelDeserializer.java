@@ -241,18 +241,18 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
     public HashMap<UUID, JsonObject> sortElements(JsonArray elementContainer) {
         HashMap<UUID, JsonObject> objects = new HashMap<>();
         for (JsonElement jsonElement : elementContainer) {
-            if (jsonElement.isJsonObject() == false)
+            if (!jsonElement.isJsonObject())
                 continue;
             JsonObject obj = jsonElement.getAsJsonObject();
 
-            if (obj.has("uuid") == false)
+            if (!obj.has("uuid"))
                 continue;
             objects.put(UUID.fromString(obj.get("uuid").getAsString()), obj);
 
 
             if (obj.has("children")) {
                 JsonElement children = obj.get("children");
-                if (children.isJsonArray() == true) {
+                if (children.isJsonArray()) {
                     JsonArray childrenArray = children.getAsJsonArray();
 
                     objects.putAll(sortElements(childrenArray));

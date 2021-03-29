@@ -96,7 +96,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
             if (playerData != null) {
                 if (playerData.model != null) {
-                    if (playerData.texture == null || playerData.texture.ready == false) {
+                    if (playerData.texture == null || !playerData.texture.ready) {
                         return;
                     }
                     //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.

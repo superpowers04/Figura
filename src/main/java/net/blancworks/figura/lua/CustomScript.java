@@ -11,11 +11,11 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
@@ -36,12 +36,15 @@ public class CustomScript {
 
     public String source;
 
-    private CompletableFuture curr_task;
-    private Queue<String> queued_tasks = new ArrayDeque<String>();
+    private CompletableFuture<Void> curr_task;
+    private Queue<LuaFunction> queued_tasks = new ArrayDeque<>();
     private LuaThread scriptThread;
 
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
+
+    private @Nullable LuaFunction tick = null;
+    private @Nullable LuaFunction render = null;
 
     public VanillaModelPartCustomization[] vanillaModifications = new VanillaModelPartCustomization[12];
 
@@ -84,19 +87,31 @@ public class CustomScript {
         };
 
         curr_task = CompletableFuture.runAsync(
-                () -> {
-                    setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
-                    Varargs result = scriptThread.resume(LuaValue.NIL);
-                    curr_task = null;
+            () -> {
+                setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
+                scriptThread.resume(LuaValue.NIL);
+                try {
+                    tick = scriptGlobals.get("tick").checkfunction();
+                } catch (LuaError error) {
+                    FiguraMod.LOGGER.warn(error);
                 }
+        
+                try {
+                    render = scriptGlobals.get("render").checkfunction();
+                } catch (LuaError error) {
+                    FiguraMod.LOGGER.warn(error);
+                }
+                curr_task = null;
+            }
         );
+        
     }
 
-    public void runFunction(String name, int max_lua_instructions) {
+    public void runFunction(LuaFunction func, int max_lua_instructions) {
         if (curr_task != null)
             return;
 
-        runFunctionAsync(name, max_lua_instructions);
+        runFunctionAsync(func, max_lua_instructions);
     }
 
     public int getTrustInstructionLimit(Identifier settingID) {
@@ -105,25 +120,19 @@ public class CustomScript {
         return tc.getIntSetting(settingID);
     }
 
-    public void runFunctionImmediate(String name, int max_lua_instructions) {
-        runFunctionImmediate(name, max_lua_instructions, LuaValue.NIL);
-    }
-
-    public void runFunctionImmediate(String name, int max_lua_instructions, LuaValue args) {
+    private void runFunctionImmediate(LuaFunction func, int max_lua_instructions, LuaValue args) {
         try {
             scriptGlobals.running.state.bytecodes = 0;
-            LuaValue function = scriptGlobals.get(name);
-            LuaFunction func = function.checkfunction();
             setInstructionLimit(max_lua_instructions);
-            if (function.isnil() == false && function.isfunction() == true) {
-                function.call(args);
+            if (!func.isnil() && func.isfunction()) {
+                func.call(args);
             }
 
-            if(name == "tick"){
+            if (func == tick) {
                 tickInstructionCount = scriptGlobals.running.state.bytecodes;
             }
 
-            if(name == "render"){
+            if (func == render) {
                 renderInstructionCount = scriptGlobals.running.state.bytecodes;
             }
         } catch (Throwable e) {
@@ -131,37 +140,36 @@ public class CustomScript {
         }
     }
 
-    public void queueTask(String name, int max_lua_instructions) {
+    public void queueTask(LuaFunction func, int max_lua_instructions) {
         if (curr_task == null) {
-            curr_task = runFunctionAsync(name, max_lua_instructions);
+            curr_task = runFunctionAsync(func, max_lua_instructions);
         } else {
-            queued_tasks.add(name);
+            queued_tasks.add(func);
         }
     }
 
-    public CompletableFuture runFunctionAsync(String name, int max_lua_instructions) {
+    private CompletableFuture<Void> runFunctionAsync(LuaFunction func, int max_lua_instructions) {
         return CompletableFuture.runAsync(
                 () -> {
                     try {
                         scriptGlobals.running.state.bytecodes = 0;
-                        LuaValue function = scriptGlobals.get(name);
-                        LuaFunction func = function.checkfunction();
+                        
                         setInstructionLimit(max_lua_instructions);
-                        if (function.isnil() == false && function.isfunction() == true) {
-                            function.call();
+                        if (!func.isnil() && func.isfunction()) {
+                            func.call();
                         }
                         
-                        if(name == "tick"){
+                        if (func == tick) {
                             tickInstructionCount = scriptGlobals.running.state.bytecodes;
                         }
 
-                        if(name == "render"){
+                        if (func == render) {
                             renderInstructionCount = scriptGlobals.running.state.bytecodes;
                         }
                         
                         curr_task = null;
-                        if (queued_tasks.size() > 0) {
-                            String nextTask = queued_tasks.remove();
+                        if (!queued_tasks.isEmpty()) {
+                            LuaFunction nextTask = queued_tasks.remove();
                             runFunctionAsync(nextTask, max_lua_instructions);
                         }
                     } catch (Exception e) {
@@ -247,8 +255,15 @@ public class CustomScript {
             return;
         }
 
-        runFunction("tick", getTrustInstructionLimit(PlayerTrustManager.maxTickID));
+        if (tick != null) {
+            runFunction(tick,  getTrustInstructionLimit(PlayerTrustManager.maxTickID));
+        }
+    }
 
+    public void render(float deltaTime) {
+        if (render != null) {
+            runFunctionImmediate(render, getTrustInstructionLimit(PlayerTrustManager.maxRenderID), LuaValue.valueOf(deltaTime));
+        }
     }
 
 

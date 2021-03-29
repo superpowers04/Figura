@@ -7,7 +7,6 @@ import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
-import org.lwjgl.system.MathUtil;
 
 import java.util.ArrayList;
 
