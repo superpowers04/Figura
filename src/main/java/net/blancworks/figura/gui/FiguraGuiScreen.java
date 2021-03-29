@@ -234,11 +234,13 @@ public class FiguraGuiScreen extends Screen {
         float j = entity.pitch;
         float k = entity.prevHeadYaw;
         float l = entity.headYaw;
+        boolean invisible = entity.isInvisible();
         entity.bodyYaw = 180.0F + f * 20.0F;
         entity.yaw = 180.0F + f * 40.0F;
         entity.pitch = -g * 20.0F;
         entity.headYaw = entity.yaw;
         entity.prevHeadYaw = entity.yaw;
+        entity.setInvisible(false);
         DiffuseLighting.method_34742();
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
@@ -255,6 +257,7 @@ public class FiguraGuiScreen extends Screen {
         entity.pitch = j;
         entity.prevHeadYaw = k;
         entity.headYaw = l;
+        entity.setInvisible(invisible);
         matrixStack.pop();
         RenderSystem.applyModelViewMatrix();
         DiffuseLighting.enableGuiDepthLighting();
