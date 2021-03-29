@@ -146,8 +146,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }
         if (elementObject.has("rotation"))
             elementPart.rot = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
-        if (elementObject.has("inflate"))
-            elementPart.inflate = elementObject.get("inflate").getAsFloat();
 
 
         Vector3f size = to.copy();
@@ -161,6 +159,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
 
         CompoundTag cuboidPropertiesTag = new CompoundTag();
+
+        if (elementObject.has("inflate"))
+            cuboidPropertiesTag.put("inf", FloatTag.of(elementObject.get("inflate").getAsFloat()));
 
         cuboidPropertiesTag.put("f", new ListTag() {{
             add(FloatTag.of(from.getX()));
