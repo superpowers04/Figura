@@ -70,7 +70,7 @@ public class PlayerData {
     public boolean toNBT(CompoundTag tag) {
 
         //You cannot save a model that is incomplete.
-        if (model == null || texture == null || script == null)
+        if (model == null || texture == null)
             return false;
 
         tag.putIntArray("version", current_version);
@@ -93,10 +93,12 @@ public class PlayerData {
             return false;
         }
 
-        //Put Script.
-        CompoundTag scriptTag = new CompoundTag();
-        script.toNBT(scriptTag);
-        tag.put("script", scriptTag);
+        if(script != null) {
+            //Put Script.
+            CompoundTag scriptTag = new CompoundTag();
+            script.toNBT(scriptTag);
+            tag.put("script", scriptTag);
+        }
 
         return true;
     }
