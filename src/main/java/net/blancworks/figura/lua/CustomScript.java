@@ -136,7 +136,7 @@ public class CustomScript {
                 renderInstructionCount = scriptGlobals.running.state.bytecodes;
             }
         } catch (Throwable e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
@@ -173,7 +173,7 @@ public class CustomScript {
                             runFunctionAsync(nextTask, max_lua_instructions);
                         }
                     } catch (Exception e) {
-                        FiguraMod.LOGGER.log(Level.ERROR, e);
+                        e.printStackTrace();
                     }
                 }
         );

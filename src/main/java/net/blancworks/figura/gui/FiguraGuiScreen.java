@@ -186,7 +186,7 @@ public class FiguraGuiScreen extends Screen {
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    FiguraMod.LOGGER.log(Level.ERROR, e);
+                    e.printStackTrace();
                 }
             }
 

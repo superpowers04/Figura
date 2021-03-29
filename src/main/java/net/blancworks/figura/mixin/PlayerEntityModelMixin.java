@@ -105,7 +105,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                 }
             }
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 

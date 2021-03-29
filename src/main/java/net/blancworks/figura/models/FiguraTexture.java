@@ -61,7 +61,7 @@ public class FiguraTexture extends ResourceTexture {
                 filePath = target_path;
                 ready = true;
             } catch (Exception e) {
-                FiguraMod.LOGGER.log(Level.ERROR, e);
+                e.printStackTrace();
             }
         });
     }
@@ -81,7 +81,7 @@ public class FiguraTexture extends ResourceTexture {
             }
             tag.putByteArray("img2", data);
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR,e);
+            e.printStackTrace();
         }
     }
 
@@ -106,7 +106,7 @@ public class FiguraTexture extends ResourceTexture {
                             }
                         });
                     } catch (Exception e) {
-                        FiguraMod.LOGGER.log(Level.ERROR, e);
+                        e.printStackTrace();
                     }
                 },
                 Util.getMainWorkerExecutor()
@@ -132,7 +132,7 @@ public class FiguraTexture extends ResourceTexture {
                             }
                         });
                     } catch (Exception e) {
-                        FiguraMod.LOGGER.log(Level.ERROR, e);
+                        e.printStackTrace();
                     }
                 },
                 Util.getMainWorkerExecutor()

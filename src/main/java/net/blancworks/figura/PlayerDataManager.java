@@ -192,7 +192,7 @@ public class PlayerDataManager {
                         }
                     }
                 } catch (Exception e) {
-                    FiguraMod.LOGGER.log(Level.ERROR, e);
+                    e.printStackTrace();
                     httpURLConnection.disconnect();
                 }
 
@@ -200,7 +200,7 @@ public class PlayerDataManager {
 
             }, Util.getMainWorkerExecutor());
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 

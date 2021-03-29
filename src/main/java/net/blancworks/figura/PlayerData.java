@@ -89,7 +89,7 @@ public class PlayerData {
             texture.toNBT(textureTag);
             tag.put("texture", textureTag);
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
             return false;
         }
 
@@ -135,7 +135,7 @@ public class PlayerData {
                 script.fromNBT(this, scriptTag);
             }
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
@@ -153,7 +153,7 @@ public class PlayerData {
             model.totalSize = w.size();
             return w.size();
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
 
         return -1;

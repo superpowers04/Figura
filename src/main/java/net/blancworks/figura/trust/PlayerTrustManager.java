@@ -165,7 +165,6 @@ public class PlayerTrustManager {
         //}
 
         FiguraMod.LOGGER.debug("Loaded presets from assets");
-
     }
 
     public static void addGroup(TrustContainer container) {

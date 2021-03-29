@@ -77,7 +77,7 @@ public class LocalPlayerData extends PlayerData {
             try {
                 watchKeys.put(contentDirectory.toString(), contentDirectory.register(ws, StandardWatchEventKinds.ENTRY_MODIFY));
             } catch (Exception e) {
-                FiguraMod.LOGGER.log(Level.ERROR, e);
+                e.printStackTrace();
             }
         }
 
@@ -140,7 +140,7 @@ public class LocalPlayerData extends PlayerData {
             
             fromNBT(nbtTag);
         } catch (Exception e){
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
@@ -148,7 +148,7 @@ public class LocalPlayerData extends PlayerData {
         try {
             super.loadFromNBT(stream);
         } catch (Exception e){
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
     
@@ -162,7 +162,7 @@ public class LocalPlayerData extends PlayerData {
                     texture.load(texturePath);
                     texture.ready = true;
                 } catch (Exception e) {
-                    FiguraMod.LOGGER.log(Level.ERROR, e);
+                    e.printStackTrace();
                     return;
                 }
             }, Util.getMainWorkerExecutor());

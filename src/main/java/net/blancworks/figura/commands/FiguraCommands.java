@@ -102,7 +102,7 @@ public class FiguraCommands {
             FileOutputStream outputStream = new FileOutputStream(outputPath.toFile());
             NbtIo.writeCompressed(infoTag, outputStream);
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
         return 1;
     }
@@ -141,7 +141,7 @@ public class FiguraCommands {
                 }
                 httpURLConnection.disconnect();
             } catch (Exception e) {
-                FiguraMod.LOGGER.log(Level.ERROR, e);
+                e.printStackTrace();
             }
         }, Util.getMainWorkerExecutor());
 

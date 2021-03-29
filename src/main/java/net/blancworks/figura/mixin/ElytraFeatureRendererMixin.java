@@ -35,7 +35,7 @@ public abstract class ElytraFeatureRendererMixin<T extends LivingEntity, M exten
             if(additionalMove != null)
                 matrixStack.translate(additionalMove.getX() / 16.0f, additionalMove.getY() / 16.0f, additionalMove.getZ() / 16.0f);
         } catch (Exception e){
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
