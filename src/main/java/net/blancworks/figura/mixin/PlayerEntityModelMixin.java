@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -58,12 +59,12 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         try {
             PlayerData playerData = FiguraMod.getCurrData();
-            
             if(playerData == null) {
                 super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
                 return;
             }
-            
+
+            PlayerDataManager.checkForPlayerDataRefresh(playerData);
             TrustContainer trustData = playerData.getTrustContainer();
             
             if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {

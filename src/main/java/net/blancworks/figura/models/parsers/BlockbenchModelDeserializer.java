@@ -90,7 +90,11 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             }
         }
         if (group.has("visibility")) groupPart.visible = group.get("visibility").getAsBoolean();
-        if (group.has("origin")) groupPart.pivot = v3fFromJArray(group.get("origin").getAsJsonArray());
+        if (group.has("origin")) {
+            Vector3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
+            corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
+            groupPart.pivot = corrected;
+        }
         if (group.has("rotation")) groupPart.rot = v3fFromJArray(group.get("rotation").getAsJsonArray());
 
         JsonArray children = group.get("children").getAsJsonArray();
@@ -135,8 +139,11 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         Vector3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
         Vector3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
-        if (elementObject.has("origin"))
-            elementPart.pivot = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
+        if (elementObject.has("origin")) {
+            Vector3f corrected = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
+            corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
+            elementPart.pivot = corrected;
+        }
         if (elementObject.has("rotation"))
             elementPart.rot = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
         if (elementObject.has("inflate"))

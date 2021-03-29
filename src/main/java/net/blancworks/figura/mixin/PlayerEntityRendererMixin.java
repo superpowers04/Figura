@@ -98,6 +98,9 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 
             }
         }
+
+        PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
+        playerEntityModel.getDisabledParts().clear();
     }
     
     
