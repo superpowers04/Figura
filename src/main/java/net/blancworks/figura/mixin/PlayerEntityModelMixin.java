@@ -59,13 +59,12 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         try {
             PlayerData playerData = FiguraMod.getCurrData();
-            PlayerDataManager.checkForPlayerDataRefresh(playerData);
-            
             if(playerData == null) {
                 super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
                 return;
             }
-            
+
+            PlayerDataManager.checkForPlayerDataRefresh(playerData);
             TrustContainer trustData = playerData.getTrustContainer();
             
             if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
