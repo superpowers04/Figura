@@ -263,6 +263,10 @@ public class PlayerDataManager {
     }
 
     public static void checkForPlayerDataRefresh(PlayerData data){
+        //Never check local player data for this.
+        if(data == localPlayer)
+            return;
+
         Date checkDate = new Date();
         if (checkDate.getTime() - data.lastHashCheckTime.getTime() > 1000 * 10) {
             if(!toRefreshSet.contains(data.playerId)) {

@@ -13,6 +13,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.*;
 import java.nio.file.*;
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -41,7 +42,8 @@ public class LocalPlayerData extends PlayerData {
     @Override
     public void tick() {
         isLoaded = true;
-        
+
+        lastHashCheckTime = new Date(Long.MAX_VALUE);
         if(loadedName != null)
             lastHash = "";
         super.tick();
