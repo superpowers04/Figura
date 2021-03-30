@@ -103,7 +103,7 @@ public class FiguraNetworkManager {
                 parseAuthKeyFromDisconnectMessage(tc);
             }
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
 
         //Auth all done :D
@@ -125,7 +125,7 @@ public class FiguraNetworkManager {
                 reason.getSiblings().set(1, garbleText);
             }
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e.toString());
+            e.printStackTrace();
         }
     }
 
@@ -232,11 +232,11 @@ public class FiguraNetworkManager {
 
                     FiguraMod.LOGGER.log(Level.DEBUG, httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
-                    FiguraMod.LOGGER.log(Level.ERROR, e);
+                    e.printStackTrace();
                 }
             }, Util.getMainWorkerExecutor());
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 

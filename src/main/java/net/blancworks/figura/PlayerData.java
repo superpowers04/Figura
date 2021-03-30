@@ -10,10 +10,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.Level;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -67,10 +66,10 @@ public class PlayerData {
 
     //Turns this PlayerData into an NBT tag.
     //Used when saving to a file to upload, or just be compressed on-disk.
-    public boolean toNBT(NbtCompound tag) {
+    public boolean toNBT(CompoundTag tag) {
 
         //You cannot save a model that is incomplete.
-        if (model == null || texture == null || script == null)
+        if (model == null || texture == null)
             return false;
 
         tag.putIntArray("version", current_version);
@@ -79,30 +78,32 @@ public class PlayerData {
         tag.putUuid("id", playerId);
 
         //Put Model.
-        NbtCompound modelTag = new NbtCompound();
+        CompoundTag modelTag = new CompoundTag();
         model.toNBT(modelTag);
         tag.put("model", modelTag);
 
         //Put Texture.
         try {
-            NbtCompound textureTag = new NbtCompound();
+            CompoundTag textureTag = new CompoundTag();
             texture.toNBT(textureTag);
             tag.put("texture", textureTag);
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
             return false;
         }
 
-        //Put Script.
-        NbtCompound scriptTag = new NbtCompound();
-        script.toNBT(scriptTag);
-        tag.put("script", scriptTag);
+        if(script != null) {
+            //Put Script.
+            CompoundTag scriptTag = new CompoundTag();
+            script.toNBT(scriptTag);
+            tag.put("script", scriptTag);
+        }
 
         return true;
     }
 
     //Loads a PlayerData from the given NBT tag.
-    public void fromNBT(NbtCompound tag) {
+    public void fromNBT(CompoundTag tag) {
 
         int[] version = tag.getIntArray("version");
 
@@ -117,31 +118,31 @@ public class PlayerData {
         }
 
         try {
-            NbtCompound modelTag = (NbtCompound) tag.get("model");
+            CompoundTag modelTag = (CompoundTag) tag.get("model");
             model = new CustomModel();
             model.fromNBT(modelTag);
             model.owner = this;
 
-            NbtCompound textureTag = (NbtCompound) tag.get("texture");
+            CompoundTag textureTag = (CompoundTag) tag.get("texture");
             texture = new FiguraTexture();
             texture.id = new Identifier("figura", playerId.toString());
             getTextureManager().registerTexture(texture.id, texture);
             texture.fromNBT(textureTag);
 
             if (tag.contains("script")) {
-                NbtCompound scriptTag = (NbtCompound) tag.get("script");
+                CompoundTag scriptTag = (CompoundTag) tag.get("script");
 
                 script = new CustomScript();
                 script.fromNBT(this, scriptTag);
             }
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
     //Returns the file size, in bytes.
     public int getFileSize() {
-        NbtCompound writtenTag = new NbtCompound();
+        CompoundTag writtenTag = new CompoundTag();
         toNBT(writtenTag);
 
         try {
@@ -153,7 +154,7 @@ public class PlayerData {
             model.totalSize = w.size();
             return w.size();
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
 
         return -1;
@@ -249,7 +250,7 @@ public class PlayerData {
     }
 
     public void loadFromNBT(DataInputStream input) throws Exception {
-        NbtCompound nbtTag = NbtIo.readCompressed(input);
+        CompoundTag nbtTag = NbtIo.readCompressed(input);
 
         fromNBT(nbtTag);
 

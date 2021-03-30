@@ -5,7 +5,6 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.network.FiguraNetworkManager;
@@ -17,7 +16,6 @@ import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.logging.log4j.Level;
 
 import java.io.DataInputStream;
 import java.io.File;
@@ -102,7 +100,7 @@ public class FiguraCommands {
             FileOutputStream outputStream = new FileOutputStream(outputPath.toFile());
             NbtIo.writeCompressed(infoTag, outputStream);
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
         return 1;
     }
@@ -141,7 +139,7 @@ public class FiguraCommands {
                 }
                 httpURLConnection.disconnect();
             } catch (Exception e) {
-                FiguraMod.LOGGER.log(Level.ERROR, e);
+                e.printStackTrace();
             }
         }, Util.getMainWorkerExecutor());
 

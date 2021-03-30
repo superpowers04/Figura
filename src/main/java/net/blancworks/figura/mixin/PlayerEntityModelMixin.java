@@ -15,7 +15,6 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.LivingEntity;
-import org.apache.logging.log4j.Level;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -96,16 +95,16 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
             if (playerData != null) {
                 if (playerData.model != null) {
-                    if (playerData.texture == null || playerData.texture.ready == false) {
+                    if (playerData.texture == null || !playerData.texture.ready) {
                         return;
                     }
                     //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.
-                    VertexConsumer actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
+                    VertexConsumer actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(RenderLayer.getEntityCutoutNoCull(playerData.texture.id));
                     playerData.model.render((PlayerEntityModel<?>) (Object) this, matrices, actualConsumer, light, overlay, red, green, blue, alpha);
                 }
             }
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 

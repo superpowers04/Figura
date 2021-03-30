@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class PlayerTrustManager {
@@ -165,7 +166,6 @@ public class PlayerTrustManager {
         //}
 
         FiguraMod.LOGGER.debug("Loaded presets from assets");
-
     }
 
     public static void addGroup(TrustContainer container) {
@@ -189,7 +189,7 @@ public class PlayerTrustManager {
                     continue;
                 }
 
-                Identifier settingID = new Identifier("setting", entry.getKey().toLowerCase());
+                Identifier settingID = new Identifier("setting", entry.getKey().toLowerCase(Locale.ENGLISH));
                 if (permissionSettings.containsKey(settingID)) {
                     PermissionSetting newSetting = permissionSettings.get(settingID).getCopy();
                     newSetting.fromJson(entry.getValue());

@@ -5,7 +5,6 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
@@ -13,8 +12,6 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import org.luaj.vm2.LuaNumber;
 
 import java.util.ArrayList;
 
@@ -61,7 +58,7 @@ public class CustomModel {
         int left_to_render = getMaxRenderAmount();
 
         if (owner.script != null) {
-            owner.script.runFunctionImmediate("render", owner.script.getTrustInstructionLimit(PlayerTrustManager.maxRenderID), LuaNumber.valueOf(FiguraMod.deltaTime));
+            owner.script.render(FiguraMod.deltaTime);
         }
 
         for (CustomModelPart part : all_parts) {

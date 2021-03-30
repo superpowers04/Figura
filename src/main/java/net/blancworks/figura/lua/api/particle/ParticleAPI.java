@@ -12,7 +12,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 
 import java.util.HashMap;

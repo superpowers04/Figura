@@ -10,18 +10,20 @@ import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
+import org.jetbrains.annotations.Nullable;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
 import java.util.ArrayDeque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
@@ -29,21 +31,24 @@ import java.util.concurrent.CompletableFuture;
 public class CustomScript {
 
     public PlayerData playerData;
-    
+
     public Globals scriptGlobals = new Globals();
     public LuaValue setHook;
     public LuaValue hookFunction;
 
     public String source;
 
-    private CompletableFuture curr_task;
-    private Queue<String> queued_tasks = new ArrayDeque<String>();
+    private CompletableFuture<Void> curr_task;
+    private Queue<LuaFunction> queued_tasks = new ArrayDeque<>();
     private LuaThread scriptThread;
 
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
 
-    public VanillaModelPartCustomization[] vanillaModifications = new VanillaModelPartCustomization[12];
+    private @Nullable LuaFunction tick = null;
+    private @Nullable LuaFunction render = null;
+
+    public VanillaModelPartCustomization[] vanillaModifications = new VanillaModelPartCustomization[16];
 
     public CustomScript() {
     }
@@ -85,18 +90,34 @@ public class CustomScript {
 
         curr_task = CompletableFuture.runAsync(
                 () -> {
-                    setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
-                    Varargs result = scriptThread.resume(LuaValue.NIL);
+                    try {
+                        setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
+                        scriptThread.resume(LuaValue.NIL);
+                    } catch (LuaError error){
+                        error.printStackTrace();
+                    }
+                    try {
+                        tick = scriptGlobals.get("tick").checkfunction();
+                    } catch (LuaError error) {
+                        error.printStackTrace();
+                    }
+
+                    try {
+                        render = scriptGlobals.get("render").checkfunction();
+                    } catch (LuaError error) {
+                        error.printStackTrace();
+                    }
                     curr_task = null;
                 }
         );
+
     }
 
-    public void runFunction(String name, int max_lua_instructions) {
+    public void runFunction(LuaFunction func, int max_lua_instructions) {
         if (curr_task != null)
             return;
 
-        runFunctionAsync(name, max_lua_instructions);
+        runFunctionAsync(func, max_lua_instructions);
     }
 
     public int getTrustInstructionLimit(Identifier settingID) {
@@ -105,67 +126,60 @@ public class CustomScript {
         return tc.getIntSetting(settingID);
     }
 
-    public void runFunctionImmediate(String name, int max_lua_instructions) {
-        runFunctionImmediate(name, max_lua_instructions, LuaValue.NIL);
-    }
-
-    public void runFunctionImmediate(String name, int max_lua_instructions, LuaValue args) {
+    private void runFunctionImmediate(LuaFunction func, int max_lua_instructions, LuaValue args) {
         try {
             scriptGlobals.running.state.bytecodes = 0;
-            LuaValue function = scriptGlobals.get(name);
-            LuaFunction func = function.checkfunction();
             setInstructionLimit(max_lua_instructions);
-            if (function.isnil() == false && function.isfunction() == true) {
-                function.call(args);
+            if (!func.isnil() && func.isfunction()) {
+                func.call(args);
             }
 
-            if(name == "tick"){
+            if (func == tick) {
                 tickInstructionCount = scriptGlobals.running.state.bytecodes;
             }
 
-            if(name == "render"){
+            if (func == render) {
                 renderInstructionCount = scriptGlobals.running.state.bytecodes;
             }
         } catch (Throwable e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
-    public void queueTask(String name, int max_lua_instructions) {
+    public void queueTask(LuaFunction func, int max_lua_instructions) {
         if (curr_task == null) {
-            curr_task = runFunctionAsync(name, max_lua_instructions);
+            curr_task = runFunctionAsync(func, max_lua_instructions);
         } else {
-            queued_tasks.add(name);
+            queued_tasks.add(func);
         }
     }
 
-    public CompletableFuture runFunctionAsync(String name, int max_lua_instructions) {
+    private CompletableFuture<Void> runFunctionAsync(LuaFunction func, int max_lua_instructions) {
         return CompletableFuture.runAsync(
                 () -> {
                     try {
                         scriptGlobals.running.state.bytecodes = 0;
-                        LuaValue function = scriptGlobals.get(name);
-                        LuaFunction func = function.checkfunction();
+
                         setInstructionLimit(max_lua_instructions);
-                        if (function.isnil() == false && function.isfunction() == true) {
-                            function.call();
+                        if (!func.isnil() && func.isfunction()) {
+                            func.call();
                         }
-                        
-                        if(name == "tick"){
+
+                        if (func == tick) {
                             tickInstructionCount = scriptGlobals.running.state.bytecodes;
                         }
 
-                        if(name == "render"){
+                        if (func == render) {
                             renderInstructionCount = scriptGlobals.running.state.bytecodes;
                         }
-                        
+
                         curr_task = null;
-                        if (queued_tasks.size() > 0) {
-                            String nextTask = queued_tasks.remove();
+                        if (!queued_tasks.isEmpty()) {
+                            LuaFunction nextTask = queued_tasks.remove();
                             runFunctionAsync(nextTask, max_lua_instructions);
                         }
                     } catch (Exception e) {
-                        FiguraMod.LOGGER.log(Level.ERROR, e);
+                        e.printStackTrace();
                     }
                 }
         );
@@ -182,11 +196,11 @@ public class CustomScript {
         );
     }
 
-    public void toNBT(NbtCompound tag) {
+    public void toNBT(CompoundTag tag) {
         tag.putString("src", source);
     }
 
-    public void fromNBT(PlayerData data, NbtCompound tag) {
+    public void fromNBT(PlayerData data, CompoundTag tag) {
         load(data, tag.getString("src"));
     }
 
@@ -228,9 +242,9 @@ public class CustomScript {
 
         for (LuaValue key : table.keys()) {
             LuaValue value = table.get(key);
-            
+
             String valString = depthString + '"' + key.toString() + '"' + " : " + value.toString();
-            
+
             if (value.istable()) {
                 MinecraftClient.getInstance().player.sendMessage(new LiteralText(valString), false);
                 logTableContents(value.checktable(), depth + 1, nextDepthString);
@@ -247,8 +261,15 @@ public class CustomScript {
             return;
         }
 
-        runFunction("tick", getTrustInstructionLimit(PlayerTrustManager.maxTickID));
+        if (tick != null) {
+            runFunction(tick, getTrustInstructionLimit(PlayerTrustManager.maxTickID));
+        }
+    }
 
+    public void render(float deltaTime) {
+        if (render != null) {
+            runFunctionImmediate(render, getTrustInstructionLimit(PlayerTrustManager.maxRenderID), LuaValue.valueOf(deltaTime));
+        }
     }
 
 
@@ -259,7 +280,7 @@ public class CustomScript {
         parts.clear();
 
         applyCustomValues(parts, model.head, 0);
-        applyCustomValues(parts, model.body, 1);
+        applyCustomValues(parts, model.torso, 1);
 
         applyCustomValues(parts, model.leftArm, 2);
         applyCustomValues(parts, model.rightArm, 3);
@@ -267,28 +288,89 @@ public class CustomScript {
         applyCustomValues(parts, model.leftLeg, 4);
         applyCustomValues(parts, model.rightLeg, 5);
 
-        applyCustomValues(parts, model.hat, 6);
+        applyCustomValues(parts, model.helmet, 6);
         applyCustomValues(parts, model.jacket, 7);
 
         applyCustomValues(parts, model.leftSleeve, 8);
         applyCustomValues(parts, model.rightSleeve, 9);
 
-        applyCustomValues(parts, model.leftPants, 10);
-        applyCustomValues(parts, model.rightPants, 11);
+        applyCustomValues(parts, model.leftPantLeg, 10);
+        applyCustomValues(parts, model.rightPantLeg, 11);
+    }
+
+    public void applyArmorValues(BipedEntityModel model, int index) {
+
+        if (index == 12)
+            applyCustomValues(model.head, 12);
+
+        if (index == 13) {
+            applyCustomValues(model.torso, 13);
+            applyCustomValues(model.rightArm, 13);
+            applyCustomValues(model.leftArm, 13);
+        }
+
+        if (index == 14) {
+            applyCustomValues(model.torso, 14);
+            applyCustomValues(model.leftLeg, 14);
+            applyCustomValues(model.rightLeg, 14);
+        }
+
+        if (index == 15) {
+            applyCustomValues(model.leftLeg, 15);
+            applyCustomValues(model.rightLeg, 15);
+        }
+
     }
 
     private void applyCustomValues(HashSet<ModelPart> disabledParts, ModelPart part, int index) {
         ModelPartAccess access = (ModelPartAccess) (Object) part;
         VanillaModelPartCustomization customization = vanillaModifications[index];
 
-        if(customization == null)
+        if (customization == null)
             return;
-        
+
         if (customization.pos != null)
             access.setAdditionalPos(customization.pos);
         if (customization.rot != null)
             access.setAdditionalRot(customization.rot);
         if (customization.visible != null && !customization.visible)
             disabledParts.add(part);
+    }
+
+    private void applyCustomValues(ModelPart part, int index) {
+        VanillaModelPartCustomization customization = vanillaModifications[index];
+
+        if (customization == null)
+            return;
+
+        if (part == null)
+            return;
+
+        if (part.visible && customization.visible != null && !customization.visible)
+            part.visible = false;
+    }
+
+
+    public HashMap<String, Integer> armorNameToIndex = new HashMap<String, Integer>() {{
+        put("HELMET", 12);
+        put("CHESTPLATE", 13);
+        put("LEGGINGS", 14);
+        put("BOOTS", 15);
+    }};
+
+    public void setArmorEnabled(String targetPart, boolean state) {
+        if (!armorNameToIndex.containsKey(targetPart)) return;
+        int index = armorNameToIndex.get(targetPart);
+        VanillaModelPartCustomization vpc = vanillaModifications[index];
+
+        vpc.visible = state;
+    }
+
+    public void clearArmorEnable(String targetPart) {
+        if (!armorNameToIndex.containsKey(targetPart)) return;
+        int index = armorNameToIndex.get(targetPart);
+        VanillaModelPartCustomization vpc = vanillaModifications[index];
+
+        vpc.visible = null;
     }
 }

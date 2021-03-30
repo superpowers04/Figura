@@ -13,33 +13,32 @@ import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRendererFactory;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
-import org.luaj.vm2.LuaNumber;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerEntityRenderer.class)
-public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
+public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
 
-    public PlayerEntityRendererMixin(EntityRendererFactory.Context context, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) { super(context, model, shadowRadius); }
-
-    @Shadow
-    public Identifier getTexture(AbstractClientPlayerEntity entity) {
-        return null;
-    }
+    PlayerEntityRendererMixin(EntityRenderDispatcher dispatcher, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) { super(dispatcher, model, shadowRadius); }
     
     @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     public void render(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo info) {
         FiguraMod.setRenderingMode(abstractClientPlayerEntity, vertexConsumerProvider, ((PlayerEntityRenderer) (Object) this).getModel(), g);
+    }
+
+    @Inject(at = @At("TAIL"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
+    public void render_tail(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo info) {
+        PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
+        playerEntityModel.getDisabledParts().clear();
     }
 
     @Inject(at = @At("HEAD"), method = "renderArm(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/model/ModelPart;Lnet/minecraft/client/model/ModelPart;)V", cancellable = true)
@@ -50,7 +49,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
         PlayerEntityModel model = realRenderer.getModel();
 
         if(playerData.script != null) {
-            playerData.script.runFunctionImmediate("render", playerData.script.getTrustInstructionLimit(PlayerTrustManager.maxRenderID), LuaNumber.valueOf(FiguraMod.deltaTime));
+            playerData.script.render(FiguraMod.deltaTime);
         }
 
         TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", playerData.playerId.toString()));
@@ -59,12 +58,12 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
                 playerData.script.applyCustomValues(model);
         } else {
             ModelPartAccess mpa = (ModelPartAccess) (Object) model.rightArm;
-            mpa.setAdditionalPos(new Vec3f());
-            mpa.setAdditionalRot(new Vec3f());
+            mpa.setAdditionalPos(new Vector3f());
+            mpa.setAdditionalRot(new Vector3f());
 
             mpa = (ModelPartAccess) (Object) model.leftArm;
-            mpa.setAdditionalPos(new Vec3f());
-            mpa.setAdditionalRot(new Vec3f());
+            mpa.setAdditionalPos(new Vector3f());
+            mpa.setAdditionalRot(new Vector3f());
         }
     }
 
@@ -78,7 +77,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
         if (playerData != null) {
             
             if (playerData.model != null) {
-                if (playerData.texture == null || playerData.texture.ready == false) {
+                if (playerData.texture == null || !playerData.texture.ready) {
                     return;
                 }
                 //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.
@@ -116,15 +115,14 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
         PlayerEntityModel model = this.getModel();
         PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
 
-        if(playerEntityModel.getDisabledParts().contains(model.hat)) model.hat.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.helmet)) model.helmet.visible = false;
         if(playerEntityModel.getDisabledParts().contains(model.jacket)) model.jacket.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.leftPants)) model.leftPants.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.rightPants)) model.rightPants.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.leftPantLeg)) model.leftPantLeg.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.rightPantLeg)) model.rightPantLeg.visible = false;
         if(playerEntityModel.getDisabledParts().contains(model.leftSleeve)) model.leftSleeve.visible = false;
         if(playerEntityModel.getDisabledParts().contains(model.rightSleeve)) model.rightSleeve.visible = false;
         
         playerEntityModel.getDisabledParts().clear();
     }
-
 
 }

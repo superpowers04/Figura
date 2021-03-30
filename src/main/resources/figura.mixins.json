@@ -13,7 +13,8 @@
     "ElytraFeatureRendererMixin",
     "GameMenuScreenMixin",
     "MatrixStackMixin",
-    "MixinDebugHud"
+    "MixinDebugHud",
+    "ArmorFeatureRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

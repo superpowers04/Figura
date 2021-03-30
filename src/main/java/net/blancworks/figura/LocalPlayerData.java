@@ -10,10 +10,10 @@ import net.minecraft.nbt.NbtTagSizeTracker;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.nio.file.*;
+import java.sql.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -42,7 +42,8 @@ public class LocalPlayerData extends PlayerData {
     @Override
     public void tick() {
         isLoaded = true;
-        
+
+        lastHashCheckTime = new Date(Long.MAX_VALUE);
         if(loadedName != null)
             lastHash = "";
         super.tick();
@@ -77,7 +78,7 @@ public class LocalPlayerData extends PlayerData {
             try {
                 watchKeys.put(contentDirectory.toString(), contentDirectory.register(ws, StandardWatchEventKinds.ENTRY_MODIFY));
             } catch (Exception e) {
-                FiguraMod.LOGGER.log(Level.ERROR, e);
+                e.printStackTrace();
             }
         }
 
@@ -140,7 +141,7 @@ public class LocalPlayerData extends PlayerData {
             
             fromNBT(nbtTag);
         } catch (Exception e){
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
@@ -148,7 +149,7 @@ public class LocalPlayerData extends PlayerData {
         try {
             super.loadFromNBT(stream);
         } catch (Exception e){
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
     
@@ -162,7 +163,7 @@ public class LocalPlayerData extends PlayerData {
                     texture.load(texturePath);
                     texture.ready = true;
                 } catch (Exception e) {
-                    FiguraMod.LOGGER.log(Level.ERROR, e);
+                    e.printStackTrace();
                     return;
                 }
             }, Util.getMainWorkerExecutor());
@@ -203,7 +204,7 @@ public class LocalPlayerData extends PlayerData {
                 String realName = FilenameUtils.removeExtension(child.getFileName().toString());
 
                 try {
-                    if (realName.equals(loadedName) && doReload == false)
+                    if (realName.equals(loadedName) && !doReload)
                         doReload = true;
                 } catch (Exception e) {
                     System.err.println(e);
@@ -212,7 +213,7 @@ public class LocalPlayerData extends PlayerData {
             }
         }
 
-        if (doReload == true) {
+        if (doReload) {
             watchKeys.clear();
 
             PlayerDataManager.lastLoadedFileName = loadedName;
