@@ -44,142 +44,159 @@ public class CustomModelPartCuboid extends CustomModelPart {
         float texHeight = cuboidProperties.getFloat("th");
 
         //North
-        {
+        if(cuboidProperties.contains("n")){
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("n");
-            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
+            
+            if(faceData.contains("texture")) {
+                Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            float rotation = 0;
+                float rotation = 0;
 
-            if (faceData.contains("rotation")) {
-                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                if (faceData.contains("rotation")) {
+                    rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                }
+
+                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
+                generateFace(
+                        new Vector3f(-from.getX(), -from.getY(), from.getZ()),
+                        new Vector3f(-to.getX(), -from.getY(), from.getZ()),
+                        new Vector3f(-to.getX(), -to.getY(), from.getZ()),
+                        new Vector3f(-from.getX(), -to.getY(), from.getZ()),
+                        cornerUVs,
+                        texWidth, texHeight
+                );
             }
-
-            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
-
-            generateFace(
-                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
-                    cornerUVs,
-                    texWidth, texHeight
-            );
         }
 
         //South
-        {
-
+        if(cuboidProperties.contains("s")){
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("s");
-            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
+            
+            if(faceData.contains("texture")) {
+                Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            float rotation = 0;
+                float rotation = 0;
 
-            if (faceData.contains("rotation")) {
-                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                if (faceData.contains("rotation")) {
+                    rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                }
+
+                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
+                generateFace(
+                        new Vector3f(-to.getX(), -from.getY(), to.getZ()),
+                        new Vector3f(-from.getX(), -from.getY(), to.getZ()),
+                        new Vector3f(-from.getX(), -to.getY(), to.getZ()),
+                        new Vector3f(-to.getX(), -to.getY(), to.getZ()),
+                        cornerUVs,
+                        texWidth, texHeight
+                );
             }
-
-            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
-
-            generateFace(
-                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
-                    cornerUVs,
-                    texWidth, texHeight
-            );
         }
 
         //East
-        {
+        if(cuboidProperties.contains("e")){
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("e");
-            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            float rotation = 0;
+            if(faceData.contains("texture")) {
+                Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            if (faceData.contains("rotation")) {
-                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                float rotation = 0;
+
+                if (faceData.contains("rotation")) {
+                    rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                }
+
+                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
+                generateFace(
+                        new Vector3f(-to.getX(), -from.getY(), from.getZ()),
+                        new Vector3f(-to.getX(), -from.getY(), to.getZ()),
+                        new Vector3f(-to.getX(), -to.getY(), to.getZ()),
+                        new Vector3f(-to.getX(), -to.getY(), from.getZ()),
+                        cornerUVs,
+                        texWidth, texHeight
+                );
             }
-
-            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
-
-            generateFace(
-                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    cornerUVs,
-                    texWidth, texHeight
-            );
         }
 
         //West
-        {
+        if(cuboidProperties.contains("w")){
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("w");
-            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            float rotation = 0;
+            if(faceData.contains("texture")) {
+                Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            if (faceData.contains("rotation")) {
-                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                float rotation = 0;
+
+                if (faceData.contains("rotation")) {
+                    rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                }
+
+                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
+                generateFace(
+                        new Vector3f(-from.getX(), -from.getY(), to.getZ()),
+                        new Vector3f(-from.getX(), -from.getY(), from.getZ()),
+                        new Vector3f(-from.getX(), -to.getY(), from.getZ()),
+                        new Vector3f(-from.getX(), -to.getY(), to.getZ()),
+                        cornerUVs,
+                        texWidth, texHeight
+                );
             }
-
-            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
-
-            generateFace(
-                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
-                    cornerUVs,
-                    texWidth, texHeight
-            );
         }
 
         //Top
-        {
+        if(cuboidProperties.contains("u")){
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("u");
-            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            float rotation = 0;
+            if(faceData.contains("texture")) {
+                Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            if (faceData.contains("rotation")) {
-                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                float rotation = 0;
+
+                if (faceData.contains("rotation")) {
+                    rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                }
+
+                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
+                generateFace(
+                        new Vector3f(-to.getX(), -to.getY(), to.getZ()),
+                        new Vector3f(-from.getX(), -to.getY(), to.getZ()),
+                        new Vector3f(-from.getX(), -to.getY(), from.getZ()),
+                        new Vector3f(-to.getX(), -to.getY(), from.getZ()),
+                        cornerUVs,
+                        texWidth, texHeight
+                );
             }
-
-            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
-
-            generateFace(
-                    new Vector3f(-to.getX(), -to.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), to.getZ()),
-                    new Vector3f(-from.getX(), -to.getY(), from.getZ()),
-                    new Vector3f(-to.getX(), -to.getY(), from.getZ()),
-                    cornerUVs,
-                    texWidth, texHeight
-            );
         }
 
         //Bottom
-        {
+        if(cuboidProperties.contains("d")){
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("d");
-            Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            float rotation = 0;
+            if(faceData.contains("texture")) {
+                Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
-            if (faceData.contains("rotation")) {
-                rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                float rotation = 0;
+
+                if (faceData.contains("rotation")) {
+                    rotation = ((FloatTag) faceData.get("rotation")).getFloat();
+                }
+
+                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+
+                generateFace(
+                        new Vector3f(-to.getX(), -from.getY(), from.getZ()),
+                        new Vector3f(-from.getX(), -from.getY(), from.getZ()),
+                        new Vector3f(-from.getX(), -from.getY(), to.getZ()),
+                        new Vector3f(-to.getX(), -from.getY(), to.getZ()),
+                        cornerUVs,
+                        texWidth, texHeight
+                );
             }
-
-            ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
-
-            generateFace(
-                    new Vector3f(-to.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -from.getY(), from.getZ()),
-                    new Vector3f(-from.getX(), -from.getY(), to.getZ()),
-                    new Vector3f(-to.getX(), -from.getY(), to.getZ()),
-                    cornerUVs,
-                    texWidth, texHeight
-            );
         }
     }
 
