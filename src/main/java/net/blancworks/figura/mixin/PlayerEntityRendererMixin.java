@@ -35,6 +35,12 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         FiguraMod.setRenderingMode(abstractClientPlayerEntity, vertexConsumerProvider, ((PlayerEntityRenderer) (Object) this).getModel(), g);
     }
 
+    @Inject(at = @At("TAIL"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
+    public void render_tail(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo info) {
+        PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
+        playerEntityModel.getDisabledParts().clear();
+    }
+
     @Inject(at = @At("HEAD"), method = "renderArm(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/model/ModelPart;Lnet/minecraft/client/model/ModelPart;)V", cancellable = true)
     private void renderArm_Head(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
         FiguraMod.setRenderingMode(player, vertexConsumers, ((PlayerEntityRenderer) (Object) this).getModel(), 0);

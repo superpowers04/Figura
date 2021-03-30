@@ -283,21 +283,18 @@ public class PlayerDataManager {
             }
         }
 
-        if (dat.lastHash.length() != 0) {
-            hashCheckCooldown = 4;
+        hashCheckCooldown = 4;
 
-            CompletableFuture.runAsync(() -> {
-                try {
-                    String hash = FiguraNetworkManager.getAvatarHash(id).get();
+        CompletableFuture.runAsync(() -> {
+            try {
+                String hash = FiguraNetworkManager.getAvatarHash(id).get();
 
-                    if (!hash.equals(dat.lastHash) && hash.length() > 0) {
-                        toClear.add(id);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (!hash.equals(dat.lastHash) && hash.length() > 0) {
+                    toClear.add(id);
                 }
-            });
-        }
-
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }
