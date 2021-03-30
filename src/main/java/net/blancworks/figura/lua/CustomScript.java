@@ -216,7 +216,7 @@ public class CustomScript {
             public LuaValue call(LuaValue arg) {
                 if (playerData == PlayerDataManager.localPlayer) {
                     FiguraMod.LOGGER.warn(arg.toString());
-                    MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(new LiteralText(arg.toString()), false);
+                    MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(new LiteralText(arg.toString()));
                 }
                 return NIL;
             }
