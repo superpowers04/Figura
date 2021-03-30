@@ -90,18 +90,22 @@ public class CustomScript {
 
         curr_task = CompletableFuture.runAsync(
                 () -> {
-                    setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
-                    scriptThread.resume(LuaValue.NIL);
+                    try {
+                        setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
+                        scriptThread.resume(LuaValue.NIL);
+                    } catch (LuaError error){
+                        error.printStackTrace();
+                    }
                     try {
                         tick = scriptGlobals.get("tick").checkfunction();
                     } catch (LuaError error) {
-                        FiguraMod.LOGGER.warn(error);
+                        error.printStackTrace();
                     }
 
                     try {
                         render = scriptGlobals.get("render").checkfunction();
                     } catch (LuaError error) {
-                        FiguraMod.LOGGER.warn(error);
+                        error.printStackTrace();
                     }
                     curr_task = null;
                 }

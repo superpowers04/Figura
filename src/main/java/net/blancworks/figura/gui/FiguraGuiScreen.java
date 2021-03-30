@@ -27,7 +27,6 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.Quaternion;
-import org.apache.logging.log4j.Level;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;

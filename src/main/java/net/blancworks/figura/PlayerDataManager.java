@@ -8,7 +8,6 @@ import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Util;
-import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.net.HttpURLConnection;

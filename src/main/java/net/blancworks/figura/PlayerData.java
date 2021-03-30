@@ -13,7 +13,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.Level;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;

@@ -2,6 +2,7 @@ package net.blancworks.figura.lua;
 
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.VectorAPI;
 import net.blancworks.figura.lua.api.model.ArmorModelAPI;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
@@ -51,6 +52,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(PlayerEntityAPI.getID(), PlayerEntityAPI::getForScript);
         apiSuppliers.put(WorldAPI.getID(), WorldAPI::getForScript);
         apiSuppliers.put(ArmorModelAPI.getID(), ArmorModelAPI::getForScript);
+        apiSuppliers.put(VectorAPI.getID(), VectorAPI::getForScript);
     }
     
     public static void loadScript(PlayerData data, String content){

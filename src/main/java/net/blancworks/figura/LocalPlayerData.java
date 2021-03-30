@@ -10,7 +10,6 @@ import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.nio.file.*;
