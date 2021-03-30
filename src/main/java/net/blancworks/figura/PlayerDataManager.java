@@ -8,7 +8,6 @@ import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Util;
-import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -71,7 +70,7 @@ public class PlayerDataManager {
         if (id == MinecraftClient.getInstance().player.getUuid())
             return localPlayer;
 
-        if (loadedPlayerData.containsKey(id) == false) {
+        if (!loadedPlayerData.containsKey(id)) {
             getData = new PlayerData();
             getData.playerId = id;
 
@@ -186,13 +185,13 @@ public class PlayerDataManager {
                             targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
 
 
-                            while (targetData.texture.ready == false)
+                            while (!targetData.texture.ready)
                                 Thread.sleep(50);
                             saveToCache(targetData, nbtFilePath, hashFilePath);
                         }
                     }
                 } catch (Exception e) {
-                    FiguraMod.LOGGER.log(Level.ERROR, e);
+                    e.printStackTrace();
                     httpURLConnection.disconnect();
                 }
 
@@ -200,7 +199,7 @@ public class PlayerDataManager {
 
             }, Util.getMainWorkerExecutor());
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
@@ -264,6 +263,10 @@ public class PlayerDataManager {
     }
 
     public static void checkForPlayerDataRefresh(PlayerData data){
+        //Never check local player data for this.
+        if(data == localPlayer)
+            return;
+
         Date checkDate = new Date();
         if (checkDate.getTime() - data.lastHashCheckTime.getTime() > 1000 * 10) {
             if(!toRefreshSet.contains(data.playerId)) {
@@ -283,21 +286,18 @@ public class PlayerDataManager {
             }
         }
 
-        if (dat.lastHash.length() != 0) {
-            hashCheckCooldown = 4;
+        hashCheckCooldown = 4;
 
-            CompletableFuture.runAsync(() -> {
-                try {
-                    String hash = FiguraNetworkManager.getAvatarHash(id).get();
+        CompletableFuture.runAsync(() -> {
+            try {
+                String hash = FiguraNetworkManager.getAvatarHash(id).get();
 
-                    if (hash.equals(dat.lastHash) == false && hash.length() > 0) {
-                        toClear.add(id);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (!hash.equals(dat.lastHash) && hash.length() > 0) {
+                    toClear.add(id);
                 }
-            });
-        }
-
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

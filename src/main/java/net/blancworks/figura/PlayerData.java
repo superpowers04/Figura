@@ -13,7 +13,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.Level;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -70,7 +69,7 @@ public class PlayerData {
     public boolean toNBT(CompoundTag tag) {
 
         //You cannot save a model that is incomplete.
-        if (model == null || texture == null || script == null)
+        if (model == null || texture == null)
             return false;
 
         tag.putIntArray("version", current_version);
@@ -89,14 +88,16 @@ public class PlayerData {
             texture.toNBT(textureTag);
             tag.put("texture", textureTag);
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
             return false;
         }
 
-        //Put Script.
-        CompoundTag scriptTag = new CompoundTag();
-        script.toNBT(scriptTag);
-        tag.put("script", scriptTag);
+        if(script != null) {
+            //Put Script.
+            CompoundTag scriptTag = new CompoundTag();
+            script.toNBT(scriptTag);
+            tag.put("script", scriptTag);
+        }
 
         return true;
     }
@@ -135,7 +136,7 @@ public class PlayerData {
                 script.fromNBT(this, scriptTag);
             }
         } catch (Exception e) {
-            FiguraMod.LOGGER.log(Level.ERROR, e);
+            e.printStackTrace();
         }
     }
 
@@ -153,7 +154,7 @@ public class PlayerData {
             model.totalSize = w.size();
             return w.size();
         } catch (Exception e) {
-
+            e.printStackTrace();
         }
 
         return -1;

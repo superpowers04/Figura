@@ -27,7 +27,6 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.Quaternion;
-import org.apache.logging.log4j.Level;
 
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -180,13 +179,13 @@ public class FiguraGuiScreen extends Screen {
         CompletableFuture.runAsync(() -> {
 
             for (int i = 0; i < 10; i++) {
-                if (PlayerDataManager.localPlayer.texture.ready == true) {
+                if (PlayerDataManager.localPlayer.texture.ready) {
                     break;
                 }
                 try {
                     Thread.sleep(100);
                 } catch (InterruptedException e) {
-                    FiguraMod.LOGGER.log(Level.ERROR, e);
+                    e.printStackTrace();
                 }
             }
 

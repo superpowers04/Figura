@@ -144,10 +144,12 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
             elementPart.pivot = corrected;
         }
-        if (elementObject.has("rotation"))
-            elementPart.rot = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
-        if (elementObject.has("inflate"))
-            elementPart.inflate = elementObject.get("inflate").getAsFloat();
+        if (elementObject.has("rotation")) {
+            Vector3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
+            corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
+            
+            elementPart.rot = corrected;
+        }
 
 
         Vector3f size = to.copy();
@@ -161,6 +163,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
 
         CompoundTag cuboidPropertiesTag = new CompoundTag();
+
+        if (elementObject.has("inflate"))
+            cuboidPropertiesTag.put("inf", FloatTag.of(elementObject.get("inflate").getAsFloat()));
 
         cuboidPropertiesTag.put("f", new ListTag() {{
             add(FloatTag.of(from.getX()));
@@ -241,18 +246,18 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
     public HashMap<UUID, JsonObject> sortElements(JsonArray elementContainer) {
         HashMap<UUID, JsonObject> objects = new HashMap<>();
         for (JsonElement jsonElement : elementContainer) {
-            if (jsonElement.isJsonObject() == false)
+            if (!jsonElement.isJsonObject())
                 continue;
             JsonObject obj = jsonElement.getAsJsonObject();
 
-            if (obj.has("uuid") == false)
+            if (!obj.has("uuid"))
                 continue;
             objects.put(UUID.fromString(obj.get("uuid").getAsString()), obj);
 
 
             if (obj.has("children")) {
                 JsonElement children = obj.get("children");
-                if (children.isJsonArray() == true) {
+                if (children.isJsonArray()) {
                     JsonArray childrenArray = children.getAsJsonArray();
 
                     objects.putAll(sortElements(childrenArray));

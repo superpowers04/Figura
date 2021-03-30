@@ -7,7 +7,6 @@ import net.minecraft.nbt.FloatTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
-import org.lwjgl.system.MathUtil;
 
 import java.util.ArrayList;
 
@@ -15,15 +14,16 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
     //Used to store the data for a cuboid, so that we can re-build it later if need be.
     public CompoundTag cuboidProperties = new CompoundTag();
-
-    public float inflate = 0;
-
+    
     @Override
     public void rebuild() {
 
         vertexData.clear();
         vertexCount = 0;
 
+        float inflate = 0;
+        if(cuboidProperties.contains("inf")) inflate = cuboidProperties.getFloat("inf");
+        
         Vector3f from = v3fFromNbtList((ListTag) cuboidProperties.get("f"));
         Vector3f to = v3fFromNbtList((ListTag) cuboidProperties.get("t"));
         Vector3f mid = new Vector3f(
