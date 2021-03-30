@@ -107,9 +107,9 @@ public class CustomModelPart {
     public void applyTransforms(MatrixStack stack) {
         stack.translate(-pivot.getX() / 16.0f, -pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
 
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
         stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(-rot.getZ()));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
 
         stack.translate(pos.getX() / 16.0f, pos.getY() / 16.0f, pos.getZ() / 16.0f);
 

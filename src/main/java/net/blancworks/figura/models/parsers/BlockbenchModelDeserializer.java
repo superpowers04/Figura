@@ -144,8 +144,12 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
             elementPart.pivot = corrected;
         }
-        if (elementObject.has("rotation"))
-            elementPart.rot = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
+        if (elementObject.has("rotation")) {
+            Vector3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
+            corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
+            
+            elementPart.rot = corrected;
+        }
 
 
         Vector3f size = to.copy();

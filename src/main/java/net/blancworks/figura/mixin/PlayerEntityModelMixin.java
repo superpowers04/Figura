@@ -100,7 +100,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                         return;
                     }
                     //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.
-                    VertexConsumer actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
+                    VertexConsumer actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(RenderLayer.getEntityCutoutNoCull(playerData.texture.id));
                     playerData.model.render((PlayerEntityModel<?>) (Object) this, matrices, actualConsumer, light, overlay, red, green, blue, alpha);
                 }
             }
