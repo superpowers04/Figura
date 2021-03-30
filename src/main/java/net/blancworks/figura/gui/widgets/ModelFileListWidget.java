@@ -13,6 +13,7 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.zip.ZipFile;
 
 public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, ModelFileListWidget.ModelFileListWidgetEntry> {
 
@@ -33,25 +34,47 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
             e.printStackTrace();
         }
 
-        ArrayList<String> valid_loads = new ArrayList<String>();
-
         File[] files = contentDirectory.listFiles();
 
         for (File file : files) {
+            //get file name
             String fileName = FilenameUtils.removeExtension(file.getName());
 
-            if (!fileName.contains(searchTerm))
+            //skip files
+            if (!fileName.contains(searchTerm) || !(file.getName().endsWith(".zip") || file.isDirectory() || !file.getName().endsWith(".bbmodel")))
                 continue;
 
-            if (Files.exists(contentDirectory.toPath().resolve(fileName + ".bbmodel")) && Files.exists(contentDirectory.toPath().resolve(fileName + ".png"))) {
-                if (valid_loads.contains(fileName))
-                    continue;
-                valid_loads.add(fileName);
+            //if directory
+            if (file.isDirectory()) {
+                //add entry
+                if (Files.exists(file.toPath().resolve("model.bbmodel")) && Files.exists(file.toPath().resolve("texture.png"))) {
+                    addEntry(new ModelFileListWidgetEntry(file.getName(), this));
+                }
             }
-        }
+            //zip support
+            else if (file.getName().endsWith(".zip")) {
+                try {
+                    ZipFile zipFile = new ZipFile(file.getPath());
 
-        for (String valid_load : valid_loads) {
-            addEntry(new ModelFileListWidgetEntry(valid_load, this));
+                    boolean hasModel = zipFile.getEntry("model.bbmodel") != null;
+                    boolean hasTexture = zipFile.getEntry("texture.png") != null;
+
+                    //add entry
+                    if (hasModel && hasTexture) {
+                        addEntry(new ModelFileListWidgetEntry(file.getName(), this));
+                    }
+                } catch (Exception e) {
+                    System.out.println("Failed to load model " + file.getAbsolutePath());
+                    e.printStackTrace();
+                }
+            }
+            //old system compatibility
+            else {
+                //add entry
+                if (Files.exists(contentDirectory.toPath().resolve(fileName + ".png"))) {
+                    addEntry(new ModelFileListWidgetEntry(fileName + "*", this));
+                }
+            }
         }
     }
 
