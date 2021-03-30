@@ -10,7 +10,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
 
@@ -66,7 +66,7 @@ public class PlayerData {
 
     //Turns this PlayerData into an NBT tag.
     //Used when saving to a file to upload, or just be compressed on-disk.
-    public boolean toNBT(CompoundTag tag) {
+    public boolean toNBT(NbtCompound tag) {
 
         //You cannot save a model that is incomplete.
         if (model == null || texture == null)
@@ -78,13 +78,13 @@ public class PlayerData {
         tag.putUuid("id", playerId);
 
         //Put Model.
-        CompoundTag modelTag = new CompoundTag();
+        NbtCompound modelTag = new NbtCompound();
         model.toNBT(modelTag);
         tag.put("model", modelTag);
 
         //Put Texture.
         try {
-            CompoundTag textureTag = new CompoundTag();
+            NbtCompound textureTag = new NbtCompound();
             texture.toNBT(textureTag);
             tag.put("texture", textureTag);
         } catch (Exception e) {
@@ -94,7 +94,7 @@ public class PlayerData {
 
         if(script != null) {
             //Put Script.
-            CompoundTag scriptTag = new CompoundTag();
+            NbtCompound scriptTag = new NbtCompound();
             script.toNBT(scriptTag);
             tag.put("script", scriptTag);
         }
@@ -103,7 +103,7 @@ public class PlayerData {
     }
 
     //Loads a PlayerData from the given NBT tag.
-    public void fromNBT(CompoundTag tag) {
+    public void fromNBT(NbtCompound tag) {
 
         int[] version = tag.getIntArray("version");
 
@@ -118,19 +118,19 @@ public class PlayerData {
         }
 
         try {
-            CompoundTag modelTag = (CompoundTag) tag.get("model");
+            NbtCompound modelTag = (NbtCompound) tag.get("model");
             model = new CustomModel();
             model.fromNBT(modelTag);
             model.owner = this;
 
-            CompoundTag textureTag = (CompoundTag) tag.get("texture");
+            NbtCompound textureTag = (NbtCompound) tag.get("texture");
             texture = new FiguraTexture();
             texture.id = new Identifier("figura", playerId.toString());
             getTextureManager().registerTexture(texture.id, texture);
             texture.fromNBT(textureTag);
 
             if (tag.contains("script")) {
-                CompoundTag scriptTag = (CompoundTag) tag.get("script");
+                NbtCompound scriptTag = (NbtCompound) tag.get("script");
 
                 script = new CustomScript();
                 script.fromNBT(this, scriptTag);
@@ -142,7 +142,7 @@ public class PlayerData {
 
     //Returns the file size, in bytes.
     public int getFileSize() {
-        CompoundTag writtenTag = new CompoundTag();
+        NbtCompound writtenTag = new NbtCompound();
         toNBT(writtenTag);
 
         try {
@@ -250,7 +250,7 @@ public class PlayerData {
     }
 
     public void loadFromNBT(DataInputStream input) throws Exception {
-        CompoundTag nbtTag = NbtIo.readCompressed(input);
+        NbtCompound nbtTag = NbtIo.readCompressed(input);
 
         fromNBT(nbtTag);
 

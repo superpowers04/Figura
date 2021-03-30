@@ -6,8 +6,8 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.blancworks.figura.models.CustomModelPartMesh;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import net.minecraft.nbt.*;
 
 import java.lang.reflect.Type;
@@ -91,7 +91,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }
         if (group.has("visibility")) groupPart.visible = group.get("visibility").getAsBoolean();
         if (group.has("origin")) {
-            Vector3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
+            Vec3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
             groupPart.pivot = corrected;
         }
@@ -137,22 +137,22 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }
         if (elementObject.has("visibility")) elementPart.visible = elementObject.get("visibility").getAsBoolean();
 
-        Vector3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
-        Vector3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
+        Vec3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
+        Vec3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
         if (elementObject.has("origin")) {
-            Vector3f corrected = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
+            Vec3f corrected = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
             elementPart.pivot = corrected;
         }
         if (elementObject.has("rotation")) {
-            Vector3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
+            Vec3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
             corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
             
             elementPart.rot = corrected;
         }
 
 
-        Vector3f size = to.copy();
+        Vec3f size = to.copy();
         size.subtract(from);
 
         if (elementObject.has("uv_offset")) {
@@ -162,25 +162,25 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
 
-        CompoundTag cuboidPropertiesTag = new CompoundTag();
+        NbtCompound cuboidPropertiesTag = new NbtCompound();
 
         if (elementObject.has("inflate"))
-            cuboidPropertiesTag.put("inf", FloatTag.of(elementObject.get("inflate").getAsFloat()));
+            cuboidPropertiesTag.put("inf", NbtFloat.of(elementObject.get("inflate").getAsFloat()));
 
-        cuboidPropertiesTag.put("f", new ListTag() {{
-            add(FloatTag.of(from.getX()));
-            add(FloatTag.of(from.getY()));
-            add(FloatTag.of(from.getZ()));
+        cuboidPropertiesTag.put("f", new NbtList() {{
+            add(NbtFloat.of(from.getX()));
+            add(NbtFloat.of(from.getY()));
+            add(NbtFloat.of(from.getZ()));
         }});
 
-        cuboidPropertiesTag.put("t", new ListTag() {{
-            add(FloatTag.of(to.getX()));
-            add(FloatTag.of(to.getY()));
-            add(FloatTag.of(to.getZ()));
+        cuboidPropertiesTag.put("t", new NbtList() {{
+            add(NbtFloat.of(to.getX()));
+            add(NbtFloat.of(to.getY()));
+            add(NbtFloat.of(to.getZ()));
         }});
 
-        cuboidPropertiesTag.put("tw", FloatTag.of(target.texWidth));
-        cuboidPropertiesTag.put("th", FloatTag.of(target.texHeight));
+        cuboidPropertiesTag.put("tw", NbtFloat.of(target.texWidth));
+        cuboidPropertiesTag.put("th", NbtFloat.of(target.texHeight));
 
         cuboidPropertiesTag.put("n", getTagFromJsonElement(facesObject.get("north")));
         cuboidPropertiesTag.put("s", getTagFromJsonElement(facesObject.get("south")));
@@ -195,16 +195,16 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         return elementPart;
     }
 
-    public Vector3f v3fFromJArray(JsonArray array) {
-        return new Vector3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat());
+    public Vec3f v3fFromJArray(JsonArray array) {
+        return new Vec3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat());
     }
 
     public Vector4f v4fFromJArray(JsonArray array) {
         return new Vector4f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat(), array.get(3).getAsFloat());
     }
 
-    public CompoundTag jsonObjectToCompoundTag(JsonObject obj) {
-        return new CompoundTag() {{
+    public NbtCompound jsonObjectToCompoundTag(JsonObject obj) {
+        return new NbtCompound() {{
             for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
                 JsonElement element = entry.getValue();
                 String key = entry.getKey();
@@ -213,15 +213,15 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }};
     }
 
-    public ListTag jsonArrayToListTag(JsonArray array) {
-        return new ListTag() {{
+    public NbtList jsonArrayToListTag(JsonArray array) {
+        return new NbtList() {{
             for (JsonElement element : array) {
                 add(getTagFromJsonElement(element));
             }
         }};
     }
     
-    public Tag getTagFromJsonElement(JsonElement element){
+    public NbtElement getTagFromJsonElement(JsonElement element){
         
         if(element instanceof JsonArray)
             return jsonArrayToListTag(element.getAsJsonArray());
@@ -233,11 +233,11 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         if(element instanceof JsonPrimitive) {
             JsonPrimitive primitive = element.getAsJsonPrimitive();
             if (primitive.isBoolean())
-                return ByteTag.of(primitive.getAsBoolean());
+                return NbtByte.of(primitive.getAsBoolean());
             if (primitive.isNumber())
-                return FloatTag.of(primitive.getAsNumber().floatValue());
+                return NbtFloat.of(primitive.getAsNumber().floatValue());
             if (primitive.isString())
-                return StringTag.of(primitive.getAsString());
+                return NbtString.of(primitive.getAsString());
         }
         return null;
     }

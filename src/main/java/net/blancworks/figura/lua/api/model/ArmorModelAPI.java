@@ -6,7 +6,7 @@ import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
@@ -58,7 +58,7 @@ public class ArmorModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
                     VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
-                    customization.pos = new Vector3f(
+                    customization.pos = new Vec3f(
                             fas.getFloat(0),
                             fas.getFloat(1),
                             fas.getFloat(2)
@@ -71,7 +71,7 @@ public class ArmorModelAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f v = targetScript.vanillaModifications[customizationIndex].rot;
+                    Vec3f v = targetScript.vanillaModifications[customizationIndex].rot;
 
                     if (v == null)
                         return NIL;
@@ -85,7 +85,7 @@ public class ArmorModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
                     VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
-                    customization.rot = new Vector3f(
+                    customization.rot = new Vec3f(
                             fas.getFloat(0),
                             fas.getFloat(1),
                             fas.getFloat(2)

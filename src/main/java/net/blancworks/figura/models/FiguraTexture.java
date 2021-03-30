@@ -5,7 +5,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.ResourceTexture;
 import net.minecraft.client.texture.TextureUtil;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.apache.commons.io.IOUtils;
@@ -72,7 +72,7 @@ public class FiguraTexture extends ResourceTexture {
     }
 
 
-    public void toNBT(CompoundTag tag) {
+    public void toNBT(NbtCompound tag) {
         try {
             if (data == null) {
                 tag.putString("note", "Texture has no data, cannot save : " + id);
@@ -84,7 +84,7 @@ public class FiguraTexture extends ResourceTexture {
         }
     }
 
-    public void fromNBT(CompoundTag tag) {
+    public void fromNBT(NbtCompound tag) {
         if (tag.contains("img2")) {
             CompletableFuture.runAsync(
                 () -> {

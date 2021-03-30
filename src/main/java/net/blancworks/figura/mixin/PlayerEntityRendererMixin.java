@@ -13,12 +13,12 @@ import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,7 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerEntityRenderer.class)
 public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
 
-    PlayerEntityRendererMixin(EntityRenderDispatcher dispatcher, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) { super(dispatcher, model, shadowRadius); }
+    public PlayerEntityRendererMixin(EntityRendererFactory.Context context, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) { super(context, model, shadowRadius); }
     
     @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     public void render(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo info) {
@@ -58,12 +58,12 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 playerData.script.applyCustomValues(model);
         } else {
             ModelPartAccess mpa = (ModelPartAccess) (Object) model.rightArm;
-            mpa.setAdditionalPos(new Vector3f());
-            mpa.setAdditionalRot(new Vector3f());
+            mpa.setAdditionalPos(new Vec3f());
+            mpa.setAdditionalRot(new Vec3f());
 
             mpa = (ModelPartAccess) (Object) model.leftArm;
-            mpa.setAdditionalPos(new Vector3f());
-            mpa.setAdditionalRot(new Vector3f());
+            mpa.setAdditionalPos(new Vec3f());
+            mpa.setAdditionalRot(new Vec3f());
         }
     }
 
@@ -115,10 +115,10 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         PlayerEntityModel model = this.getModel();
         PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
 
-        if(playerEntityModel.getDisabledParts().contains(model.helmet)) model.helmet.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.hat)) model.hat.visible = false;
         if(playerEntityModel.getDisabledParts().contains(model.jacket)) model.jacket.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.leftPantLeg)) model.leftPantLeg.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.rightPantLeg)) model.rightPantLeg.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.leftPants)) model.leftPants.visible = false;
+        if(playerEntityModel.getDisabledParts().contains(model.rightPants)) model.rightPants.visible = false;
         if(playerEntityModel.getDisabledParts().contains(model.leftSleeve)) model.leftSleeve.visible = false;
         if(playerEntityModel.getDisabledParts().contains(model.rightSleeve)) model.rightSleeve.visible = false;
         
