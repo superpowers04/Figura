@@ -49,7 +49,7 @@ public class FiguraTrustScreen extends Screen {
     private int filtersWidth;
     private int searchRowWidth;
     public final Set<String> showModChildren = new HashSet<>();
-
+    
     public PlayerListWidget playerList;
     public PermissionListWidget permissionList;
     public CustomListWidgetState playerListState = new CustomListWidgetState();

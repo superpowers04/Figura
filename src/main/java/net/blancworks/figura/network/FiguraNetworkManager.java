@@ -222,7 +222,7 @@ public class FiguraNetworkManager {
                     httpURLConnection.setDoOutput(true);
                     httpURLConnection.setDoInput(true);
 
-                    
+
                     OutputStream outStream = httpURLConnection.getOutputStream();
                     DataOutputStream nbtDataStream = new DataOutputStream(outStream);
 
@@ -230,6 +230,49 @@ public class FiguraNetworkManager {
 
                     outStream.close();
 
+                    FiguraMod.LOGGER.log(Level.DEBUG, httpURLConnection.getResponseMessage());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }, Util.getMainWorkerExecutor());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //Deletes the player model off of the server.
+    public static void deleteModel() {
+        String uuidString = MinecraftClient.getInstance().player.getUuid().toString();
+
+        try {
+            CompletableFuture.runAsync(() -> {
+                HttpURLConnection httpURLConnection = null;
+
+                refreshKeyValidity(null).join();
+
+                //If not authed, auth.
+                if (!hasAuthKey) {
+                    CompletableFuture future = authUser();
+                    future.join();
+                }
+
+                try {
+                    URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.getServerURL(), uuidString, figuraSessionKey));
+                    PlayerData data = PlayerDataManager.localPlayer;
+
+                    CompoundTag infoTag = new CompoundTag();
+                    data.toNBT(infoTag);
+
+
+                    httpURLConnection = (HttpURLConnection) url.openConnection();
+                    httpURLConnection.setRequestMethod("DELETE");
+                    httpURLConnection.setRequestProperty("Content-Type", "application/json");
+
+                    httpURLConnection.connect();
+                    httpURLConnection.disconnect();
+                    
+                    PlayerDataManager.clearLocalPlayer();
+                    
                     FiguraMod.LOGGER.log(Level.DEBUG, httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -288,13 +331,14 @@ public class FiguraNetworkManager {
     //figura.blancworks.org for proper online use.
     //TODO - Add support for a server list later for people who want to have their own avatar servers
     private static String getServerAddress() {
-        if(FabricLoader.getInstance().isDevelopmentEnvironment() && Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))){
+        if (FabricLoader.getInstance().isDevelopmentEnvironment() && Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))) {
             return "localhost:5001";
         }
         return "figura.blancworks.org";
     }
+
     private static String getMinecraftAuthServerAddress() {
-        if(FabricLoader.getInstance().isDevelopmentEnvironment() && Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))){
+        if (FabricLoader.getInstance().isDevelopmentEnvironment() && Files.exists(FabricLoader.getInstance().getConfigDir().resolve("figura").resolve("localnetwork.json"))) {
             return "localhost";
         }
         return "mc.blancworks.org";

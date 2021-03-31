@@ -234,6 +234,13 @@ public class PlayerDataManager {
         lastLoadedFileName = null;
     }
 
+    public static void clearLocalPlayer(){
+        loadedPlayerData.remove(localPlayer.playerId);
+        localPlayer = null;
+        didInitLocalPlayer = false;
+        lastLoadedFileName = null;
+    }
+    
     private static int hashCheckCooldown = 0;
 
     //Tick function for the client. Basically dispatches all the other functions in the mod.
