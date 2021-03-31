@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
+import net.blancworks.figura.lua.api.VectorAPI;
 import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.Identifier;
@@ -68,6 +69,38 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
                     targetPart.pos = new Vec3f(fas.getFloat(0), fas.getFloat(1), fas.getFloat(2));
+                    return NIL;
+                }
+            });
+
+            ret.set("getPivot", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return VectorAPI.getVector(targetPart.pivot);
+                }
+            });
+
+            ret.set("setPivot", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    Vector3f newPivot = VectorAPI.checkVec3(arg1);
+                    targetPart.pivot = newPivot;
+                    return NIL;
+                }
+            });
+
+            ret.set("getColor", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return VectorAPI.getVector(targetPart.color);
+                }
+            });
+
+            ret.set("setColor", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    Vector3f newColor = VectorAPI.checkVec3(arg1);
+                    targetPart.color = newColor;
                     return NIL;
                 }
             });

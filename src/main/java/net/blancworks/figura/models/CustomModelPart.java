@@ -23,6 +23,7 @@ public class CustomModelPart {
     public Vec3f pos = new Vec3f();
     public Vec3f rot = new Vec3f();
     public Vec3f scale = new Vec3f(1, 1, 1);
+    public Vec3f color = new Vec3f(1, 1, 1);
 
     //Offsets
     public float uOffset = 0;
@@ -38,9 +39,13 @@ public class CustomModelPart {
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
 
+    public int render(int left_to_render, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
+        return render(left_to_render, matrices, vertices, light, overlay, 0, 0, new Vector3f(1,1,1));
+    }
+
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
-    public int render(int left_to_render, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
+    public int render(int left_to_render, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor) {
 
         //Don't render invisible parts.
         if (!visible) {
@@ -53,6 +58,12 @@ public class CustomModelPart {
         Matrix4f modelMatrix = matrices.peek().getModel();
         Matrix3f normalMatrix = matrices.peek().getNormal();
 
+        u += uOffset;
+        v += vOffset;
+
+        Vector3f tempColor = color.copy();
+        tempColor.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
+
         for (int i = 0; i < vertexCount; i++) {
             int startIndex = i * 8;
 
@@ -64,8 +75,8 @@ public class CustomModelPart {
                     1
             );
 
-            float u = vertexData.getFloat(startIndex++);
-            float v = vertexData.getFloat(startIndex++);
+            float vertU = vertexData.getFloat(startIndex++);
+            float vertV = vertexData.getFloat(startIndex++);
 
             Vec3f normal = new Vec3f(
                     vertexData.getFloat(startIndex++),
@@ -79,8 +90,8 @@ public class CustomModelPart {
             //Push vertex.
             vertices.vertex(
                     fullVert.getX(), fullVert.getY(), fullVert.getZ(),
-                    1, 1, 1, 1,
-                    u + uOffset, v + vOffset,
+                    tempColor.getX(), tempColor.getY(), tempColor.getZ(), 1,
+                    vertU + u, vertV + v,
                     overlay, light,
                     normal.getX(), normal.getY(), normal.getZ()
             );
@@ -97,7 +108,7 @@ public class CustomModelPart {
         for (CustomModelPart child : children) {
             if (left_to_render == 0)
                 break;
-            left_to_render = child.render(left_to_render, matrices, vertices, light, overlay);
+            left_to_render = child.render(left_to_render, matrices, vertices, light, overlay, uOffset, vOffset, tempColor);
         }
 
         matrices.pop();
@@ -107,7 +118,7 @@ public class CustomModelPart {
     public void applyTransforms(MatrixStack stack) {
         stack.translate(-pivot.getX() / 16.0f, -pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
 
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(-rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
         stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
         stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
 
@@ -233,7 +244,7 @@ public class CustomModelPart {
             }};
             partTag.put("piv", pivTag);
         }
-        
+
         if(Math.abs(uOffset) > 0.0001f && Math.abs(vOffset) > 0.0001f){
             NbtList uvOffsetTag = new NbtList(){{
                 add(NbtFloat.of(uOffset));
