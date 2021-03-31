@@ -18,9 +18,14 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.WatchKey;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 public class FiguraMod implements ClientModInitializer {
 
@@ -49,10 +54,10 @@ public class FiguraMod implements ClientModInitializer {
     public static void setRenderingMode(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt) {
         curr_player = player;
         curr_data = PlayerDataManager.getDataForPlayer(player.getUuid());
-        
-        if(curr_data != null && curr_data.script != null && curr_data.script.vanillaModifications != null)
+
+        if (curr_data != null && curr_data.script != null && curr_data.script.vanillaModifications != null)
             curr_data.script.applyCustomValues(mdl);
-        
+
         curr_data.vanillaModel = mdl;
         vertex_consumer_provider = vertexConsumerProvider;
         deltaTime = dt;
@@ -71,8 +76,10 @@ public class FiguraMod implements ClientModInitializer {
         FiguraLuaManager.initialize();
         FiguraCommands.initialize();
         PlayerTrustManager.init();
-        
+
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
+        
+        getModContentDirectory();
     }
 
     //Client-side ticks.
@@ -80,18 +87,43 @@ public class FiguraMod implements ClientModInitializer {
         PlayerDataManager.tick();
         FiguraNetworkManager.tickNetwork();
     }
-    
-    public static Path getModContentDirectory(){
-        Path p = FabricLoader.INSTANCE.getGameDir().getParent().resolve("figura");
+
+    public static Path getModContentDirectory() {
+        Path oldPath = FabricLoader.INSTANCE.getGameDir().getParent().resolve("figura");
+        Path p = FabricLoader.INSTANCE.getGameDir().resolve("figura");
         try {
             Files.createDirectories(p);
-        } catch (Exception e){
+
+            if(Files.exists(oldPath)) {
+                copyDirectory(oldPath.toString(), p.toString());
+                deleteDirectory(oldPath.toFile());
+            }
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return p;
     }
 
-    public static void loadConfigs(){
+    public static void copyDirectory(String sourceDirectoryLocation, String destinationDirectoryLocation) throws IOException {
+        Files.walk(Paths.get(sourceDirectoryLocation))
+                .forEach(source -> {
+                    Path destination = Paths.get(destinationDirectoryLocation, source.toString()
+                            .substring(sourceDirectoryLocation.length()));
+                    try {
+                        Files.copy(source, destination);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                });
+    }
 
+    static boolean deleteDirectory(File directoryToBeDeleted) {
+        File[] allContents = directoryToBeDeleted.listFiles();
+        if (allContents != null) {
+            for (File file : allContents) {
+                deleteDirectory(file);
+            }
+        }
+        return directoryToBeDeleted.delete();
     }
 }
