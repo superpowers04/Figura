@@ -44,6 +44,8 @@ public class PlayerData {
     public CustomScript script;
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel vanillaModel;
+    
+    public ArrayList<FiguraTexture> extraTextures = new ArrayList<FiguraTexture>();
 
     public ArrayList<FiguraTexture> extraTextures = new ArrayList<FiguraTexture>();
 
