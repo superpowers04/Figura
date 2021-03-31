@@ -65,7 +65,6 @@ public class LocalPlayerData extends PlayerData {
 
         Path jsonPath = null;
         texturePath = null;
-        texturePath = null;
         Path scriptPath = null;
         Path metadataPath = null;
 
