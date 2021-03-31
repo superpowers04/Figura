@@ -47,8 +47,6 @@ public class PlayerData {
     
     public ArrayList<FiguraTexture> extraTextures = new ArrayList<FiguraTexture>();
 
-    public ArrayList<FiguraTexture> extraTextures = new ArrayList<FiguraTexture>();
-
     public PlayerEntity lastEntity;
 
     public boolean isLoaded = false;

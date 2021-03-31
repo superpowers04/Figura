@@ -29,7 +29,7 @@ public class FiguraTexture extends ResourceTexture {
     public static HashMap<TEXTURE_TYPE, Function<Identifier, RenderLayer>> extraTexturesToRenderLayers = new HashMap<TEXTURE_TYPE, Function<Identifier, RenderLayer>>(){{
         put(TEXTURE_TYPE._emission, RenderLayer::getEyes);
     }};
-
+    
     public byte[] data;
     public Path filePath;
     public Identifier id;
@@ -99,61 +99,61 @@ public class FiguraTexture extends ResourceTexture {
     public void fromNBT(CompoundTag tag) {
         if (tag.contains("img2")) {
             CompletableFuture.runAsync(
-                    () -> {
-                        try {
-                            data = tag.getByteArray("img2");
-                            ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
-                            wrapper.put(data);
-                            wrapper.rewind();
-                            NativeImage image = NativeImage.read(wrapper);
+                () -> {
+                    try {
+                        data = tag.getByteArray("img2");
+                        ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
+                        wrapper.put(data);
+                        wrapper.rewind();
+                        NativeImage image = NativeImage.read(wrapper);
 
-                            MinecraftClient.getInstance().execute(() -> {
-                                if (!RenderSystem.isOnRenderThread()) {
-                                    RenderSystem.recordRenderCall(() -> {
-                                        uploadTexture(image);
-                                    });
-                                } else {
+                        MinecraftClient.getInstance().execute(() -> {
+                            if (!RenderSystem.isOnRenderThread()) {
+                                RenderSystem.recordRenderCall(() -> {
                                     uploadTexture(image);
-                                }
-                            });
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    },
-                    Util.getMainWorkerExecutor()
+                                });
+                            } else {
+                                uploadTexture(image);
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
+                Util.getMainWorkerExecutor()
             );
         } else if (tag.contains("img")) { //legacy bloat
             CompletableFuture.runAsync(
-                    () -> {
-                        try {
-                            String dataString = tag.getString("img");
-                            data = Base64.getDecoder().decode(dataString);
-                            ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
-                            wrapper.put(data);
-                            wrapper.rewind();
-                            NativeImage image = NativeImage.read(wrapper);
+                () -> {
+                    try {
+                        String dataString = tag.getString("img");
+                        data = Base64.getDecoder().decode(dataString);
+                        ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
+                        wrapper.put(data);
+                        wrapper.rewind();
+                        NativeImage image = NativeImage.read(wrapper);
 
-                            MinecraftClient.getInstance().execute(() -> {
-                                if (!RenderSystem.isOnRenderThread()) {
-                                    RenderSystem.recordRenderCall(() -> {
-                                        uploadTexture(image);
-                                    });
-                                } else {
+                        MinecraftClient.getInstance().execute(() -> {
+                            if (!RenderSystem.isOnRenderThread()) {
+                                RenderSystem.recordRenderCall(() -> {
                                     uploadTexture(image);
-                                }
-                            });
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    },
-                    Util.getMainWorkerExecutor()
+                                });
+                            } else {
+                                uploadTexture(image);
+                            }
+                        });
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                },
+                Util.getMainWorkerExecutor()
             );
         }
-
+        
         if(tag.contains("type"))
             type = TEXTURE_TYPE.valueOf(tag.get("type").asString());
     }
-
+    
     public enum TEXTURE_TYPE{
         color,
         _emission

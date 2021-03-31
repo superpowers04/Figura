@@ -53,7 +53,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     @Shadow
     private List<ModelPart> parts;
     private HashSet<ModelPart> disabled_parts = new HashSet<ModelPart>();
-
+    
     public PlayerEntityModelMixin(float scale) {
         super(scale);
     }
@@ -69,7 +69,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
             PlayerDataManager.checkForPlayerDataRefresh(playerData);
             TrustContainer trustData = playerData.getTrustContainer();
-
+            
             if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
                 playerData.script.applyCustomValues((PlayerEntityModel) (Object) this);
             } else {
@@ -88,7 +88,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                 resetModelPartAdditionalValues(leftArm);
                 resetModelPartAdditionalValues(rightLeg);
                 resetModelPartAdditionalValues(leftLeg);
-
+                
                 resetModelPartAdditionalValues(rightSleeve);
                 resetModelPartAdditionalValues(leftSleeve);
                 resetModelPartAdditionalValues(rightPantLeg);
@@ -108,13 +108,13 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
                     for (int i = 0; i < playerData.extraTextures.size(); i++) {
                         FiguraTexture texture = playerData.extraTextures.get(i);
-
+                        
                         if(!texture.ready){
                             continue;
                         }
 
                         Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.extraTexturesToRenderLayers.get(texture.type);
-
+                        
                         if(renderLayerGetter != null){
                             actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(renderLayerGetter.apply(texture.id));
                             playerData.model.render((PlayerEntityModel<?>) (Object) this, matrices, actualConsumer, light, overlay, red, green, blue, alpha);
