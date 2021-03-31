@@ -3,7 +3,7 @@ package net.blancworks.figura.mixin;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -33,12 +33,12 @@ public class ModelPartMixin implements ModelPartAccess {
     @Final
     public float roll;
 
-    private Vector3f additional_pos = new Vector3f();
-    private Vector3f additional_rot = new Vector3f();
+    private Vec3f additional_pos = new Vec3f();
+    private Vec3f additional_rot = new Vec3f();
 
     //Used sometimes for copying stuff to armor, or similar.
-    private Vector3f last_additional_pos = new Vector3f();
-    private Vector3f last_additional_rot = new Vector3f();
+    private Vec3f last_additional_pos = new Vec3f();
+    private Vec3f last_additional_rot = new Vec3f();
 
     @Inject(at = @At("HEAD"), method = "rotate", cancellable = true)
     public void rotate_head(MatrixStack matrix, CallbackInfo info) {
@@ -49,47 +49,47 @@ public class ModelPartMixin implements ModelPartAccess {
         }
 
         if (additional_rot != null) {
-            matrix.multiply(Vector3f.POSITIVE_Z.getRadialQuaternion(roll + additional_rot.getZ()));
-            matrix.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw + additional_rot.getY()));
-            matrix.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch + additional_rot.getX()));
+            matrix.multiply(Vec3f.POSITIVE_Z.getRadialQuaternion(roll + additional_rot.getZ()));
+            matrix.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(yaw + additional_rot.getY()));
+            matrix.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(pitch + additional_rot.getX()));
         } else {
-            matrix.multiply(Vector3f.POSITIVE_Z.getRadialQuaternion(roll));
-            matrix.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw));
-            matrix.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch));
+            matrix.multiply(Vec3f.POSITIVE_Z.getRadialQuaternion(roll));
+            matrix.multiply(Vec3f.POSITIVE_Y.getRadialQuaternion(yaw));
+            matrix.multiply(Vec3f.POSITIVE_X.getRadialQuaternion(pitch));
         }
 
         info.cancel();
     }
 
-    @Inject(at = @At("RETURN"), method = "copyPositionAndRotation(Lnet/minecraft/client/model/ModelPart;)V")
-    public void copyPositionAndRotation(ModelPart modelPart, CallbackInfo ci) {
+    @Inject(at = @At("RETURN"), method = "copyTransform(Lnet/minecraft/client/model/ModelPart;)V")
+    public void copyTransform(ModelPart modelPart, CallbackInfo ci) {
         setAdditionalPos(((ModelPartAccess)(Object)modelPart).getAdditionalPos());
         setAdditionalRot(((ModelPartAccess)(Object)modelPart).getAdditionalRot());
     }
 
-    public void setAdditionalPos(Vector3f v) {
+    public void setAdditionalPos(Vec3f v) {
         last_additional_pos = additional_pos;
         additional_pos = v;
     }
 
-    public void setAdditionalRot(Vector3f v) {
+    public void setAdditionalRot(Vec3f v) {
         last_additional_rot = additional_rot;
         additional_rot = v;
     }
 
-    public Vector3f getAdditionalPos() {
+    public Vec3f getAdditionalPos() {
         return additional_pos;
     }
 
-    public Vector3f getAdditionalRot() {
+    public Vec3f getAdditionalRot() {
         return additional_rot;
     }
 
-    public Vector3f getLastAdditionalPos() {
+    public Vec3f getLastAdditionalPos() {
         return last_additional_pos;
     }
 
-    public Vector3f getLastAdditionalRot() {
+    public Vec3f getLastAdditionalRot() {
         return last_additional_rot;
     }
 }

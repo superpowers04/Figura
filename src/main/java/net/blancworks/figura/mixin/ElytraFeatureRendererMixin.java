@@ -8,7 +8,7 @@ import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.LivingEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,8 +28,8 @@ public abstract class ElytraFeatureRendererMixin<T extends LivingEntity, M exten
 
         try {
             BipedEntityModel mdl = (BipedEntityModel) this.getContextModel();
-            ModelPartAccess access = (ModelPartAccess) (Object) mdl.torso;
-            Vector3f additionalMove = access.getAdditionalPos();
+            ModelPartAccess access = (ModelPartAccess) (Object) mdl.body;
+            Vec3f additionalMove = access.getAdditionalPos();
             if(additionalMove != null)
                 matrixStack.translate(additionalMove.getX() / 16.0f, additionalMove.getY() / 16.0f, additionalMove.getZ() / 16.0f);
         } catch (Exception e){

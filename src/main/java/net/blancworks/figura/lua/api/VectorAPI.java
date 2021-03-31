@@ -2,8 +2,8 @@ package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
@@ -52,7 +52,7 @@ public class VectorAPI {
             set("partToWorld", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    Vector3f arg1 = checkVec3(arg);
+                    Vec3f arg1 = checkVec3(arg);
 
                     arg1.scale(16);
                     arg1.set(-arg1.getX(), -arg1.getY(), arg1.getZ());
@@ -92,13 +92,13 @@ public class VectorAPI {
         }});
     }
 
-    public static Vector3f checkVec3(LuaValue val) {
+    public static Vec3f checkVec3(LuaValue val) {
         LuaTable table = val.checktable();
 
         if (table.length() != 3)
             LuaValue.error("Invalid number of components in vector, 3 expected.");
 
-        Vector3f ret = new Vector3f(
+        Vec3f ret = new Vec3f(
                 table.get(1).checknumber().tofloat(),
                 table.get(2).checknumber().tofloat(),
                 table.get(3).checknumber().tofloat()
@@ -137,7 +137,7 @@ public class VectorAPI {
         return ret;
     }
 
-    public static LuaValue vec3fToLua(Vector3f v){
+    public static LuaValue vec3fToLua(Vec3f v){
         LuaTable table = getVector(3);
         table.set("x", LuaValue.valueOf(v.getX()));
         table.set("y", LuaValue.valueOf(v.getY()));

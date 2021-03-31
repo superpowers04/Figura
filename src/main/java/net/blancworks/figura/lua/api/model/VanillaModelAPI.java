@@ -7,7 +7,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
@@ -27,7 +27,7 @@ public class VanillaModelAPI {
             PlayerEntityModel mdl = script.playerData.vanillaModel;
 
             set("HEAD", getTableForPart(mdl.head, 0, script));
-            set("TORSO", getTableForPart(mdl.torso, 1, script));
+            set("TORSO", getTableForPart(mdl.body, 1, script));
 
             set("LEFT_ARM", getTableForPart(mdl.leftArm, 2, script));
             set("RIGHT_ARM", getTableForPart(mdl.rightArm, 3, script));
@@ -35,14 +35,14 @@ public class VanillaModelAPI {
             set("LEFT_LEG", getTableForPart(mdl.leftLeg, 4, script));
             set("RIGHT_LEG", getTableForPart(mdl.rightLeg, 5, script));
 
-            set("HAT", getTableForPart(mdl.helmet, 6, script));
+            set("HAT", getTableForPart(mdl.hat, 6, script));
             set("JACKET", getTableForPart(mdl.jacket, 7, script));
 
             set("LEFT_SLEEVE", getTableForPart(mdl.leftSleeve, 8, script));
             set("RIGHT_SLEEVE", getTableForPart(mdl.rightSleeve, 9, script));
 
-            set("LEFT_PANTS", getTableForPart(mdl.leftPantLeg, 10, script));
-            set("RIGHT_PANTS", getTableForPart(mdl.rightPantLeg, 11, script));
+            set("LEFT_PANTS", getTableForPart(mdl.leftPants, 10, script));
+            set("RIGHT_PANTS", getTableForPart(mdl.rightPants, 11, script));
         }});
 
         return producedTable;
@@ -70,7 +70,7 @@ public class VanillaModelAPI {
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f v = targetScript.vanillaModifications[customizationIndex].pos;
+                    Vec3f v = targetScript.vanillaModifications[customizationIndex].pos;
 
                     if(v == null)
                         return NIL;
@@ -84,7 +84,7 @@ public class VanillaModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
                     VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
-                    customization.pos = new Vector3f(
+                    customization.pos = new Vec3f(
                             fas.getFloat(0),
                             fas.getFloat(1),
                             fas.getFloat(2)
@@ -97,7 +97,7 @@ public class VanillaModelAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f v = targetScript.vanillaModifications[customizationIndex].rot;
+                    Vec3f v = targetScript.vanillaModifications[customizationIndex].rot;
                     
                     if(v == null)
                         return NIL;
@@ -111,7 +111,7 @@ public class VanillaModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
                     VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
-                    customization.rot = new Vector3f(
+                    customization.rot = new Vec3f(
                             fas.getFloat(0),
                             fas.getFloat(1),
                             fas.getFloat(2)
@@ -152,14 +152,14 @@ public class VanillaModelAPI {
             ret.set("getOriginPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVector3f(new Vector3f(targetPart.pivotX, targetPart.pivotY, targetPart.pivotZ));
+                    return LuaUtils.getTableFromVector3f(new Vec3f(targetPart.pivotX, targetPart.pivotY, targetPart.pivotZ));
                 }
             });
 
             ret.set("getOriginRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVector3f(new Vector3f(targetPart.pitch, targetPart.yaw, targetPart.roll));
+                    return LuaUtils.getTableFromVector3f(new Vec3f(targetPart.pitch, targetPart.yaw, targetPart.roll));
                 }
             });
 

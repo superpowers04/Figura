@@ -1,9 +1,9 @@
 package net.blancworks.figura.lua.api.model;
 
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 
 public class VanillaModelPartCustomization {
-    public Vector3f pos;
-    public Vector3f rot;
+    public Vec3f pos;
+    public Vec3f rot;
     public Boolean visible;
 }

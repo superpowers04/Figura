@@ -9,10 +9,10 @@ import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -226,12 +226,12 @@ public class PlayerTrustManager {
         return null;
     }
 
-    public static void fromNBT(CompoundTag tag) {
+    public static void fromNBT(NbtCompound tag) {
 
-        ListTag list = (ListTag) tag.get("containers");
+        NbtList list = (NbtList) tag.get("containers");
 
-        for (Tag listTag : list) {
-            CompoundTag ct = (CompoundTag) listTag;
+        for (NbtElement listTag : list) {
+            NbtCompound ct = (NbtCompound) listTag;
 
             String idString = ct.getString("id");
             Identifier id = Identifier.tryParse(idString);
@@ -245,8 +245,8 @@ public class PlayerTrustManager {
 
     }
 
-    public static void toNBT(CompoundTag tag) {
-        ListTag containerList = new ListTag();
+    public static void toNBT(NbtCompound tag) {
+        NbtList containerList = new NbtList();
 
         for (Map.Entry<Identifier, TrustContainer> entry : allContainers.entrySet()) {
 
@@ -254,7 +254,7 @@ public class PlayerTrustManager {
                 continue;
             }
 
-            CompoundTag containerTag = new CompoundTag();
+            NbtCompound containerTag = new NbtCompound();
             entry.getValue().toNbt(containerTag);
             containerList.add(containerTag);
         }
@@ -265,7 +265,7 @@ public class PlayerTrustManager {
 
     public static void saveToDisk() {
         try {
-            CompoundTag targetTag = new CompoundTag();
+            NbtCompound targetTag = new NbtCompound();
             toNBT(targetTag);
 
             Path targetPath = net.fabricmc.loader.FabricLoader.INSTANCE.getGameDir().resolve("figura");
@@ -292,7 +292,7 @@ public class PlayerTrustManager {
                 return;
 
             FileInputStream fis = new FileInputStream(targetPath.toFile());
-            CompoundTag getTag = NbtIo.readCompressed(fis);
+            NbtCompound getTag = NbtIo.readCompressed(fis);
             fromNBT(getTag);
             fis.close();
         } catch (Exception e) {

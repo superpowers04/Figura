@@ -4,8 +4,8 @@ import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
 import net.blancworks.figura.gui.widgets.permissions.PermissionListSliderEntry;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtFloat;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -24,13 +24,13 @@ public class PermissionFloatSetting extends PermissionSetting {
     }
 
     @Override
-    public void fromNBT(CompoundTag tag) {
+    public void fromNBT(NbtCompound tag) {
         value = tag.getFloat(id.getPath());
     }
 
     @Override
-    public void toNBT(CompoundTag tag) {
-        tag.put(id.getPath(), FloatTag.of(value));
+    public void toNBT(NbtCompound tag) {
+        tag.put(id.getPath(), NbtFloat.of(value));
     }
 
     @Override

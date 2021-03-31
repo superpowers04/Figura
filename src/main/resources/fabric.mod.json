@@ -6,12 +6,13 @@
   "name": "Figura",
   "description": "Figura is a client-side mod that allows players to change their player model and highly customize it, while also letting other players see their models safely.",
   "authors": [
-    "Zandra"
+    "Zandra",
+    "Francy-Chan"
   ],
   "contact": {
     "homepage": "http://figura.blancworks.org",
-    "sources": "https://github.com/TheOneTrueZandra/Figura/",
-    "issues": "https://github.com/TheOneTrueZandra/Figura/issues"
+    "sources": "https://github.com/Francy-chan/Figura-1.17",
+    "issues": "https://github.com/Francy-chan/Figura-1.17/issues"
   },
 
   "license": "LGPL-2.1",
@@ -29,8 +30,7 @@
 
   "depends": {
     "fabricloader": ">=0.7.4",
-    "fabric": "*",
-    "minecraft": "1.16.x"
+    "fabric": "*"
   },
   "suggests": {
     "another-mod": "*"

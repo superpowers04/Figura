@@ -28,7 +28,7 @@
   "gui.figura.button.tooltip.resetallperm": "Segure SHIFT ESQUERDO e pressione para redefinir as permissões deste usuário",
   "gui.figura.button.tooltip.clearcache": "Segure SHIFT ESQUERDO e pressione para limpar os dados de todos os avatares carregados",
 
-  "gui.figura.deprecatedwarning" : "*O uso de modelos na pasta raiz foi descontinuado, para mais informações consulte a wiki.",
+  "gui.figura.deprecatedwarning" : "*O uso de modelos na pasta raiz foi descontinuado, para mais informações consulte a wiki",
   "gui.figura.complexity": "Complexidade: %d",
   "gui.figura.filesize": "Tamanho do aquivo: %dkb",
   "gui.figura.name": "Nome: %d"

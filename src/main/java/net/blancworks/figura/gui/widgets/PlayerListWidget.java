@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
@@ -159,7 +160,11 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
                     }
 
                     matrices.push();
+
+                    RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                    RenderSystem.setShaderTexture(0, lockTextureID);
                     this.drawTexture(matrices, this.x, this.y, i, j, this.width, this.height, 32, 32);
+
                     matrices.pop();
                     RenderSystem.enableDepthTest();
                 }

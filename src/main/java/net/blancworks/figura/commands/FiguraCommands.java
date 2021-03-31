@@ -11,7 +11,7 @@ import net.blancworks.figura.network.FiguraNetworkManager;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.Util;
@@ -87,7 +87,7 @@ public class FiguraCommands {
 
         PlayerData data = PlayerDataManager.localPlayer;
 
-        CompoundTag infoTag = new CompoundTag();
+        NbtCompound infoTag = new NbtCompound();
         data.toNBT(infoTag);
 
         Path outputPath = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files").resolve(fileName + ".nbt");
