@@ -14,6 +14,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -21,10 +22,10 @@ import java.util.ArrayList;
 public class VectorAPI {
 
     public static final ArrayList<String> componentNames = new ArrayList<String>() {{
-        add("x,u");
-        add("y,v");
-        add("z");
-        add("w");
+        add("x,u,r");
+        add("y,v,g");
+        add("z,b");
+        add("w,a");
         add("t");
         add("h");
     }};
@@ -158,17 +159,53 @@ public class VectorAPI {
         LuaTable metaTableSource = new LuaTable();
         LuaTable altAccessors = new LuaTable();
 
+        LuaTable components = new LuaTable();
+
         componentCount = Math.min(componentCount, componentNames.size());
 
         for (int i = 0; i < componentCount; i++) {
             String name = componentNames.get(i);
 
-            ret.set(i, LuaValue.valueOf(0));
+            components.set(i, LuaValue.valueOf(0));
 
             for (String s : name.split(",")) {
                 altAccessors.set(s, i + 1);
             }
         }
+
+        ret.set("length", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                double total = 0;
+
+                for (LuaValue key : components.keys()) {
+                    LuaValue value = components.get(key);
+
+                    float val = value.tofloat();
+
+                    total += val * val;
+                }
+
+                return LuaValue.valueOf(Math.sqrt(total));
+            }
+        });
+
+        ret.set("lengthSqr", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                double total = 0;
+
+                for (LuaValue key : components.keys()) {
+                    LuaValue value = components.get(key);
+
+                    float val = value.tofloat();
+
+                    total += val * val;
+                }
+
+                return LuaValue.valueOf(total);
+            }
+        });
 
         metaTableSource.set("__index", new TwoArgFunction() {
             @Override
@@ -180,11 +217,11 @@ public class VectorAPI {
                     LuaValue alt = alts.get(key);
 
                     if (!alt.isnil()) {
-                        return table.rawget(alt);
+                        return components.rawget(alt);
                     }
                 }
 
-                return table.rawget(key);
+                return components.rawget(key);
             }
         });
 
@@ -198,17 +235,18 @@ public class VectorAPI {
                     LuaValue alt = alts.get(key);
 
                     if (!alt.isnil()) {
-                        table.rawset(alt.tonumber().toint(), value);
+                        components.rawset(alt.tonumber().toint(), value);
                         return LuaBoolean.valueOf(true);
                     }
                 } else {
-                    table.rawset(key, value);
+                    components.rawset(key, value);
                 }
 
                 return LuaBoolean.valueOf(true);
             }
         });
 
+        ret.set("components", components);
         ret.set("alt_accessors", altAccessors);
         ret.setmetatable(new ReadOnlyLuaTable(metaTableSource));
         return ret;
@@ -357,7 +395,7 @@ public class VectorAPI {
                 B = MathHelper.clamp(B, 0.0f, 1.0f);
             }
         }
-        return new Vector3f(R,G,B);
+        return new Vector3f(R, G, B);
     }
 
 }
