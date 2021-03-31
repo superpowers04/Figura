@@ -2,10 +2,12 @@ package net.blancworks.figura.models;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.ResourceTexture;
 import net.minecraft.client.texture.TextureUtil;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.apache.commons.io.IOUtils;
@@ -17,14 +19,23 @@ import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class FiguraTexture extends ResourceTexture {
 
+    public static HashMap<TEXTURE_TYPE, Function<Identifier, RenderLayer>> extraTexturesToRenderLayers = new HashMap<TEXTURE_TYPE, Function<Identifier, RenderLayer>>(){{
+        put(TEXTURE_TYPE._emission, RenderLayer::getEyes);
+    }};
+    
     public byte[] data;
     public Path filePath;
     public Identifier id;
+    public TEXTURE_TYPE type = TEXTURE_TYPE.color;
 
+    public boolean isLoading = false;
     public boolean ready = false;
 
     public FiguraTexture() {
@@ -79,6 +90,7 @@ public class FiguraTexture extends ResourceTexture {
                 return;
             }
             tag.putByteArray("img2", data);
+            tag.put("type", StringTag.of(type.toString()));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -137,5 +149,13 @@ public class FiguraTexture extends ResourceTexture {
                 Util.getMainWorkerExecutor()
             );
         }
+        
+        if(tag.contains("type"))
+            type = TEXTURE_TYPE.valueOf(tag.get("type").asString());
+    }
+    
+    public enum TEXTURE_TYPE{
+        color,
+        _emission
     }
 }

@@ -81,7 +81,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                     return;
                 }
                 //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.
-                VertexConsumer actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
                 VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
                 
                 for (CustomModelPart part : playerData.model.all_parts) {
