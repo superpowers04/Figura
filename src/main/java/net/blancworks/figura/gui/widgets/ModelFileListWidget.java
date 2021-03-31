@@ -1,5 +1,6 @@
 package net.blancworks.figura.gui.widgets;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.minecraft.client.MinecraftClient;
@@ -64,7 +65,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
                         addEntry(new ModelFileListWidgetEntry(file.getName(), this));
 
                 } catch (Exception e) {
-                    System.out.println("Failed to load model " + file.getAbsolutePath());
+                    FiguraMod.LOGGER.error("Failed to load model " + file.getAbsolutePath());
                     e.printStackTrace();
                 }
             }

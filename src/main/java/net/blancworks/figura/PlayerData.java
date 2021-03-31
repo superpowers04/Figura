@@ -11,15 +11,19 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.Identifier;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
+import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 
@@ -40,6 +44,8 @@ public class PlayerData {
     public CustomScript script;
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel vanillaModel;
+
+    public ArrayList<FiguraTexture> extraTextures = new ArrayList<FiguraTexture>();
 
     public PlayerEntity lastEntity;
 
@@ -92,11 +98,23 @@ public class PlayerData {
             return false;
         }
 
-        if(script != null) {
+        if (script != null) {
             //Put Script.
             CompoundTag scriptTag = new CompoundTag();
             script.toNBT(scriptTag);
             tag.put("script", scriptTag);
+        }
+
+        if (extraTextures.size() > 0) {
+            ListTag texList = new ListTag();
+
+            for (FiguraTexture extraTexture : extraTextures) {
+                CompoundTag etTag = new CompoundTag();
+                extraTexture.toNBT(etTag);
+                texList.add(etTag);
+            }
+
+            tag.put("exTexs", texList);
         }
 
         return true;
@@ -122,18 +140,42 @@ public class PlayerData {
             model = new CustomModel();
             model.fromNBT(modelTag);
             model.owner = this;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        try {
             CompoundTag textureTag = (CompoundTag) tag.get("texture");
             texture = new FiguraTexture();
             texture.id = new Identifier("figura", playerId.toString());
             getTextureManager().registerTexture(texture.id, texture);
             texture.fromNBT(textureTag);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+        try {
             if (tag.contains("script")) {
                 CompoundTag scriptTag = (CompoundTag) tag.get("script");
 
                 script = new CustomScript();
                 script.fromNBT(this, scriptTag);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            if (tag.contains("exTexs")) {
+                ListTag textureList = (ListTag) tag.get("exTexs");
+
+                for (Tag etTag : textureList) {
+                    FiguraTexture newTexture = new FiguraTexture();
+                    newTexture.id = new Identifier("figura", playerId.toString() + newTexture.type.toString());
+                    newTexture.fromNBT((CompoundTag) etTag);
+                    getTextureManager().registerTexture(newTexture.id, newTexture);
+                    extraTextures.add(newTexture);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -173,10 +215,10 @@ public class PlayerData {
             PlayerDataManager.clearPlayer(playerId);
 
         PlayerEntity newEnt = MinecraftClient.getInstance().world.getPlayerByUuid(playerId);
-        if(lastEntity != newEnt){
+        if (lastEntity != newEnt) {
             lastEntity = newEnt;
-            
-            if(lastEntity != null) {
+
+            if (lastEntity != null) {
                 if (script != null) {
                     CustomScript reloadedScript = new CustomScript();
                     reloadedScript.load(this, script.source);
@@ -185,7 +227,7 @@ public class PlayerData {
                 }
             }
         }
-        
+
         if (lastEntity != null) {
             if (script != null) {
                 try {

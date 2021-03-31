@@ -47,24 +47,24 @@ public class LocalPlayerData extends PlayerData {
         isLoaded = true;
 
         lastHashCheckTime = new Date(Long.MAX_VALUE);
-        if(loadedName != null)
+        if (loadedName != null)
             lastHash = "";
         super.tick();
 
         lateLoadTexture();
         tickFileWatchers();
     }
-    
 
-    public static Path getContentDirectory(){
+    public static Path getContentDirectory() {
         return FiguraMod.getModContentDirectory().resolve("model_files");
     }
-    
+
     //Loads a model file at a specific directory.
     public void loadModelFile(String fileName) {
         Path contentDirectory = getContentDirectory();
 
         Path jsonPath = null;
+        texturePath = null;
         texturePath = null;
         Path scriptPath = null;
         Path metadataPath = null;
@@ -147,7 +147,10 @@ public class LocalPlayerData extends PlayerData {
                 ZipEntry textureEntry = zipFile.getEntry("texture.png");
                 InputStream stream = zipFile.getInputStream(textureEntry);
 
-                Path tempTexture = contentDirectory.getParent().resolve("texture.TEMP");
+                Path tempDir = contentDirectory.getParent().resolve("temp");
+                if (!Files.exists(tempDir)) Files.createDirectory(tempDir);
+
+                Path tempTexture = tempDir.resolve("texture.temp");
                 if (Files.exists(tempTexture)) Files.delete(tempTexture);
                 Files.copy(stream, tempTexture);
 
@@ -184,17 +187,61 @@ public class LocalPlayerData extends PlayerData {
             if (contents != null)
                 script = new CustomScript(this, contents);
             else
-                System.out.println("Model \"" + file.getName() + "\" doesn't have any valid script!");
+                FiguraMod.LOGGER.info("Model \"" + file.getName() + "\" doesn't have any valid scripts!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        extraTextures.clear();
+        try {
+            for (FiguraTexture.TEXTURE_TYPE textureType : FiguraTexture.extraTexturesToRenderLayers.keySet()) {
+                Path location;
+
+                //zip
+                if (isZip) {
+                    ZipFile zipFile = new ZipFile(file);
+                    ZipEntry textureEntry = zipFile.getEntry("texture" + textureType.toString() + ".png");
+
+                    Path tempTexture = contentDirectory.getParent().resolve("temp").resolve("texture" + textureType.toString() + ".temp");
+                    if (Files.exists(tempTexture)) Files.delete(tempTexture);
+
+                    if (textureEntry != null) {
+                        InputStream stream = zipFile.getInputStream(textureEntry);
+                        Files.copy(stream, tempTexture);
+                    }
+
+                    location = tempTexture;
+                }
+                //folder
+                else if (file.isDirectory()) {
+                    location = file.toPath().resolve("texture" + textureType.toString() + ".png");
+                }
+                //.bbmodel
+                else
+                    location = contentDirectory.resolve(fileName + textureType.toString() + ".png");
+
+                if (Files.exists(location)) {
+                    FiguraTexture extraTexture = new FiguraTexture();
+                    extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
+                    extraTexture.filePath = location;
+                    getTextureManager().registerTexture(extraTexture.id, extraTexture);
+                    extraTexture.type = textureType;
+
+                    extraTextures.add(extraTexture);
+                    didTextureLoad = true;
+                }
+
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void loadModelFileNBT(String fileName){
+    public void loadModelFileNBT(String fileName) {
         Path contentDirectory = getContentDirectory();
         Path filePath = contentDirectory.resolve(fileName);
-        
-        if(!Files.exists(filePath))
+
+        if (!Files.exists(filePath))
             return;
 
         try {
@@ -202,35 +249,49 @@ public class LocalPlayerData extends PlayerData {
             DataInputStream dis = new DataInputStream(fis);
             PositionTracker positionTracker = new PositionTracker(999999999);
             CompoundTag nbtTag = CompoundTag.READER.read(dis, 0, positionTracker);
-            
+
             fromNBT(nbtTag);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void loadModelFileNBT(DataInputStream stream){
+    public void loadModelFileNBT(DataInputStream stream) {
         try {
             super.loadFromNBT(stream);
         } catch (Exception e){
             e.printStackTrace();
         }
     }
-    
+
     //Loads the texture late, once it's been actually registered.
     public void lateLoadTexture() {
-        if (didTextureLoad) {
-            didTextureLoad = false;
-            //Create async task to load model.
-            CompletableFuture.runAsync(() -> {
-                try {
-                    texture.load(texturePath);
-                    texture.ready = true;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return;
-                }
-            }, Util.getMainWorkerExecutor());
+        attemptTextureLoad(texture);
+
+        for (FiguraTexture extraTexture : extraTextures) {
+            attemptTextureLoad(extraTexture);
+        }
+    }
+
+    public void attemptTextureLoad(FiguraTexture texture){
+        if(texture != null) {
+            if (!texture.ready && !texture.isLoading) {
+                texture.isLoading = true;
+
+                //Create async task to load model.
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        texture.load(texture.filePath);
+                        texture.ready = true;
+                        texture.isLoading = false;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return;
+                    }
+                }, Util.getMainWorkerExecutor());
+
+                FiguraMod.LOGGER.debug("LOADED TEXTURE " + texture.id.toString());
+            }
         }
     }
 
@@ -270,6 +331,15 @@ public class LocalPlayerData extends PlayerData {
                 try {
                     if (realName.equals(loadedName) && !doReload)
                         doReload = true;
+
+                    if(!doReload){
+                        for (FiguraTexture extraTexture : extraTextures) {
+                            if(realName.equals(loadedName + extraTexture.type)){
+                                doReload = true;
+                                break;
+                            }
+                        }
+                    }
                 } catch (Exception e) {
                     System.err.println(e);
                     continue;

@@ -5,6 +5,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.access.PlayerEntityModelAccess;
+import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.model.ModelPart;
@@ -15,6 +16,7 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -24,6 +26,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 @Mixin(PlayerEntityModel.class)
 public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityModel<T> implements PlayerEntityModelAccess {
@@ -49,7 +53,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     @Shadow
     private List<ModelPart> parts;
     private HashSet<ModelPart> disabled_parts = new HashSet<ModelPart>();
-    
+
     public PlayerEntityModelMixin(float scale) {
         super(scale);
     }
@@ -65,7 +69,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
             PlayerDataManager.checkForPlayerDataRefresh(playerData);
             TrustContainer trustData = playerData.getTrustContainer();
-            
+
             if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
                 playerData.script.applyCustomValues((PlayerEntityModel) (Object) this);
             } else {
@@ -84,7 +88,7 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                 resetModelPartAdditionalValues(leftArm);
                 resetModelPartAdditionalValues(rightLeg);
                 resetModelPartAdditionalValues(leftLeg);
-                
+
                 resetModelPartAdditionalValues(rightSleeve);
                 resetModelPartAdditionalValues(leftSleeve);
                 resetModelPartAdditionalValues(rightPantLeg);
@@ -101,6 +105,21 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                     //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.
                     VertexConsumer actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(RenderLayer.getEntityCutoutNoCull(playerData.texture.id));
                     playerData.model.render((PlayerEntityModel<?>) (Object) this, matrices, actualConsumer, light, overlay, red, green, blue, alpha);
+
+                    for (int i = 0; i < playerData.extraTextures.size(); i++) {
+                        FiguraTexture texture = playerData.extraTextures.get(i);
+
+                        if(!texture.ready){
+                            continue;
+                        }
+
+                        Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.extraTexturesToRenderLayers.get(texture.type);
+
+                        if(renderLayerGetter != null){
+                            actualConsumer = FiguraMod.vertex_consumer_provider.getBuffer(renderLayerGetter.apply(texture.id));
+                            playerData.model.render((PlayerEntityModel<?>) (Object) this, matrices, actualConsumer, light, overlay, red, green, blue, alpha);
+                        }
+                    }
                 }
             }
         } catch (Exception e) {
