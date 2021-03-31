@@ -16,6 +16,7 @@ import java.io.*;
 import java.nio.file.*;
 import java.sql.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.zip.ZipEntry;
@@ -32,6 +33,7 @@ public class LocalPlayerData extends PlayerData {
 
     public String loadedName;
     private HashMap<String, WatchKey> watchKeys = new HashMap<String, WatchKey>();
+    private HashSet<String> watchedFiles = new HashSet<String>();
     public static WatchService ws;
 
     static {
@@ -61,6 +63,7 @@ public class LocalPlayerData extends PlayerData {
 
     //Loads a model file at a specific directory.
     public void loadModelFile(String fileName) {
+        watchedFiles.clear();
         Path contentDirectory = getContentDirectory();
 
         Path jsonPath = null;
@@ -89,6 +92,13 @@ public class LocalPlayerData extends PlayerData {
             texturePath = file.toPath().resolve("texture.png");
             scriptPath = file.toPath().resolve("script.lua");
             metadataPath = file.toPath().resolve("metadata.nbt");
+            
+            watchedFiles.add(jsonPath.toString());
+            watchedFiles.add(texturePath.toString());
+            watchedFiles.add(scriptPath.toString());
+            watchedFiles.add(metadataPath.toString());
+            
+            contentDirectory = file.toPath();
         }
         //then must be a .bbmodel
         else if (!isZip) {
@@ -97,6 +107,15 @@ public class LocalPlayerData extends PlayerData {
             texturePath = contentDirectory.resolve(fileName + ".png");
             scriptPath = contentDirectory.resolve(fileName + ".lua");
             metadataPath = contentDirectory.resolve(fileName + ".nbt");
+
+            watchedFiles.add(jsonPath.toString());
+            watchedFiles.add(texturePath.toString());
+            watchedFiles.add(scriptPath.toString());
+            watchedFiles.add(metadataPath.toString());
+        }
+        
+        if(isZip){
+            watchedFiles.add(file.toString());
         }
 
         if (!watchKeys.containsKey(contentDirectory.toString())) {
@@ -228,6 +247,7 @@ public class LocalPlayerData extends PlayerData {
                     extraTexture.type = textureType;
 
                     extraTextures.add(extraTexture);
+                    watchedFiles.add(location.toString());
                     didTextureLoad = true;
                 }
 
@@ -316,28 +336,18 @@ public class LocalPlayerData extends PlayerData {
                 // context of the event.
                 WatchEvent<Path> ev = (WatchEvent<Path>) event;
                 Path filename = ev.context();
-
-                // Verify that the new
-                //  file is a text file.
-                // Resolve the filename against the directory.
-                // If the filename is "test" and the directory is "foo",
-                // the resolved name is "test/foo".
+                
                 Path parentPath = FileSystems.getDefault().getPath(entry.getKey());
                 Path child = parentPath.resolve(filename);
                 String realName = FilenameUtils.removeExtension(child.getFileName().toString());
 
                 try {
+                    
+                    if(watchedFiles.contains(child.toString()))
+                        doReload = true;
+                    
                     if (realName.equals(loadedName) && !doReload)
                         doReload = true;
-
-                    if (!doReload) {
-                        for (FiguraTexture extraTexture : extraTextures) {
-                            if(realName.equals(loadedName + extraTexture.type)){
-                                doReload = true;
-                                break;
-                            }
-                        }
-                    }
                 } catch (Exception e) {
                     System.err.println(e);
                     continue;
