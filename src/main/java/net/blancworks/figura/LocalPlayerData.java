@@ -10,14 +10,17 @@ import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.nio.file.*;
 import java.sql.Date;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 //This is the specific class used for the LOCAL player.
 //This is in place to allow users to freely modify their model based on files loaded from disk,
@@ -30,6 +33,7 @@ public class LocalPlayerData extends PlayerData {
 
     public String loadedName;
     private HashMap<String, WatchKey> watchKeys = new HashMap<String, WatchKey>();
+    private HashSet<String> watchedFiles = new HashSet<String>();
     public static WatchService ws;
 
     static {
@@ -53,17 +57,19 @@ public class LocalPlayerData extends PlayerData {
         tickFileWatchers();
     }
 
-
     public static Path getContentDirectory() {
         return FiguraMod.getModContentDirectory().resolve("model_files");
     }
 
     //Loads a model file at a specific directory.
     public void loadModelFile(String fileName) {
+        watchedFiles.clear();
         Path contentDirectory = getContentDirectory();
-        Path jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
-        texturePath = contentDirectory.resolve(fileName + ".png");
-        Path scriptPath = contentDirectory.resolve(fileName + ".lua");
+
+        Path jsonPath = null;
+        texturePath = null;
+        Path scriptPath = null;
+        Path metadataPath = null;
 
         try {
             Files.createDirectories(contentDirectory);
@@ -71,9 +77,46 @@ public class LocalPlayerData extends PlayerData {
             e.printStackTrace();
         }
 
-        //Custom models can exist without scripts, but not without a texture and a json file.
-        if (!Files.exists(jsonPath) || !Files.exists(texturePath))
-            return;
+        //remove "*" from file name if its .bbmodel
+        if (fileName.endsWith("*")) {
+            fileName = fileName.substring(0, fileName.length() - 1);
+            fileName += ".bbmodel";
+        }
+
+        File file = new File(contentDirectory.resolve(fileName).toString());
+        boolean isZip = file.getName().endsWith(".zip");
+
+        //folder data
+        if (file.isDirectory()) {
+            jsonPath = file.toPath().resolve("model.bbmodel");
+            texturePath = file.toPath().resolve("texture.png");
+            scriptPath = file.toPath().resolve("script.lua");
+            metadataPath = file.toPath().resolve("metadata.nbt");
+            
+            watchedFiles.add(jsonPath.toString());
+            watchedFiles.add(texturePath.toString());
+            watchedFiles.add(scriptPath.toString());
+            watchedFiles.add(metadataPath.toString());
+            
+            contentDirectory = file.toPath();
+        }
+        //then must be a .bbmodel
+        else if (!isZip) {
+            fileName = fileName.substring(0, fileName.length() - 8);
+            jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
+            texturePath = contentDirectory.resolve(fileName + ".png");
+            scriptPath = contentDirectory.resolve(fileName + ".lua");
+            metadataPath = contentDirectory.resolve(fileName + ".nbt");
+
+            watchedFiles.add(jsonPath.toString());
+            watchedFiles.add(texturePath.toString());
+            watchedFiles.add(scriptPath.toString());
+            watchedFiles.add(metadataPath.toString());
+        }
+        
+        if(isZip){
+            watchedFiles.add(file.toString());
+        }
 
         if (!watchKeys.containsKey(contentDirectory.toString())) {
             try {
@@ -85,11 +128,20 @@ public class LocalPlayerData extends PlayerData {
 
         loadedName = fileName;
 
+        //load JSON file for model
         model = null;
-        //Load JSON file for model.
-        String text = null;
+        String text;
         try {
-            InputStream stream = new FileInputStream(jsonPath.toFile());
+            InputStream stream;
+            if (!isZip) {
+                stream = new FileInputStream(jsonPath.toFile());
+            }
+            else {
+                ZipFile zipFile = new ZipFile(file);
+                ZipEntry modelEntry = zipFile.getEntry("model.bbmodel");
+                stream = zipFile.getInputStream(modelEntry);
+            }
+
             try (final Reader reader = new InputStreamReader(stream)) {
                 text = CharStreams.toString(reader);
             }
@@ -101,46 +153,104 @@ public class LocalPlayerData extends PlayerData {
             e.printStackTrace();
         }
 
+        //load texture
         texture = null;
-        //Load texture.
         try {
             Identifier id = new Identifier("figura", playerId.toString());
             texture = new FiguraTexture();
             texture.id = id;
+
+            if (isZip) {
+                ZipFile zipFile = new ZipFile(file);
+                ZipEntry textureEntry = zipFile.getEntry("texture.png");
+                InputStream stream = zipFile.getInputStream(textureEntry);
+
+                texture.inputStream = stream;
+                texturePath = null;
+            }
+
             texture.filePath = texturePath;
             getTextureManager().registerTexture(id, texture);
 
-            texturePath = texturePath;
             didTextureLoad = true;
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        //load script
         script = null;
-        //Load script.
         try {
-            String contents = new String(Files.readAllBytes(scriptPath));
+            String contents = null;
 
-            script = new CustomScript(this, contents);
+            if (!isZip) {
+                if (Files.exists(scriptPath))
+                    contents = new String(Files.readAllBytes(scriptPath));
+            }
+            else {
+                ZipFile zipFile = new ZipFile(file);
+                ZipEntry scriptEntry = zipFile.getEntry("script.lua");
+
+                if (scriptEntry != null) {
+                    InputStream stream = zipFile.getInputStream(scriptEntry);
+                    contents = new String(IOUtils.toByteArray(stream));
+                }
+            }
+
+            if (contents != null)
+                script = new CustomScript(this, contents);
+            else
+                FiguraMod.LOGGER.info("Model \"" + file.getName() + "\" doesn't have any valid scripts!");
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+        //load extra textures
         extraTextures.clear();
         try {
             for (FiguraTexture.TEXTURE_TYPE textureType : FiguraTexture.extraTexturesToRenderLayers.keySet()) {
-                Path location = contentDirectory.resolve(fileName + textureType.toString() + ".png");
-                
-                if(Files.exists(location)){
+                Path location;
+
+                //zip
+                if (isZip) {
+                    ZipFile zipFile = new ZipFile(file);
+                    ZipEntry textureEntry = zipFile.getEntry("texture" + textureType.toString() + ".png");
+
+                    if (textureEntry != null) {
+                        InputStream stream = zipFile.getInputStream(textureEntry);
+
+                        FiguraTexture extraTexture = new FiguraTexture();
+                        extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
+                        extraTexture.filePath = null;
+                        extraTexture.inputStream = stream;
+                        getTextureManager().registerTexture(extraTexture.id, extraTexture);
+                        extraTexture.type = textureType;
+
+                        extraTextures.add(extraTexture);
+                        didTextureLoad = true;
+                    }
+
+                    continue;
+                }
+                //folder
+                else if (file.isDirectory()) {
+                    location = file.toPath().resolve("texture" + textureType.toString() + ".png");
+                }
+                //.bbmodel
+                else
+                    location = contentDirectory.resolve(fileName + textureType.toString() + ".png");
+
+                if (Files.exists(location)) {
                     FiguraTexture extraTexture = new FiguraTexture();
                     extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
                     extraTexture.filePath = location;
                     getTextureManager().registerTexture(extraTexture.id, extraTexture);
                     extraTexture.type = textureType;
-                    
+
                     extraTextures.add(extraTexture);
+                    watchedFiles.add(location.toString());
                     didTextureLoad = true;
                 }
+
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -176,14 +286,12 @@ public class LocalPlayerData extends PlayerData {
 
     //Loads the texture late, once it's been actually registered.
     public void lateLoadTexture() {
-
         attemptTextureLoad(texture);
 
         for (FiguraTexture extraTexture : extraTextures) {
             attemptTextureLoad(extraTexture);
         }
     }
-        
     public void attemptTextureLoad(FiguraTexture texture){
         if(texture != null) {
             if (!texture.ready && !texture.isLoading) {
@@ -200,8 +308,7 @@ public class LocalPlayerData extends PlayerData {
                         return;
                     }
                 }, Util.getMainWorkerExecutor());
-                
-                FiguraMod.LOGGER.error("LOADED TEXTURE " + texture.id.toString());
+                FiguraMod.LOGGER.debug("LOADED TEXTURE " + texture.id.toString());
             }
         }
     }
@@ -229,28 +336,18 @@ public class LocalPlayerData extends PlayerData {
                 // context of the event.
                 WatchEvent<Path> ev = (WatchEvent<Path>) event;
                 Path filename = ev.context();
-
-                // Verify that the new
-                //  file is a text file.
-                // Resolve the filename against the directory.
-                // If the filename is "test" and the directory is "foo",
-                // the resolved name is "test/foo".
+                
                 Path parentPath = FileSystems.getDefault().getPath(entry.getKey());
                 Path child = parentPath.resolve(filename);
                 String realName = FilenameUtils.removeExtension(child.getFileName().toString());
 
                 try {
-                    if (realName.equals(loadedName) && !doReload)
+                    
+                    if(watchedFiles.contains(child.toString()))
                         doReload = true;
                     
-                    if(doReload == false){
-                        for (FiguraTexture extraTexture : extraTextures) {
-                            if(realName.equals(loadedName + extraTexture.type)){
-                                doReload = true;
-                                break;
-                            }
-                        }
-                    }
+                    if (realName.equals(loadedName) && !doReload)
+                        doReload = true;
                 } catch (Exception e) {
                     System.err.println(e);
                     continue;
@@ -264,7 +361,5 @@ public class LocalPlayerData extends PlayerData {
             PlayerDataManager.lastLoadedFileName = loadedName;
             loadModelFile(loadedName);
         }
-
     }
-
 }
