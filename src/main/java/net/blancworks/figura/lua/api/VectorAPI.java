@@ -5,6 +5,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaBoolean;
@@ -14,6 +15,7 @@ import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 
+import java.awt.*;
 import java.util.ArrayList;
 
 public class VectorAPI {
@@ -67,6 +69,26 @@ public class VectorAPI {
                     return getVector(count);
                 }
             });
+
+            set("hsvToRGB", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    Vector3f hsv = checkVec3(arg);
+
+                    return getVector(hsvToRGB(hsv));
+                }
+            });
+
+
+            set("rgbToHSV", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    Vector3f rgb = checkVec3(arg);
+
+                    return getVector(rgbToHSV(rgb));
+                }
+            });
+
         }});
     }
 
@@ -121,6 +143,14 @@ public class VectorAPI {
         table.set("y", LuaValue.valueOf(v.getY()));
         table.set("z", LuaValue.valueOf(v.getZ()));
         return table;
+    }
+
+    public static LuaTable getVector(Vector3f v){
+        LuaTable ret = getVector(3);
+        ret.set("x", v.getX());
+        ret.set("y", v.getY());
+        ret.set("z", v.getZ());
+        return ret;
     }
 
     public static LuaTable getVector(int componentCount) {
@@ -182,5 +212,130 @@ public class VectorAPI {
         ret.set("alt_accessors", altAccessors);
         ret.setmetatable(new ReadOnlyLuaTable(metaTableSource));
         return ret;
+    }
+
+    public static Vector3f rgbToHSV(Vector3f rgb)
+    {
+        float r = rgb.getX();
+        float g = rgb.getY();
+        float b = rgb.getZ();
+
+        // h, s, v = hue, saturation, value
+        float cmax = Math.max(r, Math.max(g, b)); // maximum of r, g, b
+        float cmin = Math.min(r, Math.min(g, b)); // minimum of r, g, b
+        float diff = cmax - cmin; // diff of cmax and cmin.
+        float h = -1, s = -1;
+
+        // if cmax and cmax are equal then h = 0
+        if (cmax == cmin)
+            h = 0;
+
+            // if cmax equal r then compute h
+        else if (cmax == r)
+            h = (60 * ((g - b) / diff) + 360) % 360;
+
+            // if cmax equal g then compute h
+        else if (cmax == g)
+            h = (60 * ((b - r) / diff) + 120) % 360;
+
+            // if cmax equal b then compute h
+        else if (cmax == b)
+            h = (60 * ((r - g) / diff) + 240) % 360;
+
+        // if cmax equal zero
+        if (cmax == 0)
+            s = 0;
+        else
+            s = (diff / cmax) * 100;
+
+        // compute v
+        float v = cmax * 100;
+
+        return new Vector3f(h,s,v);
+    }
+
+    public static Vector3f hsvToRGB(Vector3f hsv){
+        float S = hsv.getY();
+        float V = hsv.getZ();
+        double H = hsv.getX();
+        while (H < 0) { H += 360; };
+        while (H >= 360) { H -= 360; };
+        double R, G, B;
+        if (V <= 0)
+        { R = G = B = 0; }
+        else if (S <= 0)
+        {
+            R = G = B = V;
+        }
+        else
+        {
+            double hf = H / 60.0;
+            int i = (int)Math.floor(hf);
+            double f = hf - i;
+            double pv = V * (1 - S);
+            double qv = V * (1 - S * f);
+            double tv = V * (1 - S * (1 - f));
+            switch (i)
+            {
+
+                // Red is the dominant color
+
+                case 0:
+
+                    // Just in case we overshoot on our math by a little, we put these here. Since its a switch it won't slow us down at all to put these here.
+
+                case 6:
+                    R = V;
+                    G = tv;
+                    B = pv;
+                    break;
+
+                // Green is the dominant color
+
+                case 1:
+                    R = qv;
+                    G = V;
+                    B = pv;
+                    break;
+                case 2:
+                    R = pv;
+                    G = V;
+                    B = tv;
+                    break;
+
+                // Blue is the dominant color
+
+                case 3:
+                    R = pv;
+                    G = qv;
+                    B = V;
+                    break;
+                case 4:
+                    R = tv;
+                    G = pv;
+                    B = V;
+                    break;
+
+                // Red is the dominant color
+
+                case 5:
+                case -1:
+                    R = V;
+                    G = pv;
+                    B = qv;
+                    break;
+
+                // The color is not defined, we should throw an error.
+
+                default:
+                    R = G = B = V; // Just pretend its black/white
+                    break;
+            }
+        }
+        float r = MathHelper.clamp((int)(R * 255.0), 0, 255);
+        float g = MathHelper.clamp((int)(G * 255.0), 0, 255);
+        float b = MathHelper.clamp((int)(B * 255.0), 0, 255);
+
+        return new Vector3f(r,g,b);
     }
 }
