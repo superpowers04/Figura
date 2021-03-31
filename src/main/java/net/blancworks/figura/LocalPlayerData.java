@@ -192,6 +192,7 @@ public class LocalPlayerData extends PlayerData {
             e.printStackTrace();
         }
 
+        //load extra textures
         extraTextures.clear();
         try {
             for (FiguraTexture.TEXTURE_TYPE textureType : FiguraTexture.extraTexturesToRenderLayers.keySet()) {
@@ -231,26 +232,6 @@ public class LocalPlayerData extends PlayerData {
                     didTextureLoad = true;
                 }
 
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        extraTextures.clear();
-        try {
-            for (FiguraTexture.TEXTURE_TYPE textureType : FiguraTexture.extraTexturesToRenderLayers.keySet()) {
-                Path location = contentDirectory.resolve(fileName + textureType.toString() + ".png");
-                
-                if(Files.exists(location)){
-                    FiguraTexture extraTexture = new FiguraTexture();
-                    extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
-                    extraTexture.filePath = location;
-                    getTextureManager().registerTexture(extraTexture.id, extraTexture);
-                    extraTexture.type = textureType;
-                    
-                    extraTextures.add(extraTexture);
-                    didTextureLoad = true;
-                }
             }
         } catch (Exception e) {
             e.printStackTrace();
