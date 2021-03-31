@@ -217,9 +217,8 @@ public class FiguraTrustScreen extends Screen {
                         DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
                         df.setRoundingMode(RoundingMode.HALF_UP);
                         float fileSize = Float.parseFloat(df.format(size / 1000.0f));
-                        long i = (long) fileSize;
 
-                        MutableText sizeText = new TranslatableText("gui.figura.filesize", fileSize == i ? String.valueOf(i) : String.valueOf(fileSize)).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+                        MutableText sizeText = new TranslatableText("gui.figura.filesize", fileSize).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
 
                         drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, TextColor.parse("white").getRgb());
                     }

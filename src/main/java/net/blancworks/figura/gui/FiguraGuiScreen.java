@@ -126,10 +126,10 @@ public class FiguraGuiScreen extends Screen {
 
         //upload button
         uploadButton = new TexturedButtonWidget(
-                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 32,
-                25, 25,
-                0, 0, 25,
-                uploadTexture, 25, 50,
+                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 30,
+                30, 30,
+                0, 0, 30,
+                uploadTexture, 30, 60,
                 (bx) -> {
                     FiguraNetworkManager.postModel();
                 }
@@ -245,9 +245,8 @@ public class FiguraGuiScreen extends Screen {
         DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
         df.setRoundingMode(RoundingMode.HALF_UP);
         float size = Float.parseFloat(df.format(fileSize / 1000.0f));
-        long i = (long) size;
 
-        MutableText fsText = new TranslatableText("gui.figura.filesize", fileSize == i ? String.valueOf(i) : String.valueOf(size));
+        MutableText fsText = new TranslatableText("gui.figura.filesize", size);
 
         if (fileSize >= filesize_large_threshold)
             fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("red")));
