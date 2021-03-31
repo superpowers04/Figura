@@ -108,7 +108,7 @@ public class CustomModelPart {
         for (CustomModelPart child : children) {
             if (left_to_render == 0)
                 break;
-            left_to_render = child.render(left_to_render, matrices, vertices, light, overlay, uOffset, vOffset, tempColor);
+            left_to_render = child.render(left_to_render, matrices, vertices, light, overlay, u, v, tempColor);
         }
 
         matrices.pop();
