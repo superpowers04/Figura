@@ -14,7 +14,8 @@
     "GameMenuScreenMixin",
     "MatrixStackMixin",
     "MixinDebugHud",
-    "ArmorFeatureRendererMixin"
+    "ArmorFeatureRendererMixin",
+    "LivingEntityRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
