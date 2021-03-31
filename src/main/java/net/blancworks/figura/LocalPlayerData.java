@@ -71,7 +71,7 @@ public class LocalPlayerData extends PlayerData {
 
         try {
             Files.createDirectories(contentDirectory);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -235,6 +235,26 @@ public class LocalPlayerData extends PlayerData {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        extraTextures.clear();
+        try {
+            for (FiguraTexture.TEXTURE_TYPE textureType : FiguraTexture.extraTexturesToRenderLayers.keySet()) {
+                Path location = contentDirectory.resolve(fileName + textureType.toString() + ".png");
+                
+                if(Files.exists(location)){
+                    FiguraTexture extraTexture = new FiguraTexture();
+                    extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
+                    extraTexture.filePath = location;
+                    getTextureManager().registerTexture(extraTexture.id, extraTexture);
+                    extraTexture.type = textureType;
+                    
+                    extraTextures.add(extraTexture);
+                    didTextureLoad = true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void loadModelFileNBT(String fileName) {
@@ -259,7 +279,7 @@ public class LocalPlayerData extends PlayerData {
     public void loadModelFileNBT(DataInputStream stream) {
         try {
             super.loadFromNBT(stream);
-        } catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -272,7 +292,6 @@ public class LocalPlayerData extends PlayerData {
             attemptTextureLoad(extraTexture);
         }
     }
-
     public void attemptTextureLoad(FiguraTexture texture){
         if(texture != null) {
             if (!texture.ready && !texture.isLoading) {
@@ -289,7 +308,6 @@ public class LocalPlayerData extends PlayerData {
                         return;
                     }
                 }, Util.getMainWorkerExecutor());
-
                 FiguraMod.LOGGER.debug("LOADED TEXTURE " + texture.id.toString());
             }
         }
@@ -332,7 +350,7 @@ public class LocalPlayerData extends PlayerData {
                     if (realName.equals(loadedName) && !doReload)
                         doReload = true;
 
-                    if(!doReload){
+                    if (!doReload) {
                         for (FiguraTexture extraTexture : extraTextures) {
                             if(realName.equals(loadedName + extraTexture.type)){
                                 doReload = true;
@@ -353,7 +371,5 @@ public class LocalPlayerData extends PlayerData {
             PlayerDataManager.lastLoadedFileName = loadedName;
             loadModelFile(loadedName);
         }
-
     }
-
 }
