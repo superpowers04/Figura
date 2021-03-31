@@ -25,7 +25,7 @@
 
   "gui.figura.button.tooltip.resetperm": "Hold LEFT SHIFT and press to reset the selected permission for this user",
   "gui.figura.button.tooltip.cantreset": "Cannot reset a Preset",
-  "gui.figura.button.tooltip.resetallperm": "Hold LEFT SHIFT and press to reset the permissions for this user.",
+  "gui.figura.button.tooltip.resetallperm": "Hold LEFT SHIFT and press to reset the permissions for this user",
   "gui.figura.button.tooltip.clearcache": "Hold LEFT SHIFT and press to clear all loaded avatar data",
 
   "gui.figura.deprecatedwarning" : "*The use of models in the root folder is deprecated, see the wiki for more info",

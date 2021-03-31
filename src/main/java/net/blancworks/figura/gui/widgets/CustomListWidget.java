@@ -152,8 +152,8 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
     @Override
     protected void renderList(MatrixStack matrices, int x, int y, int mouseX, int mouseY, float delta) {
         int itemCount = this.getEntryCount();
-        Tessellator tessellator_1 = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator_1.getBuffer();
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.getBuffer();
 
         for (int index = 0; index < itemCount; ++index) {
             int entryTop = this.getRowTop(index) + 2;
@@ -164,26 +164,26 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
                 int rowWidth = this.getRowWidth();
                 int entryLeft;
                 if (this.isSelectedEntry(index)) {
-                    RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
                     entryLeft = getRowLeft() - 2 + entry.getXOffset();
                     int selectionRight = x + rowWidth + 2;
                     RenderSystem.disableTexture();
+                    RenderSystem.setShader(GameRenderer::getPositionShader);
                     float float_2 = this.isFocused() ? 1.0F : 0.5F;
                     RenderSystem.setShaderColor(float_2, float_2, float_2, 1.0F);
                     Matrix4f matrix = matrices.peek().getModel();
-                    buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
-                    buffer.vertex(matrix, entryLeft, entryTop + entryHeight + 2, 0.0F).next();
-                    buffer.vertex(matrix, selectionRight, entryTop + entryHeight + 2, 0.0F).next();
-                    buffer.vertex(matrix, selectionRight, entryTop - 2, 0.0F).next();
-                    buffer.vertex(matrix, entryLeft, entryTop - 2, 0.0F).next();
-                    tessellator_1.draw();
+                    bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
+                    bufferBuilder.vertex(matrix, entryLeft, entryTop + entryHeight + 2, 0.0F).next();
+                    bufferBuilder.vertex(matrix, selectionRight, entryTop + entryHeight + 2, 0.0F).next();
+                    bufferBuilder.vertex(matrix, selectionRight, entryTop - 2, 0.0F).next();
+                    bufferBuilder.vertex(matrix, entryLeft, entryTop - 2, 0.0F).next();
+                    tessellator.draw();
                     RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, 1.0F);
-                    buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
-                    buffer.vertex(matrix, entryLeft + 1, entryTop + entryHeight + 1, 0.0F).next();
-                    buffer.vertex(matrix, selectionRight - 1, entryTop + entryHeight + 1, 0.0F).next();
-                    buffer.vertex(matrix, selectionRight - 1, entryTop - 1, 0.0F).next();
-                    buffer.vertex(matrix, entryLeft + 1, entryTop - 1, 0.0F).next();
-                    tessellator_1.draw();
+                    bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
+                    bufferBuilder.vertex(matrix, entryLeft + 1, entryTop + entryHeight + 1, 0.0F).next();
+                    bufferBuilder.vertex(matrix, selectionRight - 1, entryTop + entryHeight + 1, 0.0F).next();
+                    bufferBuilder.vertex(matrix, selectionRight - 1, entryTop - 1, 0.0F).next();
+                    bufferBuilder.vertex(matrix, entryLeft + 1, entryTop - 1, 0.0F).next();
+                    tessellator.draw();
                     RenderSystem.enableTexture();
                 }
 

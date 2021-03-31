@@ -62,6 +62,9 @@ public class FiguraGuiScreen extends Screen {
     private double angleX, angleY;
     private boolean canRotate;
 
+    //model nameplate
+    public static boolean showOwnNametag = false;
+
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
     
     public CustomListWidgetState modelFileListState = new CustomListWidgetState();
@@ -163,10 +166,8 @@ public class FiguraGuiScreen extends Screen {
 
             int currY = 45 + 12;
 
-            if (name_text != null) {
+            if (name_text != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, name_text, this.width - this.textRenderer.getWidth(name_text) - 8, currY += 12, 16777215);
-                drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, raw_name_text, this.width / 2, this.height / 2 - modelBgSize / 2 - 12, 16777215);
-            }
             if (file_size_text != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, file_size_text, this.width - this.textRenderer.getWidth(file_size_text) - 8, currY += 12, 16777215);
             if (model_complexity_text != null)
@@ -216,9 +217,6 @@ public class FiguraGuiScreen extends Screen {
         PlayerDataManager.lastLoadedFileName = file_name;
         PlayerDataManager.localPlayer.loadModelFile(file_name);
 
-        name_text = new TranslatableText("gui.figura.name", file_name.substring(0, Math.min(20, file_name.length())));
-        raw_name_text = new LiteralText(file_name);
-
         CompletableFuture.runAsync(() -> {
 
             for (int i = 0; i < 10; i++) {
@@ -232,10 +230,11 @@ public class FiguraGuiScreen extends Screen {
                 }
             }
 
+            name_text = new TranslatableText("gui.figura.name", file_name.substring(0, Math.min(20, file_name.length())));
+            raw_name_text = new LiteralText(file_name);
             model_complexity_text = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
             file_size_text = getFileSizeText();
         }, Util.getMainWorkerExecutor());
-
     }
 
     public MutableText getFileSizeText() {
@@ -324,9 +323,7 @@ public class FiguraGuiScreen extends Screen {
         matrixStack2.scale((float) size, (float) size, (float) size);
         Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
         Quaternion quaternion2 = Vec3f.POSITIVE_X.getDegreesQuaternion(rotationX);
-        Quaternion quaternion3 = Vec3f.POSITIVE_Y.getDegreesQuaternion(rotationY);
         quaternion.hamiltonProduct(quaternion2);
-        quaternion.hamiltonProduct(quaternion3);
         matrixStack2.multiply(quaternion);
         float h = entity.bodyYaw;
         float i = entity.yaw;
@@ -334,12 +331,13 @@ public class FiguraGuiScreen extends Screen {
         float k = entity.prevHeadYaw;
         float l = entity.headYaw;
         boolean invisible = entity.isInvisible();
-        entity.bodyYaw = 180.0F;
-        entity.yaw = 180.0F;
+        entity.bodyYaw = 180.0F - rotationY;
+        entity.yaw = 180.0F - rotationY;
         entity.pitch = 0.0F;
         entity.headYaw = entity.yaw;
         entity.prevHeadYaw = entity.yaw;
         entity.setInvisible(false);
+        showOwnNametag = true;
         DiffuseLighting.method_34742();
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
@@ -357,6 +355,7 @@ public class FiguraGuiScreen extends Screen {
         entity.prevHeadYaw = k;
         entity.headYaw = l;
         entity.setInvisible(invisible);
+        showOwnNametag = false;
         matrixStack.pop();
         RenderSystem.applyModelViewMatrix();
         DiffuseLighting.enableGuiDepthLighting();
