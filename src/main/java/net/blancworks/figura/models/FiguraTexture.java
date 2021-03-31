@@ -32,6 +32,7 @@ public class FiguraTexture extends ResourceTexture {
     
     public byte[] data;
     public Path filePath;
+    public InputStream inputStream;
     public Identifier id;
     public TEXTURE_TYPE type = TEXTURE_TYPE.color;
 
@@ -53,7 +54,11 @@ public class FiguraTexture extends ResourceTexture {
     public void load(Path target_path) {
         MinecraftClient.getInstance().execute(() -> {
             try {
-                InputStream stream = Files.newInputStream(target_path);
+                InputStream stream;
+                if (target_path != null)
+                    stream = Files.newInputStream(target_path);
+                else
+                    stream = inputStream;
                 data = IOUtils.toByteArray(stream);
                 stream.close();
                 ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);

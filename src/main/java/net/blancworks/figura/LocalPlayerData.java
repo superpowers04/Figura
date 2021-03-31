@@ -147,14 +147,8 @@ public class LocalPlayerData extends PlayerData {
                 ZipEntry textureEntry = zipFile.getEntry("texture.png");
                 InputStream stream = zipFile.getInputStream(textureEntry);
 
-                Path tempDir = contentDirectory.getParent().resolve("temp");
-                if (!Files.exists(tempDir)) Files.createDirectory(tempDir);
-
-                Path tempTexture = tempDir.resolve("texture.temp");
-                if (Files.exists(tempTexture)) Files.delete(tempTexture);
-                Files.copy(stream, tempTexture);
-
-                texturePath = tempTexture;
+                texture.inputStream = stream;
+                texturePath = null;
             }
 
             texture.filePath = texturePath;
@@ -203,15 +197,21 @@ public class LocalPlayerData extends PlayerData {
                     ZipFile zipFile = new ZipFile(file);
                     ZipEntry textureEntry = zipFile.getEntry("texture" + textureType.toString() + ".png");
 
-                    Path tempTexture = contentDirectory.getParent().resolve("temp").resolve("texture" + textureType.toString() + ".temp");
-                    if (Files.exists(tempTexture)) Files.delete(tempTexture);
-
                     if (textureEntry != null) {
                         InputStream stream = zipFile.getInputStream(textureEntry);
-                        Files.copy(stream, tempTexture);
+
+                        FiguraTexture extraTexture = new FiguraTexture();
+                        extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
+                        extraTexture.filePath = null;
+                        extraTexture.inputStream = stream;
+                        getTextureManager().registerTexture(extraTexture.id, extraTexture);
+                        extraTexture.type = textureType;
+
+                        extraTextures.add(extraTexture);
+                        didTextureLoad = true;
                     }
 
-                    location = tempTexture;
+                    continue;
                 }
                 //folder
                 else if (file.isDirectory()) {
