@@ -6,7 +6,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
@@ -211,7 +211,7 @@ public class FiguraNetworkManager {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.getServerURL(), uuidString, figuraSessionKey));
                     PlayerData data = PlayerDataManager.localPlayer;
 
-                    NbtCompound infoTag = new NbtCompound();
+                    CompoundTag infoTag = new CompoundTag();
                     data.toNBT(infoTag);
 
 

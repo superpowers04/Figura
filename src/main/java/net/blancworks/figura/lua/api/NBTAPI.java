@@ -7,38 +7,38 @@ import java.util.HashMap;
 import java.util.function.Function;
 
 public class NBTAPI {
-    public NbtElement target;
+    public Tag target;
 
-    public static HashMap<Class, Function<NbtElement, LuaValue>> nbtConverters = new HashMap<Class, Function<NbtElement, LuaValue>>(){{
-        put(NbtCompound.class, NBTAPI::fromCompoundTag);
-        put(NbtInt.class, NBTAPI::fromIntTag);
-        put(NbtShort.class, NBTAPI::fromShortTag);
-        put(NbtByte.class, NBTAPI::fromByteTag);
-        put(NbtFloat.class, NBTAPI::fromFloatTag);
-        put(NbtLong.class, NBTAPI::fromLongTag);
-        put(NbtString.class, NBTAPI::fromStringTag);
+    public static HashMap<Class, Function<Tag, LuaValue>> nbtConverters = new HashMap<Class, Function<Tag, LuaValue>>(){{
+        put(CompoundTag.class, NBTAPI::fromCompoundTag);
+        put(IntTag.class, NBTAPI::fromIntTag);
+        put(ShortTag.class, NBTAPI::fromShortTag);
+        put(ByteTag.class, NBTAPI::fromByteTag);
+        put(FloatTag.class, NBTAPI::fromFloatTag);
+        put(LongTag.class, NBTAPI::fromLongTag);
+        put(StringTag.class, NBTAPI::fromStringTag);
 
-        put(NbtIntArray.class, NBTAPI::fromIntTag);
-        put(NbtByteArray.class, NBTAPI::fromByteArrayTag);
-        put(NbtLongArray.class, NBTAPI::fromLongArrayTag);
-        put(NbtList.class, NBTAPI::fromListTag);
+        put(IntArrayTag.class, NBTAPI::fromIntTag);
+        put(ByteArrayTag.class, NBTAPI::fromByteArrayTag);
+        put(LongArrayTag.class, NBTAPI::fromLongArrayTag);
+        put(ListTag.class, NBTAPI::fromListTag);
     }};
 
 
     //Automatically determines the tag type and converts it.
-    public static LuaValue fromTag(NbtElement tag){
+    public static LuaValue fromTag(Tag tag){
         if(tag == null)
             return LuaValue.NIL;
 
         Class getClass = tag.getClass();
-        Function<NbtElement, LuaValue> builder = nbtConverters.get(getClass);
+        Function<Tag, LuaValue> builder = nbtConverters.get(getClass);
         if(builder == null) return LuaValue.NIL;
         return builder.apply(tag);
     }
 
-    public static LuaValue fromCompoundTag(NbtElement tag){
+    public static LuaValue fromCompoundTag(Tag tag){
         LuaTable table = new LuaTable();
-        NbtCompound t = (NbtCompound) tag;
+        CompoundTag t = (CompoundTag) tag;
 
         for (String key : t.getKeys()) {
             table.set(key.toLowerCase(), fromTag(t.get(key)));
@@ -46,30 +46,30 @@ public class NBTAPI {
         return new ReadOnlyLuaTable(table);
     }
 
-    public static LuaValue fromIntTag(NbtElement tag){
-        return LuaInteger.valueOf(((NbtInt)tag).intValue());
+    public static LuaValue fromIntTag(Tag tag){
+        return LuaInteger.valueOf(((IntTag)tag).getInt());
     }
-    public static LuaValue fromByteTag(NbtElement tag){
-        return LuaBoolean.valueOf(((NbtByte)tag).byteValue() == 1);
+    public static LuaValue fromByteTag(Tag tag){
+        return LuaBoolean.valueOf(((ByteTag)tag).getByte() == 1);
     }
-    public static LuaValue fromShortTag(NbtElement tag){
-        return LuaNumber.valueOf(((NbtShort)tag).shortValue());
-    }
-
-    public static LuaValue fromFloatTag(NbtElement tag){
-        return LuaNumber.valueOf(((NbtFloat)tag).floatValue());
-    }
-    public static LuaValue fromLongTag(NbtElement tag){
-        return LuaNumber.valueOf(((NbtLong)tag).longValue());
-    }
-    public static LuaValue fromStringTag(NbtElement tag){
-        return LuaString.valueOf(((NbtString)tag).asString());
+    public static LuaValue fromShortTag(Tag tag){
+        return LuaNumber.valueOf(((ShortTag)tag).getShort());
     }
 
+    public static LuaValue fromFloatTag(Tag tag){
+        return LuaNumber.valueOf(((FloatTag)tag).getFloat());
+    }
+    public static LuaValue fromLongTag(Tag tag){
+        return LuaNumber.valueOf(((LongTag)tag).getLong());
+    }
+    public static LuaValue fromStringTag(Tag tag){
+        return LuaString.valueOf(((StringTag)tag).asString());
+    }
 
-    public static LuaValue fromIntArrayTag(NbtElement tag){
+
+    public static LuaValue fromIntArrayTag(Tag tag){
         LuaTable table = new LuaTable();
-        NbtIntArray t = (NbtIntArray) tag;
+        IntArrayTag t = (IntArrayTag) tag;
 
         for (int i = 0; i < t.size(); i++) {
             table.set(i, fromTag(t.get(i)));
@@ -77,9 +77,9 @@ public class NBTAPI {
 
         return new ReadOnlyLuaTable(table);
     }
-    public static LuaValue fromByteArrayTag(NbtElement tag){
+    public static LuaValue fromByteArrayTag(Tag tag){
         LuaTable table = new LuaTable();
-        NbtByteArray t = (NbtByteArray) tag;
+        ByteArrayTag t = (ByteArrayTag) tag;
 
         for (int i = 0; i < t.size(); i++) {
             table.set(i, fromTag(t.get(i)));
@@ -87,9 +87,9 @@ public class NBTAPI {
 
         return new ReadOnlyLuaTable(table);
     }
-    public static LuaValue fromLongArrayTag(NbtElement tag){
+    public static LuaValue fromLongArrayTag(Tag tag){
         LuaTable table = new LuaTable();
-        NbtLongArray t = (NbtLongArray) tag;
+        LongArrayTag t = (LongArrayTag) tag;
 
         for (int i = 0; i < t.size(); i++) {
             table.set(i, fromTag(t.get(i)));
@@ -97,9 +97,9 @@ public class NBTAPI {
 
         return new ReadOnlyLuaTable(table);
     }
-    public static LuaValue fromListTag(NbtElement tag){
+    public static LuaValue fromListTag(Tag tag){
         LuaTable table = new LuaTable();
-        NbtList t = (NbtList) tag;
+        ListTag t = (ListTag) tag;
 
         for (int i = 0; i < t.size(); i++) {
             table.set(i, fromTag(t.get(i)));

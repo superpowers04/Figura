@@ -3,7 +3,7 @@ package net.blancworks.figura.trust.settings;
 import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
 
 public abstract class PermissionSetting<T extends PermissionSetting> {
@@ -14,11 +14,11 @@ public abstract class PermissionSetting<T extends PermissionSetting> {
     }
 
     //Reads from NBT
-    public void fromNBT(NbtCompound tag) {
+    public void fromNBT(CompoundTag tag) {
     }
 
     //Writes to NBT.
-    public void toNBT(NbtCompound tag) {
+    public void toNBT(CompoundTag tag) {
         
     }
 

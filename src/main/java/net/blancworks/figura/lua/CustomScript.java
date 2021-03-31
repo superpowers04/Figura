@@ -12,7 +12,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.Level;
@@ -196,11 +196,11 @@ public class CustomScript {
         );
     }
 
-    public void toNBT(NbtCompound tag) {
+    public void toNBT(CompoundTag tag) {
         tag.putString("src", source);
     }
 
-    public void fromNBT(PlayerData data, NbtCompound tag) {
+    public void fromNBT(PlayerData data, CompoundTag tag) {
         load(data, tag.getString("src"));
     }
 
@@ -280,7 +280,7 @@ public class CustomScript {
         parts.clear();
 
         applyCustomValues(parts, model.head, 0);
-        applyCustomValues(parts, model.body, 1);
+        applyCustomValues(parts, model.torso, 1);
 
         applyCustomValues(parts, model.leftArm, 2);
         applyCustomValues(parts, model.rightArm, 3);
@@ -288,14 +288,14 @@ public class CustomScript {
         applyCustomValues(parts, model.leftLeg, 4);
         applyCustomValues(parts, model.rightLeg, 5);
 
-        applyCustomValues(parts, model.hat, 6);
+        applyCustomValues(parts, model.helmet, 6);
         applyCustomValues(parts, model.jacket, 7);
 
         applyCustomValues(parts, model.leftSleeve, 8);
         applyCustomValues(parts, model.rightSleeve, 9);
 
-        applyCustomValues(parts, model.leftPants, 10);
-        applyCustomValues(parts, model.rightPants, 11);
+        applyCustomValues(parts, model.leftPantLeg, 10);
+        applyCustomValues(parts, model.rightPantLeg, 11);
     }
 
     public void applyArmorValues(BipedEntityModel model, int index) {
@@ -304,13 +304,13 @@ public class CustomScript {
             applyCustomValues(model.head, 12);
 
         if (index == 13) {
-            applyCustomValues(model.body, 13);
+            applyCustomValues(model.torso, 13);
             applyCustomValues(model.rightArm, 13);
             applyCustomValues(model.leftArm, 13);
         }
 
         if (index == 14) {
-            applyCustomValues(model.body, 14);
+            applyCustomValues(model.torso, 14);
             applyCustomValues(model.leftLeg, 14);
             applyCustomValues(model.rightLeg, 14);
         }

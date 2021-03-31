@@ -5,12 +5,11 @@ import com.google.common.io.CharStreams;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtTagSizeTracker;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.nio.file.*;
@@ -18,8 +17,6 @@ import java.sql.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 //This is the specific class used for the LOCAL player.
 //This is in place to allow users to freely modify their model based on files loaded from disk,
@@ -60,45 +57,22 @@ public class LocalPlayerData extends PlayerData {
         return FiguraMod.getModContentDirectory().resolve("model_files");
     }
     
-    //loads a model file at a specific directory
+    //Loads a model file at a specific directory.
     public void loadModelFile(String fileName) {
         Path contentDirectory = getContentDirectory();
-
-        Path jsonPath = null;
-        texturePath = null;
-        Path scriptPath = null;
-        Path metadataPath = null;
-
+        Path jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
+        texturePath = contentDirectory.resolve(fileName + ".png");
+        Path scriptPath = contentDirectory.resolve(fileName + ".lua");
+        
         try {
             Files.createDirectories(contentDirectory);
         } catch (Exception e){
             e.printStackTrace();
         }
 
-        //remove "*" from file name if its .bbmodel
-        if (fileName.endsWith("*")) {
-            fileName = fileName.substring(0, fileName.length() - 1);
-            fileName += ".bbmodel";
-        }
-
-        File file = new File(contentDirectory.resolve(fileName).toString());
-        boolean isZip = file.getName().endsWith(".zip");
-
-        //folder data
-        if (file.isDirectory()) {
-            jsonPath = file.toPath().resolve("model.bbmodel");
-            texturePath = file.toPath().resolve("texture.png");
-            scriptPath = file.toPath().resolve("script.lua");
-            metadataPath = file.toPath().resolve("metadata.nbt");
-        }
-        //then must be a .bbmodel
-        else if (!isZip) {
-            fileName = fileName.substring(0, fileName.length() - 8);
-            jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
-            texturePath = contentDirectory.resolve(fileName + ".png");
-            scriptPath = contentDirectory.resolve(fileName + ".lua");
-            metadataPath = contentDirectory.resolve(fileName + ".nbt");
-        }
+        //Custom models can exist without scripts, but not without a texture and a json file.
+        if (!Files.exists(jsonPath) || !Files.exists(texturePath))
+            return;
 
         if (!watchKeys.containsKey(contentDirectory.toString())) {
             try {
@@ -110,20 +84,11 @@ public class LocalPlayerData extends PlayerData {
 
         loadedName = fileName;
 
-        //load JSON file for model
         model = null;
-        String text;
+        //Load JSON file for model.
+        String text = null;
         try {
-            InputStream stream;
-            if (!isZip) {
-                stream = new FileInputStream(jsonPath.toFile());
-            }
-            else {
-                ZipFile zipFile = new ZipFile(file);
-                ZipEntry modelEntry = zipFile.getEntry("model.bbmodel");
-                stream = zipFile.getInputStream(modelEntry);
-            }
-
+            InputStream stream = new FileInputStream(jsonPath.toFile());
             try (final Reader reader = new InputStreamReader(stream)) {
                 text = CharStreams.toString(reader);
             }
@@ -135,56 +100,27 @@ public class LocalPlayerData extends PlayerData {
             e.printStackTrace();
         }
 
-        //load texture.
         texture = null;
+        //Load texture.
         try {
             Identifier id = new Identifier("figura", playerId.toString());
             texture = new FiguraTexture();
             texture.id = id;
-
-            if (isZip) {
-                ZipFile zipFile = new ZipFile(file);
-                ZipEntry textureEntry = zipFile.getEntry("texture.png");
-                InputStream stream = zipFile.getInputStream(textureEntry);
-
-                Path tempTexture = contentDirectory.getParent().resolve("texture.TEMP");
-                if (Files.exists(tempTexture)) Files.delete(tempTexture);
-                Files.copy(stream, tempTexture);
-
-                texturePath = tempTexture;
-            }
-
             texture.filePath = texturePath;
             getTextureManager().registerTexture(id, texture);
 
+            texturePath = texturePath;
             didTextureLoad = true;
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        //load script
         script = null;
+        //Load script.
         try {
-            String contents = null;
+            String contents = new String(Files.readAllBytes(scriptPath));
 
-            if (!isZip) {
-                if (Files.exists(scriptPath))
-                    contents = new String(Files.readAllBytes(scriptPath));
-            }
-            else {
-                ZipFile zipFile = new ZipFile(file);
-                ZipEntry scriptEntry = zipFile.getEntry("script.lua");
-
-                if (scriptEntry != null) {
-                    InputStream stream = zipFile.getInputStream(scriptEntry);
-                    contents = new String(IOUtils.toByteArray(stream));
-                }
-            }
-
-            if (contents != null)
-                script = new CustomScript(this, contents);
-            else
-                System.out.println("Model \"" + file.getName() + "\" doesn't have any valid script!");
+            script = new CustomScript(this, contents);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -200,8 +136,8 @@ public class LocalPlayerData extends PlayerData {
         try {
             FileInputStream fis = new FileInputStream(filePath.toFile());
             DataInputStream dis = new DataInputStream(fis);
-            NbtTagSizeTracker positionTracker = new NbtTagSizeTracker(999999999);
-            NbtCompound nbtTag = NbtCompound.TYPE.read(dis, 0, positionTracker);
+            PositionTracker positionTracker = new PositionTracker(999999999);
+            CompoundTag nbtTag = CompoundTag.READER.read(dis, 0, positionTracker);
             
             fromNBT(nbtTag);
         } catch (Exception e){

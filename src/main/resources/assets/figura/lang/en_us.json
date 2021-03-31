@@ -1,5 +1,4 @@
 {
-  "gui.figura.trustmenutitle": "Figura Trust Menu",
   "gui.figura.blocked": "Blocked",
   "gui.figura.untrusted": "Untrusted",
   "gui.figura.trusted": "Trusted",
@@ -9,27 +8,7 @@
   "gui.figura.maxtickinstructions": "Max Tick Instructions",
   "gui.figura.maxrenderinstructions": "Max Render Instructions",
   "gui.figura.maxcomplexity": "Max Complexity",
-  "gui.figura.allowvanillaedit": "Vanilla Avatar Changes",
-  "gui.figura.maxparticles": "Maximum Particles Per Second",
+  "gui.figura.allowvanillaedit" : "Vanilla Avatar Changes",
+  "gui.figura.maxparticles" : "Maximum Particles Per Second"
 
-  "gui.figura.button.trustmenu": "Trust Menu",
-  "gui.figura.button.back": "Back",
-  "gui.figura.button.clearall": "Clear ALL Avatars",
-  "gui.figura.button.help": "Help",
-  "gui.figura.button.menutitle": "Figura Menu",
-  "gui.figura.button.openfolder": "Open Models Folder",
-  "gui.figura.button.resetallperm": "Reset ALL Permissions",
-  "gui.figura.button.resetperm": "Reset Permission",
-  "gui.figura.button.reloadavatar": "Reload avatar",
-  "gui.figura.button.search": "Search...",
-
-  "gui.figura.button.tooltip.resetperm": "Hold LEFT SHIFT and press to reset the selected permission for this user",
-  "gui.figura.button.tooltip.cantreset": "Cannot reset a Preset",
-  "gui.figura.button.tooltip.resetallperm": "Hold LEFT SHIFT and press to reset the permissions for this user",
-  "gui.figura.button.tooltip.clearcache": "Hold LEFT SHIFT and press to clear all loaded avatar data",
-
-  "gui.figura.deprecatedwarning" : "*The use of models in the root folder is deprecated, see the wiki for more info",
-  "gui.figura.complexity": "Complexity: %d",
-  "gui.figura.filesize": "File Size: %dkb",
-  "gui.figura.name": "Name: %d"
 }

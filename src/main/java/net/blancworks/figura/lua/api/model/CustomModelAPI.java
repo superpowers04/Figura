@@ -7,7 +7,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.VectorAPI;
 import net.blancworks.figura.models.CustomModelPart;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.LuaBoolean;
@@ -68,7 +68,7 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    targetPart.pos = new Vec3f(fas.getFloat(0), fas.getFloat(1), fas.getFloat(2));
+                    targetPart.pos = new Vector3f(fas.getFloat(0), fas.getFloat(1), fas.getFloat(2));
                     return NIL;
                 }
             });
@@ -83,7 +83,7 @@ public class CustomModelAPI {
             ret.set("setPivot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vec3f newPivot = VectorAPI.checkVec3(arg1);
+                    Vector3f newPivot = VectorAPI.checkVec3(arg1);
                     targetPart.pivot = newPivot;
                     return NIL;
                 }
@@ -99,7 +99,7 @@ public class CustomModelAPI {
             ret.set("setColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vec3f newColor = VectorAPI.checkVec3(arg1);
+                    Vector3f newColor = VectorAPI.checkVec3(arg1);
                     targetPart.color = newColor;
                     return NIL;
                 }
@@ -116,7 +116,7 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    targetPart.rot = new Vec3f(fas.getFloat(0), fas.getFloat(1), fas.getFloat(2));
+                    targetPart.rot = new Vector3f(fas.getFloat(0), fas.getFloat(1), fas.getFloat(2));
                     return NIL;
                 }
             });

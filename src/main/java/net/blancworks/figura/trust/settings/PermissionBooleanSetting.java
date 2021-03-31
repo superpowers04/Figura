@@ -4,8 +4,8 @@ import com.google.gson.JsonElement;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
 import net.blancworks.figura.gui.widgets.permissions.PermissionListToggleEntry;
-import net.minecraft.nbt.NbtByte;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.ByteTag;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.util.Identifier;
 
 public class PermissionBooleanSetting extends PermissionSetting {
@@ -16,13 +16,13 @@ public class PermissionBooleanSetting extends PermissionSetting {
     }
 
     @Override
-    public void fromNBT(NbtCompound tag) {
+    public void fromNBT(CompoundTag tag) {
         value = tag.getBoolean(id.getPath());
     }
 
     @Override
-    public void toNBT(NbtCompound tag) {
-        tag.put(id.getPath(), NbtByte.of(value));
+    public void toNBT(CompoundTag tag) {
+        tag.put(id.getPath(), ByteTag.of(value));
     }
 
     @Override

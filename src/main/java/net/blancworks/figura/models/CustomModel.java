@@ -8,8 +8,8 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
@@ -74,7 +74,7 @@ public class CustomModel {
                         player_model.head.rotate(matrices);
                         break;
                     case Torso:
-                        player_model.body.rotate(matrices);
+                        player_model.torso.rotate(matrices);
                         break;
                     case LeftArm:
                         player_model.leftArm.rotate(matrices);
@@ -124,12 +124,12 @@ public class CustomModel {
         }
     }
 
-    public void toNBT(NbtCompound tag) {
+    public void toNBT(CompoundTag tag) {
 
-        NbtList partList = new NbtList();
+        ListTag partList = new ListTag();
 
         for (int i = 0; i < all_parts.size(); i++) {
-            NbtCompound partTag = new NbtCompound();
+            CompoundTag partTag = new CompoundTag();
             CustomModelPart.writeToCompoundTag(partTag, all_parts.get(i));
             partList.add(partTag);
         }
@@ -137,11 +137,11 @@ public class CustomModel {
         tag.put("parts", partList);
     }
 
-    public void fromNBT(NbtCompound tag) {
-        NbtList partList = (NbtList) tag.get("parts");
+    public void fromNBT(CompoundTag tag) {
+        ListTag partList = (ListTag) tag.get("parts");
 
         for (int i = 0; i < partList.size(); i++) {
-            NbtCompound partTag = (NbtCompound) partList.get(i);
+            CompoundTag partTag = (CompoundTag) partList.get(i);
             int type = partTag.getInt("type");
 
             CustomModelPart part = CustomModelPart.getFromNbtTag(partTag);
