@@ -1,18 +1,20 @@
 package net.blancworks.figura.lua.api.world.entity;
 
 import net.blancworks.figura.lua.LuaUtils;
+import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import org.luaj.vm2.LuaNumber;
-import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.Iterator;
@@ -48,14 +50,22 @@ public class EntityAPI {
                     @Override
                     public LuaValue call() {
                         LuaTable t = new LuaTable();
+
                         LuaValue pitch = LuaNumber.valueOf(targetEntity.pitch);
                         LuaValue yaw = LuaNumber.valueOf(targetEntity.yaw);
+                        LuaValue roll;
+                        if (targetEntity instanceof LivingEntity)
+                            roll = LuaNumber.valueOf(((LivingEntity) targetEntity).getRoll());
+                        else
+                            roll = LuaNumber.valueOf(0);
                         
                         t.set("pitch", pitch);
                         t.set("yaw", yaw);
+                        t.set("roll", roll);
 
                         t.set(1, pitch);
                         t.set(2, yaw);
+                        t.set(3, roll);
 
                         return t;
                     }
@@ -147,6 +157,50 @@ public class EntityAPI {
                             return NIL;
 
                         return LuaString.valueOf(p.name());
+                    }
+                });
+
+                set("getVehicle", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        if (targetEntity.getVehicle() == null) return NIL;
+
+                        Entity vehicle = targetEntity.getVehicle();
+
+                        if (vehicle instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable<>((LivingEntity) vehicle);
+
+                        return new EntityLuaAPITable<>(vehicle);
+                    }
+                });
+
+                set("isGrounded", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaBoolean.valueOf(targetEntity.isOnGround());
+                    }
+                });
+
+                set("getNbtValue", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        String pathArg = arg.checkjstring();
+
+                        String[] path = pathArg.split("\\.");
+
+                        CompoundTag tag = new CompoundTag();
+                        targetEntity.toTag(tag);
+
+                        Tag current = null;
+                        for (String key : path) {
+                            if (current == null)
+                                current = tag.get(key);
+                            else if (current instanceof CompoundTag)
+                                current = ((CompoundTag)current).get(key);
+                        }
+
+                        if (current == null) return NIL;
+
+                        return NBTAPI.fromTag(current);
                     }
                 });
                 
