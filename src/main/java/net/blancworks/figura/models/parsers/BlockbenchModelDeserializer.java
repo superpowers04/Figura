@@ -207,6 +207,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         return new NbtCompound() {{
             for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
                 JsonElement element = entry.getValue();
+                
+                if(element.isJsonNull())
+                    continue;
+                
                 String key = entry.getKey();
                 put(key, getTagFromJsonElement(element));
             }
