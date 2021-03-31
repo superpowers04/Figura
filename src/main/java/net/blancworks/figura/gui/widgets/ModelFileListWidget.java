@@ -41,7 +41,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
             String fileName = FilenameUtils.removeExtension(file.getName());
 
             //skip files
-            if (!fileName.contains(searchTerm) || !(file.getName().endsWith(".zip") || file.isDirectory() || !file.getName().endsWith(".bbmodel")))
+            if (!fileName.contains(searchTerm))
                 continue;
 
             //if directory
@@ -60,20 +60,19 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
                     boolean hasTexture = zipFile.getEntry("texture.png") != null;
 
                     //add entry
-                    if (hasModel && hasTexture) {
+                    if (hasModel && hasTexture)
                         addEntry(new ModelFileListWidgetEntry(file.getName(), this));
-                    }
+
                 } catch (Exception e) {
                     System.out.println("Failed to load model " + file.getAbsolutePath());
                     e.printStackTrace();
                 }
             }
             //old system compatibility
-            else {
+            else if (file.getName().endsWith(".bbmodel")) {
                 //add entry
-                if (Files.exists(contentDirectory.toPath().resolve(fileName + ".png"))) {
+                if (Files.exists(contentDirectory.toPath().resolve(fileName + ".png")))
                     addEntry(new ModelFileListWidgetEntry(fileName + "*", this));
-                }
             }
         }
     }
