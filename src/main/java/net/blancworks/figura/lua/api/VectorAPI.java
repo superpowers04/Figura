@@ -48,7 +48,7 @@ public class VectorAPI {
     }
 
     public static void updateGlobalTable() {
-        globalLuaTable = new ReadOnlyLuaTable(new LuaTable(){{
+        globalLuaTable = new ReadOnlyLuaTable(new LuaTable() {{
             set("partToWorld", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -75,7 +75,7 @@ public class VectorAPI {
                 public LuaValue call(LuaValue arg) {
                     Vector3f hsv = checkVec3(arg);
 
-                    return getVector(hsvToRGB(hsv));
+                    return getVector(HSVToRGB(hsv));
                 }
             });
 
@@ -85,7 +85,7 @@ public class VectorAPI {
                 public LuaValue call(LuaValue arg) {
                     Vector3f rgb = checkVec3(arg);
 
-                    return getVector(rgbToHSV(rgb));
+                    return getVector(RGBToHSV(rgb));
                 }
             });
 
@@ -137,7 +137,7 @@ public class VectorAPI {
         return ret;
     }
 
-    public static LuaValue vec3fToLua(Vector3f v){
+    public static LuaValue vec3fToLua(Vector3f v) {
         LuaTable table = getVector(3);
         table.set("x", LuaValue.valueOf(v.getX()));
         table.set("y", LuaValue.valueOf(v.getY()));
@@ -145,7 +145,7 @@ public class VectorAPI {
         return table;
     }
 
-    public static LuaTable getVector(Vector3f v){
+    public static LuaTable getVector(Vector3f v) {
         LuaTable ret = getVector(3);
         ret.set("x", v.getX());
         ret.set("y", v.getY());
@@ -166,7 +166,7 @@ public class VectorAPI {
             ret.set(i, LuaValue.valueOf(0));
 
             for (String s : name.split(",")) {
-                altAccessors.set(s, i+1);
+                altAccessors.set(s, i + 1);
             }
         }
 
@@ -214,128 +214,150 @@ public class VectorAPI {
         return ret;
     }
 
-    public static Vector3f rgbToHSV(Vector3f rgb)
-    {
-        float r = rgb.getX();
-        float g = rgb.getY();
-        float b = rgb.getZ();
-
-        // h, s, v = hue, saturation, value
-        float cmax = Math.max(r, Math.max(g, b)); // maximum of r, g, b
-        float cmin = Math.min(r, Math.min(g, b)); // minimum of r, g, b
-        float diff = cmax - cmin; // diff of cmax and cmin.
-        float h = -1, s = -1;
-
-        // if cmax and cmax are equal then h = 0
-        if (cmax == cmin)
-            h = 0;
-
-            // if cmax equal r then compute h
-        else if (cmax == r)
-            h = (60 * ((g - b) / diff) + 360) % 360;
-
-            // if cmax equal g then compute h
-        else if (cmax == g)
-            h = (60 * ((b - r) / diff) + 120) % 360;
-
-            // if cmax equal b then compute h
-        else if (cmax == b)
-            h = (60 * ((r - g) / diff) + 240) % 360;
-
-        // if cmax equal zero
-        if (cmax == 0)
-            s = 0;
+    public static Vector3f RGBToHSV(Vector3f rgbColor) {
+        // when blue is highest valued
+        if ((rgbColor.getX() > rgbColor.getY()) && (rgbColor.getZ() > rgbColor.getX()))
+            return RGBToHSVHelper((float) 4, rgbColor.getZ(), rgbColor.getX(), rgbColor.getY());
+            //when green is highest valued
+        else if (rgbColor.getY() > rgbColor.getX())
+            return RGBToHSVHelper((float) 2, rgbColor.getY(), rgbColor.getZ(), rgbColor.getX());
+            //when red is highest valued
         else
-            s = (diff / cmax) * 100;
-
-        // compute v
-        float v = cmax * 100;
-
-        return new Vector3f(h,s,v);
+            return RGBToHSVHelper((float) 0, rgbColor.getX(), rgbColor.getY(), rgbColor.getZ());
     }
 
-    public static Vector3f hsvToRGB(Vector3f hsv){
-        float S = hsv.getY();
-        float V = hsv.getZ();
-        double H = hsv.getX();
-        while (H < 0) { H += 360; };
-        while (H >= 360) { H -= 360; };
-        double R, G, B;
-        if (V <= 0)
-        { R = G = B = 0; }
-        else if (S <= 0)
-        {
-            R = G = B = V;
+    public static Vector3f RGBToHSVHelper(float offset, float dominantcolor, float colorone, float colortwo) {
+        float V = dominantcolor;
+        float S = 0;
+        float H = 0;
+        //we need to find out which is the minimum color
+        if (V != 0) {
+            //we check which color is smallest
+            float small = 0;
+            if (colorone > colortwo) small = colortwo;
+            else small = colorone;
+
+            float diff = V - small;
+
+            //if the two values are not the same, we compute the like this
+            if (diff != 0) {
+                //S = max-min/max
+                S = diff / V;
+                //H = hue is offset by X, and is the difference between the two smallest colors
+                H = offset + ((colorone - colortwo) / diff);
+            } else {
+                //S = 0 when the difference is zero
+                S = 0;
+                //H = 4 + (R-G) hue is offset by 4 when blue, and is the difference between the two smallest colors
+                H = offset + (colorone - colortwo);
+            }
+
+            H /= 6;
+
+            //conversion values
+            if (H < 0)
+                H += 1.0f;
+        } else {
+            S = 0;
+            H = 0;
         }
-        else
-        {
-            double hf = H / 60.0;
-            int i = (int)Math.floor(hf);
-            double f = hf - i;
-            double pv = V * (1 - S);
-            double qv = V * (1 - S * f);
-            double tv = V * (1 - S * (1 - f));
-            switch (i)
-            {
 
-                // Red is the dominant color
+        return new Vector3f(H, S, V);
+    }
 
+    public static Vector3f HSVToRGB(Vector3f hsv) {
+        return HSVToRGB(hsv.getX(), hsv.getY(), hsv.getZ(), true);
+    }
+
+    // Convert a set of HSV values to an RGB Color.
+    public static Vector3f HSVToRGB(float H, float S, float V, boolean hdr) {
+        float R;
+        float G;
+        float B;
+
+        if (S == 0) {
+            R = V;
+            G = V;
+            B = V;
+        } else if (V == 0) {
+            R = 0;
+            G = 0;
+            B = 0;
+        } else {
+            R = 0;
+            G = 0;
+            B = 0;
+
+            //crazy hsv conversion
+            float t_S, t_V, h_to_floor;
+
+            t_S = S;
+            t_V = V;
+            h_to_floor = H * 6.0f;
+
+            int temp = (int) Math.floor(h_to_floor);
+            float t = h_to_floor - ((float) temp);
+            float var_1 = (t_V) * (1 - t_S);
+            float var_2 = t_V * (1 - t_S * t);
+            float var_3 = t_V * (1 - t_S * (1 - t));
+
+            switch (temp) {
                 case 0:
-
-                    // Just in case we overshoot on our math by a little, we put these here. Since its a switch it won't slow us down at all to put these here.
-
-                case 6:
-                    R = V;
-                    G = tv;
-                    B = pv;
+                    R = t_V;
+                    G = var_3;
+                    B = var_1;
                     break;
-
-                // Green is the dominant color
 
                 case 1:
-                    R = qv;
-                    G = V;
-                    B = pv;
-                    break;
-                case 2:
-                    R = pv;
-                    G = V;
-                    B = tv;
+                    R = var_2;
+                    G = t_V;
+                    B = var_1;
                     break;
 
-                // Blue is the dominant color
+                case 2:
+                    R = var_1;
+                    G = t_V;
+                    B = var_3;
+                    break;
 
                 case 3:
-                    R = pv;
-                    G = qv;
-                    B = V;
-                    break;
-                case 4:
-                    R = tv;
-                    G = pv;
-                    B = V;
+                    R = var_1;
+                    G = var_2;
+                    B = t_V;
                     break;
 
-                // Red is the dominant color
+                case 4:
+                    R = var_3;
+                    G = var_1;
+                    B = t_V;
+                    break;
 
                 case 5:
-                case -1:
-                    R = V;
-                    G = pv;
-                    B = qv;
+                    R = t_V;
+                    G = var_1;
+                    B = var_2;
                     break;
 
-                // The color is not defined, we should throw an error.
+                case 6:
+                    R = t_V;
+                    G = var_3;
+                    B = var_1;
+                    break;
 
-                default:
-                    R = G = B = V; // Just pretend its black/white
+                case -1:
+                    R = t_V;
+                    G = var_1;
+                    B = var_2;
                     break;
             }
-        }
-        float r = MathHelper.clamp((int)(R * 255.0), 0, 255);
-        float g = MathHelper.clamp((int)(G * 255.0), 0, 255);
-        float b = MathHelper.clamp((int)(B * 255.0), 0, 255);
 
-        return new Vector3f(r,g,b);
+            if (!hdr) {
+                R = MathHelper.clamp(R, 0.0f, 1.0f);
+                G = MathHelper.clamp(G, 0.0f, 1.0f);
+                B = MathHelper.clamp(B, 0.0f, 1.0f);
+            }
+        }
+        return new Vector3f(R,G,B);
     }
+
 }
