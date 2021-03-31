@@ -40,12 +40,12 @@ public class CustomModelPart {
     public int vertexCount = 0;
 
     public int render(int left_to_render, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
-        return render(left_to_render, matrices, vertices, light, overlay, 0, 0, new Vector3f(1,1,1));
+        return render(left_to_render, matrices, vertices, light, overlay, 0, 0, new Vec3f(1,1,1));
     }
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
-    public int render(int left_to_render, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor) {
+    public int render(int left_to_render, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f prevColor) {
 
         //Don't render invisible parts.
         if (!visible) {
@@ -61,7 +61,7 @@ public class CustomModelPart {
         u += uOffset;
         v += vOffset;
 
-        Vector3f tempColor = color.copy();
+        Vec3f tempColor = color.copy();
         tempColor.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
 
         for (int i = 0; i < vertexCount; i++) {

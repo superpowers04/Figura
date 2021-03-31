@@ -73,7 +73,7 @@ public class VectorAPI {
             set("hsvToRGB", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    Vector3f hsv = checkVec3(arg);
+                    Vec3f hsv = checkVec3(arg);
 
                     return getVector(hsvToRGB(hsv));
                 }
@@ -83,7 +83,7 @@ public class VectorAPI {
             set("rgbToHSV", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    Vector3f rgb = checkVec3(arg);
+                    Vec3f rgb = checkVec3(arg);
 
                     return getVector(rgbToHSV(rgb));
                 }
@@ -145,7 +145,7 @@ public class VectorAPI {
         return table;
     }
 
-    public static LuaTable getVector(Vector3f v){
+    public static LuaTable getVector(Vec3f v){
         LuaTable ret = getVector(3);
         ret.set("x", v.getX());
         ret.set("y", v.getY());
@@ -214,7 +214,7 @@ public class VectorAPI {
         return ret;
     }
 
-    public static Vector3f rgbToHSV(Vector3f rgb)
+    public static Vec3f rgbToHSV(Vec3f rgb)
     {
         float r = rgb.getX();
         float g = rgb.getY();
@@ -251,10 +251,10 @@ public class VectorAPI {
         // compute v
         float v = cmax * 100;
 
-        return new Vector3f(h,s,v);
+        return new Vec3f(h,s,v);
     }
 
-    public static Vector3f hsvToRGB(Vector3f hsv){
+    public static Vec3f hsvToRGB(Vec3f hsv){
         float S = hsv.getY();
         float V = hsv.getZ();
         double H = hsv.getX();
@@ -336,6 +336,6 @@ public class VectorAPI {
         float g = MathHelper.clamp((int)(G * 255.0), 0, 255);
         float b = MathHelper.clamp((int)(B * 255.0), 0, 255);
 
-        return new Vector3f(r,g,b);
+        return new Vec3f(r,g,b);
     }
 }

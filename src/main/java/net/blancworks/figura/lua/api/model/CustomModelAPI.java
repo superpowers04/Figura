@@ -83,7 +83,7 @@ public class CustomModelAPI {
             ret.set("setPivot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vector3f newPivot = VectorAPI.checkVec3(arg1);
+                    Vec3f newPivot = VectorAPI.checkVec3(arg1);
                     targetPart.pivot = newPivot;
                     return NIL;
                 }
@@ -99,7 +99,7 @@ public class CustomModelAPI {
             ret.set("setColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vector3f newColor = VectorAPI.checkVec3(arg1);
+                    Vec3f newColor = VectorAPI.checkVec3(arg1);
                     targetPart.color = newColor;
                     return NIL;
                 }
