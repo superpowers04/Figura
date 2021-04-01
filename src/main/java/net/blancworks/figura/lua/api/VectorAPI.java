@@ -50,7 +50,7 @@ public class VectorAPI {
 
     public static void updateGlobalTable() {
         globalLuaTable = new ReadOnlyLuaTable(new LuaTable() {{
-            set("partToWorld", new OneArgFunction() {
+            set("worldToPart", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     Vector3f arg1 = checkVec3(arg);
