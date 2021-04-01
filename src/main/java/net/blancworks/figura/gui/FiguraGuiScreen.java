@@ -216,7 +216,7 @@ public class FiguraGuiScreen extends Screen {
 
         if(uploadButton.isMouseOver(mouseX, mouseY)){
             matrices.push();
-            matrices.translate(0,0,200);
+            matrices.translate(0, 0, 200);
             renderTooltip(matrices, uploadTooltip, mouseX, mouseY);
             matrices.pop();
         }
@@ -228,7 +228,7 @@ public class FiguraGuiScreen extends Screen {
 
             if(mouseOver) {
                 matrices.push();
-                matrices.translate(0,0,200);
+                matrices.translate(0, 0, 200);
                 renderTooltip(matrices, deletePrompt, mouseX, mouseY);
                 matrices.pop();
             }
