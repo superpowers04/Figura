@@ -82,10 +82,22 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
             groupPart.parentType = CustomModelPart.ParentType.Model;
             //Find parent type.
-            for (Map.Entry<String, CustomModelPart.ParentType> entry : nameParentTypeTags.entrySet()) {
+
+            for (Map.Entry<String, CustomModelPart.ParentType> entry : nameMimicTypeTags.entrySet()) {
                 if (groupPart.name.contains(entry.getKey())) {
+                    groupPart.isMimicMode = true;
                     groupPart.parentType = entry.getValue();
                     break;
+                }
+            }
+            
+            //Only set group parent if not mimicing. We can't mimic and be parented.
+            if(!groupPart.isMimicMode) {
+                for (Map.Entry<String, CustomModelPart.ParentType> entry : nameParentTypeTags.entrySet()) {
+                    if (groupPart.name.contains(entry.getKey())) {
+                        groupPart.parentType = entry.getValue();
+                        break;
+                    }
                 }
             }
         }
@@ -128,6 +140,16 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg);
         put("NO_PARENT", CustomModelPart.ParentType.None);
     }};
+
+    public static final HashMap<String, CustomModelPart.ParentType> nameMimicTypeTags = new HashMap<String, CustomModelPart.ParentType>() {{
+        put("MIMIC_HEAD", CustomModelPart.ParentType.Head);
+        put("MIMIC_TORSO", CustomModelPart.ParentType.Torso);
+        put("MIMIC_LEFT_ARM", CustomModelPart.ParentType.LeftArm);
+        put("MIMIC_RIGHT_ARM", CustomModelPart.ParentType.RightArm);
+        put("MIMIC_LEFT_LEG", CustomModelPart.ParentType.LeftLeg);
+        put("MIMIC_RIGHT_LEG", CustomModelPart.ParentType.RightLeg);
+    }};
+
 
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
         CustomModelPartCuboid elementPart = new CustomModelPartCuboid();

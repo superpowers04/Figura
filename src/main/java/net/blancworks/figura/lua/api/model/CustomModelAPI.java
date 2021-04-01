@@ -156,6 +156,21 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("getMimicMode", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(targetPart.isMimicMode);
+                }
+            });
+
+            ret.set("setMimicMode", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    targetPart.isMimicMode = arg1.checkboolean();
+                    return NIL;
+                }
+            });
+
             ret.set("getEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {

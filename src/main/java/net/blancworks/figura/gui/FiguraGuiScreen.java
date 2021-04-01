@@ -12,22 +12,25 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.TexturedButtonWidget;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.Tessellator;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.TextColor;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.Quaternion;
+import org.lwjgl.glfw.GLFW;
 
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -40,7 +43,16 @@ public class FiguraGuiScreen extends Screen {
     public Identifier playerBackgroundTexture = new Identifier("figura", "gui/menu/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "gui/menu/scalable_box.png");
 
+    public static final List<Text> deletePrompt = new ArrayList<Text>(){{
+        add(new TranslatableText("gui.figura.button.tooltip.deleteavatarfirst"));
+        add(new TranslatableText("gui.figura.button.tooltip.deleteavatarsecond").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+        add(new TranslatableText("gui.figura.button.tooltip.deleteavatarthird").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+    }};
+    
+    public static final TranslatableText uploadTooltip = new TranslatableText("gui.figura.button.tooltip.upload");
+
     public TexturedButtonWidget uploadButton;
+    public ButtonWidget deleteAvatarButton;
 
     public MutableText name_text;
     public MutableText raw_name_text;
@@ -54,6 +66,9 @@ public class FiguraGuiScreen extends Screen {
     private int rightPaneX;
     private int searchBoxX;
     private int filtersX;
+    
+    private boolean isHoldingShift = false;
+    private boolean isHoldingAlt = false;
 
     //gui sizes
     private int guiScale, modelBgSize, modelSize;
@@ -66,9 +81,9 @@ public class FiguraGuiScreen extends Screen {
 
     //model nameplate
     public static boolean showOwnNametag = false;
-    
+
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
-    
+
     public CustomListWidgetState modelFileListState = new CustomListWidgetState();
     public ModelFileListWidget modelFileList;
 
@@ -93,7 +108,7 @@ public class FiguraGuiScreen extends Screen {
         guiScale = (int) this.client.getWindow().getScaleFactor();
         double screenScale = Math.min(this.width, this.height) / 1018.0;
         modelBgSize = (int) ((512 / guiScale) * (screenScale * guiScale));
-        modelSize = (int) ((192 / guiScale)   * (screenScale * guiScale));
+        modelSize = (int) ((192 / guiScale) * (screenScale * guiScale));
 
         //search box and model list
         paneY = 48;
@@ -129,6 +144,16 @@ public class FiguraGuiScreen extends Screen {
             Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
         }));
 
+        deleteAvatarButton = new ButtonWidget(this.width - 140 - 5, 65, 140, 20, new TranslatableText("gui.figura.button.deleteavatar"), (buttonWidgetx) -> {
+            if(isHoldingShift && isHoldingAlt)
+                FiguraNetworkManager.deleteModel();
+            else if(isHoldingShift)
+                PlayerDataManager.clearLocalPlayer();
+        });
+        this.addButton(deleteAvatarButton);
+
+        deleteAvatarButton.active = false;
+
         //upload button
         uploadButton = new TexturedButtonWidget(
                 this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 30,
@@ -161,7 +186,7 @@ public class FiguraGuiScreen extends Screen {
 
         //draw avatar info
         {
-            int currY = 45 + 12;
+            int currY = 75 + 12;
 
             if (name_text != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, name_text, this.width - this.textRenderer.getWidth(name_text) - 8, currY += 12, 16777215);
@@ -181,10 +206,27 @@ public class FiguraGuiScreen extends Screen {
         //deprecated warning
         if (raw_name_text != null)
             if (raw_name_text.getString().endsWith("*"))
-                drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer,  new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
-
+                drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
+        
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
+
+        if(uploadButton.isMouseOver(mouseX, mouseY)){
+            renderTooltip(matrices, uploadTooltip, mouseX + 5, uploadButton.y + uploadButton.getHeight() );
+        }
+        
+        if (!deleteAvatarButton.active) {
+            deleteAvatarButton.active = true;
+            boolean mouseOver = deleteAvatarButton.isMouseOver(mouseX, mouseY);
+            deleteAvatarButton.active = false;
+
+            if(mouseOver) {
+                matrices.push();
+                matrices.translate(0,0,-15);
+                renderTooltip(matrices, deletePrompt, mouseX, mouseY);
+                matrices.pop();
+            }
+        }
     }
 
     @Override
@@ -205,7 +247,7 @@ public class FiguraGuiScreen extends Screen {
         buffer.vertex(x1, y1, 0.0D).texture(x1 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
         tessellator.draw();
     }
-    
+
     private static int filesize_warning_threshold = 75000;
     private static int filesize_large_threshold = 100000;
 
@@ -307,6 +349,38 @@ public class FiguraGuiScreen extends Screen {
         }
 
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
+    @Override
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        boolean result = super.keyReleased(keyCode, scanCode, modifiers);
+
+        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT) {
+            isHoldingShift = false;
+            deleteAvatarButton.active = false;
+        }
+
+        if (keyCode == GLFW.GLFW_KEY_LEFT_ALT) {
+            isHoldingAlt = false;
+        }
+
+        return result;
+    }
+
+    @Override
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        boolean result = super.keyPressed(keyCode, scanCode, modifiers);
+
+        if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT) {
+            isHoldingShift = true;
+            deleteAvatarButton.active = true;
+        }
+
+        if (keyCode == GLFW.GLFW_KEY_LEFT_ALT) {
+            isHoldingAlt = true;
+        }
+
+        return result;
     }
 
     public static void drawEntity(int x, int y, int size, float rotationX, float rotationY, LivingEntity entity) {

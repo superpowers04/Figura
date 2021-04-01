@@ -2,10 +2,13 @@ package net.blancworks.figura.models;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
+import net.blancworks.figura.FiguraMod;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.command.argument.RotationArgumentType;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
@@ -23,7 +26,7 @@ public class CustomModelPart {
     public Vector3f pos = new Vector3f();
     public Vector3f rot = new Vector3f();
     public Vector3f scale = new Vector3f(1, 1, 1);
-    public Vector3f color = new Vector3f(1,1,1);
+    public Vector3f color = new Vector3f(1, 1, 1);
 
     //Offsets
     public float uOffset = 0;
@@ -32,6 +35,9 @@ public class CustomModelPart {
     public boolean visible = true;
 
     public ParentType parentType = ParentType.None;
+    public boolean isMimicMode = false;
+    
+    public RotationType rotationType = RotationType.BlockBench;
 
     public ArrayList<CustomModelPart> children = new ArrayList<>();
 
@@ -40,7 +46,7 @@ public class CustomModelPart {
     public int vertexCount = 0;
 
     public int render(int left_to_render, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
-        return render(left_to_render, matrices, vertices, light, overlay, 0, 0, new Vector3f(1,1,1));
+        return render(left_to_render, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1));
     }
 
     //Renders this custom model part and all its children.
@@ -51,6 +57,38 @@ public class CustomModelPart {
         if (!visible) {
             return left_to_render;
         }
+
+        try {
+            if (isMimicMode) {
+                PlayerEntityModel model = FiguraMod.curr_model;
+                
+                switch (parentType) {
+                    case Head:
+                        rot = new Vector3f(model.head.pitch, model.head.yaw, model.head.roll);
+                        break;
+                    case Torso:
+                        rot = new Vector3f(model.torso.pitch, model.torso.yaw, model.torso.roll);
+                        break;
+                    case LeftArm:
+                        rot = new Vector3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
+                        break;
+                    case LeftLeg:
+                        rot = new Vector3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
+                        break;
+                    case RightArm:
+                        rot = new Vector3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
+                        break;
+                    case RightLeg:
+                        rot = new Vector3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
+                        break;
+                }
+
+                rot.set(rot.getX() * 57.2958f, rot.getY() * 57.2958f, rot.getZ() * 57.2958f);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         matrices.push();
 
         applyTransforms(matrices);
@@ -108,7 +146,7 @@ public class CustomModelPart {
         for (CustomModelPart child : children) {
             if (left_to_render == 0)
                 break;
-            left_to_render = child.render(left_to_render, matrices, vertices, light, overlay, uOffset, vOffset, tempColor);
+            left_to_render = child.render(left_to_render, matrices, vertices, light, overlay, u, v, tempColor);
         }
 
         matrices.pop();
@@ -118,9 +156,16 @@ public class CustomModelPart {
     public void applyTransforms(MatrixStack stack) {
         stack.translate(-pivot.getX() / 16.0f, -pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
 
-        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
+        
+        if(isMimicMode || rotationType == RotationType.Vanilla){
+            stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+            stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
+            stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
+        } else if (rotationType == RotationType.BlockBench) {
+            stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+            stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+            stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
+        } 
 
         stack.translate(pos.getX() / 16.0f, pos.getY() / 16.0f, pos.getZ() / 16.0f);
 
@@ -186,6 +231,9 @@ public class CustomModelPart {
         if (partTag.contains("ptype")) {
             parentType = ParentType.valueOf(partTag.get("ptype").asString());
         }
+        if (partTag.contains("mmc")) {
+            isMimicMode = ((ByteTag)partTag.get("mmc")).getByte() == 1;
+        }
 
         if (partTag.contains("vsb")) {
             visible = partTag.getBoolean("vsb");
@@ -245,8 +293,8 @@ public class CustomModelPart {
             partTag.put("piv", pivTag);
         }
 
-        if(Math.abs(uOffset) > 0.0001f && Math.abs(vOffset) > 0.0001f){
-            ListTag uvOffsetTag = new ListTag(){{
+        if (Math.abs(uOffset) > 0.0001f && Math.abs(vOffset) > 0.0001f) {
+            ListTag uvOffsetTag = new ListTag() {{
                 add(FloatTag.of(uOffset));
                 add(FloatTag.of(vOffset));
             }};
@@ -256,6 +304,7 @@ public class CustomModelPart {
         if (parentType != ParentType.None) {
             partTag.put("ptype", StringTag.of(parentType.toString()));
         }
+        partTag.put("mmc", ByteTag.of(isMimicMode));
 
         if (!visible) {
             partTag.put("vsb", ByteTag.of(false));
@@ -289,6 +338,11 @@ public class CustomModelPart {
         LeftLeg,
         RightLeg,
         Torso
+    }
+
+    public enum RotationType {
+        BlockBench,
+        Vanilla
     }
 
     //---------MODEL PART TYPES---------
