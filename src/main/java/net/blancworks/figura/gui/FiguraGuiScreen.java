@@ -333,8 +333,8 @@ public class FiguraGuiScreen extends Screen {
         //set rotations
         if (canRotate) {
             //get starter rotation angle then get hot much is moved and divided by a slow factor
-            angleX = anchorAngleX + (anchorY - mouseY) / (3 * screenScale);
-            angleY = anchorAngleY - (anchorX - mouseX) / (3 * screenScale);
+            angleX = anchorAngleX + (anchorY - mouseY) / (3.0 / guiScale);
+            angleY = anchorAngleY - (anchorX - mouseX) / (3.0 / guiScale);
 
             //prevent rating so much down and up
             if (angleX > 90) {
