@@ -69,32 +69,32 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
 
             PlayerDataManager.checkForPlayerDataRefresh(playerData);
             TrustContainer trustData = playerData.getTrustContainer();
+
+            for (ModelPart part : parts) {
+                ModelPartAccess mpa = (ModelPartAccess) (Object) part;
+                mpa.setAdditionalPos(new Vector3f());
+                mpa.setAdditionalRot(new Vector3f());
+            }
+
+
+            resetModelPartAdditionalValues(head);
+            resetModelPartAdditionalValues(helmet);
+            resetModelPartAdditionalValues(torso);
+            resetModelPartAdditionalValues(jacket);
+            resetModelPartAdditionalValues(rightArm);
+            resetModelPartAdditionalValues(leftArm);
+            resetModelPartAdditionalValues(rightLeg);
+            resetModelPartAdditionalValues(leftLeg);
+
+            resetModelPartAdditionalValues(rightSleeve);
+            resetModelPartAdditionalValues(leftSleeve);
+            resetModelPartAdditionalValues(rightPantLeg);
+            resetModelPartAdditionalValues(leftPantLeg);
             
             if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
                 playerData.script.applyCustomValues((PlayerEntityModel) (Object) this);
-            } else {
-                for (ModelPart part : parts) {
-                    ModelPartAccess mpa = (ModelPartAccess) (Object) part;
-                    mpa.setAdditionalPos(new Vector3f());
-                    mpa.setAdditionalRot(new Vector3f());
-                }
-
-
-                resetModelPartAdditionalValues(head);
-                resetModelPartAdditionalValues(helmet);
-                resetModelPartAdditionalValues(torso);
-                resetModelPartAdditionalValues(jacket);
-                resetModelPartAdditionalValues(rightArm);
-                resetModelPartAdditionalValues(leftArm);
-                resetModelPartAdditionalValues(rightLeg);
-                resetModelPartAdditionalValues(leftLeg);
-                
-                resetModelPartAdditionalValues(rightSleeve);
-                resetModelPartAdditionalValues(leftSleeve);
-                resetModelPartAdditionalValues(rightPantLeg);
-                resetModelPartAdditionalValues(leftPantLeg);
             }
-
+            
             super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
 
             if (playerData != null) {
