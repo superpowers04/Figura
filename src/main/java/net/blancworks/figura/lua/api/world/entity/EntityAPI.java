@@ -4,12 +4,14 @@ import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.*;
@@ -53,19 +55,12 @@ public class EntityAPI {
 
                         LuaValue pitch = LuaNumber.valueOf(targetEntity.pitch);
                         LuaValue yaw = LuaNumber.valueOf(targetEntity.yaw);
-                        LuaValue roll;
-                        if (targetEntity instanceof LivingEntity)
-                            roll = LuaNumber.valueOf(((LivingEntity) targetEntity).getRoll());
-                        else
-                            roll = LuaNumber.valueOf(0);
                         
                         t.set("pitch", pitch);
                         t.set("yaw", yaw);
-                        t.set("roll", roll);
 
                         t.set(1, pitch);
                         t.set(2, yaw);
-                        t.set(3, roll);
 
                         return t;
                     }
@@ -74,7 +69,7 @@ public class EntityAPI {
                 set("getType", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return typeString;
+                        return LuaString.valueOf(Registry.ENTITY_TYPE.getId(targetEntity.getType()).toString());
                     }
                 });
 
@@ -167,9 +162,9 @@ public class EntityAPI {
 
                         Entity vehicle = targetEntity.getVehicle();
 
-                        if (vehicle instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable<>((LivingEntity) vehicle);
+                        if (vehicle instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable<>((LivingEntity) vehicle).getTable();
 
-                        return new EntityLuaAPITable<>(vehicle);
+                        return new EntityLuaAPITable<>(vehicle).getTable();
                     }
                 });
 
@@ -190,12 +185,13 @@ public class EntityAPI {
                         CompoundTag tag = new CompoundTag();
                         targetEntity.toTag(tag);
 
-                        Tag current = null;
+                        Tag current = tag;
                         for (String key : path) {
                             if (current == null)
                                 current = tag.get(key);
                             else if (current instanceof CompoundTag)
                                 current = ((CompoundTag)current).get(key);
+                            else current = null;
                         }
 
                         if (current == null) return NIL;

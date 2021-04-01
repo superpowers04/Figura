@@ -75,6 +75,7 @@ public class LivingEntityAPI {
                     int i = 1;
                     for (StatusEffectInstance inst : targetEntity.getStatusEffects()) {
                         effects.set(i, LuaString.valueOf(Registry.STATUS_EFFECT.getId(inst.getEffectType()).toString()));
+                        i++;
                     }
 
                     return effects;
