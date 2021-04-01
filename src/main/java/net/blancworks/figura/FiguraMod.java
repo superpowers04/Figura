@@ -89,7 +89,7 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static Path getModContentDirectory() {
-        Path oldPath = FabricLoader.INSTANCE.getGameDir().getParent().resolve("figura");
+        Path oldPath = FabricLoader.INSTANCE.getGameDir().normalize().getParent().resolve("figura");
         Path p = FabricLoader.INSTANCE.getGameDir().normalize().resolve("figura");
         try {
             Files.createDirectories(p);
