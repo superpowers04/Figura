@@ -90,13 +90,15 @@ public class FiguraMod implements ClientModInitializer {
 
     public static Path getModContentDirectory() {
         Path oldPath = FabricLoader.INSTANCE.getGameDir().getParent().resolve("figura");
-        Path p = FabricLoader.INSTANCE.getGameDir().resolve("figura");
+        Path p = FabricLoader.INSTANCE.getGameDir().normalize().resolve("figura");
         try {
             Files.createDirectories(p);
 
-            if(Files.exists(oldPath)) {
-                copyDirectory(oldPath.toString(), p.toString());
-                deleteDirectory(oldPath.toFile());
+            if(!oldPath.equals(p)) {
+                if (Files.exists(oldPath)) {
+                    copyDirectory(oldPath.toString(), p.toString());
+                    deleteDirectory(oldPath.toFile());
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
