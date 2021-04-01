@@ -72,6 +72,7 @@ public class FiguraGuiScreen extends Screen {
 
     //gui sizes
     private int guiScale, modelBgSize, modelSize;
+    private double screenScale;
 
     //model rotation
     private double anchorX, anchorY;
@@ -104,9 +105,11 @@ public class FiguraGuiScreen extends Screen {
     protected void init() {
         super.init();
 
-        //model size
+        //screen size
         guiScale = (int) this.client.getWindow().getScaleFactor();
-        double screenScale = Math.min(this.width, this.height) / 1018.0;
+        screenScale = Math.min(this.width, this.height) / 1018.0;
+
+        //model size
         modelBgSize = (int) ((512 / guiScale) * (screenScale * guiScale));
         modelSize = (int) ((192 / guiScale) * (screenScale * guiScale));
 
@@ -212,7 +215,10 @@ public class FiguraGuiScreen extends Screen {
         super.render(matrices, mouseX, mouseY, delta);
 
         if(uploadButton.isMouseOver(mouseX, mouseY)){
-            renderTooltip(matrices, uploadTooltip, mouseX + 5, uploadButton.y + uploadButton.getHeight() );
+            matrices.push();
+            matrices.translate(0, 0, 200);
+            renderTooltip(matrices, uploadTooltip, mouseX, mouseY);
+            matrices.pop();
         }
         
         if (!deleteAvatarButton.active) {
@@ -222,7 +228,7 @@ public class FiguraGuiScreen extends Screen {
 
             if(mouseOver) {
                 matrices.push();
-                matrices.translate(0,0,-15);
+                matrices.translate(0, 0, 200);
                 renderTooltip(matrices, deletePrompt, mouseX, mouseY);
                 matrices.pop();
             }
@@ -327,8 +333,8 @@ public class FiguraGuiScreen extends Screen {
         //set rotations
         if (canRotate) {
             //get starter rotation angle then get hot much is moved and divided by a slow factor
-            angleX = anchorAngleX + (anchorY - mouseY) / 1.5;
-            angleY = anchorAngleY - (anchorX - mouseX) / 1.5;
+            angleX = anchorAngleX + (anchorY - mouseY) / (3.0 / guiScale);
+            angleY = anchorAngleY - (anchorX - mouseX) / (3.0 / guiScale);
 
             //prevent rating so much down and up
             if (angleX > 90) {
