@@ -8,9 +8,11 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
+import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class PlayerEntityAPI {
 
@@ -63,6 +65,34 @@ public class PlayerEntityAPI {
                     
                     LuaTable getItemRepresentation = ItemStackAPI.getTable(targetStack);
                     return getItemRepresentation;
+                }
+            });
+
+            superTable.set("getFood", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(targetEntity.getHungerManager().getFoodLevel());
+                }
+            });
+
+            superTable.set("getSaturation", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(targetEntity.getHungerManager().getSaturationLevel());
+                }
+            });
+
+            superTable.set("getExperienceProgress", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(targetEntity.experienceProgress);
+                }
+            });
+
+            superTable.set("getExperienceLevel", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(targetEntity.experienceLevel);
                 }
             });
             
