@@ -69,7 +69,7 @@ public class EntityAPI {
                 set("getType", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaString.valueOf(Registry.ENTITY_TYPE.getId(targetEntity.getType()).toString());
+                        return typeString;
                     }
                 });
 
