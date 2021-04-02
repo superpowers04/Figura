@@ -64,12 +64,9 @@ public class LocalPlayerData extends PlayerData {
     //Loads a model file at a specific directory.
     public void loadModelFile(String fileName) {
         watchedFiles.clear();
-        Path contentDirectory = getContentDirectory();
 
-        Path jsonPath = null;
-        texturePath = null;
-        Path scriptPath = null;
-        Path metadataPath = null;
+        //create root directory
+        Path contentDirectory = getContentDirectory();
 
         try {
             Files.createDirectories(contentDirectory);
@@ -77,45 +74,64 @@ public class LocalPlayerData extends PlayerData {
             e.printStackTrace();
         }
 
-        //remove "*" from file name if its .bbmodel
-        if (fileName.endsWith("*")) {
-            fileName = fileName.substring(0, fileName.length() - 1);
-            fileName += ".bbmodel";
-        }
+        //check file type
+        boolean isZip = fileName.endsWith(".zip");
+        boolean legacy = fileName.endsWith("*");
+        boolean directory = !isZip && !legacy;
 
-        File file = new File(contentDirectory.resolve(fileName).toString());
-        boolean isZip = file.getName().endsWith(".zip");
+        //reset paths
+        Path jsonPath = null;
+        texturePath = null;
+        Path scriptPath = null;
+        Path metadataPath = null;
+
+        //dummy file - must be initialized
+        File file = null;
 
         //folder data
-        if (file.isDirectory()) {
+        if (directory) {
+            file = new File(contentDirectory.resolve(fileName).toString());
+
+            //set paths
             jsonPath = file.toPath().resolve("model.bbmodel");
             texturePath = file.toPath().resolve("texture.png");
             scriptPath = file.toPath().resolve("script.lua");
             metadataPath = file.toPath().resolve("metadata.nbt");
-            
+
+            //add watchedfiles
             watchedFiles.add(jsonPath.toString());
             watchedFiles.add(texturePath.toString());
             watchedFiles.add(scriptPath.toString());
             watchedFiles.add(metadataPath.toString());
-            
+
+            //set root directory
             contentDirectory = file.toPath();
         }
-        //then must be a .bbmodel
-        else if (!isZip) {
-            fileName = fileName.substring(0, fileName.length() - 8);
+        //zip data
+        else if (isZip) {
+            //add zip to watched files, even if you cant edit opened zip files, you might be able to
+            file = new File(contentDirectory.resolve(fileName).toString());
+            watchedFiles.add(file.toString());
+        }
+        //then must be a .bbmodel *
+        else {
+            //remove invalid * from name
+            fileName = fileName.substring(0, fileName.length() - 1);
+
+            //set paths
             jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
             texturePath = contentDirectory.resolve(fileName + ".png");
             scriptPath = contentDirectory.resolve(fileName + ".lua");
             metadataPath = contentDirectory.resolve(fileName + ".nbt");
 
+            //add watched files
             watchedFiles.add(jsonPath.toString());
             watchedFiles.add(texturePath.toString());
             watchedFiles.add(scriptPath.toString());
             watchedFiles.add(metadataPath.toString());
-        }
-        
-        if(isZip){
-            watchedFiles.add(file.toString());
+
+            //add * back
+            fileName += "*";
         }
 
         if (!watchKeys.containsKey(contentDirectory.toString())) {
@@ -126,25 +142,31 @@ public class LocalPlayerData extends PlayerData {
             }
         }
 
+        //set loaded name
         loadedName = fileName;
 
-        //load JSON file for model
+        //load JSON model
         model = null;
         String text;
         try {
             InputStream stream;
-            if (!isZip) {
-                stream = new FileInputStream(jsonPath.toFile());
-            }
-            else {
+
+            //if zip copy input stream, else, create a new from path file
+            if (isZip) {
                 ZipFile zipFile = new ZipFile(file);
                 ZipEntry modelEntry = zipFile.getEntry("model.bbmodel");
                 stream = zipFile.getInputStream(modelEntry);
             }
+            else
+                stream = new FileInputStream(jsonPath.toFile());
 
+            //then read the input stream
             try (final Reader reader = new InputStreamReader(stream)) {
                 text = CharStreams.toString(reader);
             }
+
+            //close stream
+            stream.close();
 
             CustomModel mdl = FiguraMod.builder.fromJson(text, CustomModel.class);
             model = mdl;
@@ -156,19 +178,21 @@ public class LocalPlayerData extends PlayerData {
         //load texture
         texture = null;
         try {
+            //start texture loading
             Identifier id = new Identifier("figura", playerId.toString());
             texture = new FiguraTexture();
             texture.id = id;
 
+            //if zip pass the input stream to the texture and nulls the path
             if (isZip) {
                 ZipFile zipFile = new ZipFile(file);
                 ZipEntry textureEntry = zipFile.getEntry("texture.png");
-                InputStream stream = zipFile.getInputStream(textureEntry);
 
-                texture.inputStream = stream;
+                texture.inputStream = zipFile.getInputStream(textureEntry);
                 texturePath = null;
             }
 
+            //finish texture loading
             texture.filePath = texturePath;
             getTextureManager().registerTexture(id, texture);
 
@@ -182,24 +206,25 @@ public class LocalPlayerData extends PlayerData {
         try {
             String contents = null;
 
-            if (!isZip) {
-                if (Files.exists(scriptPath))
-                    contents = new String(Files.readAllBytes(scriptPath));
-            }
-            else {
+            //try to load script file inside the zip - if have one
+            if (isZip) {
                 ZipFile zipFile = new ZipFile(file);
                 ZipEntry scriptEntry = zipFile.getEntry("script.lua");
 
-                if (scriptEntry != null) {
-                    InputStream stream = zipFile.getInputStream(scriptEntry);
-                    contents = new String(IOUtils.toByteArray(stream));
-                }
+                if (scriptEntry != null)
+                    contents = new String(IOUtils.toByteArray(zipFile.getInputStream(scriptEntry)));
+            }
+            //then try to load from path
+            else {
+                if (Files.exists(scriptPath))
+                    contents = new String(Files.readAllBytes(scriptPath));
             }
 
+            //create script if found or log an info that no scripts was loaded
             if (contents != null)
                 script = new CustomScript(this, contents);
             else
-                FiguraMod.LOGGER.info("Model \"" + file.getName() + "\" doesn't have any valid scripts!");
+                FiguraMod.LOGGER.info("Model \"" + fileName + "\" doesn't have any valid scripts!");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -210,18 +235,17 @@ public class LocalPlayerData extends PlayerData {
             for (FiguraTexture.TEXTURE_TYPE textureType : FiguraTexture.extraTexturesToRenderLayers.keySet()) {
                 Path location;
 
-                //zip
+                //zip is special because it only passes an input stream, if have one
                 if (isZip) {
                     ZipFile zipFile = new ZipFile(file);
                     ZipEntry textureEntry = zipFile.getEntry("texture" + textureType.toString() + ".png");
 
                     if (textureEntry != null) {
-                        InputStream stream = zipFile.getInputStream(textureEntry);
 
                         FiguraTexture extraTexture = new FiguraTexture();
                         extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
                         extraTexture.filePath = null;
-                        extraTexture.inputStream = stream;
+                        extraTexture.inputStream = zipFile.getInputStream(textureEntry);
                         getTextureManager().registerTexture(extraTexture.id, extraTexture);
                         extraTexture.type = textureType;
 
@@ -231,14 +255,14 @@ public class LocalPlayerData extends PlayerData {
 
                     continue;
                 }
-                //folder
-                else if (file.isDirectory()) {
+                //folder - just load from folder
+                else if (directory)
                     location = file.toPath().resolve("texture" + textureType.toString() + ".png");
-                }
-                //.bbmodel
+                //.bbmodel - remove * from name then loads from root folder
                 else
-                    location = contentDirectory.resolve(fileName + textureType.toString() + ".png");
+                    location = contentDirectory.resolve(fileName.substring(0, fileName.length() - 1) + textureType.toString() + ".png");
 
+                //if location is valid, finish the loading
                 if (Files.exists(location)) {
                     FiguraTexture extraTexture = new FiguraTexture();
                     extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
@@ -250,7 +274,6 @@ public class LocalPlayerData extends PlayerData {
                     watchedFiles.add(location.toString());
                     didTextureLoad = true;
                 }
-
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -339,7 +362,7 @@ public class LocalPlayerData extends PlayerData {
                 
                 Path parentPath = FileSystems.getDefault().getPath(entry.getKey());
                 Path child = parentPath.resolve(filename);
-                String realName = FilenameUtils.removeExtension(child.getFileName().toString());
+                String realName = child.getFileName().toString();
 
                 try {
                     
@@ -348,9 +371,9 @@ public class LocalPlayerData extends PlayerData {
                     
                     if (realName.equals(loadedName) && !doReload)
                         doReload = true;
+
                 } catch (Exception e) {
                     System.err.println(e);
-                    continue;
                 }
             }
         }
