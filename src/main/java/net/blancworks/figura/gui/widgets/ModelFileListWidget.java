@@ -13,7 +13,6 @@ import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.zip.ZipFile;
 
 public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, ModelFileListWidget.ModelFileListWidgetEntry> {
@@ -84,7 +83,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
 
         FiguraGuiScreen parent = (FiguraGuiScreen) getParent();
 
-        parent.click_button(entry.getEntryObject().toString());
+        parent.clickButton(entry.getEntryObject().toString());
     }
 
     public class ModelFileListWidgetEntry extends CustomListEntry {

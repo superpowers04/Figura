@@ -22,23 +22,26 @@ public abstract class ElytraFeatureRendererMixin<T extends LivingEntity, M exten
         super(context);
     }
 
-    @Inject(at = @At("HEAD"), method = "Lnet/minecraft/client/render/entity/feature/ElytraFeatureRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V")
-    public void render_HEAD(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, LivingEntity livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        matrixStack.push();
+    @SuppressWarnings("unchecked")
+    @Inject(at = @At("HEAD"), method = "render")
+    public void onRenderStart(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int i, LivingEntity entity,
+                              float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
+        matrices.push();
 
         try {
-            BipedEntityModel mdl = (BipedEntityModel) this.getContextModel();
-            ModelPartAccess access = (ModelPartAccess) (Object) mdl.torso;
+            BipedEntityModel<T> mdl = (BipedEntityModel<T>) this.getContextModel();
+            ModelPartAccess access = (ModelPartAccess) mdl.torso;
             Vector3f additionalMove = access.getAdditionalPos();
-            if(additionalMove != null)
-                matrixStack.translate(additionalMove.getX() / 16.0f, additionalMove.getY() / 16.0f, additionalMove.getZ() / 16.0f);
-        } catch (Exception e){
+            if (additionalMove != null)
+                matrices.translate(additionalMove.getX() / 16.0f, additionalMove.getY() / 16.0f, additionalMove.getZ() / 16.0f);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "Lnet/minecraft/client/render/entity/feature/ElytraFeatureRenderer;render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V")
-    public void render_TAIL(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, LivingEntity livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        matrixStack.pop();
+    @Inject(at = @At("RETURN"), method = "render")
+    public void onRenderEnd(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int i, LivingEntity entity,
+                            float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
+        matrices.pop();
     }
 }

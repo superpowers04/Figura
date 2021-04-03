@@ -10,8 +10,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ClientLoginNetworkHandler.class)
 public class ClientLoginNetworkHandlerMixin {
-
-
     @Inject(at = @At("HEAD"), method = "onDisconnected(Lnet/minecraft/text/Text;)V")
     public void onDisconnected(Text reason, CallbackInfo ci) {
         FiguraNetworkManager.parseAuthKeyFromDisconnectMessage(reason);

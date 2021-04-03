@@ -4,7 +4,6 @@ import net.blancworks.figura.access.ModelPartAccess;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
-import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -13,49 +12,42 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ModelPart.class)
 public class ModelPartMixin implements ModelPartAccess {
-
     @Shadow
-    @Final
     public float pivotX;
     @Shadow
-    @Final
     public float pivotY;
     @Shadow
-    @Final
     public float pivotZ;
     @Shadow
-    @Final
     public float pitch;
     @Shadow
-    @Final
     public float yaw;
     @Shadow
-    @Final
     public float roll;
 
-    private Vector3f additional_pos = new Vector3f();
-    private Vector3f additional_rot = new Vector3f();
+    private Vector3f figura$additionalPos = new Vector3f();
+    private Vector3f figura$additionalRot = new Vector3f();
 
     //Used sometimes for copying stuff to armor, or similar.
-    private Vector3f last_additional_pos = new Vector3f();
-    private Vector3f last_additional_rot = new Vector3f();
+    private Vector3f figura$lastAdditionalPos = new Vector3f();
+    private Vector3f figura$lastAdditionalRot = new Vector3f();
 
     @Inject(at = @At("HEAD"), method = "rotate", cancellable = true)
-    public void rotate_head(MatrixStack matrix, CallbackInfo info) {
-        if (additional_pos != null) {
-            matrix.translate((pivotX + additional_pos.getX()) / 16.0f, (pivotY + additional_pos.getY()) / 16.0f, (pivotZ + additional_pos.getZ()) / 16.0f);
+    public void onRotate(MatrixStack matrices, CallbackInfo info) {
+        if (figura$additionalPos != null) {
+            matrices.translate((pivotX + figura$additionalPos.getX()) / 16.0f, (pivotY + figura$additionalPos.getY()) / 16.0f, (pivotZ + figura$additionalPos.getZ()) / 16.0f);
         } else {
-            matrix.translate(pivotX / 16.0f, pivotY / 16.0f, pivotZ / 16.0f);
+            matrices.translate(pivotX / 16.0f, pivotY / 16.0f, pivotZ / 16.0f);
         }
 
-        if (additional_rot != null) {
-            matrix.multiply(Vector3f.POSITIVE_Z.getRadialQuaternion(roll + additional_rot.getZ()));
-            matrix.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw + additional_rot.getY()));
-            matrix.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch + additional_rot.getX()));
+        if (figura$additionalRot != null) {
+            matrices.multiply(Vector3f.POSITIVE_Z.getRadialQuaternion(roll + figura$additionalRot.getZ()));
+            matrices.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw + figura$additionalRot.getY()));
+            matrices.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch + figura$additionalRot.getX()));
         } else {
-            matrix.multiply(Vector3f.POSITIVE_Z.getRadialQuaternion(roll));
-            matrix.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw));
-            matrix.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch));
+            matrices.multiply(Vector3f.POSITIVE_Z.getRadialQuaternion(roll));
+            matrices.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw));
+            matrices.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch));
         }
 
         info.cancel();
@@ -63,33 +55,38 @@ public class ModelPartMixin implements ModelPartAccess {
 
     @Inject(at = @At("RETURN"), method = "copyPositionAndRotation(Lnet/minecraft/client/model/ModelPart;)V")
     public void copyPositionAndRotation(ModelPart modelPart, CallbackInfo ci) {
-        setAdditionalPos(((ModelPartAccess)(Object)modelPart).getAdditionalPos());
-        setAdditionalRot(((ModelPartAccess)(Object)modelPart).getAdditionalRot());
+        setAdditionalPos(((ModelPartAccess) modelPart).getAdditionalPos());
+        setAdditionalRot(((ModelPartAccess) modelPart).getAdditionalRot());
     }
 
+    @Override
     public void setAdditionalPos(Vector3f v) {
-        last_additional_pos = additional_pos;
-        additional_pos = v;
+        figura$lastAdditionalPos = figura$additionalPos;
+        figura$additionalPos = v;
     }
 
+    @Override
     public void setAdditionalRot(Vector3f v) {
-        last_additional_rot = additional_rot;
-        additional_rot = v;
+        figura$lastAdditionalRot = figura$additionalRot;
+        figura$additionalRot = v;
     }
 
+    @Override
     public Vector3f getAdditionalPos() {
-        return additional_pos;
+        return figura$additionalPos;
     }
 
+    @Override
     public Vector3f getAdditionalRot() {
-        return additional_rot;
+        return figura$additionalRot;
     }
 
+    // @TODO remove?
     public Vector3f getLastAdditionalPos() {
-        return last_additional_pos;
+        return figura$lastAdditionalPos;
     }
 
     public Vector3f getLastAdditionalRot() {
-        return last_additional_rot;
+        return figura$lastAdditionalRot;
     }
 }

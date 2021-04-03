@@ -25,7 +25,7 @@ public class CustomModelAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
-            for (CustomModelPart part : script.playerData.model.all_parts) {
+            for (CustomModelPart part : script.playerData.model.allParts) {
                 set(part.name, new CustomModelPartTable(part));
             }
         }});

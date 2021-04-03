@@ -16,8 +16,7 @@ import java.nio.file.Path;
 
 
 public class CustomModelPartMesh extends CustomModelPart {
-
-    public boolean is_ready = false;
+    public boolean isReady = false;
     
     public static CustomModelPartMesh loadFromObj(Path path) {
         CustomModelPartMesh newPart = new CustomModelPartMesh();
@@ -34,31 +33,31 @@ public class CustomModelPartMesh extends CustomModelPart {
     }
 
     public void parseObj(Path path) throws Exception {
-        is_ready = false;
+        this.isReady = false;
         vertexData.clear();
 
         InputStream fileStream = new FileInputStream(path.toString());
-        Obj object_file = ObjReader.read(fileStream);
+        Obj objectFile = ObjReader.read(fileStream);
         fileStream.close();
 
-        int triCount = object_file.getNumFaces();
+        int triCount = objectFile.getNumFaces();
 
         for (int i = 0; i < triCount; i++) {
-            ObjFace face = object_file.getFace(i);
+            ObjFace face = objectFile.getFace(i);
             int vertCount = face.getNumVertices();
 
             if (vertCount == 4) {
                 for (int j = vertCount - 1; j >= 0; j--) {
-                    FloatTuple vertex = object_file.getVertex(face.getVertexIndex(j));
+                    FloatTuple vertex = objectFile.getVertex(face.getVertexIndex(j));
                     vertexData.add(vertex.getX());
                     vertexData.add(-vertex.getY());
                     vertexData.add(vertex.getZ());
 
-                    FloatTuple uv = object_file.getTexCoord(face.getTexCoordIndex(j));
+                    FloatTuple uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
                     vertexData.add(uv.getX());
                     vertexData.add(1 - uv.getY());
 
-                    FloatTuple normal = object_file.getNormal(face.getNormalIndex(j));
+                    FloatTuple normal = objectFile.getNormal(face.getNormalIndex(j));
                     vertexData.add(normal.getX());
                     vertexData.add(-normal.getY());
                     vertexData.add(normal.getZ());
@@ -67,31 +66,31 @@ public class CustomModelPartMesh extends CustomModelPart {
                 }
             } else if (vertCount == 3) {
                 for (int j = vertCount - 1; j >= 0; j--) {
-                    FloatTuple vertex = object_file.getVertex(face.getVertexIndex(j));
+                    FloatTuple vertex = objectFile.getVertex(face.getVertexIndex(j));
                     vertexData.add(vertex.getX());
                     vertexData.add(-vertex.getY());
                     vertexData.add(vertex.getZ());
 
-                    FloatTuple uv = object_file.getTexCoord(face.getTexCoordIndex(j));
+                    FloatTuple uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
                     vertexData.add(uv.getX());
                     vertexData.add(1 - uv.getY());
 
-                    FloatTuple normal = object_file.getNormal(face.getNormalIndex(j));
+                    FloatTuple normal = objectFile.getNormal(face.getNormalIndex(j));
                     vertexData.add(normal.getX());
                     vertexData.add(-normal.getY());
                     vertexData.add(normal.getZ());
 
                     if (j == vertCount - 1) {
-                        vertex = object_file.getVertex(face.getVertexIndex(j));
+                        vertex = objectFile.getVertex(face.getVertexIndex(j));
                         vertexData.add(vertex.getX());
                         vertexData.add(-vertex.getY());
                         vertexData.add(vertex.getZ());
 
-                        uv = object_file.getTexCoord(face.getTexCoordIndex(j));
+                        uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
                         vertexData.add(uv.getX());
                         vertexData.add(1 - uv.getY());
 
-                        normal = object_file.getNormal(face.getNormalIndex(j));
+                        normal = objectFile.getNormal(face.getNormalIndex(j));
                         vertexData.add(normal.getX());
                         vertexData.add(-normal.getY());
                         vertexData.add(normal.getZ());
@@ -102,32 +101,31 @@ public class CustomModelPartMesh extends CustomModelPart {
             }
 
         }
-        
-        is_ready = true;
+
+        this.isReady = true;
     }
 
-
     @Override
-    public void toNBT(CompoundTag tag) {
-        super.toNBT(tag);
+    public void writeNbt(CompoundTag partNbt) {
+        super.writeNbt(partNbt);
         ListTag geometryData = new ListTag();
 
-        for (int i = 0; i < vertexData.size(); i++) {
-            geometryData.add(FloatTag.of(vertexData.getFloat(i)));
+        for (int i = 0; i < this.vertexData.size(); i++) {
+            geometryData.add(FloatTag.of(this.vertexData.getFloat(i)));
         }
-        tag.put("vc", IntTag.of(vertexCount));
-        tag.put("geo", geometryData);
+        partNbt.put("vc", IntTag.of(this.vertexCount));
+        partNbt.put("geo", geometryData);
     }
 
     @Override
-    public void fromNBT(CompoundTag tag) {
-        super.fromNBT(tag);
-        ListTag geometryData = (ListTag) tag.get("geo");
+    public void readNbt(CompoundTag partNbt) {
+        super.readNbt(partNbt);
+        ListTag geometryData = (ListTag) partNbt.get("geo");
 
         for (int i = 0; i < geometryData.size(); i++) {
-            vertexData.add(geometryData.getFloat(i));
+            this.vertexData.add(geometryData.getFloat(i));
         }
-        vertexCount = tag.getInt("vc");
+        this.vertexCount = partNbt.getInt("vc");
     }
 
     public String getPartType() {

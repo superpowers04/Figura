@@ -3,7 +3,8 @@ package net.blancworks.figura.access;
 import net.minecraft.client.model.ModelPart;
 
 import java.util.HashSet;
+import java.util.Set;
 
 public interface PlayerEntityModelAccess {
-    HashSet<ModelPart> getDisabledParts();
+    Set<ModelPart> figura$getDisabledParts();
 }

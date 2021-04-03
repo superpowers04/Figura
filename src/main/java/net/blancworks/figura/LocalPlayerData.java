@@ -2,6 +2,7 @@ package net.blancworks.figura;
 
 
 import com.google.common.io.CharStreams;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
@@ -9,31 +10,27 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.PositionTracker;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.nio.file.*;
 import java.sql.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-//This is the specific class used for the LOCAL player.
-//This is in place to allow users to freely modify their model based on files loaded from disk,
-//and allow for easier editing.
+/**
+ * This is the specific class used for the LOCAL player.
+ * This is in place to allow users to freely modify their model based on files loaded from disk,
+ * and allow for easier editing.
+ */
 public class LocalPlayerData extends PlayerData {
-
-
-    private Path texturePath = null;
-    private boolean didTextureLoad = false;
-
     public String loadedName;
-    private HashMap<String, WatchKey> watchKeys = new HashMap<String, WatchKey>();
-    private HashSet<String> watchedFiles = new HashSet<String>();
+    private final Map<String, WatchKey> watchKeys = new Object2ObjectOpenHashMap<>();
+    private final Set<String> watchedFiles = new HashSet<>();
     public static WatchService ws;
 
     static {
@@ -46,22 +43,25 @@ public class LocalPlayerData extends PlayerData {
 
     @Override
     public void tick() {
-        isLoaded = true;
+        this.isLoaded = true;
 
-        lastHashCheckTime = new Date(Long.MAX_VALUE);
-        if (loadedName != null)
-            lastHash = "";
+        this.lastHashCheckTime = new Date(Long.MAX_VALUE);
+        if (this.loadedName != null)
+            this.lastHash = "";
         super.tick();
 
-        lateLoadTexture();
-        tickFileWatchers();
+        this.lateLoadTexture();
+        this.tickFileWatchers();
     }
 
     public static Path getContentDirectory() {
         return FiguraMod.getModContentDirectory().resolve("model_files");
     }
 
-    //Loads a model file at a specific directory.
+    /**
+     * Loads a model file at a specific directory.
+     * @param fileName
+     */
     public void loadModelFile(String fileName) {
         watchedFiles.clear();
 
@@ -81,9 +81,9 @@ public class LocalPlayerData extends PlayerData {
 
         //reset paths
         Path jsonPath = null;
-        texturePath = null;
+        Path texturePath = null;
         Path scriptPath = null;
-        Path metadataPath = null;
+        Path metadataPath;
 
         //dummy file - must be initialized
         File file = null;
@@ -143,10 +143,10 @@ public class LocalPlayerData extends PlayerData {
         }
 
         //set loaded name
-        loadedName = fileName;
+        this.loadedName = fileName;
 
         //load JSON model
-        model = null;
+        this.model = null;
         String text;
         try {
             InputStream stream;
@@ -156,8 +156,7 @@ public class LocalPlayerData extends PlayerData {
                 ZipFile zipFile = new ZipFile(file);
                 ZipEntry modelEntry = zipFile.getEntry("model.bbmodel");
                 stream = zipFile.getInputStream(modelEntry);
-            }
-            else
+            } else
                 stream = new FileInputStream(jsonPath.toFile());
 
             //then read the input stream
@@ -168,41 +167,40 @@ public class LocalPlayerData extends PlayerData {
             //close stream
             stream.close();
 
-            CustomModel mdl = FiguraMod.builder.fromJson(text, CustomModel.class);
-            model = mdl;
+            CustomModel mdl = FiguraMod.GSON.fromJson(text, CustomModel.class);
+            this.model = mdl;
             mdl.owner = this;
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         //load texture
-        texture = null;
+        this.texture = null;
         try {
             //start texture loading
             Identifier id = new Identifier("figura", playerId.toString());
-            texture = new FiguraTexture();
-            texture.id = id;
+            this.texture = new FiguraTexture();
+            this.texture.id = id;
 
             //if zip pass the input stream to the texture and nulls the path
             if (isZip) {
                 ZipFile zipFile = new ZipFile(file);
                 ZipEntry textureEntry = zipFile.getEntry("texture.png");
 
-                texture.inputStream = zipFile.getInputStream(textureEntry);
+                this.texture.inputStream = zipFile.getInputStream(textureEntry);
                 texturePath = null;
             }
 
             //finish texture loading
-            texture.filePath = texturePath;
+            this.texture.filePath = texturePath;
             getTextureManager().registerTexture(id, texture);
 
-            didTextureLoad = true;
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         //load script
-        script = null;
+        this.script = null;
         try {
             String contents = null;
 
@@ -222,9 +220,9 @@ public class LocalPlayerData extends PlayerData {
 
             //create script if found or log an info that no scripts was loaded
             if (contents != null)
-                script = new CustomScript(this, contents);
+                this.script = new CustomScript(this, contents);
             else
-                FiguraMod.LOGGER.info("Model \"" + fileName + "\" doesn't have any valid scripts!");
+                FiguraMod.LOGGER.warn("Model \"" + fileName + "\" doesn't have any valid scripts!");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -232,7 +230,7 @@ public class LocalPlayerData extends PlayerData {
         //load extra textures
         extraTextures.clear();
         try {
-            for (FiguraTexture.TEXTURE_TYPE textureType : FiguraTexture.extraTexturesToRenderLayers.keySet()) {
+            for (FiguraTexture.TextureType textureType : FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.keySet()) {
                 Path location;
 
                 //zip is special because it only passes an input stream, if have one
@@ -250,7 +248,6 @@ public class LocalPlayerData extends PlayerData {
                         extraTexture.type = textureType;
 
                         extraTextures.add(extraTexture);
-                        didTextureLoad = true;
                     }
 
                     continue;
@@ -258,7 +255,7 @@ public class LocalPlayerData extends PlayerData {
                 //folder - just load from folder
                 else if (directory)
                     location = file.toPath().resolve("texture" + textureType.toString() + ".png");
-                //.bbmodel - remove * from name then loads from root folder
+                    //.bbmodel - remove * from name then loads from root folder
                 else
                     location = contentDirectory.resolve(fileName.substring(0, fileName.length() - 1) + textureType.toString() + ".png");
 
@@ -272,7 +269,6 @@ public class LocalPlayerData extends PlayerData {
 
                     extraTextures.add(extraTexture);
                     watchedFiles.add(location.toString());
-                    didTextureLoad = true;
                 }
             }
         } catch (Exception e) {
@@ -280,7 +276,7 @@ public class LocalPlayerData extends PlayerData {
         }
     }
 
-    public void loadModelFileNBT(String fileName) {
+    public void loadModelFileNbt(String fileName) {
         Path contentDirectory = getContentDirectory();
         Path filePath = contentDirectory.resolve(fileName);
 
@@ -291,17 +287,17 @@ public class LocalPlayerData extends PlayerData {
             FileInputStream fis = new FileInputStream(filePath.toFile());
             DataInputStream dis = new DataInputStream(fis);
             PositionTracker positionTracker = new PositionTracker(999999999);
-            CompoundTag nbtTag = CompoundTag.READER.read(dis, 0, positionTracker);
+            CompoundTag nbt = CompoundTag.READER.read(dis, 0, positionTracker);
 
-            fromNBT(nbtTag);
+            readNbt(nbt);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void loadModelFileNBT(DataInputStream stream) {
+    public void loadModelFileNbt(DataInputStream stream) {
         try {
-            super.loadFromNBT(stream);
+            super.loadFromNbt(stream);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -315,8 +311,9 @@ public class LocalPlayerData extends PlayerData {
             attemptTextureLoad(extraTexture);
         }
     }
-    public void attemptTextureLoad(FiguraTexture texture){
-        if(texture != null) {
+
+    public void attemptTextureLoad(FiguraTexture texture) {
+        if (texture != null) {
             if (!texture.ready && !texture.isLoading) {
                 texture.isLoading = true;
 
@@ -359,16 +356,16 @@ public class LocalPlayerData extends PlayerData {
                 // context of the event.
                 WatchEvent<Path> ev = (WatchEvent<Path>) event;
                 Path filename = ev.context();
-                
+
                 Path parentPath = FileSystems.getDefault().getPath(entry.getKey());
                 Path child = parentPath.resolve(filename);
                 String realName = child.getFileName().toString();
 
                 try {
-                    
-                    if(watchedFiles.contains(child.toString()))
+
+                    if (watchedFiles.contains(child.toString()))
                         doReload = true;
-                    
+
                     if (realName.equals(loadedName) && !doReload)
                         doReload = true;
 

@@ -20,7 +20,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
-import java.lang.reflect.Array;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -28,9 +27,10 @@ import java.util.Date;
 import java.util.UUID;
 
 
-//Responsible for storing all the data associated with the player on this client.
+/**
+ * Responsible for storing all the data associated with the player on this client.
+ */
 public class PlayerData {
-
     private static TextureManager textureManager;
 
     //ID of the player
@@ -44,7 +44,7 @@ public class PlayerData {
     public CustomScript script;
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel vanillaModel;
-    
+
     public ArrayList<FiguraTexture> extraTextures = new ArrayList<FiguraTexture>();
 
     public PlayerEntity lastEntity;
@@ -72,7 +72,7 @@ public class PlayerData {
 
     //Turns this PlayerData into an NBT tag.
     //Used when saving to a file to upload, or just be compressed on-disk.
-    public boolean toNBT(CompoundTag tag) {
+    public boolean writeNbt(CompoundTag tag) {
 
         //You cannot save a model that is incomplete.
         if (model == null || texture == null)
@@ -85,13 +85,13 @@ public class PlayerData {
 
         //Put Model.
         CompoundTag modelTag = new CompoundTag();
-        model.toNBT(modelTag);
+        model.writeNbt(modelTag);
         tag.put("model", modelTag);
 
         //Put Texture.
         try {
             CompoundTag textureTag = new CompoundTag();
-            texture.toNBT(textureTag);
+            texture.writeNbt(textureTag);
             tag.put("texture", textureTag);
         } catch (Exception e) {
             e.printStackTrace();
@@ -110,7 +110,7 @@ public class PlayerData {
 
             for (FiguraTexture extraTexture : extraTextures) {
                 CompoundTag etTag = new CompoundTag();
-                extraTexture.toNBT(etTag);
+                extraTexture.writeNbt(etTag);
                 texList.add(etTag);
             }
 
@@ -121,8 +121,7 @@ public class PlayerData {
     }
 
     //Loads a PlayerData from the given NBT tag.
-    public void fromNBT(CompoundTag tag) {
-
+    public void readNbt(CompoundTag tag) {
         int[] version = tag.getIntArray("version");
 
         playerId = tag.getUuid("id");
@@ -136,30 +135,30 @@ public class PlayerData {
         }
 
         try {
-            CompoundTag modelTag = (CompoundTag) tag.get("model");
+            CompoundTag modelNbt = (CompoundTag) tag.get("model");
             model = new CustomModel();
-            model.fromNBT(modelTag);
+            model.readNbt(modelNbt);
             model.owner = this;
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
-            CompoundTag textureTag = (CompoundTag) tag.get("texture");
+            CompoundTag textureNbt = (CompoundTag) tag.get("texture");
             texture = new FiguraTexture();
             texture.id = new Identifier("figura", playerId.toString());
             getTextureManager().registerTexture(texture.id, texture);
-            texture.fromNBT(textureTag);
+            texture.readNbt(textureNbt);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
             if (tag.contains("script")) {
-                CompoundTag scriptTag = (CompoundTag) tag.get("script");
+                CompoundTag scriptNbt = (CompoundTag) tag.get("script");
 
                 script = new CustomScript();
-                script.fromNBT(this, scriptTag);
+                script.readNbt(this, scriptNbt);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -169,10 +168,10 @@ public class PlayerData {
             if (tag.contains("exTexs")) {
                 ListTag textureList = (ListTag) tag.get("exTexs");
 
-                for (Tag etTag : textureList) {
+                for (Tag element : textureList) {
                     FiguraTexture newTexture = new FiguraTexture();
                     newTexture.id = new Identifier("figura", playerId.toString() + newTexture.type.toString());
-                    newTexture.fromNBT((CompoundTag) etTag);
+                    newTexture.readNbt((CompoundTag) element);
                     getTextureManager().registerTexture(newTexture.id, newTexture);
                     extraTextures.add(newTexture);
                 }
@@ -184,16 +183,16 @@ public class PlayerData {
 
     //Returns the file size, in bytes.
     public int getFileSize() {
-        CompoundTag writtenTag = new CompoundTag();
-        toNBT(writtenTag);
+        CompoundTag writtenNbt = new CompoundTag();
+        this.writeNbt(writtenNbt);
 
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            DataOutputStream w = new DataOutputStream(baos);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            DataOutputStream w = new DataOutputStream(out);
 
-            NbtIo.writeCompressed(writtenTag, w);
+            NbtIo.writeCompressed(writtenNbt, w);
 
-            model.totalSize = w.size();
+            this.model.totalSize = w.size();
             return w.size();
         } catch (Exception e) {
             e.printStackTrace();
@@ -205,16 +204,15 @@ public class PlayerData {
 
     //Ticks from client.
     public void tick() {
-
-        if (!isLoaded) {
-            tickLoads();
+        if (!this.isLoaded) {
+            this.tickLoads();
             return;
         }
 
-        if (isInvalidated)
+        if (this.isInvalidated)
             PlayerDataManager.clearPlayer(playerId);
 
-        PlayerEntity newEnt = MinecraftClient.getInstance().world.getPlayerByUuid(playerId);
+        PlayerEntity newEnt = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
         if (lastEntity != newEnt) {
             lastEntity = newEnt;
 
@@ -240,7 +238,6 @@ public class PlayerData {
     }
 
     public void tickLoads() {
-
         switch (loadType) {
             case NONE:
                 loadType = LoadType.LOCAL;
@@ -272,29 +269,26 @@ public class PlayerData {
             return;
         }
 
-        loadFromNBTFile(localPath);
+        loadFromNbtFile(localPath);
         isLoaded = true;
     }
 
     //Attempts to load assets off of the server
     protected void loadServer() {
         loadType = LoadType.NONE;
-
-
         isLoaded = true;
-        return;
     }
 
 
-    public void loadFromNBTFile(Path path) throws Exception {
+    public void loadFromNbtFile(Path path) throws Exception {
         DataInputStream input = new DataInputStream(new FileInputStream(path.toFile()));
-        loadFromNBT(input);
+        loadFromNbt(input);
     }
 
-    public void loadFromNBT(DataInputStream input) throws Exception {
-        CompoundTag nbtTag = NbtIo.readCompressed(input);
+    public void loadFromNbt(DataInputStream input) throws Exception {
+        CompoundTag nbt = NbtIo.readCompressed(input);
 
-        fromNBT(nbtTag);
+        this.readNbt(nbt);
 
         getFileSize();
     }

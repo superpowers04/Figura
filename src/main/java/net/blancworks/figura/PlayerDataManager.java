@@ -21,15 +21,15 @@ import java.util.concurrent.CompletableFuture;
 public class PlayerDataManager {
 
     public static boolean didInitLocalPlayer = false;
-    public static HashMap<UUID, PlayerData> loadedPlayerData = new HashMap<UUID, PlayerData>();
+    public static Map<UUID, PlayerData> loadedPlayerData = new HashMap<>();
 
     //Players that we're currently queued up to grab data for.
-    private static HashSet<UUID> serverRequestedPlayers = new HashSet<UUID>();
-    private static ArrayList<UUID> toClear = new ArrayList<>();
+    private static Set<UUID> serverRequestedPlayers = new HashSet<>();
+    private static List<UUID> toClear = new ArrayList<>();
 
     //Hash checking stuff
-    public static Queue<UUID> toRefresh = new ArrayDeque<UUID>();
-    public static HashSet<UUID> toRefreshSet = new HashSet<UUID>();
+    public static Queue<UUID> toRefresh = new ArrayDeque<>();
+    public static Set<UUID> toRefreshSet = new HashSet<>();
 
     public static LocalPlayerData localPlayer;
 
@@ -40,8 +40,7 @@ public class PlayerDataManager {
     }
 
     public static PlayerData getDataForPlayer(UUID id) {
-
-        PlayerData getData = null;
+        PlayerData getData;
 
         if (toClear.contains(id)) {
             toClear.remove(id);
@@ -86,7 +85,6 @@ public class PlayerDataManager {
 
     //Attempts to get the data for a player from the server.
     public static void getPlayerAvatarFromServerOrCache(UUID id, PlayerData targetData) {
-
         //Prevent this from running more than once at a time per player.
         if (serverRequestedPlayers.contains(id))
             return;
@@ -128,7 +126,7 @@ public class PlayerDataManager {
                             FileInputStream fis = new FileInputStream(nbtFilePath.toFile());
                             DataInputStream dis = new DataInputStream(fis);
 
-                            targetData.loadFromNBT(dis);
+                            targetData.loadFromNbt(dis);
                             targetData.lastHash = hash;
                             targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
 
@@ -158,7 +156,7 @@ public class PlayerDataManager {
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(httpURLConnection.getInputStream()));
                         String inputLine;
-                        StringBuffer content = new StringBuffer();
+                        StringBuilder content = new StringBuilder();
                         while ((inputLine = in.readLine()) != null) {
                             content.append(inputLine);
                         }
@@ -180,7 +178,7 @@ public class PlayerDataManager {
                             DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
                             receivedDataToStream.reset();
 
-                            targetData.loadFromNBT(receivedDataToStream);
+                            targetData.loadFromNbt(receivedDataToStream);
                             targetData.lastHash = FiguraNetworkManager.getAvatarHash(id).get();
                             targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
 
@@ -192,7 +190,10 @@ public class PlayerDataManager {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    httpURLConnection.disconnect();
+
+                    if (httpURLConnection != null) {
+                        httpURLConnection.disconnect();
+                    }
                 }
 
                 serverRequestedPlayers.remove(id);
@@ -206,7 +207,7 @@ public class PlayerDataManager {
     public static void saveToCache(PlayerData data, Path targetPath, Path targetHashPath) {
         try {
             CompoundTag targetTag = new CompoundTag();
-            data.toNBT(targetTag);
+            data.writeNbt(targetTag);
 
             Files.createDirectories(targetPath.getParent());
             NbtIo.writeCompressed(targetTag, new FileOutputStream(targetPath.toFile()));
@@ -234,13 +235,13 @@ public class PlayerDataManager {
         lastLoadedFileName = null;
     }
 
-    public static void clearLocalPlayer(){
+    public static void clearLocalPlayer() {
         loadedPlayerData.remove(localPlayer.playerId);
         localPlayer = null;
         didInitLocalPlayer = false;
         lastLoadedFileName = null;
     }
-    
+
     private static int hashCheckCooldown = 0;
 
     //Tick function for the client. Basically dispatches all the other functions in the mod.
@@ -257,10 +258,10 @@ public class PlayerDataManager {
             entry.getValue().tick();
         }
 
-        if(hashCheckCooldown > 0)
+        if (hashCheckCooldown > 0)
             hashCheckCooldown--;
 
-        if(hashCheckCooldown == 0 && toRefresh.size() > 0){
+        if (hashCheckCooldown == 0 && toRefresh.size() > 0) {
             UUID nextID = toRefresh.remove();
             toRefreshSet.remove(nextID);
 
@@ -269,14 +270,14 @@ public class PlayerDataManager {
         }
     }
 
-    public static void checkForPlayerDataRefresh(PlayerData data){
+    public static void checkForPlayerDataRefresh(PlayerData data) {
         //Never check local player data for this.
-        if(data == localPlayer)
+        if (data == localPlayer)
             return;
 
         Date checkDate = new Date();
         if (checkDate.getTime() - data.lastHashCheckTime.getTime() > 1000 * 10) {
-            if(!toRefreshSet.contains(data.playerId)) {
+            if (!toRefreshSet.contains(data.playerId)) {
                 toRefreshSet.add(data.playerId);
                 toRefresh.add(data.playerId);
             }

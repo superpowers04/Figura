@@ -28,8 +28,11 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-// Used to manage the network operations for Figura.
-// Used for sending/receiving data, managing custom packets/networking, that sort.
+
+/**
+ * Used to manage the network operations for Figura.
+ * Used for sending/receiving data, managing custom packets/networking, that sort.
+ */
 public class FiguraNetworkManager {
 
     //This is the key for the session the user has with figura.
@@ -43,12 +46,10 @@ public class FiguraNetworkManager {
 
     public static CompletableFuture currentAuthTask = null;
 
-
     //Ticks the network
     //Checks after 20 minutes, attempt to get a fresh key with our previously valid one.
     //Repeat re-grab for fresh key 10 times, or until server returns unauthorized 
     public static void tickNetwork() {
-
         if (lastAuthDate != null) {
             Date now = new Date();
             long diff = now.getTime() - lastAuthDate.getTime();
@@ -60,8 +61,7 @@ public class FiguraNetworkManager {
                 lastAuthDate = new Date(now.getTime() - 1000 * 60 * 19);
 
                 //Attempt to refresh key.
-                refreshKeyValidity(() -> {
-                });
+                refreshKeyValidity(() -> {});
             }
         }
     }
@@ -82,7 +82,6 @@ public class FiguraNetworkManager {
 
     //Asynchronously authenticates the user using the Figura server.
     private static void asyncAuthUser() {
-
         try {
             String address = getMinecraftAuthServerAddress();
             InetAddress inetAddress = InetAddress.getByName(address);
@@ -99,7 +98,7 @@ public class FiguraNetworkManager {
             Text dcReason = connection.getDisconnectReason();
 
             if (dcReason instanceof Text) {
-                Text tc = (Text) dcReason;
+                Text tc = dcReason;
                 parseAuthKeyFromDisconnectMessage(tc);
             }
         } catch (Exception e) {
@@ -177,11 +176,7 @@ public class FiguraNetworkManager {
                         HttpURLConnection connection = createReadConnection(url);
                         connection.connect();
                         connection.disconnect();
-                        if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                            return true;
-                        } else {
-                            return false;
-                        }
+                        return connection.getResponseCode() == HttpURLConnection.HTTP_OK;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -197,7 +192,7 @@ public class FiguraNetworkManager {
 
         try {
             CompletableFuture.runAsync(() -> {
-                HttpURLConnection httpURLConnection = null;
+                HttpURLConnection httpURLConnection;
 
                 refreshKeyValidity(null).join();
 
@@ -211,8 +206,8 @@ public class FiguraNetworkManager {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.getServerURL(), uuidString, figuraSessionKey));
                     PlayerData data = PlayerDataManager.localPlayer;
 
-                    CompoundTag infoTag = new CompoundTag();
-                    data.toNBT(infoTag);
+                    CompoundTag infoNbt = new CompoundTag();
+                    data.writeNbt(infoNbt);
 
 
                     httpURLConnection = (HttpURLConnection) url.openConnection();
@@ -226,7 +221,7 @@ public class FiguraNetworkManager {
                     OutputStream outStream = httpURLConnection.getOutputStream();
                     DataOutputStream nbtDataStream = new DataOutputStream(outStream);
 
-                    NbtIo.writeCompressed(infoTag, nbtDataStream);
+                    NbtIo.writeCompressed(infoNbt, nbtDataStream);
 
                     outStream.close();
 
@@ -246,7 +241,7 @@ public class FiguraNetworkManager {
 
         try {
             CompletableFuture.runAsync(() -> {
-                HttpURLConnection httpURLConnection = null;
+                HttpURLConnection httpURLConnection;
 
                 refreshKeyValidity(null).join();
 
@@ -260,8 +255,8 @@ public class FiguraNetworkManager {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", FiguraNetworkManager.getServerURL(), uuidString, figuraSessionKey));
                     PlayerData data = PlayerDataManager.localPlayer;
 
-                    CompoundTag infoTag = new CompoundTag();
-                    data.toNBT(infoTag);
+                    CompoundTag infoNbt = new CompoundTag();
+                    data.writeNbt(infoNbt);
 
 
                     httpURLConnection = (HttpURLConnection) url.openConnection();
@@ -270,9 +265,9 @@ public class FiguraNetworkManager {
 
                     httpURLConnection.connect();
                     httpURLConnection.disconnect();
-                    
+
                     PlayerDataManager.clearLocalPlayer();
-                    
+
                     FiguraMod.LOGGER.log(Level.DEBUG, httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -285,9 +280,7 @@ public class FiguraNetworkManager {
 
     public static CompletableFuture<String> getAvatarHash(UUID uuid) {
         return CompletableFuture.supplyAsync(
-                () -> {
-                    return getAvatarHashSync(uuid);
-                }, Util.getMainWorkerExecutor()
+                () -> getAvatarHashSync(uuid), Util.getMainWorkerExecutor()
         );
     }
 
@@ -365,8 +358,7 @@ public class FiguraNetworkManager {
 
     public static HttpURLConnection createConnection(String destination) throws Exception {
         URL dst = new URL(destination);
-        HttpURLConnection httpURLConnection = (HttpURLConnection) dst.openConnection(MinecraftClient.getInstance().getNetworkProxy());
-        return httpURLConnection;
+        return (HttpURLConnection) dst.openConnection(MinecraftClient.getInstance().getNetworkProxy());
     }
 
     public static HttpURLConnection createReadConnection(String destination) throws Exception {
@@ -375,5 +367,4 @@ public class FiguraNetworkManager {
         c.setDoOutput(false);
         return c;
     }
-
 }
