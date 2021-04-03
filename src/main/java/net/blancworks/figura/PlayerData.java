@@ -166,7 +166,7 @@ public class PlayerData {
                 CompoundTag scriptNbt = (CompoundTag) nbt.get("script");
 
                 script = new CustomScript();
-                script.readNbt(this, scriptNbt);
+                script.fromNBT(this, scriptNbt);
             }
         } catch (Exception e) {
             e.printStackTrace();

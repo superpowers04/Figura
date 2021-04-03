@@ -5,6 +5,9 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.access.PlayerEntityModelAccess;
+import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.api.model.VanillaModelAPI;
+import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -24,6 +27,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import javax.net.ssl.TrustManager;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -78,26 +82,10 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
                 mpa.setAdditionalPos(new Vector3f());
                 mpa.setAdditionalRot(new Vector3f());
             }
-
-
-            figura$resetModelPartAdditionalValues(head);
-            figura$resetModelPartAdditionalValues(helmet);
-            figura$resetModelPartAdditionalValues(torso);
-            figura$resetModelPartAdditionalValues(jacket);
-            figura$resetModelPartAdditionalValues(rightArm);
-            figura$resetModelPartAdditionalValues(leftArm);
-            figura$resetModelPartAdditionalValues(rightLeg);
-            figura$resetModelPartAdditionalValues(leftLeg);
-
-            figura$resetModelPartAdditionalValues(rightSleeve);
-            figura$resetModelPartAdditionalValues(leftSleeve);
-            figura$resetModelPartAdditionalValues(rightPantLeg);
-            figura$resetModelPartAdditionalValues(leftPantLeg);
-
-            if (playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
-                playerData.script.applyCustomValues(self);
-            }
-
+            
+            figura$setupCustomValuesFromScript(playerData.script);
+            
+            //Render vanilla model.
             super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
 
             if (playerData.model != null) {
@@ -141,10 +129,56 @@ public class PlayerEntityModelMixin<T extends LivingEntity> extends BipedEntityM
     public Set<ModelPart> figura$getDisabledParts() {
         return this.figura$disabledParts;
     }
+    
+    
+    //Applies all the values from a custom script's customizations to this model.
+    @Override
+    public void figura$setupCustomValuesFromScript(CustomScript script){
+        figura$disabledParts.clear();
 
-    public void figura$resetModelPartAdditionalValues(ModelPart part) {
+        //Easy shortcut, null script = reset, so we can just set it to null if we don't have perms.
+        if(script != null && !script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+            script = null;
+        
+        //Main body reset
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_HEAD, head);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_TORSO, torso);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_LEFT_ARM, leftArm);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_RIGHT_ARM, rightArm);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_LEFT_LEG, leftLeg);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_RIGHT_LEG, rightLeg);
+
+        //Layer reset
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_HAT, helmet);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_JACKET, jacket);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_LEFT_SLEEVE, leftSleeve);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_RIGHT_SLEEVE, rightSleeve);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_LEFT_PANTS, leftPantLeg);
+        figura$applyCustomValueForPart(script, VanillaModelAPI.VANILLA_RIGHT_PANTS, rightPantLeg);
+    }
+
+    @Override
+    public void figura$applyCustomValueForPart(CustomScript script, String accessor, ModelPart part){
         ModelPartAccess mpa = (ModelPartAccess) part;
-        mpa.setAdditionalPos(new Vector3f());
-        mpa.setAdditionalRot(new Vector3f());
+        
+        //Null script = reset
+        if(script == null){
+            mpa.setAdditionalPos(new Vector3f());
+            mpa.setAdditionalRot(new Vector3f());
+            return;
+        }
+        VanillaModelPartCustomization customization = script.getPartCustomization(accessor);
+        
+        //No customization = reset
+        if(customization == null) {
+            mpa.setAdditionalPos(new Vector3f());
+            mpa.setAdditionalRot(new Vector3f());
+            return;
+        }
+
+        mpa.setAdditionalPos(customization.pos);
+        mpa.setAdditionalRot(customization.rot);
+        if(customization.visible != null)
+            figura$disabledParts.add(part);
     }
 }

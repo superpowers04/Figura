@@ -53,10 +53,6 @@ public class FiguraMod implements ClientModInitializer {
     public static void setRenderingMode(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt) {
         currentPlayer = player;
         currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
-
-        if (currentData != null && currentData.script != null && currentData.script.vanillaModifications != null)
-            currentData.script.applyCustomValues(mdl);
-
         currentData.vanillaModel = mdl;
         FiguraMod.vertexConsumerProvider = vertexConsumerProvider;
         deltaTime = dt;

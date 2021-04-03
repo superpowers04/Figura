@@ -5,7 +5,12 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.CompoundTag;
@@ -130,6 +135,25 @@ public class CustomModel {
         }
 
         FiguraMod.currentModel = null;
+    }
+    
+    public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve){
+        VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
+
+        if (owner.script != null) {
+            owner.script.render(FiguraMod.deltaTime);
+        }
+        
+        for (CustomModelPart part : playerData.model.allParts) {
+            if (part.parentType == CustomModelPart.ParentType.RightArm) {
+                matrices.push();
+
+                arm.rotate(matrices);
+                part.render(99999, matrices, vc, light, OverlayTexture.DEFAULT_UV);
+
+                matrices.pop();
+            }
+        }
     }
 
     public void writeNbt(CompoundTag nbt) {

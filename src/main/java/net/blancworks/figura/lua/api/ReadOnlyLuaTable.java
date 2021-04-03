@@ -32,15 +32,12 @@ public class ReadOnlyLuaTable extends LuaTable {
     public void javaSet(int key, LuaValue value) {
         super.set(key, value);
     }
-    
     public void javaRawSet(int key, LuaValue value) {
         super.rawset(key, value);
     }
-    
     public void javaRawSet(LuaValue key, LuaValue value) {
         super.rawset(key, value);
     }
-    
     public void javaRemove(int pos) {
         super.remove(pos);
     }

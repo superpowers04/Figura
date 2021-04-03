@@ -27,7 +27,7 @@ public class ModelPartMixin implements ModelPartAccess {
 
     private Vector3f figura$additionalPos = new Vector3f();
     private Vector3f figura$additionalRot = new Vector3f();
-
+    
     //Used sometimes for copying stuff to armor, or similar.
     private Vector3f figura$lastAdditionalPos = new Vector3f();
     private Vector3f figura$lastAdditionalRot = new Vector3f();
@@ -89,4 +89,5 @@ public class ModelPartMixin implements ModelPartAccess {
     public Vector3f getLastAdditionalRot() {
         return figura$lastAdditionalRot;
     }
+    
 }

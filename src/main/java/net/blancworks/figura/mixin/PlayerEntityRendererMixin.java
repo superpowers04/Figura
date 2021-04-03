@@ -37,12 +37,6 @@ public abstract class PlayerEntityRendererMixin
         FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), g);
     }
 
-    @Inject(at = @At("TAIL"), method = "render")
-    public void onRenderEnd(AbstractClientPlayerEntity player, float f, float g, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int i, CallbackInfo ci) {
-        PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
-        playerEntityModel.figura$getDisabledParts().clear();
-    }
-
     @Inject(at = @At("HEAD"), method = "renderArm", cancellable = true)
     private void onRenderArmStart(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
         FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), 0);
@@ -53,20 +47,9 @@ public abstract class PlayerEntityRendererMixin
         if (playerData.script != null) {
             playerData.script.render(FiguraMod.deltaTime);
         }
-
-        TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", playerData.playerId.toString()));
-
-        if (playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
-            playerData.script.applyCustomValues(model);
-        } else {
-            ModelPartAccess mpa = (ModelPartAccess) model.rightArm;
-            mpa.setAdditionalPos(new Vector3f());
-            mpa.setAdditionalRot(new Vector3f());
-
-            mpa = (ModelPartAccess) model.leftArm;
-            mpa.setAdditionalPos(new Vector3f());
-            mpa.setAdditionalRot(new Vector3f());
-        }
+        
+        PlayerEntityModelAccess access = (PlayerEntityModelAccess) model;
+        access.figura$setupCustomValuesFromScript(playerData.script);
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm", cancellable = true)
@@ -75,8 +58,19 @@ public abstract class PlayerEntityRendererMixin
         PlayerData playerData = FiguraMod.getCurrentData();
         PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
         PlayerEntityModel<AbstractClientPlayerEntity> model = realRenderer.getModel();
-
-        if (playerData != null) {
+        
+        //If there's player data and a model associated with it.
+        if(playerData != null && playerData.model != null){
+            //Only render if texture is ready
+            if(playerData.texture == null || !playerData.texture.ready)
+                return;
+            
+            
+            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, player, arm, sleeve);
+        }
+        
+        //TODO Re-implement
+        /*if (playerData != null) {
 
             if (playerData.model != null) {
                 if (playerData.texture == null || !playerData.texture.ready) {
@@ -106,7 +100,7 @@ public abstract class PlayerEntityRendererMixin
         }
 
         PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
-        playerEntityModel.figura$getDisabledParts().clear();
+        playerEntityModel.figura$getDisabledParts().clear();*/
     }
 
 
@@ -121,8 +115,6 @@ public abstract class PlayerEntityRendererMixin
         if (playerEntityModel.figura$getDisabledParts().contains(model.rightPantLeg)) model.rightPantLeg.visible = false;
         if (playerEntityModel.figura$getDisabledParts().contains(model.leftSleeve)) model.leftSleeve.visible = false;
         if (playerEntityModel.figura$getDisabledParts().contains(model.rightSleeve)) model.rightSleeve.visible = false;
-
-        playerEntityModel.figura$getDisabledParts().clear();
     }
 
 }

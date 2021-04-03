@@ -17,6 +17,23 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class VanillaModelAPI {
 
+    //Main body accessors
+    public static final String VANILLA_HEAD = "HEAD";
+    public static final String VANILLA_TORSO = "TORSO";
+    public static final String VANILLA_LEFT_ARM = "LEFT_LEG";
+    public static final String VANILLA_RIGHT_ARM = "RIGHT_ARM";
+    public static final String VANILLA_LEFT_LEG = "LEFT_LEG";
+    public static final String VANILLA_RIGHT_LEG = "RIGHT_LEG";
+
+    //Layered accessors
+    public static final String VANILLA_HAT = "HAT";
+    public static final String VANILLA_JACKET = "JACKET";
+    public static final String VANILLA_LEFT_SLEEVE = "LEFT_SLEEVE";
+    public static final String VANILLA_RIGHT_SLEEVE = "RIGHT_SLEEVE";
+    public static final String VANILLA_LEFT_PANTS = "LEFT_PANTS";
+    public static final String VANILLA_RIGHT_PANTS = "RIGHT_PANTS";
+
+
 
     public static Identifier getID() {
         return new Identifier("default", "vanilla_model");
@@ -26,41 +43,41 @@ public class VanillaModelAPI {
         ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
             PlayerEntityModel mdl = script.playerData.vanillaModel;
 
-            set("HEAD", getTableForPart(mdl.head, 0, script));
-            set("TORSO", getTableForPart(mdl.torso, 1, script));
+            set(VANILLA_HEAD, getTableForPart(mdl.head, VANILLA_HEAD, script));
+            set(VANILLA_TORSO, getTableForPart(mdl.torso, VANILLA_TORSO, script));
 
-            set("LEFT_ARM", getTableForPart(mdl.leftArm, 2, script));
-            set("RIGHT_ARM", getTableForPart(mdl.rightArm, 3, script));
+            set(VANILLA_LEFT_ARM, getTableForPart(mdl.leftArm, VANILLA_LEFT_ARM, script));
+            set(VANILLA_RIGHT_ARM, getTableForPart(mdl.rightArm, VANILLA_RIGHT_ARM, script));
 
-            set("LEFT_LEG", getTableForPart(mdl.leftLeg, 4, script));
-            set("RIGHT_LEG", getTableForPart(mdl.rightLeg, 5, script));
+            set(VANILLA_LEFT_LEG, getTableForPart(mdl.leftLeg, VANILLA_LEFT_LEG, script));
+            set(VANILLA_RIGHT_LEG, getTableForPart(mdl.rightLeg, VANILLA_RIGHT_LEG, script));
 
-            set("HAT", getTableForPart(mdl.helmet, 6, script));
-            set("JACKET", getTableForPart(mdl.jacket, 7, script));
+            set(VANILLA_HAT, getTableForPart(mdl.helmet, VANILLA_HAT, script));
+            set(VANILLA_JACKET, getTableForPart(mdl.jacket, VANILLA_JACKET, script));
 
-            set("LEFT_SLEEVE", getTableForPart(mdl.leftSleeve, 8, script));
-            set("RIGHT_SLEEVE", getTableForPart(mdl.rightSleeve, 9, script));
+            set(VANILLA_LEFT_SLEEVE, getTableForPart(mdl.leftSleeve, VANILLA_LEFT_SLEEVE, script));
+            set(VANILLA_RIGHT_SLEEVE, getTableForPart(mdl.rightSleeve, VANILLA_RIGHT_SLEEVE, script));
 
-            set("LEFT_PANTS", getTableForPart(mdl.leftPantLeg, 10, script));
-            set("RIGHT_PANTS", getTableForPart(mdl.rightPantLeg, 11, script));
+            set(VANILLA_LEFT_PANTS, getTableForPart(mdl.leftPantLeg, VANILLA_LEFT_PANTS, script));
+            set(VANILLA_RIGHT_PANTS, getTableForPart(mdl.rightPantLeg, VANILLA_RIGHT_PANTS, script));
         }});
 
         return producedTable;
     }
 
-    public static ReadOnlyLuaTable getTableForPart(ModelPart part, int index, CustomScript script) {
-        ModelPartTable producedTable = new ModelPartTable(part, index, script);
+    public static ReadOnlyLuaTable getTableForPart(ModelPart part, String accessor, CustomScript script) {
+        ModelPartTable producedTable = new ModelPartTable(part, accessor, script);
         return producedTable;
     }
 
     private static class ModelPartTable extends ScriptLocalAPITable {
         ModelPart targetPart;
-        int customizationIndex;
+        String accessor;
 
-        public ModelPartTable(ModelPart part, int index, CustomScript script) {
+        public ModelPartTable(ModelPart part, String accessor, CustomScript script) {
             super(script);
             targetPart = part;
-            customizationIndex = index;
+            this.accessor = accessor;
             super.setTable(getTable());
         }
 
@@ -70,7 +87,7 @@ public class VanillaModelAPI {
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f v = targetScript.vanillaModifications[customizationIndex].pos;
+                    Vector3f v = targetScript.getOrMakePartCustomization(accessor).pos;
 
                     if(v == null)
                         return NIL;
@@ -83,7 +100,7 @@ public class VanillaModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
                     customization.pos = new Vector3f(
                             fas.getFloat(0),
                             fas.getFloat(1),
@@ -97,7 +114,7 @@ public class VanillaModelAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f v = targetScript.vanillaModifications[customizationIndex].rot;
+                    Vector3f v = targetScript.getOrMakePartCustomization(accessor).rot;
                     
                     if(v == null)
                         return NIL;
@@ -110,7 +127,7 @@ public class VanillaModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
                     customization.rot = new Vector3f(
                             fas.getFloat(0),
                             fas.getFloat(1),
@@ -123,7 +140,7 @@ public class VanillaModelAPI {
             ret.set("getEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
                     
                     if(customization != null)
                         return LuaBoolean.valueOf(customization.visible);
@@ -135,7 +152,7 @@ public class VanillaModelAPI {
             ret.set("setEnabled", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
 
                     if(arg.isnil()) {
                         customization.visible = null;
