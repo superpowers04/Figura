@@ -7,6 +7,7 @@ import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
@@ -34,12 +35,12 @@ public abstract class PlayerEntityRendererMixin
 
     @Inject(at = @At("HEAD"), method = "render")
     public void onRenderStart(AbstractClientPlayerEntity player, float f, float g, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int i, CallbackInfo ci) {
-        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), g);
+        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), g, matrices);
     }
 
     @Inject(at = @At("HEAD"), method = "renderArm", cancellable = true)
     private void onRenderArmStart(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
-        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), 0);
+        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), MinecraftClient.getInstance().getTickDelta(), matrices);
         PlayerData playerData = FiguraMod.getCurrentData();
         PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
         PlayerEntityModel<AbstractClientPlayerEntity> model = realRenderer.getModel();
@@ -54,7 +55,7 @@ public abstract class PlayerEntityRendererMixin
 
     @Inject(at = @At("RETURN"), method = "renderArm", cancellable = true)
     private void onRenderArmEnd(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
-        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), 0);
+        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), MinecraftClient.getInstance().getTickDelta(), matrices);
         PlayerData playerData = FiguraMod.getCurrentData();
         PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
         PlayerEntityModel<AbstractClientPlayerEntity> model = realRenderer.getModel();
