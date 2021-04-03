@@ -60,15 +60,15 @@ public class CustomModelAPI {
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVector3f(targetPart.pos);
+                    return VectorAPI.getVector(targetPart.pos);
                 }
             });
 
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    targetPart.pos = new Vector3f(fas.getFloat(0), fas.getFloat(1), fas.getFloat(2));
+                    Vector3f newPos = VectorAPI.checkVec3(arg1);
+                    targetPart.pos = newPos;
                     return NIL;
                 }
             });
@@ -105,18 +105,34 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("getScale", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return VectorAPI.getVector(targetPart.scale);
+                }
+            });
+
+            ret.set("setScale", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    Vector3f newScale = VectorAPI.checkVec3(arg1);
+                    targetPart.scale = newScale;
+                    return NIL;
+                }
+            });
+
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVector3f(targetPart.rot);
+                    return VectorAPI.getVector(targetPart.rot);
                 }
             });
 
             ret.set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    targetPart.rot = new Vector3f(fas.getFloat(0), fas.getFloat(1), fas.getFloat(2));
+                    Vector3f newRot = VectorAPI.checkVec3(arg1);
+                    targetPart.rot = newRot;
                     return NIL;
                 }
             });
@@ -124,19 +140,16 @@ public class CustomModelAPI {
             ret.set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    LuaTable getTable = LuaUtils.getTableFromVec2f(new Vec2f(targetPart.uOffset, targetPart.vOffset));
-                    getTable.set("u", getTable.get("x"));
-                    getTable.set("v", getTable.get("y"));
-                    return getTable;
+                    return VectorAPI.getVector(targetPart.rot);
                 }
             });
 
             ret.set("setUV", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    targetPart.uOffset = fas.getFloat(0);
-                    targetPart.vOffset = fas.getFloat(1);
+                    Vec2f newUV = VectorAPI.checkVec2f(arg1);
+                    targetPart.uOffset = newUV.x;
+                    targetPart.vOffset = newUV.y;
                     return NIL;
                 }
             });

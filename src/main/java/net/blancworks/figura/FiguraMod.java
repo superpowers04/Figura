@@ -15,6 +15,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.Matrix4f;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -38,6 +40,7 @@ public class FiguraMod implements ClientModInitializer {
     private static PlayerData currentData;
     public static VertexConsumerProvider vertexConsumerProvider;
     public static float deltaTime;
+    public static MatrixStack modelMatrix;
 
     private static final boolean USE_DEBUG_MODEL = true;
     private static WatchKey watchKey;
@@ -50,12 +53,13 @@ public class FiguraMod implements ClientModInitializer {
     //Set current player.
     //If there is a model loaded for the player, it'll be assigned here to the current model.
     //Otherwise, sends the model to the request list.
-    public static void setRenderingMode(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt) {
+    public static void setRenderingMode(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt, MatrixStack mdlMatrix) {
         currentPlayer = player;
         currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
         currentData.vanillaModel = mdl;
         FiguraMod.vertexConsumerProvider = vertexConsumerProvider;
         deltaTime = dt;
+        modelMatrix = mdlMatrix;
     }
 
     //Returns the current custom model for rendering. 

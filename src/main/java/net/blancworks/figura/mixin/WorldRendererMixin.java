@@ -39,7 +39,7 @@ public class WorldRendererMixin {
                 //Setup
                 EntityRenderer realRenderer = client.getEntityRenderDispatcher().getRenderer(ent);
                 PlayerEntityModel<AbstractClientPlayerEntity> model = (PlayerEntityModel<AbstractClientPlayerEntity>) ((LivingEntityRenderer)realRenderer).getModel();
-                FiguraMod.setRenderingMode((AbstractClientPlayerEntity) ent, bufferBuilders.getEntityVertexConsumers(), model, tickDelta);
+                FiguraMod.setRenderingMode((AbstractClientPlayerEntity) ent, bufferBuilders.getEntityVertexConsumers(), model, tickDelta, matrices);
                 PlayerData playerData = FiguraMod.getCurrentData();
                 
                 //If playerdata
@@ -51,7 +51,7 @@ public class WorldRendererMixin {
                     VertexConsumer vc = FiguraMod.vertexConsumerProvider.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
 
                     for (CustomModelPart part : playerData.model.allParts) {
-                        if (part.parentType == CustomModelPart.ParentType.None) {
+                        if (part.parentType == CustomModelPart.ParentType.WORLD) {
                             //Make shallow copy of OG stack.
                             MatrixStack tempStack = new MatrixStack();
                             ((MatrixStackAccess) matrices).copyTo(tempStack);

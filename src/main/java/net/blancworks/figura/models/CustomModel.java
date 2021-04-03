@@ -67,66 +67,22 @@ public class CustomModel {
         }
 
         FiguraMod.currentModel = player_model;
+        FiguraMod.modelMatrix = matrices;
 
         for (CustomModelPart part : allParts) {
+            
+            if(part.parentType == CustomModelPart.ParentType.WORLD)
+                continue;
+            
             matrices.push();
 
             try {
                 player_model.setVisible(false);
-                MatrixStack tempStack = null;
 
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
-
-                if (!part.isMimicMode && part.parentType != CustomModelPart.ParentType.Model) {
-                    switch (part.parentType) {
-                        case Head:
-                            player_model.head.rotate(matrices);
-                            break;
-                        case Torso:
-                            player_model.torso.rotate(matrices);
-                            break;
-                        case LeftArm:
-                            player_model.leftArm.rotate(matrices);
-                            break;
-                        case LeftLeg:
-                            player_model.leftLeg.rotate(matrices);
-                            break;
-                        case RightArm:
-                            player_model.rightArm.rotate(matrices);
-                            break;
-                        case RightLeg:
-                            player_model.rightLeg.rotate(matrices);
-                            break;
-                        case None:
-
-                            //Make shallow copy of OG stack.
-                            tempStack = new MatrixStack();
-                            ((MatrixStackAccess) matrices).copyTo(tempStack);
-
-                            //Push to be sure we don't modify the original stack values.
-                            tempStack.pop();
-                            tempStack.pop();
-                            tempStack.push();
-
-                            double d = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.currentPlayer.lastRenderX, FiguraMod.currentPlayer.getX());
-                            double e = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.currentPlayer.lastRenderY, FiguraMod.currentPlayer.getY());
-                            double f = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.currentPlayer.lastRenderZ, FiguraMod.currentPlayer.getZ());
-
-                            tempStack.translate(-d, -e, -f);
-                            tempStack.push();
-                            tempStack.scale(-1, -1, 1);
-                            tempStack.push();
-
-                            break;
-                    }
-                }
-
-                if (tempStack != null)
-                    leftToRender = part.render(leftToRender, tempStack, vertices, light, overlay);
-                else
-                    leftToRender = part.render(leftToRender, matrices, vertices, light, overlay);
-
+                
+                leftToRender = part.render(leftToRender, matrices, vertices, light, overlay);
             } catch (Exception e) {
                 e.printStackTrace();
             }

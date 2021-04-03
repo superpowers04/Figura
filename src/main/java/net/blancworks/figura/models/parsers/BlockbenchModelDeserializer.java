@@ -27,7 +27,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("RIGHT_ARM", CustomModelPart.ParentType.RightArm)
                     .put("LEFT_LEG", CustomModelPart.ParentType.LeftLeg)
                     .put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg)
-                    .put("NO_PARENT", CustomModelPart.ParentType.None)
+                    .put("NO_PARENT", CustomModelPart.ParentType.WORLD)
                     .build();
 
     public static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =

@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.access.MatrixStackAccess;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -11,6 +12,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.*;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
 import org.jetbrains.annotations.Nullable;
@@ -57,8 +59,15 @@ public class CustomModelPart {
         if (!this.visible) {
             return leftToRender;
         }
+        MatrixStack tempStack = null;
+        
+        //if(tempStack != null)
+            //matrices = tempStack;
+        
+        matrices.push();
 
         try {
+
             if (this.isMimicMode) {
                 PlayerEntityModel model = FiguraMod.currentModel;
 
@@ -85,12 +94,33 @@ public class CustomModelPart {
 
                 float multiply = 57.2958f;
                 this.rot.multiplyComponentwise(multiply, multiply, multiply);
+            } else if(parentType != CustomModelPart.ParentType.Model){
+                PlayerEntityModel playerModel = FiguraMod.currentModel;
+
+                switch (parentType) {
+                    case Head:
+                        playerModel.head.rotate(matrices);
+                        break;
+                    case Torso:
+                        playerModel.torso.rotate(matrices);
+                        break;
+                    case LeftArm:
+                        playerModel.leftArm.rotate(matrices);
+                        break;
+                    case LeftLeg:
+                        playerModel.leftLeg.rotate(matrices);
+                        break;
+                    case RightArm:
+                        playerModel.rightArm.rotate(matrices);
+                        break;
+                    case RightLeg:
+                        playerModel.rightLeg.rotate(matrices);
+                        break;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        matrices.push();
 
         applyTransforms(matrices);
 
@@ -147,6 +177,8 @@ public class CustomModelPart {
         for (CustomModelPart child : this.children) {
             if (leftToRender == 0)
                 break;
+            if(child.parentType == CustomModelPart.ParentType.WORLD)
+                continue;
             leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor);
         }
 
@@ -302,7 +334,8 @@ public class CustomModelPart {
         RightArm,
         LeftLeg,
         RightLeg,
-        Torso
+        Torso,
+        WORLD
     }
 
     public enum RotationType {
