@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 
@@ -45,7 +46,7 @@ public class PlayerData {
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel vanillaModel;
 
-    public ArrayList<FiguraTexture> extraTextures = new ArrayList<FiguraTexture>();
+    public final List<FiguraTexture> extraTextures = new ArrayList<>();
 
     public PlayerEntity lastEntity;
 
@@ -70,29 +71,32 @@ public class PlayerData {
         return textureManager;
     }
 
-    //Turns this PlayerData into an NBT tag.
-    //Used when saving to a file to upload, or just be compressed on-disk.
-    public boolean writeNbt(CompoundTag tag) {
-
+    /**
+     * Writes to the NBT this player data.
+     *
+     * @param nbt the nbt to write to
+     * @return {@code true} if the player data was written into the NBT, otherwise {@code false}
+     */
+    public boolean writeNbt(CompoundTag nbt) {
         //You cannot save a model that is incomplete.
         if (model == null || texture == null)
             return false;
 
-        tag.putIntArray("version", current_version);
+        nbt.putIntArray("version", CURRENT_VERSION);
 
         //Put ID.
-        tag.putUuid("id", playerId);
+        nbt.putUuid("id", playerId);
 
         //Put Model.
-        CompoundTag modelTag = new CompoundTag();
-        model.writeNbt(modelTag);
-        tag.put("model", modelTag);
+        CompoundTag modelNbt = new CompoundTag();
+        model.writeNbt(modelNbt);
+        nbt.put("model", modelNbt);
 
         //Put Texture.
         try {
-            CompoundTag textureTag = new CompoundTag();
-            texture.writeNbt(textureTag);
-            tag.put("texture", textureTag);
+            CompoundTag textureNbt = new CompoundTag();
+            texture.writeNbt(textureNbt);
+            nbt.put("texture", textureNbt);
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -100,31 +104,35 @@ public class PlayerData {
 
         if (script != null) {
             //Put Script.
-            CompoundTag scriptTag = new CompoundTag();
-            script.toNBT(scriptTag);
-            tag.put("script", scriptTag);
+            CompoundTag scriptNbt = new CompoundTag();
+            script.toNBT(scriptNbt);
+            nbt.put("script", scriptNbt);
         }
 
         if (extraTextures.size() > 0) {
             ListTag texList = new ListTag();
 
             for (FiguraTexture extraTexture : extraTextures) {
-                CompoundTag etTag = new CompoundTag();
-                extraTexture.writeNbt(etTag);
-                texList.add(etTag);
+                CompoundTag elytraTextureNbt = new CompoundTag();
+                extraTexture.writeNbt(elytraTextureNbt);
+                texList.add(elytraTextureNbt);
             }
 
-            tag.put("exTexs", texList);
+            nbt.put("exTexs", texList);
         }
 
         return true;
     }
 
-    //Loads a PlayerData from the given NBT tag.
-    public void readNbt(CompoundTag tag) {
-        int[] version = tag.getIntArray("version");
+    /**
+     * Reads a player data from the given NBT.
+     *
+     * @param nbt the nbt to read
+     */
+    public void readNbt(CompoundTag nbt) {
+        int[] version = nbt.getIntArray("version");
 
-        playerId = tag.getUuid("id");
+        playerId = nbt.getUuid("id");
 
         //VERSION CHECKING.
         if (version != null) {
@@ -135,7 +143,7 @@ public class PlayerData {
         }
 
         try {
-            CompoundTag modelNbt = (CompoundTag) tag.get("model");
+            CompoundTag modelNbt = (CompoundTag) nbt.get("model");
             model = new CustomModel();
             model.readNbt(modelNbt);
             model.owner = this;
@@ -144,7 +152,7 @@ public class PlayerData {
         }
 
         try {
-            CompoundTag textureNbt = (CompoundTag) tag.get("texture");
+            CompoundTag textureNbt = (CompoundTag) nbt.get("texture");
             texture = new FiguraTexture();
             texture.id = new Identifier("figura", playerId.toString());
             getTextureManager().registerTexture(texture.id, texture);
@@ -154,8 +162,8 @@ public class PlayerData {
         }
 
         try {
-            if (tag.contains("script")) {
-                CompoundTag scriptNbt = (CompoundTag) tag.get("script");
+            if (nbt.contains("script")) {
+                CompoundTag scriptNbt = (CompoundTag) nbt.get("script");
 
                 script = new CustomScript();
                 script.readNbt(this, scriptNbt);
@@ -165,8 +173,8 @@ public class PlayerData {
         }
 
         try {
-            if (tag.contains("exTexs")) {
-                ListTag textureList = (ListTag) tag.get("exTexs");
+            if (nbt.contains("exTexs")) {
+                ListTag textureList = (ListTag) nbt.get("exTexs");
 
                 for (Tag element : textureList) {
                     FiguraTexture newTexture = new FiguraTexture();
@@ -200,7 +208,6 @@ public class PlayerData {
 
         return -1;
     }
-
 
     //Ticks from client.
     public void tick() {
@@ -259,7 +266,10 @@ public class PlayerData {
         }
     }
 
-    //Attempts to load assets locally off of disk.
+    /**
+     * Attempts to load assets locally of disk.
+     * @throws Exception
+     */
     protected void loadLocal() throws Exception {
         Path localPath = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files").resolve("cache").resolve(playerId.toString() + ".nbt");
 
@@ -273,7 +283,9 @@ public class PlayerData {
         isLoaded = true;
     }
 
-    //Attempts to load assets off of the server
+    /**
+     * Attempts to load assets off of the server
+     */
     protected void loadServer() {
         loadType = LoadType.NONE;
         isLoaded = true;
@@ -299,21 +311,21 @@ public class PlayerData {
     //0 = mega version for huge api changes to the fundamentals of the loading system
     //1 = major version, for compatibility-breaking api changes
     //2 = minor version, for non-compat breaking api changes
-    static final int[] current_version = new int[3];
+    static final int[] CURRENT_VERSION = new int[3];
 
     static {
-        current_version[0] = 0;
-        current_version[1] = 0;
-        current_version[2] = 1;
+        CURRENT_VERSION[0] = 0;
+        CURRENT_VERSION[1] = 0;
+        CURRENT_VERSION[2] = 1;
     }
 
     public boolean compareVersions(int[] version) {
-        if (version[0] != current_version[0]) {
-            System.out.printf("MEGA VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)", version[0], version[1], version[2], current_version[0], current_version[1], current_version[2]);
+        if (version[0] != CURRENT_VERSION[0]) {
+            System.out.printf("MEGA VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)", version[0], version[1], version[2], CURRENT_VERSION[0], CURRENT_VERSION[1], CURRENT_VERSION[2]);
             return false;
         }
-        if (version[1] != current_version[1]) {
-            System.out.printf("MAJOR VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)", version[0], version[1], version[2], current_version[0], current_version[1], current_version[2]);
+        if (version[1] != CURRENT_VERSION[1]) {
+            System.out.printf("MAJOR VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)", version[0], version[1], version[2], CURRENT_VERSION[0], CURRENT_VERSION[1], CURRENT_VERSION[2]);
             return false;
         }
         return true;
@@ -321,10 +333,6 @@ public class PlayerData {
 
     public TrustContainer getTrustContainer() {
         return PlayerTrustManager.getContainer(getTrustIdentifier());
-    }
-
-    public PlayerEntity getEntityIfLoaded() {
-        return MinecraftClient.getInstance().world.getPlayerByUuid(playerId);
     }
 
     public enum LoadType {
