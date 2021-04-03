@@ -15,7 +15,8 @@
     "MatrixStackMixin",
     "MixinDebugHud",
     "ArmorFeatureRendererMixin",
-    "LivingEntityRendererMixin"
+    "LivingEntityRendererMixin",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

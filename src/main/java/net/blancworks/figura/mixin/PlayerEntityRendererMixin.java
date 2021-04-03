@@ -26,72 +26,68 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(PlayerEntityRenderer.class)
-public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
-
-    PlayerEntityRendererMixin(EntityRenderDispatcher dispatcher, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) { super(dispatcher, model, shadowRadius); }
-    
-    @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
-    public void render(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo info) {
-        FiguraMod.setRenderingMode(abstractClientPlayerEntity, vertexConsumerProvider, ((PlayerEntityRenderer) (Object) this).getModel(), g);
+public abstract class PlayerEntityRendererMixin
+        extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
+    PlayerEntityRendererMixin(EntityRenderDispatcher dispatcher, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) {
+        super(dispatcher, model, shadowRadius);
     }
 
-    @Inject(at = @At("TAIL"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
-    public void render_tail(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo info) {
-        PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
-        playerEntityModel.getDisabledParts().clear();
+    @Inject(at = @At("HEAD"), method = "render")
+    public void onRenderStart(AbstractClientPlayerEntity player, float f, float g, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int i, CallbackInfo ci) {
+        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), g);
     }
 
-    @Inject(at = @At("HEAD"), method = "renderArm(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/model/ModelPart;Lnet/minecraft/client/model/ModelPart;)V", cancellable = true)
-    private void renderArm_Head(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
-        FiguraMod.setRenderingMode(player, vertexConsumers, ((PlayerEntityRenderer) (Object) this).getModel(), 0);
-        PlayerData playerData = FiguraMod.getCurrData();
-        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer)(Object)this;
-        PlayerEntityModel model = realRenderer.getModel();
+    @Inject(at = @At("HEAD"), method = "renderArm", cancellable = true)
+    private void onRenderArmStart(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
+        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), 0);
+        PlayerData playerData = FiguraMod.getCurrentData();
+        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
+        PlayerEntityModel<AbstractClientPlayerEntity> model = realRenderer.getModel();
 
-        if(playerData.script != null) {
+        if (playerData.script != null) {
             playerData.script.render(FiguraMod.deltaTime);
         }
-
-        TrustContainer trustData = PlayerTrustManager.getContainer(new Identifier("players", playerData.playerId.toString()));
-
-        if (playerData != null && playerData.script != null && playerData.script.vanillaModifications != null && trustData.getBoolSetting(PlayerTrustManager.allowVanillaModID)) {
-                playerData.script.applyCustomValues(model);
-        } else {
-            ModelPartAccess mpa = (ModelPartAccess) (Object) model.rightArm;
-            mpa.setAdditionalPos(new Vector3f());
-            mpa.setAdditionalRot(new Vector3f());
-
-            mpa = (ModelPartAccess) (Object) model.leftArm;
-            mpa.setAdditionalPos(new Vector3f());
-            mpa.setAdditionalRot(new Vector3f());
-        }
+        
+        PlayerEntityModelAccess access = (PlayerEntityModelAccess) model;
+        access.figura$setupCustomValuesFromScript(playerData.script);
     }
 
-    @Inject(at = @At("RETURN"), method = "renderArm(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/client/model/ModelPart;Lnet/minecraft/client/model/ModelPart;)V", cancellable = true)
-    private void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
-        FiguraMod.setRenderingMode(player, vertexConsumers, ((PlayerEntityRenderer) (Object) this).getModel(), 0);
-        PlayerData playerData = FiguraMod.getCurrData();
-        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer)(Object)this;
-        PlayerEntityModel model = realRenderer.getModel();
+    @Inject(at = @At("RETURN"), method = "renderArm", cancellable = true)
+    private void onRenderArmEnd(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
+        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), 0);
+        PlayerData playerData = FiguraMod.getCurrentData();
+        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
+        PlayerEntityModel<AbstractClientPlayerEntity> model = realRenderer.getModel();
         
-        if (playerData != null) {
+        //If there's player data and a model associated with it.
+        if(playerData != null && playerData.model != null){
+            //Only render if texture is ready
+            if(playerData.texture == null || !playerData.texture.ready)
+                return;
             
+            
+            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, player, arm, sleeve);
+        }
+        
+        //TODO Re-implement
+        /*if (playerData != null) {
+
             if (playerData.model != null) {
                 if (playerData.texture == null || !playerData.texture.ready) {
                     return;
                 }
                 //We actually wanna use this custom vertex consumer, not the one provided by the render arguments.
                 VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
-                
-                for (CustomModelPart part : playerData.model.all_parts) {
-                    if(part.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm){
+
+                for (CustomModelPart part : playerData.model.allParts) {
+                    if (part.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm) {
                         matrices.push();
-                        
+
                         model.rightArm.rotate(matrices);
                         part.render(999, matrices, vc, light, OverlayTexture.DEFAULT_UV);
-                        
+
                         matrices.pop();
-                    } else if(part.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm){
+                    } else if (part.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm) {
                         matrices.push();
 
                         model.leftArm.rotate(matrices);
@@ -100,28 +96,25 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                         matrices.pop();
                     }
                 }
-                
             }
         }
 
         PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
-        playerEntityModel.getDisabledParts().clear();
+        playerEntityModel.figura$getDisabledParts().clear();*/
     }
-    
-    
-    @Inject(at = @At("RETURN"), method = "Lnet/minecraft/client/render/entity/PlayerEntityRenderer;setModelPose(Lnet/minecraft/client/network/AbstractClientPlayerEntity;)V")
-    public void setModelPose(AbstractClientPlayerEntity abstractClientPlayerEntity, CallbackInfo inf){
-        PlayerEntityModel model = this.getModel();
+
+
+    @Inject(at = @At("RETURN"), method = "setModelPose")
+    public void onSetModelPose(AbstractClientPlayerEntity player, CallbackInfo ci) {
+        PlayerEntityModel<AbstractClientPlayerEntity> model = this.getModel();
         PlayerEntityModelAccess playerEntityModel = (PlayerEntityModelAccess) model;
 
-        if(playerEntityModel.getDisabledParts().contains(model.helmet)) model.helmet.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.jacket)) model.jacket.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.leftPantLeg)) model.leftPantLeg.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.rightPantLeg)) model.rightPantLeg.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.leftSleeve)) model.leftSleeve.visible = false;
-        if(playerEntityModel.getDisabledParts().contains(model.rightSleeve)) model.rightSleeve.visible = false;
-        
-        playerEntityModel.getDisabledParts().clear();
+        if (playerEntityModel.figura$getDisabledParts().contains(model.helmet)) model.helmet.visible = false;
+        if (playerEntityModel.figura$getDisabledParts().contains(model.jacket)) model.jacket.visible = false;
+        if (playerEntityModel.figura$getDisabledParts().contains(model.leftPantLeg)) model.leftPantLeg.visible = false;
+        if (playerEntityModel.figura$getDisabledParts().contains(model.rightPantLeg)) model.rightPantLeg.visible = false;
+        if (playerEntityModel.figura$getDisabledParts().contains(model.leftSleeve)) model.leftSleeve.visible = false;
+        if (playerEntityModel.figura$getDisabledParts().contains(model.rightSleeve)) model.rightSleeve.visible = false;
     }
 
 }

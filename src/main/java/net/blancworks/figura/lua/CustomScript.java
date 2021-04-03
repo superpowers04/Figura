@@ -3,66 +3,77 @@ package net.blancworks.figura.lua;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.access.ModelPartAccess;
-import net.blancworks.figura.access.PlayerEntityModelAccess;
+import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
-import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.render.entity.model.BipedEntityModel;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
-import org.apache.logging.log4j.Level;
-import org.jetbrains.annotations.Nullable;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
-import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Queue;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public class CustomScript {
 
     public PlayerData playerData;
-
-    public Globals scriptGlobals = new Globals();
-    public LuaValue setHook;
-    public LuaValue hookFunction;
-
     public String source;
 
-    private CompletableFuture<Void> curr_task;
-    private Queue<LuaFunction> queued_tasks = new ArrayDeque<>();
-    private LuaThread scriptThread;
+    //Global script values
+    public Globals scriptGlobals = new Globals();
+    //setHook, used for setting instruction count/other debug stuff
+    public LuaValue setHook;
+    //This is what's called when the instruction cap is hit.
+    public LuaValue instructionCapFunction;
 
+
+    //The currently running task.
+    //Updated as things are added to it.
+    public CompletableFuture currTask;
+
+
+    //How many instructions the last tick/render event used.
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
 
-    private @Nullable LuaFunction tick = null;
-    private @Nullable LuaFunction render = null;
+    //References to the tick and render functions for easy use elsewhere.
+    private LuaEvent tickLuaEvent = null;
+    private LuaEvent renderLuaEvent = null;
+    
+    private CompletableFuture lastTickFunction = null;
 
-    public VanillaModelPartCustomization[] vanillaModifications = new VanillaModelPartCustomization[16];
+    public Map<String, LuaEvent> allEvents = new HashMap<>();
 
-    public CustomScript() {
-    }
+    //Vanilla model part customizations made via this script
+    public Map<String, VanillaModelPartCustomization> allCustomizations = new HashMap<>();
+
+    public CustomScript() {}
 
     public CustomScript(PlayerData data, String content) {
         load(data, content);
     }
 
 
+    //--Setup--
+    //Loads the script using the targeted playerData and source code.
     public void load(PlayerData data, String src) {
+        //Set the player data so we have something to target.
         playerData = data;
 
+        //Loads the source into this string variable for later use.
         source = src;
 
+        //Load up the default libraries we wanna include.
         scriptGlobals.load(new JseBaseLib());
         scriptGlobals.load(new PackageLib());
         scriptGlobals.load(new Bit32Lib());
@@ -70,130 +81,45 @@ public class CustomScript {
         scriptGlobals.load(new StringLib());
         scriptGlobals.load(new JseMathLib());
 
+        //Set up debug in this environment, but never allow any users to access it.
         scriptGlobals.load(new DebugLib());
+        //Yoink sethook from debug so we can use it later.
         setHook = scriptGlobals.get("debug").get("sethook");
+        //Yeet debug library so nobody can access it.
         scriptGlobals.set("debug", LuaValue.NIL);
 
+        //Sets up events!
+        setupEvents();
+        //Sets up the global values for the API and such in the script.
         setupGlobals();
 
+        //Load the script source.
         LuaValue chunk = FiguraLuaManager.modGlobals.load(source, "main", scriptGlobals);
-        scriptThread = new LuaThread(scriptGlobals, chunk);
+        LuaThread scriptThread = new LuaThread(scriptGlobals, chunk);
 
-        hookFunction = new ZeroArgFunction() {
+        instructionCapFunction = new ZeroArgFunction() {
             public LuaValue call() {
                 // A simple lua error may be caught by the script, but a
                 // Java Error will pass through to top and stop the script.
-                FiguraMod.LOGGER.log(Level.WARN, "Script overran resource limits.");
+                sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                 throw new Error("Script overran resource limits.");
             }
         };
-
-        curr_task = CompletableFuture.runAsync(
+        
+        //Queue up a new task.
+        currTask = CompletableFuture.runAsync(
                 () -> {
                     try {
-                        setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
+                        setInstructionLimitPermission(PlayerTrustManager.MAX_INIT_ID);
                         scriptThread.resume(LuaValue.NIL);
-                    } catch (LuaError error){
-                        error.printStackTrace();
-                    }
-                    try {
-                        tick = scriptGlobals.get("tick").checkfunction();
                     } catch (LuaError error) {
                         error.printStackTrace();
                     }
-
-                    try {
-                        render = scriptGlobals.get("render").checkfunction();
-                    } catch (LuaError error) {
-                        error.printStackTrace();
-                    }
-                    curr_task = null;
+                    
+                    currTask = null;
                 }
         );
 
-    }
-
-    public void runFunction(LuaFunction func, int max_lua_instructions) {
-        if (curr_task != null)
-            return;
-
-        runFunctionAsync(func, max_lua_instructions);
-    }
-
-    public int getTrustInstructionLimit(Identifier settingID) {
-        TrustContainer tc = playerData.getTrustContainer();
-
-        return tc.getIntSetting(settingID);
-    }
-
-    private void runFunctionImmediate(LuaFunction func, int max_lua_instructions, LuaValue args) {
-        try {
-            scriptGlobals.running.state.bytecodes = 0;
-            setInstructionLimit(max_lua_instructions);
-            if (!func.isnil() && func.isfunction()) {
-                func.call(args);
-            }
-
-            if (func == tick) {
-                tickInstructionCount = scriptGlobals.running.state.bytecodes;
-            }
-
-            if (func == render) {
-                renderInstructionCount = scriptGlobals.running.state.bytecodes;
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void queueTask(LuaFunction func, int max_lua_instructions) {
-        if (curr_task == null) {
-            curr_task = runFunctionAsync(func, max_lua_instructions);
-        } else {
-            queued_tasks.add(func);
-        }
-    }
-
-    private CompletableFuture<Void> runFunctionAsync(LuaFunction func, int max_lua_instructions) {
-        return CompletableFuture.runAsync(
-                () -> {
-                    try {
-                        scriptGlobals.running.state.bytecodes = 0;
-
-                        setInstructionLimit(max_lua_instructions);
-                        if (!func.isnil() && func.isfunction()) {
-                            func.call();
-                        }
-
-                        if (func == tick) {
-                            tickInstructionCount = scriptGlobals.running.state.bytecodes;
-                        }
-
-                        if (func == render) {
-                            renderInstructionCount = scriptGlobals.running.state.bytecodes;
-                        }
-
-                        curr_task = null;
-                        if (!queued_tasks.isEmpty()) {
-                            LuaFunction nextTask = queued_tasks.remove();
-                            runFunctionAsync(nextTask, max_lua_instructions);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-        );
-    }
-
-    public void setInstructionLimit(int max) {
-        setHook.invoke(
-                LuaValue.varargsOf(
-                        new LuaValue[]{
-                                hookFunction,
-                                LuaValue.EMPTYSTRING, LuaValue.valueOf(max)
-                        }
-                )
-        );
     }
 
     public void toNBT(CompoundTag tag) {
@@ -204,19 +130,28 @@ public class CustomScript {
         load(data, tag.getString("src"));
     }
 
-    public void setupGlobals() {
-
-        for (int i = 0; i < vanillaModifications.length; i++) {
-            vanillaModifications[i] = new VanillaModelPartCustomization();
+    
+    //Sets up and creates all the LuaEvents for this script
+    public void setupEvents(){
+        //Foreach event
+        for (Map.Entry<String, Function<String, LuaEvent>> entry : FiguraLuaManager.registeredEvents.entrySet()) {
+            //Add a new event created from the name here
+            allEvents.put(entry.getKey(), entry.getValue().apply(entry.getKey()));
         }
-
+        
+        tickLuaEvent = allEvents.get("tick");
+        renderLuaEvent = allEvents.get("render");
+    }
+    
+    //Sets up global variables
+    public void setupGlobals() {
         //Log! Only for local player.
         scriptGlobals.set("log", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue arg) {
                 if (playerData == PlayerDataManager.localPlayer) {
                     FiguraMod.LOGGER.warn(arg.toString());
-                    MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(new LiteralText(arg.toString()));
+                    sendChatMessage(new LiteralText(arg.toString()));
                 }
                 return NIL;
             }
@@ -233,12 +168,137 @@ public class CustomScript {
             }
         });
 
+        LuaTable globalMetaTable = new LuaTable();
+
+        //When creating a new variable.
+        globalMetaTable.set("__newindex", new ThreeArgFunction() {
+            @Override
+            public LuaValue call(LuaValue table, LuaValue key, LuaValue value) {
+                if(table != scriptGlobals)
+                    error("Can't use global table metatable on other tables!");
+                
+                if(value.isfunction() && key.isstring()){
+                    String funcName = key.checkjstring();
+                    LuaFunction func = value.checkfunction();
+                    
+                    LuaEvent possibleEvent = allEvents.get(funcName);
+                    
+                    if(possibleEvent != null){
+                        possibleEvent.subscribe(func);
+                        return NIL;
+                    }
+                }
+                table.rawset(key, value);
+                
+                return NIL;
+            }
+        });
+        
+        scriptGlobals.setmetatable(globalMetaTable);
+        
         FiguraLuaManager.setupScriptAPI(this);
     }
 
+    //--Instruction Limits--
+
+    //Sets the instruction limit of the next function we'll call, and resets the bytecode count to 0
+    //Uses the permission at permissionID to set it.
+    public void setInstructionLimitPermission(Identifier permissionID) {
+        int count = playerData.getTrustContainer().getIntSetting(permissionID);
+        setInstructionLimit(count);
+    }
+
+    //Sets the instruction limit of the next function we'll call, and resets the bytecode count to 0.
+    public void setInstructionLimit(int count) {
+        scriptGlobals.running.state.bytecodes = 0;
+        setHook.invoke(
+                LuaValue.varargsOf(
+                        new LuaValue[]{
+                                instructionCapFunction,
+                                LuaValue.EMPTYSTRING, LuaValue.valueOf(count)
+                        }
+                )
+        );
+    }
+
+
+    //--Events--
+
+    //Called whenever the global tick event happens
+    public void tick() {
+        //If the tick function exists, call it.
+        if (tickLuaEvent != null && lastTickFunction == null || lastTickFunction.isDone())
+            lastTickFunction = queueTask(this::onTick);
+    }
+
+    //Called whenever the game renders a new frame with this avatar in view
+    public void render(float deltaTime) {
+        //Don't render if the script is doing something else still
+        //Prevents threading memory errors and also ensures that "long" ticks and events and such are penalized.
+        if (tickLuaEvent == null || currTask == null || !currTask.isDone())
+            return;
+        
+        onRender(deltaTime);
+    }
+
+    public void onTick() {
+        setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+        try {
+            tickLuaEvent.call();
+        } catch (Exception error) {
+            tickLuaEvent = null;
+            if(error instanceof LuaError)
+                logLuaError((LuaError) error);
+        }
+        tickInstructionCount = scriptGlobals.running.state.bytecodes;
+    }
+
+    public void onRender(float deltaTime) {
+        setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
+        try {
+            renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
+        } catch (Exception error) {
+            renderLuaEvent = null;
+            if(error instanceof LuaError)
+                logLuaError((LuaError) error);
+        }
+        renderInstructionCount = scriptGlobals.running.state.bytecodes;
+    }
+
+    //--Tasks--
+
+    public CompletableFuture queueTask(Runnable task) {
+
+        if (currTask == null || currTask.isDone()) {
+            currTask = CompletableFuture.runAsync(task);
+        } else {
+            currTask = currTask.thenRun(task);
+        }
+
+        return currTask;
+    }
+
+    //--Debugging--
+
+    public void logLuaError(LuaError error) {
+        //Never even log errors for other players, only the local player.
+        if (playerData != PlayerDataManager.localPlayer)
+            return;
+        
+        String msg = error.getMessage();
+        msg = msg.replace("\t", "   ");
+        String[] messageParts = msg.split("\n");
+
+        for (String part : messageParts) {
+            sendChatMessage(new LiteralText(part).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+        }
+        
+        error.printStackTrace();
+    }
+
     public void logTableContents(LuaTable table, int depth, String depthString) {
-        String nextDepthString = depthString + "    ";
-        MinecraftClient.getInstance().player.sendMessage(new LiteralText(depthString + "{"), false);
+        String nextDepthString = depthString;
+        sendChatMessage(new LiteralText(depthString + "{"));
 
         for (LuaValue key : table.keys()) {
             LuaValue value = table.get(key);
@@ -246,131 +306,32 @@ public class CustomScript {
             String valString = depthString + '"' + key.toString() + '"' + " : " + value.toString();
 
             if (value.istable()) {
-                MinecraftClient.getInstance().player.sendMessage(new LiteralText(valString), false);
+                sendChatMessage(new LiteralText(valString));
                 logTableContents(value.checktable(), depth + 1, nextDepthString);
             } else {
-                MinecraftClient.getInstance().player.sendMessage(new LiteralText(valString + ","), false);
+                sendChatMessage(new LiteralText(valString + ","));
             }
         }
-        MinecraftClient.getInstance().player.sendMessage(new LiteralText(depthString + "},"), false);
+        sendChatMessage(new LiteralText(depthString + "},"));
     }
 
-    public void tick() {
+    public static void sendChatMessage(Text text) {
+        MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(text);
+    }
+    
+    //--Vanilla Modifications--
 
-        if (MinecraftClient.getInstance().isPaused()) {
-            return;
+    public VanillaModelPartCustomization getOrMakePartCustomization(String accessor){
+        VanillaModelPartCustomization currCustomization = getPartCustomization(accessor);
+        
+        if(currCustomization == null){
+            currCustomization = new VanillaModelPartCustomization();
+            allCustomizations.put(accessor, currCustomization);
         }
-
-        if (tick != null) {
-            runFunction(tick, getTrustInstructionLimit(PlayerTrustManager.maxTickID));
-        }
+        return currCustomization;
     }
-
-    public void render(float deltaTime) {
-        if (render != null) {
-            runFunctionImmediate(render, getTrustInstructionLimit(PlayerTrustManager.maxRenderID), LuaValue.valueOf(deltaTime));
-        }
-    }
-
-
-    public void applyCustomValues(PlayerEntityModel model) {
-
-        PlayerEntityModelAccess access = (PlayerEntityModelAccess) (Object) model;
-        HashSet<ModelPart> parts = access.getDisabledParts();
-        parts.clear();
-
-        applyCustomValues(parts, model.head, 0);
-        applyCustomValues(parts, model.torso, 1);
-
-        applyCustomValues(parts, model.leftArm, 2);
-        applyCustomValues(parts, model.rightArm, 3);
-
-        applyCustomValues(parts, model.leftLeg, 4);
-        applyCustomValues(parts, model.rightLeg, 5);
-
-        applyCustomValues(parts, model.helmet, 6);
-        applyCustomValues(parts, model.jacket, 7);
-
-        applyCustomValues(parts, model.leftSleeve, 8);
-        applyCustomValues(parts, model.rightSleeve, 9);
-
-        applyCustomValues(parts, model.leftPantLeg, 10);
-        applyCustomValues(parts, model.rightPantLeg, 11);
-    }
-
-    public void applyArmorValues(BipedEntityModel model, int index) {
-
-        if (index == 12)
-            applyCustomValues(model.head, 12);
-
-        if (index == 13) {
-            applyCustomValues(model.torso, 13);
-            applyCustomValues(model.rightArm, 13);
-            applyCustomValues(model.leftArm, 13);
-        }
-
-        if (index == 14) {
-            applyCustomValues(model.torso, 14);
-            applyCustomValues(model.leftLeg, 14);
-            applyCustomValues(model.rightLeg, 14);
-        }
-
-        if (index == 15) {
-            applyCustomValues(model.leftLeg, 15);
-            applyCustomValues(model.rightLeg, 15);
-        }
-
-    }
-
-    private void applyCustomValues(HashSet<ModelPart> disabledParts, ModelPart part, int index) {
-        ModelPartAccess access = (ModelPartAccess) (Object) part;
-        VanillaModelPartCustomization customization = vanillaModifications[index];
-
-        if (customization == null)
-            return;
-
-        if (customization.pos != null)
-            access.setAdditionalPos(customization.pos);
-        if (customization.rot != null)
-            access.setAdditionalRot(customization.rot);
-        if (customization.visible != null && !customization.visible)
-            disabledParts.add(part);
-    }
-
-    private void applyCustomValues(ModelPart part, int index) {
-        VanillaModelPartCustomization customization = vanillaModifications[index];
-
-        if (customization == null)
-            return;
-
-        if (part == null)
-            return;
-
-        if (part.visible && customization.visible != null && !customization.visible)
-            part.visible = false;
-    }
-
-
-    public HashMap<String, Integer> armorNameToIndex = new HashMap<String, Integer>() {{
-        put("HELMET", 12);
-        put("CHESTPLATE", 13);
-        put("LEGGINGS", 14);
-        put("BOOTS", 15);
-    }};
-
-    public void setArmorEnabled(String targetPart, boolean state) {
-        if (!armorNameToIndex.containsKey(targetPart)) return;
-        int index = armorNameToIndex.get(targetPart);
-        VanillaModelPartCustomization vpc = vanillaModifications[index];
-
-        vpc.visible = state;
-    }
-
-    public void clearArmorEnable(String targetPart) {
-        if (!armorNameToIndex.containsKey(targetPart)) return;
-        int index = armorNameToIndex.get(targetPart);
-        VanillaModelPartCustomization vpc = vanillaModifications[index];
-
-        vpc.visible = null;
+    
+    public VanillaModelPartCustomization getPartCustomization(String accessor){
+        return allCustomizations.get(accessor);
     }
 }

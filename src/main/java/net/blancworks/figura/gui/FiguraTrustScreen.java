@@ -49,7 +49,7 @@ public class FiguraTrustScreen extends Screen {
     private int filtersWidth;
     private int searchRowWidth;
     public final Set<String> showModChildren = new HashSet<>();
-    
+
     public PlayerListWidget playerList;
     public PermissionListWidget permissionList;
     public CustomListWidgetState playerListState = new CustomListWidgetState();
@@ -124,7 +124,7 @@ public class FiguraTrustScreen extends Screen {
 
         this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.reloadavatar"), (btx) -> {
 
-            if(playerListState.selected instanceof PlayerListEntry) {
+            if (playerListState.selected instanceof PlayerListEntry) {
                 PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
 
                 if (entry != null) {
@@ -134,7 +134,7 @@ public class FiguraTrustScreen extends Screen {
         }));
 
         resetPermissionButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetperm"), (btx) -> {
-            if(playerListState.selected instanceof PlayerListEntry) {
+            if (playerListState.selected instanceof PlayerListEntry) {
                 if (playerListState.selected != null) {
                     TrustContainer tc = permissionList.getCurrentContainer();
 
@@ -150,7 +150,7 @@ public class FiguraTrustScreen extends Screen {
         });
 
         resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetallperm"), (btx) -> {
-            if(playerListState.selected instanceof PlayerListEntry) {
+            if (playerListState.selected instanceof PlayerListEntry) {
                 if (playerListState.selected != null) {
                     TrustContainer tc = permissionList.getCurrentContainer();
 
@@ -201,7 +201,7 @@ public class FiguraTrustScreen extends Screen {
                         MutableText complexityText = new TranslatableText("gui.figura.complexity", complexity).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
 
                         if (trustData != null) {
-                            if (complexity >= trustData.getFloatSetting(PlayerTrustManager.maxComplexityID)) {
+                            if (complexity >= trustData.getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
                                 complexityText = complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
                             }
                         }
@@ -262,20 +262,20 @@ public class FiguraTrustScreen extends Screen {
 
         if (draggedId != null) {
             PlayerListEntry entry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(draggedId);
-            
-            if(entry == null){
+
+            if (entry == null) {
                 draggedId = null;
                 return;
             }
-            
+
             TextRenderer tr = MinecraftClient.getInstance().textRenderer;
             Text displayText = Text.of(entry.getProfile().getName());
 
             drawTextWithShadow(matrices,
                     tr,
                     displayText,
-                    (int)(mouseX - tr.getWidth(displayText) / 2.0f),
-                    (int)(mouseY - tr.fontHeight / 2.0f),
+                    (int) (mouseX - tr.getWidth(displayText) / 2.0f),
+                    (int) (mouseY - tr.fontHeight / 2.0f),
                     TextColor.parse("white").getRgb());
         }
 
@@ -327,7 +327,7 @@ public class FiguraTrustScreen extends Screen {
         }
         return this.searchBox.charTyped(char_1, int_1);
     }
-    
+
     int tickCount = 0;
 
     @Override
@@ -374,9 +374,9 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        if(draggedId != null)
+        if (draggedId != null)
             return true;
-        
+
         if (button == 0) {
             pressStartX = mouseX;
             pressStartY = mouseY;
@@ -386,9 +386,9 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
-        if(draggedId != null)
+        if (draggedId != null)
             return true;
-        
+
         if (permissionList.isMouseOver(mouseX, mouseY)) {
             return this.permissionList.mouseScrolled(mouseX, mouseY, amount);
         }
@@ -400,13 +400,13 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        
-        if(draggedId != null)
+
+        if (draggedId != null)
             return true;
-        
-        if(playerList.isMouseOver(mouseX, mouseY) && playerList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
+
+        if (playerList.isMouseOver(mouseX, mouseY) && playerList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
             return true;
-        
+
         if (playerList.isMouseOver(mouseX, mouseY) && playerListState.selected instanceof PlayerListEntry) {
             PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
 
@@ -435,12 +435,12 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        
-        if(draggedId != null) {
+
+        if (draggedId != null) {
             if (playerList.isMouseOver(mouseX, mouseY)) {
                 PlayerListWidget.PlayerListWidgetEntry listEntry = (PlayerListWidget.PlayerListWidgetEntry) playerList.getEntryAtPos(mouseX, mouseY);
-                
-                if(listEntry != null) {
+
+                if (listEntry != null) {
                     Object obj = listEntry.getEntryObject();
 
                     if (obj instanceof Identifier) {
@@ -461,7 +461,7 @@ public class FiguraTrustScreen extends Screen {
         }
         draggedId = null;
 
-        
+
         playerList.reloadFilters();
         permissionList.rebuild();
         return false;

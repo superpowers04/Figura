@@ -15,27 +15,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(GameMenuScreen.class)
 public class GameMenuScreenMixin extends Screen {
 
-    private FiguraGuiScreen figuraScreen;
-    
+    private FiguraGuiScreen figura$screen;
+
     protected GameMenuScreenMixin(Text title) {
         super(title);
     }
 
     @Inject(at = @At("RETURN"), method = "init()V")
-    void init(CallbackInfo ci){
-        
-        if(figuraScreen == null)
-            figuraScreen = new FiguraGuiScreen(this);
-        
-        
-        int yVal = this.height - 20 - 5;
-        if(FabricLoader.getInstance().isModLoaded("modmenu"))
-            yVal -= 12;
-        
-        addButton(new ButtonWidget(this.width - 64 - 5, yVal, 64, 20, new LiteralText("Figura"), (buttonWidgetx) -> {
-            this.client.openScreen(figuraScreen);
-        }));
-        
+    void init(CallbackInfo ci) {
+        if (this.figura$screen == null)
+            this.figura$screen = new FiguraGuiScreen(this);
+
+        int y = this.height - 20 - 5;
+        if (FabricLoader.getInstance().isModLoaded("modmenu"))
+            y -= 12;
+
+        addButton(new ButtonWidget(this.width - 64 - 5, y, 64, 20, new LiteralText("Figura"),
+                btn -> this.client.openScreen(figura$screen)));
     }
-    
 }

@@ -2,15 +2,24 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.api.model.ArmorModelAPI;
+import net.blancworks.figura.lua.api.model.VanillaModelAPI;
+import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.trust.PlayerTrustManager;
+import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.screen.PlayerScreenHandler;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,47 +27,102 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ArmorFeatureRenderer.class)
-public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEntityModel<T>, A extends BipedEntityModel<T>> extends FeatureRenderer<T, M> {
+public abstract class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEntityModel<T>, A extends BipedEntityModel<T>>
+        extends FeatureRenderer<T, M> {
+    private PlayerData figura$currentData;
 
-    private PlayerData figura_curr_player;
-    
     public ArmorFeatureRendererMixin(FeatureRendererContext<T, M> context) {
         super(context);
     }
 
     @Shadow
-    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-    }
+    public abstract void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity,
+                                float limbAngle, float limbDistance, float tickDelta, float animationProgress,
+                                float headYaw, float headPitch);
 
-    @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V")
-    public void render_HEAD(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        if(livingEntity instanceof PlayerEntity){
-            figura_curr_player = PlayerDataManager.getDataForPlayer(((PlayerEntity) livingEntity).getGameProfile().getId());
+    @Inject(at = @At("HEAD"), method = "render")
+    public void onRenderStart(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity,
+                              float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
+        if (entity instanceof PlayerEntity) {
+            figura$currentData = PlayerDataManager.getDataForPlayer(((PlayerEntity) entity).getGameProfile().getId());
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V")
-    public void render_RETURN(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        figura_curr_player = null;
+    @Inject(at = @At("RETURN"), method = "render")
+    public void onRenderEnd(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity,
+                            float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
+        figura$currentData = null;
     }
 
-    @Inject(at = @At("RETURN"), method = "setVisible(Lnet/minecraft/client/render/entity/model/BipedEntityModel;Lnet/minecraft/entity/EquipmentSlot;)V")
-    protected void setVisible(A bipedModel, EquipmentSlot slot, CallbackInfo ci) {
-        PlayerData curr_data = figura_curr_player;
+    @Inject(at = @At("RETURN"), method = "setVisible")
+    protected void setVisible(A model, EquipmentSlot slot, CallbackInfo ci) {
+        PlayerData currentData = figura$currentData;
+        CustomScript script = null;
+        if(currentData != null)
+            script = currentData.script;
 
-        if (curr_data == null)
+
+        //Easy shortcut, null script = reset, so we can just set it to null if we don't have perms.
+        if(script != null && !script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+            script = null;
+        
+        if (slot == EquipmentSlot.HEAD) {
+            VanillaModelPartCustomization customization = null;
+            if (script != null)
+                customization = script.getPartCustomization(ArmorModelAPI.VANILLA_HELMET);
+
+            figura$applyCustomValueForPart(script, customization, model.head);
+        }
+        if (slot == EquipmentSlot.CHEST) {
+            VanillaModelPartCustomization customization = null;
+            if (script != null)
+                customization = script.getPartCustomization(ArmorModelAPI.VANILLA_CHESTPLATE);
+
+            figura$applyCustomValueForPart(script, customization, model.torso);
+            figura$applyCustomValueForPart(script, customization, model.rightArm);
+            figura$applyCustomValueForPart(script, customization, model.leftArm);
+        }
+        if (slot == EquipmentSlot.LEGS) {
+            VanillaModelPartCustomization customization = null;
+            if (script != null)
+                customization = script.getPartCustomization(ArmorModelAPI.VANILLA_LEGGINGS);
+
+            figura$applyCustomValueForPart(script, customization, model.torso);
+            figura$applyCustomValueForPart(script, customization, model.rightLeg);
+            figura$applyCustomValueForPart(script, customization, model.leftLeg);
+        }
+        if (slot == EquipmentSlot.FEET) {
+            VanillaModelPartCustomization customization = null;
+            if (script != null)
+                customization = script.getPartCustomization(ArmorModelAPI.VANILLA_BOOTS);
+
+            figura$applyCustomValueForPart(script, customization, model.rightLeg);
+            figura$applyCustomValueForPart(script, customization, model.leftLeg);
+        }
+        
+    }
+
+    public void figura$applyCustomValueForPart(CustomScript script, VanillaModelPartCustomization customization, ModelPart part) {
+        ModelPartAccess mpa = (ModelPartAccess) part;
+
+        //Null script = reset
+        if (script == null) {
+            mpa.setAdditionalPos(new Vector3f());
+            mpa.setAdditionalRot(new Vector3f());
             return;
-
-        if(curr_data.script != null && curr_data.script.vanillaModifications != null) {
-            
-            if(slot == EquipmentSlot.HEAD)
-                curr_data.script.applyArmorValues(bipedModel, 12);
-            if(slot == EquipmentSlot.CHEST)
-                curr_data.script.applyArmorValues(bipedModel, 13);
-            if(slot == EquipmentSlot.LEGS)
-                curr_data.script.applyArmorValues(bipedModel, 14);
-            if(slot == EquipmentSlot.FEET)
-                curr_data.script.applyArmorValues(bipedModel, 15);
         }
+
+        //No customization = reset
+        if (customization == null) {
+            mpa.setAdditionalPos(new Vector3f());
+            mpa.setAdditionalRot(new Vector3f());
+            return;
+        }
+
+        mpa.setAdditionalPos(customization.pos);
+        mpa.setAdditionalRot(customization.rot);
+        if (customization.visible != null)
+            part.visible = customization.visible;
     }
+
 }

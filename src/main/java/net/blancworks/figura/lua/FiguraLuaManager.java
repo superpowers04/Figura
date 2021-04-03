@@ -1,6 +1,7 @@
 package net.blancworks.figura.lua;
 
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.VectorAPI;
 import net.blancworks.figura.lua.api.model.ArmorModelAPI;
@@ -22,15 +23,17 @@ import org.luaj.vm2.lib.jse.JseMathLib;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class FiguraLuaManager {
-    
-    public static HashMap<Identifier, Function<CustomScript,? extends ReadOnlyLuaTable>> apiSuppliers = new HashMap<Identifier, Function<CustomScript,? extends ReadOnlyLuaTable>> ();
-    
+
+    public static HashMap<Identifier, Function<CustomScript, ? extends ReadOnlyLuaTable>> apiSuppliers = new HashMap<Identifier, Function<CustomScript, ? extends ReadOnlyLuaTable>>();
+    public static Map<String, Function<String, LuaEvent>> registeredEvents = new HashMap<String, Function<String, LuaEvent>>();
+
     //The globals for the entire lua system.
     public static Globals modGlobals;
-    
-    public static void initialize(){
+
+    public static void initialize() {
         modGlobals = new Globals();
         modGlobals.load(new JseBaseLib());
         modGlobals.load(new PackageLib());
@@ -41,11 +44,12 @@ public class FiguraLuaManager {
         LuaC.install(modGlobals);
 
         LuaString.s_metatable = new ReadOnlyLuaTable(LuaString.s_metatable);
-        
+
+        registerEvents();
         registerAPI();
     }
-    
-    public static void registerAPI(){
+
+    public static void registerAPI() {
         apiSuppliers.put(ParticleAPI.getID(), ParticleAPI::getForScript);
         apiSuppliers.put(CustomModelAPI.getID(), CustomModelAPI::getForScript);
         apiSuppliers.put(VanillaModelAPI.getID(), VanillaModelAPI::getForScript);
@@ -54,21 +58,32 @@ public class FiguraLuaManager {
         apiSuppliers.put(ArmorModelAPI.getID(), ArmorModelAPI::getForScript);
         apiSuppliers.put(VectorAPI.getID(), VectorAPI::getForScript);
     }
-    
-    public static void loadScript(PlayerData data, String content){
+
+    public static void registerEvents(){
+        registerEvent("tick");
+        registerEvent("render");
+
+        registerEvent("onDamage");
+    }
+
+    public static void loadScript(PlayerData data, String content) {
         CustomScript newScript = new CustomScript(data, content);
         data.script = newScript;
     }
-    
-    public static void setupScriptAPI(CustomScript script){
-        for (Map.Entry<Identifier, Function<CustomScript,? extends ReadOnlyLuaTable>>  entry : apiSuppliers.entrySet()) {
+
+    public static void setupScriptAPI(CustomScript script) {
+        for (Map.Entry<Identifier, Function<CustomScript, ? extends ReadOnlyLuaTable>> entry : apiSuppliers.entrySet()) {
             try {
                 script.scriptGlobals.set(entry.getKey().getPath(), entry.getValue().apply(script));
-            } catch (Exception e){
+            } catch (Exception e) {
                 System.out.println("Failed to initialize script global " + entry.getKey().toString());
                 e.printStackTrace();
             }
         }
     }
-    
+
+    public static void registerEvent(String name) {
+        registeredEvents.put(name, LuaEvent::new);
+    }
+
 }

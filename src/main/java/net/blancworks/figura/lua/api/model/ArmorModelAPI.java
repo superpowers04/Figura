@@ -16,7 +16,12 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ArmorModelAPI {
 
+    public static final String VANILLA_HELMET = "HELMET";
+    public static final String VANILLA_CHESTPLATE = "CHESTPLATE";
+    public static final String VANILLA_LEGGINGS = "LEGGINGS";
+    public static final String VANILLA_BOOTS = "BOOTS";
 
+    
     public static Identifier getID() {
         return new Identifier("default", "armor_model");
     }
@@ -25,28 +30,28 @@ public class ArmorModelAPI {
         ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
             PlayerEntityModel mdl = script.playerData.vanillaModel;
 
-            set("HELMET", getTableForPart(12, script));
+            set(VANILLA_HELMET, getTableForPart(VANILLA_HELMET, script));
 
-            set("CHESTPLATE", getTableForPart(13, script));
-            set("LEGGINGS", getTableForPart(14, script));
+            set(VANILLA_CHESTPLATE, getTableForPart(VANILLA_CHESTPLATE, script));
+            set(VANILLA_LEGGINGS, getTableForPart(VANILLA_LEGGINGS, script));
 
-            set("BOOTS", getTableForPart(15, script));
+            set(VANILLA_BOOTS, getTableForPart(VANILLA_BOOTS, script));
         }});
 
         return producedTable;
     }
 
-    public static ReadOnlyLuaTable getTableForPart(int index, CustomScript script) {
-        ArmorPartTable producedTable = new ArmorPartTable(index, script);
+    public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
+        ArmorPartTable producedTable = new ArmorPartTable(accessor, script);
         return producedTable;
     }
 
     private static class ArmorPartTable extends ScriptLocalAPITable {
-        int customizationIndex;
+        String accessor;
 
-        public ArmorPartTable(int index, CustomScript script) {
+        public ArmorPartTable(String accessor, CustomScript script) {
             super(script);
-            customizationIndex = index;
+            this.accessor = accessor;
             super.setTable(getTable());
         }
 
@@ -57,7 +62,7 @@ public class ArmorModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
                     customization.pos = new Vector3f(
                             fas.getFloat(0),
                             fas.getFloat(1),
@@ -71,7 +76,7 @@ public class ArmorModelAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f v = targetScript.vanillaModifications[customizationIndex].rot;
+                    Vector3f v = targetScript.getOrMakePartCustomization(accessor).rot;
 
                     if (v == null)
                         return NIL;
@@ -84,7 +89,7 @@ public class ArmorModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
                     customization.rot = new Vector3f(
                             fas.getFloat(0),
                             fas.getFloat(1),
@@ -97,7 +102,7 @@ public class ArmorModelAPI {
             ret.set("getEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
 
                     if (customization != null)
                         return LuaBoolean.valueOf(customization.visible);
@@ -109,7 +114,7 @@ public class ArmorModelAPI {
             ret.set("setEnabled", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    VanillaModelPartCustomization customization = targetScript.vanillaModifications[customizationIndex];
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
 
                     if (arg.isnil()) {
                         customization.visible = null;

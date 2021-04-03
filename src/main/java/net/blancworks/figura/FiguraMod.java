@@ -25,23 +25,22 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.WatchKey;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
-
 public class FiguraMod implements ClientModInitializer {
 
-    public static final Gson builder = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BlockbenchModelDeserializer()).setPrettyPrinting().create();
+    public static final Gson GSON = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BlockbenchModelDeserializer())
+            .setPrettyPrinting().create();
 
     public static final Logger LOGGER = LogManager.getLogger();
 
     //Used during rendering.
-    public static AbstractClientPlayerEntity curr_player;
-    public static PlayerEntityModel curr_model;
-    public static VertexConsumerProvider vertex_consumer_provider;
-    private static PlayerData curr_data;
+    public static AbstractClientPlayerEntity currentPlayer;
+    public static PlayerEntityModel currentModel;
+    private static PlayerData currentData;
+    public static VertexConsumerProvider vertexConsumerProvider;
     public static float deltaTime;
 
     private static final boolean USE_DEBUG_MODEL = true;
-    private static WatchKey watch_key;
+    private static WatchKey watchKey;
     private static Path path;
 
     //Lua
@@ -52,22 +51,18 @@ public class FiguraMod implements ClientModInitializer {
     //If there is a model loaded for the player, it'll be assigned here to the current model.
     //Otherwise, sends the model to the request list.
     public static void setRenderingMode(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt) {
-        curr_player = player;
-        curr_data = PlayerDataManager.getDataForPlayer(player.getUuid());
-
-        if (curr_data != null && curr_data.script != null && curr_data.script.vanillaModifications != null)
-            curr_data.script.applyCustomValues(mdl);
-
-        curr_data.vanillaModel = mdl;
-        vertex_consumer_provider = vertexConsumerProvider;
+        currentPlayer = player;
+        currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
+        currentData.vanillaModel = mdl;
+        FiguraMod.vertexConsumerProvider = vertexConsumerProvider;
         deltaTime = dt;
     }
 
     //Returns the current custom model for rendering. 
     //Set earlier by the player render function, used in the renderer mixin.
-    public static PlayerData getCurrData() {
-        PlayerData ret = curr_data;
-        curr_data = null;
+    public static PlayerData getCurrentData() {
+        PlayerData ret = currentData;
+        currentData = null;
         return ret;
     }
 
@@ -78,7 +73,7 @@ public class FiguraMod implements ClientModInitializer {
         PlayerTrustManager.init();
 
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
-        
+
         getModContentDirectory();
     }
 
@@ -94,7 +89,7 @@ public class FiguraMod implements ClientModInitializer {
         try {
             Files.createDirectories(p);
 
-            if(!oldPath.equals(p)) {
+            if (!oldPath.equals(p)) {
                 if (Files.exists(oldPath)) {
                     copyDirectory(oldPath.toString(), p.toString());
                     deleteDirectory(oldPath.toFile());

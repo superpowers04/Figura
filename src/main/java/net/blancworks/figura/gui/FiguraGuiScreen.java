@@ -54,10 +54,10 @@ public class FiguraGuiScreen extends Screen {
     public TexturedButtonWidget uploadButton;
     public ButtonWidget deleteAvatarButton;
 
-    public MutableText name_text;
-    public MutableText raw_name_text;
-    public MutableText file_size_text;
-    public MutableText model_complexity_text;
+    public MutableText nameText;
+    public MutableText rawNameText;
+    public MutableText fileSizeText;
+    public MutableText modelComplexityText;
 
     private TextFieldWidget searchBox;
     private boolean filterOptionsShown = false;
@@ -170,8 +170,8 @@ public class FiguraGuiScreen extends Screen {
         this.addButton(uploadButton);
 
         if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
-            model_complexity_text = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
-            file_size_text = getFileSizeText();
+            modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
+            fileSizeText = getFileSizeText();
         }
     }
 
@@ -191,12 +191,12 @@ public class FiguraGuiScreen extends Screen {
         {
             int currY = 75 + 12;
 
-            if (name_text != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, name_text, this.width - this.textRenderer.getWidth(name_text) - 8, currY += 12, 16777215);
-            if (file_size_text != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, file_size_text, this.width - this.textRenderer.getWidth(file_size_text) - 8, currY += 12, 16777215);
-            if (model_complexity_text != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, model_complexity_text, this.width - this.textRenderer.getWidth(model_complexity_text) - 8, currY += 12, 16777215);
+            if (nameText != null)
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 16777215);
+            if (fileSizeText != null)
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, fileSizeText, this.width - this.textRenderer.getWidth(fileSizeText) - 8, currY += 12, 16777215);
+            if (modelComplexityText != null)
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY += 12, 16777215);
 
             if (this.getFocused() != null)
                 FiguraMod.LOGGER.debug(this.getFocused().toString());
@@ -207,8 +207,8 @@ public class FiguraGuiScreen extends Screen {
         searchBox.render(matrices, mouseX, mouseY, delta);
 
         //deprecated warning
-        if (raw_name_text != null)
-            if (raw_name_text.getString().endsWith("*"))
+        if (rawNameText != null)
+            if (rawNameText.getString().endsWith("*"))
                 drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
         
         //draw buttons
@@ -254,15 +254,14 @@ public class FiguraGuiScreen extends Screen {
         tessellator.draw();
     }
 
-    private static int filesize_warning_threshold = 75000;
-    private static int filesize_large_threshold = 100000;
+    private static final int FILESIZE_WARNING_THRESHOLD = 75000;
+    private static final int FILESIZE_LARGE_THRESHOLD = 100000;
 
-    public void click_button(String file_name) {
-        PlayerDataManager.lastLoadedFileName = file_name;
-        PlayerDataManager.localPlayer.loadModelFile(file_name);
+    public void clickButton(String fileName) {
+        PlayerDataManager.lastLoadedFileName = fileName;
+        PlayerDataManager.localPlayer.loadModelFile(fileName);
 
         CompletableFuture.runAsync(() -> {
-
             for (int i = 0; i < 10; i++) {
                 if (PlayerDataManager.localPlayer.texture.ready) {
                     break;
@@ -274,10 +273,10 @@ public class FiguraGuiScreen extends Screen {
                 }
             }
 
-            name_text = new TranslatableText("gui.figura.name", file_name.substring(0, Math.min(20, file_name.length())));
-            raw_name_text = new LiteralText(file_name);
-            model_complexity_text = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
-            file_size_text = getFileSizeText();
+            nameText = new TranslatableText("gui.figura.name", fileName.substring(0, Math.min(20, fileName.length())));
+            rawNameText = new LiteralText(fileName);
+            modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
+            fileSizeText = getFileSizeText();
         }, Util.getMainWorkerExecutor());
 
     }
@@ -292,9 +291,9 @@ public class FiguraGuiScreen extends Screen {
 
         MutableText fsText = new TranslatableText("gui.figura.filesize", size);
 
-        if (fileSize >= filesize_large_threshold)
+        if (fileSize >= FILESIZE_LARGE_THRESHOLD)
             fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("red")));
-        else if (fileSize >= filesize_warning_threshold)
+        else if (fileSize >= FILESIZE_WARNING_THRESHOLD)
             fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("orange")));
         else
             fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("white")));
