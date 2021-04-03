@@ -9,12 +9,13 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CustomModelPartCuboid extends CustomModelPart {
 
     //Used to store the data for a cuboid, so that we can re-build it later if need be.
     public CompoundTag cuboidProperties = new CompoundTag();
-    
+
     @Override
     public void rebuild() {
 
@@ -22,8 +23,8 @@ public class CustomModelPartCuboid extends CustomModelPart {
         vertexCount = 0;
 
         float inflate = 0;
-        if(cuboidProperties.contains("inf")) inflate = cuboidProperties.getFloat("inf");
-        
+        if (cuboidProperties.contains("inf")) inflate = cuboidProperties.getFloat("inf");
+
         Vector3f from = v3fFromNbtList((ListTag) cuboidProperties.get("f"));
         Vector3f to = v3fFromNbtList((ListTag) cuboidProperties.get("t"));
         Vector3f mid = new Vector3f(
@@ -44,10 +45,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         float texHeight = cuboidProperties.getFloat("th");
 
         //North
-        if(cuboidProperties.contains("n")){
+        if (cuboidProperties.contains("n")) {
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("n");
-            
-            if(faceData.contains("texture")) {
+
+            if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
                 float rotation = 0;
@@ -56,7 +57,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     rotation = ((FloatTag) faceData.get("rotation")).getFloat();
                 }
 
-                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+                List<Vec2f> cornerUVs = rotateUV(v, rotation);
 
                 generateFace(
                         new Vector3f(-from.getX(), -from.getY(), from.getZ()),
@@ -70,10 +71,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         }
 
         //South
-        if(cuboidProperties.contains("s")){
+        if (cuboidProperties.contains("s")) {
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("s");
-            
-            if(faceData.contains("texture")) {
+
+            if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
                 float rotation = 0;
@@ -82,7 +83,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     rotation = ((FloatTag) faceData.get("rotation")).getFloat();
                 }
 
-                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+                List<Vec2f> cornerUVs = rotateUV(v, rotation);
 
                 generateFace(
                         new Vector3f(-to.getX(), -from.getY(), to.getZ()),
@@ -96,10 +97,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         }
 
         //East
-        if(cuboidProperties.contains("e")){
+        if (cuboidProperties.contains("e")) {
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("e");
 
-            if(faceData.contains("texture")) {
+            if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
                 float rotation = 0;
@@ -108,7 +109,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     rotation = ((FloatTag) faceData.get("rotation")).getFloat();
                 }
 
-                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+                List<Vec2f> cornerUVs = rotateUV(v, rotation);
 
                 generateFace(
                         new Vector3f(-to.getX(), -from.getY(), from.getZ()),
@@ -122,10 +123,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         }
 
         //West
-        if(cuboidProperties.contains("w")){
+        if (cuboidProperties.contains("w")) {
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("w");
 
-            if(faceData.contains("texture")) {
+            if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
                 float rotation = 0;
@@ -134,7 +135,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     rotation = ((FloatTag) faceData.get("rotation")).getFloat();
                 }
 
-                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+                List<Vec2f> cornerUVs = rotateUV(v, rotation);
 
                 generateFace(
                         new Vector3f(-from.getX(), -from.getY(), to.getZ()),
@@ -148,10 +149,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         }
 
         //Top
-        if(cuboidProperties.contains("u")){
+        if (cuboidProperties.contains("u")) {
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("u");
 
-            if(faceData.contains("texture")) {
+            if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
                 float rotation = 0;
@@ -160,7 +161,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     rotation = ((FloatTag) faceData.get("rotation")).getFloat();
                 }
 
-                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+                List<Vec2f> cornerUVs = rotateUV(v, rotation);
 
                 generateFace(
                         new Vector3f(-to.getX(), -to.getY(), to.getZ()),
@@ -174,10 +175,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         }
 
         //Bottom
-        if(cuboidProperties.contains("d")){
+        if (cuboidProperties.contains("d")) {
             CompoundTag faceData = (CompoundTag) cuboidProperties.get("d");
 
-            if(faceData.contains("texture")) {
+            if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((ListTag) faceData.get("uv"));
 
                 float rotation = 0;
@@ -186,7 +187,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                     rotation = ((FloatTag) faceData.get("rotation")).getFloat();
                 }
 
-                ArrayList<Vec2f> cornerUVs = rotateUV(v, rotation);
+                List<Vec2f> cornerUVs = rotateUV(v, rotation);
 
                 generateFace(
                         new Vector3f(-to.getX(), -from.getY(), from.getZ()),
@@ -200,7 +201,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
         }
     }
 
-    public void generateFace(Vector3f a, Vector3f b, Vector3f c, Vector3f d, ArrayList<Vec2f> uv, float texWidth, float texHeight) {
+    public void generateFace(Vector3f a, Vector3f b, Vector3f c, Vector3f d, List<Vec2f> uv, float texWidth, float texHeight) {
         Vector3f nA = b.copy();
         nA.subtract(a);
         Vector3f nB = c.copy();
@@ -219,18 +220,16 @@ public class CustomModelPartCuboid extends CustomModelPart {
         addVertex(c, uv.get(3).x / texWidth, uv.get(3).y / texHeight, nA);
     }
 
-
     @Override
-    public void fromNBT(CompoundTag partTag) {
-        super.fromNBT(partTag);
-        cuboidProperties = (CompoundTag) partTag.get("props");
+    public void readNbt(CompoundTag partNbt) {
+        super.readNbt(partNbt);
+        this.cuboidProperties = (CompoundTag) partNbt.get("props");
     }
 
-
     @Override
-    public void toNBT(CompoundTag partTag) {
-        super.toNBT(partTag);
-        partTag.put("props", cuboidProperties);
+    public void writeNbt(CompoundTag partNbt) {
+        super.writeNbt(partNbt);
+        partNbt.put("props", this.cuboidProperties);
     }
 
     @Override
@@ -246,9 +245,8 @@ public class CustomModelPartCuboid extends CustomModelPart {
         return new Vector4f(list.getFloat(0), list.getFloat(1), list.getFloat(2), list.getFloat(3));
     }
 
-    public static ArrayList<Vec2f> rotateUV(Vector4f v, float rotation) {
-
-        ArrayList<Vec2f> cornerUVs = new ArrayList<Vec2f>();
+    public static List<Vec2f> rotateUV(Vector4f v, float rotation) {
+        List<Vec2f> cornerUVs = new ArrayList<>();
         cornerUVs.add(new Vec2f(v.getX(), v.getW())); //0,1
         cornerUVs.add(new Vec2f(v.getZ(), v.getW())); //1,1
         cornerUVs.add(new Vec2f(v.getZ(), v.getY())); //1,0

@@ -2,6 +2,7 @@ package net.blancworks.figura;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
@@ -18,41 +19,39 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class PlayerDataManager {
-
+public final class PlayerDataManager {
     public static boolean didInitLocalPlayer = false;
-    public static HashMap<UUID, PlayerData> loadedPlayerData = new HashMap<UUID, PlayerData>();
+    public static final Map<UUID, PlayerData> LOADED_PLAYER_DATA = new Object2ObjectOpenHashMap<>();
 
     //Players that we're currently queued up to grab data for.
-    private static HashSet<UUID> serverRequestedPlayers = new HashSet<UUID>();
-    private static ArrayList<UUID> toClear = new ArrayList<>();
+    private static final Set<UUID> SERVER_REQUESTED_PLAYERS = new HashSet<>();
+    private static final List<UUID> TO_CLEAR = new ArrayList<>();
 
     //Hash checking stuff
-    public static Queue<UUID> toRefresh = new ArrayDeque<UUID>();
-    public static HashSet<UUID> toRefreshSet = new HashSet<UUID>();
+    public static final Queue<UUID> TO_REFRESH = new ArrayDeque<>();
+    public static final Set<UUID> TO_REFRESH_SET = new HashSet<>();
 
     public static LocalPlayerData localPlayer;
 
     public static String lastLoadedFileName;
 
     public static boolean hasPlayerData(UUID id) {
-        return loadedPlayerData.containsKey(id);
+        return LOADED_PLAYER_DATA.containsKey(id);
     }
 
     public static PlayerData getDataForPlayer(UUID id) {
+        PlayerData getData;
 
-        PlayerData getData = null;
-
-        if (toClear.contains(id)) {
-            toClear.remove(id);
-            loadedPlayerData.remove(id);
+        if (TO_CLEAR.contains(id)) {
+            TO_CLEAR.remove(id);
+            LOADED_PLAYER_DATA.remove(id);
         }
 
         if (!didInitLocalPlayer) {
             if (id == MinecraftClient.getInstance().player.getUuid()) {
                 localPlayer = new LocalPlayerData();
                 localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
-                loadedPlayerData.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
+                LOADED_PLAYER_DATA.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
                 didInitLocalPlayer = true;
 
                 if (lastLoadedFileName != null) {
@@ -70,15 +69,15 @@ public class PlayerDataManager {
         if (id == MinecraftClient.getInstance().player.getUuid())
             return localPlayer;
 
-        if (!loadedPlayerData.containsKey(id)) {
+        if (!LOADED_PLAYER_DATA.containsKey(id)) {
             getData = new PlayerData();
             getData.playerId = id;
 
             getPlayerAvatarFromServerOrCache(id, getData);
 
-            loadedPlayerData.put(id, getData);
+            LOADED_PLAYER_DATA.put(id, getData);
         } else {
-            getData = loadedPlayerData.get(id);
+            getData = LOADED_PLAYER_DATA.get(id);
         }
 
         return getData;
@@ -86,11 +85,10 @@ public class PlayerDataManager {
 
     //Attempts to get the data for a player from the server.
     public static void getPlayerAvatarFromServerOrCache(UUID id, PlayerData targetData) {
-
         //Prevent this from running more than once at a time per player.
-        if (serverRequestedPlayers.contains(id))
+        if (SERVER_REQUESTED_PLAYERS.contains(id))
             return;
-        serverRequestedPlayers.add(id);
+        SERVER_REQUESTED_PLAYERS.add(id);
 
         try {
 
@@ -128,11 +126,11 @@ public class PlayerDataManager {
                             FileInputStream fis = new FileInputStream(nbtFilePath.toFile());
                             DataInputStream dis = new DataInputStream(fis);
 
-                            targetData.loadFromNBT(dis);
+                            targetData.loadFromNbt(dis);
                             targetData.lastHash = hash;
                             targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
 
-                            serverRequestedPlayers.remove(id);
+                            SERVER_REQUESTED_PLAYERS.remove(id);
 
                             return;
                         }
@@ -158,7 +156,7 @@ public class PlayerDataManager {
                         BufferedReader in = new BufferedReader(
                                 new InputStreamReader(httpURLConnection.getInputStream()));
                         String inputLine;
-                        StringBuffer content = new StringBuffer();
+                        StringBuilder content = new StringBuilder();
                         while ((inputLine = in.readLine()) != null) {
                             content.append(inputLine);
                         }
@@ -180,7 +178,7 @@ public class PlayerDataManager {
                             DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
                             receivedDataToStream.reset();
 
-                            targetData.loadFromNBT(receivedDataToStream);
+                            targetData.loadFromNbt(receivedDataToStream);
                             targetData.lastHash = FiguraNetworkManager.getAvatarHash(id).get();
                             targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
 
@@ -192,10 +190,13 @@ public class PlayerDataManager {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    httpURLConnection.disconnect();
+
+                    if (httpURLConnection != null) {
+                        httpURLConnection.disconnect();
+                    }
                 }
 
-                serverRequestedPlayers.remove(id);
+                SERVER_REQUESTED_PLAYERS.remove(id);
 
             }, Util.getMainWorkerExecutor());
         } catch (Exception e) {
@@ -206,7 +207,7 @@ public class PlayerDataManager {
     public static void saveToCache(PlayerData data, Path targetPath, Path targetHashPath) {
         try {
             CompoundTag targetTag = new CompoundTag();
-            data.toNBT(targetTag);
+            data.writeNbt(targetTag);
 
             Files.createDirectories(targetPath.getParent());
             NbtIo.writeCompressed(targetTag, new FileOutputStream(targetPath.toFile()));
@@ -217,7 +218,7 @@ public class PlayerDataManager {
     }
 
     public static void clearPlayer(UUID id) {
-        toClear.add(id);
+        TO_CLEAR.add(id);
 
         if (localPlayer != null) {
             if (id == localPlayer.playerId) {
@@ -228,19 +229,19 @@ public class PlayerDataManager {
     }
 
     public static void clearCache() {
-        loadedPlayerData.clear();
+        LOADED_PLAYER_DATA.clear();
         localPlayer = null;
         didInitLocalPlayer = false;
         lastLoadedFileName = null;
     }
 
-    public static void clearLocalPlayer(){
-        loadedPlayerData.remove(localPlayer.playerId);
+    public static void clearLocalPlayer() {
+        LOADED_PLAYER_DATA.remove(localPlayer.playerId);
         localPlayer = null;
         didInitLocalPlayer = false;
         lastLoadedFileName = null;
     }
-    
+
     private static int hashCheckCooldown = 0;
 
     //Tick function for the client. Basically dispatches all the other functions in the mod.
@@ -248,37 +249,37 @@ public class PlayerDataManager {
         if (MinecraftClient.getInstance().world == null)
             return;
 
-        for (UUID uuid : toClear) {
-            loadedPlayerData.remove(uuid);
+        for (UUID uuid : TO_CLEAR) {
+            LOADED_PLAYER_DATA.remove(uuid);
         }
-        toClear.clear();
+        TO_CLEAR.clear();
 
-        for (Map.Entry<UUID, PlayerData> entry : loadedPlayerData.entrySet()) {
+        for (Map.Entry<UUID, PlayerData> entry : LOADED_PLAYER_DATA.entrySet()) {
             entry.getValue().tick();
         }
 
-        if(hashCheckCooldown > 0)
+        if (hashCheckCooldown > 0)
             hashCheckCooldown--;
 
-        if(hashCheckCooldown == 0 && toRefresh.size() > 0){
-            UUID nextID = toRefresh.remove();
-            toRefreshSet.remove(nextID);
+        if (hashCheckCooldown == 0 && TO_REFRESH.size() > 0) {
+            UUID nextID = TO_REFRESH.remove();
+            TO_REFRESH_SET.remove(nextID);
 
             checkPlayerDataHash(nextID);
             hashCheckCooldown += 4;
         }
     }
 
-    public static void checkForPlayerDataRefresh(PlayerData data){
+    public static void checkForPlayerDataRefresh(PlayerData data) {
         //Never check local player data for this.
-        if(data == localPlayer)
+        if (data == localPlayer)
             return;
 
         Date checkDate = new Date();
         if (checkDate.getTime() - data.lastHashCheckTime.getTime() > 1000 * 10) {
-            if(!toRefreshSet.contains(data.playerId)) {
-                toRefreshSet.add(data.playerId);
-                toRefresh.add(data.playerId);
+            if (!TO_REFRESH_SET.contains(data.playerId)) {
+                TO_REFRESH_SET.add(data.playerId);
+                TO_REFRESH.add(data.playerId);
             }
         }
     }
@@ -300,7 +301,7 @@ public class PlayerDataManager {
                 String hash = FiguraNetworkManager.getAvatarHash(id).get();
 
                 if (!hash.equals(dat.lastHash) && hash.length() > 0) {
-                    toClear.add(id);
+                    TO_CLEAR.add(id);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

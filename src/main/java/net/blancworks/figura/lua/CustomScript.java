@@ -24,8 +24,8 @@ import org.luaj.vm2.lib.jse.JseMathLib;
 
 import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class CustomScript {
@@ -91,9 +91,9 @@ public class CustomScript {
         curr_task = CompletableFuture.runAsync(
                 () -> {
                     try {
-                        setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.maxInitID));
+                        setInstructionLimit(getTrustInstructionLimit(PlayerTrustManager.MAX_INIT_ID));
                         scriptThread.resume(LuaValue.NIL);
-                    } catch (LuaError error){
+                    } catch (LuaError error) {
                         error.printStackTrace();
                     }
                     try {
@@ -200,7 +200,7 @@ public class CustomScript {
         tag.putString("src", source);
     }
 
-    public void fromNBT(PlayerData data, CompoundTag tag) {
+    public void readNbt(PlayerData data, CompoundTag tag) {
         load(data, tag.getString("src"));
     }
 
@@ -262,21 +262,20 @@ public class CustomScript {
         }
 
         if (tick != null) {
-            runFunction(tick, getTrustInstructionLimit(PlayerTrustManager.maxTickID));
+            runFunction(tick, getTrustInstructionLimit(PlayerTrustManager.MAX_TICK_ID));
         }
     }
 
     public void render(float deltaTime) {
         if (render != null) {
-            runFunctionImmediate(render, getTrustInstructionLimit(PlayerTrustManager.maxRenderID), LuaValue.valueOf(deltaTime));
+            runFunctionImmediate(render, getTrustInstructionLimit(PlayerTrustManager.MAX_RENDER_ID), LuaValue.valueOf(deltaTime));
         }
     }
 
 
     public void applyCustomValues(PlayerEntityModel model) {
-
-        PlayerEntityModelAccess access = (PlayerEntityModelAccess) (Object) model;
-        HashSet<ModelPart> parts = access.getDisabledParts();
+        PlayerEntityModelAccess access = (PlayerEntityModelAccess) model;
+        Set<ModelPart> parts = access.figura$getDisabledParts();
         parts.clear();
 
         applyCustomValues(parts, model.head, 0);
@@ -322,8 +321,8 @@ public class CustomScript {
 
     }
 
-    private void applyCustomValues(HashSet<ModelPart> disabledParts, ModelPart part, int index) {
-        ModelPartAccess access = (ModelPartAccess) (Object) part;
+    private void applyCustomValues(Set<ModelPart> disabledParts, ModelPart part, int index) {
+        ModelPartAccess access = (ModelPartAccess) part;
         VanillaModelPartCustomization customization = vanillaModifications[index];
 
         if (customization == null)

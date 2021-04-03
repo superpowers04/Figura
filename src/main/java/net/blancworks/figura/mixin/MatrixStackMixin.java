@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.minecraft.client.util.math.MatrixStack;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 
@@ -9,19 +10,12 @@ import java.util.Deque;
 
 @Mixin(MatrixStack.class)
 public class MatrixStackMixin implements MatrixStackAccess {
-
+    @Final
     @Shadow
     private Deque<MatrixStack.Entry> stack;
 
     public void copyTo(MatrixStack otherStack) {
         MatrixStackMixin access = (MatrixStackMixin) (Object) otherStack;
-
-        for (MatrixStack.Entry entry : stack) {
-            MatrixStack.Entry e = entry;
-            access.stack.add(e);
-        }
+        access.stack.addAll(stack);
     }
-    
-    
-    
 }

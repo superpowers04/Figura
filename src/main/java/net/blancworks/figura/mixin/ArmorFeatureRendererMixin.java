@@ -18,47 +18,50 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(ArmorFeatureRenderer.class)
-public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEntityModel<T>, A extends BipedEntityModel<T>> extends FeatureRenderer<T, M> {
+public abstract class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEntityModel<T>, A extends BipedEntityModel<T>>
+        extends FeatureRenderer<T, M> {
+    private PlayerData figura$currentData;
 
-    private PlayerData figura_curr_player;
-    
     public ArmorFeatureRendererMixin(FeatureRendererContext<T, M> context) {
         super(context);
     }
 
     @Shadow
-    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-    }
+    public abstract void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity,
+                                float limbAngle, float limbDistance, float tickDelta, float animationProgress,
+                                float headYaw, float headPitch);
 
-    @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V")
-    public void render_HEAD(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        if(livingEntity instanceof PlayerEntity){
-            figura_curr_player = PlayerDataManager.getDataForPlayer(((PlayerEntity) livingEntity).getGameProfile().getId());
+    @Inject(at = @At("HEAD"), method = "render")
+    public void onRenderStart(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity,
+                              float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
+        if (entity instanceof PlayerEntity) {
+            figura$currentData = PlayerDataManager.getDataForPlayer(((PlayerEntity) entity).getGameProfile().getId());
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V")
-    public void render_RETURN(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        figura_curr_player = null;
+    @Inject(at = @At("RETURN"), method = "render")
+    public void onRenderEnd(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity,
+                            float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
+        figura$currentData = null;
     }
 
-    @Inject(at = @At("RETURN"), method = "setVisible(Lnet/minecraft/client/render/entity/model/BipedEntityModel;Lnet/minecraft/entity/EquipmentSlot;)V")
-    protected void setVisible(A bipedModel, EquipmentSlot slot, CallbackInfo ci) {
-        PlayerData curr_data = figura_curr_player;
+    @Inject(at = @At("RETURN"), method = "setVisible")
+    protected void setVisible(A model, EquipmentSlot slot, CallbackInfo ci) {
+        PlayerData currentData = figura$currentData;
 
-        if (curr_data == null)
+        if (currentData == null)
             return;
 
-        if(curr_data.script != null && curr_data.script.vanillaModifications != null) {
-            
-            if(slot == EquipmentSlot.HEAD)
-                curr_data.script.applyArmorValues(bipedModel, 12);
-            if(slot == EquipmentSlot.CHEST)
-                curr_data.script.applyArmorValues(bipedModel, 13);
-            if(slot == EquipmentSlot.LEGS)
-                curr_data.script.applyArmorValues(bipedModel, 14);
-            if(slot == EquipmentSlot.FEET)
-                curr_data.script.applyArmorValues(bipedModel, 15);
+        if (currentData.script != null && currentData.script.vanillaModifications != null) {
+
+            if (slot == EquipmentSlot.HEAD)
+                currentData.script.applyArmorValues(model, 12);
+            if (slot == EquipmentSlot.CHEST)
+                currentData.script.applyArmorValues(model, 13);
+            if (slot == EquipmentSlot.LEGS)
+                currentData.script.applyArmorValues(model, 14);
+            if (slot == EquipmentSlot.FEET)
+                currentData.script.applyArmorValues(model, 15);
         }
     }
 }

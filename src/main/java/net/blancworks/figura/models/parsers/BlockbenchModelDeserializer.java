@@ -1,6 +1,8 @@
 package net.blancworks.figura.models.parsers;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.gson.*;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
@@ -13,16 +15,33 @@ import net.minecraft.nbt.*;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel> {
+    public static final Map<String, CustomModelPart.ParentType> NAME_PARENT_TYPE_TAGS =
+            new ImmutableMap.Builder<String, CustomModelPart.ParentType>()
+                    .put("HEAD", CustomModelPart.ParentType.Head)
+                    .put("TORSO", CustomModelPart.ParentType.Torso)
+                    .put("LEFT_ARM", CustomModelPart.ParentType.LeftArm)
+                    .put("RIGHT_ARM", CustomModelPart.ParentType.RightArm)
+                    .put("LEFT_LEG", CustomModelPart.ParentType.LeftLeg)
+                    .put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg)
+                    .put("NO_PARENT", CustomModelPart.ParentType.None)
+                    .build();
 
+    public static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =
+            new ImmutableMap.Builder<String, CustomModelPart.ParentType>()
+                    .put("MIMIC_HEAD", CustomModelPart.ParentType.Head)
+                    .put("MIMIC_TORSO", CustomModelPart.ParentType.Torso)
+                    .put("MIMIC_LEFT_ARM", CustomModelPart.ParentType.LeftArm)
+                    .put("MIMIC_RIGHT_ARM", CustomModelPart.ParentType.RightArm)
+                    .put("MIMIC_LEFT_LEG", CustomModelPart.ParentType.LeftLeg)
+                    .put("MIMIC_RIGHT_LEG", CustomModelPart.ParentType.RightLeg)
+                    .build();
 
     @Override
     public CustomModel deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-
         CustomModel retModel = new CustomModel();
 
         JsonObject root = json.getAsJsonObject();
@@ -36,9 +55,8 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         retModel.texWidth = resolution.get("width").getAsFloat();
         retModel.texHeight = resolution.get("height").getAsFloat();
 
-        HashMap<UUID, JsonObject> elementsByUuid = sortElements(elements);
-        HashMap<UUID, CustomModelPart> parsedParts = new HashMap<UUID, CustomModelPart>();
-
+        Map<UUID, JsonObject> elementsByUuid = sortElements(elements);
+        Map<UUID, CustomModelPart> parsedParts = new Object2ObjectOpenHashMap<>();
 
         //Parse out custom model parts from json objects.
         for (Map.Entry<UUID, JsonObject> entry : elementsByUuid.entrySet()) {
@@ -57,7 +75,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 String s = element.getAsString();
 
                 if (s != null)
-                    retModel.all_parts.add(parsedParts.get(UUID.fromString(s)));
+                    retModel.allParts.add(parsedParts.get(UUID.fromString(s)));
             }
         }
 
@@ -65,7 +83,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
     }
 
     //Builds out a group from a JsonObject that specifies the group in the outline.
-    public void buildGroup(JsonObject group, CustomModel target, HashMap<UUID, CustomModelPart> allParts, CustomModelPart parent) {
+    public void buildGroup(JsonObject group, CustomModel target, Map<UUID, CustomModelPart> allParts, CustomModelPart parent) {
         CustomModelPart groupPart = new CustomModelPart();
 
         if (group.has("name")) {
@@ -83,17 +101,17 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             groupPart.parentType = CustomModelPart.ParentType.Model;
             //Find parent type.
 
-            for (Map.Entry<String, CustomModelPart.ParentType> entry : nameMimicTypeTags.entrySet()) {
+            for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_MIMIC_TYPE_TAGS.entrySet()) {
                 if (groupPart.name.contains(entry.getKey())) {
                     groupPart.isMimicMode = true;
                     groupPart.parentType = entry.getValue();
                     break;
                 }
             }
-            
+
             //Only set group parent if not mimicing. We can't mimic and be parented.
-            if(!groupPart.isMimicMode) {
-                for (Map.Entry<String, CustomModelPart.ParentType> entry : nameParentTypeTags.entrySet()) {
+            if (!groupPart.isMimicMode) {
+                for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_PARENT_TYPE_TAGS.entrySet()) {
                     if (groupPart.name.contains(entry.getKey())) {
                         groupPart.parentType = entry.getValue();
                         break;
@@ -104,7 +122,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         if (group.has("visibility")) groupPart.visible = group.get("visibility").getAsBoolean();
         if (group.has("origin")) {
             Vector3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
-            corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
+            corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
             groupPart.pivot = corrected;
         }
         if (group.has("rotation")) groupPart.rot = v3fFromJArray(group.get("rotation").getAsJsonArray());
@@ -126,30 +144,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         //Add part.
         if (parent == null)
-            target.all_parts.add(groupPart);
+            target.allParts.add(groupPart);
         else
             parent.children.add(groupPart);
     }
-
-    public static final HashMap<String, CustomModelPart.ParentType> nameParentTypeTags = new HashMap<String, CustomModelPart.ParentType>() {{
-        put("HEAD", CustomModelPart.ParentType.Head);
-        put("TORSO", CustomModelPart.ParentType.Torso);
-        put("LEFT_ARM", CustomModelPart.ParentType.LeftArm);
-        put("RIGHT_ARM", CustomModelPart.ParentType.RightArm);
-        put("LEFT_LEG", CustomModelPart.ParentType.LeftLeg);
-        put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg);
-        put("NO_PARENT", CustomModelPart.ParentType.None);
-    }};
-
-    public static final HashMap<String, CustomModelPart.ParentType> nameMimicTypeTags = new HashMap<String, CustomModelPart.ParentType>() {{
-        put("MIMIC_HEAD", CustomModelPart.ParentType.Head);
-        put("MIMIC_TORSO", CustomModelPart.ParentType.Torso);
-        put("MIMIC_LEFT_ARM", CustomModelPart.ParentType.LeftArm);
-        put("MIMIC_RIGHT_ARM", CustomModelPart.ParentType.RightArm);
-        put("MIMIC_LEFT_LEG", CustomModelPart.ParentType.LeftLeg);
-        put("MIMIC_RIGHT_LEG", CustomModelPart.ParentType.RightLeg);
-    }};
-
 
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
         CustomModelPartCuboid elementPart = new CustomModelPartCuboid();
@@ -163,13 +161,13 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         Vector3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
         if (elementObject.has("origin")) {
             Vector3f corrected = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
-            corrected.set(corrected.getX(),corrected.getY(),-corrected.getZ());
+            corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
             elementPart.pivot = corrected;
         }
         if (elementObject.has("rotation")) {
             Vector3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
-            corrected.set(corrected.getX(),corrected.getY(),corrected.getZ());
-            
+            corrected.set(corrected.getX(), corrected.getY(), corrected.getZ());
+
             elementPart.rot = corrected;
         }
 
@@ -204,12 +202,12 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         cuboidPropertiesTag.put("tw", FloatTag.of(target.texWidth));
         cuboidPropertiesTag.put("th", FloatTag.of(target.texHeight));
 
-        cuboidPropertiesTag.put("n", getTagFromJsonElement(facesObject.get("north")));
-        cuboidPropertiesTag.put("s", getTagFromJsonElement(facesObject.get("south")));
-        cuboidPropertiesTag.put("e", getTagFromJsonElement(facesObject.get("east")));
-        cuboidPropertiesTag.put("w", getTagFromJsonElement(facesObject.get("west")));
-        cuboidPropertiesTag.put("u", getTagFromJsonElement(facesObject.get("up")));
-        cuboidPropertiesTag.put("d", getTagFromJsonElement(facesObject.get("down")));
+        cuboidPropertiesTag.put("n", getNbtElementFromJsonElement(facesObject.get("north")));
+        cuboidPropertiesTag.put("s", getNbtElementFromJsonElement(facesObject.get("south")));
+        cuboidPropertiesTag.put("e", getNbtElementFromJsonElement(facesObject.get("east")));
+        cuboidPropertiesTag.put("w", getNbtElementFromJsonElement(facesObject.get("west")));
+        cuboidPropertiesTag.put("u", getNbtElementFromJsonElement(facesObject.get("up")));
+        cuboidPropertiesTag.put("d", getNbtElementFromJsonElement(facesObject.get("down")));
 
         elementPart.cuboidProperties = cuboidPropertiesTag;
         elementPart.rebuild();
@@ -225,38 +223,34 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         return new Vector4f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat(), array.get(3).getAsFloat());
     }
 
-    public CompoundTag jsonObjectToCompoundTag(JsonObject obj) {
+    public CompoundTag jsonObjectToNbt(JsonObject obj) {
         return new CompoundTag() {{
             for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
                 JsonElement element = entry.getValue();
-                
-                if(element.isJsonNull())
+
+                if (element.isJsonNull())
                     continue;
-                
+
                 String key = entry.getKey();
-                put(key, getTagFromJsonElement(element));
+                put(key, getNbtElementFromJsonElement(element));
             }
         }};
     }
 
-    public ListTag jsonArrayToListTag(JsonArray array) {
+    public ListTag jsonArrayToNbtList(JsonArray array) {
         return new ListTag() {{
             for (JsonElement element : array) {
-                add(getTagFromJsonElement(element));
+                add(getNbtElementFromJsonElement(element));
             }
         }};
     }
-    
-    public Tag getTagFromJsonElement(JsonElement element){
-        
-        if(element instanceof JsonArray)
-            return jsonArrayToListTag(element.getAsJsonArray());
-        
-        if(element instanceof JsonObject)
-            return jsonObjectToCompoundTag(element.getAsJsonObject());
-        
-        
-        if(element instanceof JsonPrimitive) {
+
+    public Tag getNbtElementFromJsonElement(JsonElement element) {
+        if (element instanceof JsonArray)
+            return this.jsonArrayToNbtList(element.getAsJsonArray());
+        else if (element instanceof JsonObject)
+            return this.jsonObjectToNbt(element.getAsJsonObject());
+        else if (element instanceof JsonPrimitive) {
             JsonPrimitive primitive = element.getAsJsonPrimitive();
             if (primitive.isBoolean())
                 return ByteTag.of(primitive.getAsBoolean());
@@ -268,9 +262,11 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         return null;
     }
 
-    //Sorts out all the things in a json array out by UUID.
-    public HashMap<UUID, JsonObject> sortElements(JsonArray elementContainer) {
-        HashMap<UUID, JsonObject> objects = new HashMap<>();
+    /**
+     * Sorts out all the things in a json array out by UUID.
+     */
+    public Map<UUID, JsonObject> sortElements(JsonArray elementContainer) {
+        Map<UUID, JsonObject> objects = new Object2ObjectOpenHashMap<>();
         for (JsonElement jsonElement : elementContainer) {
             if (!jsonElement.isJsonObject())
                 continue;
@@ -280,12 +276,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 continue;
             objects.put(UUID.fromString(obj.get("uuid").getAsString()), obj);
 
-
             if (obj.has("children")) {
                 JsonElement children = obj.get("children");
                 if (children.isJsonArray()) {
                     JsonArray childrenArray = children.getAsJsonArray();
-
                     objects.putAll(sortElements(childrenArray));
                 }
             }

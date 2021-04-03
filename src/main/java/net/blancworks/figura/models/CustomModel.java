@@ -8,7 +8,6 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Identifier;
@@ -18,7 +17,7 @@ import java.util.ArrayList;
 
 public class CustomModel {
     public PlayerData owner;
-    public ArrayList<CustomModelPart> all_parts = new ArrayList<CustomModelPart>();
+    public ArrayList<CustomModelPart> allParts = new ArrayList<CustomModelPart>();
 
     public float texWidth = 64, texHeight = 64;
 
@@ -30,7 +29,7 @@ public class CustomModel {
 
         int ret = 0;
 
-        for (CustomModelPart all_part : all_parts) {
+        for (CustomModelPart all_part : allParts) {
             ret += getComplexityRecursive(all_part);
         }
 
@@ -50,22 +49,21 @@ public class CustomModel {
     }
 
     public int getMaxRenderAmount() {
-        Identifier playerID = new Identifier("players", owner.playerId.toString());
-        TrustContainer tc = PlayerTrustManager.getContainer(playerID);
-        return tc.getIntSetting(PlayerTrustManager.maxComplexityID);
+        Identifier playerId = new Identifier("players", this.owner.playerId.toString());
+        TrustContainer tc = PlayerTrustManager.getContainer(playerId);
+        return tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID);
     }
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
-        int left_to_render = getMaxRenderAmount();
+        int leftToRender = getMaxRenderAmount();
 
         if (owner.script != null) {
             owner.script.render(FiguraMod.deltaTime);
         }
 
-        FiguraMod.curr_model = player_model;
+        FiguraMod.currentModel = player_model;
 
-        for (CustomModelPart part : all_parts) {
-
+        for (CustomModelPart part : allParts) {
             matrices.push();
 
             try {
@@ -99,16 +97,16 @@ public class CustomModel {
 
                             //Make shallow copy of OG stack.
                             tempStack = new MatrixStack();
-                            ((MatrixStackAccess) (Object) matrices).copyTo(tempStack);
+                            ((MatrixStackAccess) matrices).copyTo(tempStack);
 
                             //Push to be sure we don't modify the original stack values.
                             tempStack.pop();
                             tempStack.pop();
                             tempStack.push();
 
-                            double d = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.curr_player.lastRenderX, FiguraMod.curr_player.getX());
-                            double e = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.curr_player.lastRenderY, FiguraMod.curr_player.getY());
-                            double f = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.curr_player.lastRenderZ, FiguraMod.curr_player.getZ());
+                            double d = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.currentPlayer.lastRenderX, FiguraMod.currentPlayer.getX());
+                            double e = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.currentPlayer.lastRenderY, FiguraMod.currentPlayer.getY());
+                            double f = MathHelper.lerp(FiguraMod.deltaTime, FiguraMod.currentPlayer.lastRenderZ, FiguraMod.currentPlayer.getZ());
 
                             tempStack.translate(-d, -e, -f);
                             tempStack.push();
@@ -120,9 +118,9 @@ public class CustomModel {
                 }
 
                 if (tempStack != null)
-                    left_to_render = part.render(left_to_render, tempStack, vertices, light, overlay);
+                    leftToRender = part.render(leftToRender, tempStack, vertices, light, overlay);
                 else
-                    left_to_render = part.render(left_to_render, matrices, vertices, light, overlay);
+                    leftToRender = part.render(leftToRender, matrices, vertices, light, overlay);
 
             } catch (Exception e) {
                 e.printStackTrace();
@@ -131,34 +129,33 @@ public class CustomModel {
             matrices.pop();
         }
 
-        FiguraMod.curr_model = null;
+        FiguraMod.currentModel = null;
     }
 
-    public void toNBT(CompoundTag tag) {
-
+    public void writeNbt(CompoundTag nbt) {
         ListTag partList = new ListTag();
 
-        for (int i = 0; i < all_parts.size(); i++) {
-            CompoundTag partTag = new CompoundTag();
-            CustomModelPart.writeToCompoundTag(partTag, all_parts.get(i));
-            partList.add(partTag);
+        for (CustomModelPart part : allParts) {
+            CompoundTag partNbt = new CompoundTag();
+            CustomModelPart.writeToNbt(partNbt, part);
+            partList.add(partNbt);
         }
 
-        tag.put("parts", partList);
+        nbt.put("parts", partList);
     }
 
-    public void fromNBT(CompoundTag tag) {
+    public void readNbt(CompoundTag tag) {
         ListTag partList = (ListTag) tag.get("parts");
 
         for (int i = 0; i < partList.size(); i++) {
             CompoundTag partTag = (CompoundTag) partList.get(i);
             int type = partTag.getInt("type");
 
-            CustomModelPart part = CustomModelPart.getFromNbtTag(partTag);
+            CustomModelPart part = CustomModelPart.fromNbt(partTag);
 
             if (part != null) {
                 part.rebuild();
-                all_parts.add(part);
+                allParts.add(part);
             }
         }
     }
