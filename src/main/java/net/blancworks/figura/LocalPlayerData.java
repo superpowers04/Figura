@@ -76,8 +76,7 @@ public class LocalPlayerData extends PlayerData {
 
         //check file type
         boolean isZip = fileName.endsWith(".zip");
-        boolean legacy = fileName.endsWith("*");
-        boolean directory = !isZip && !legacy;
+        boolean isDirectory = !isZip && !fileName.endsWith("*");
 
         //reset paths
         Path jsonPath = null;
@@ -89,7 +88,7 @@ public class LocalPlayerData extends PlayerData {
         File file = null;
 
         //folder data
-        if (directory) {
+        if (isDirectory) {
             file = new File(contentDirectory.resolve(fileName).toString());
 
             //set paths
@@ -132,6 +131,31 @@ public class LocalPlayerData extends PlayerData {
 
             //add * back
             fileName += "*";
+        }
+
+        //check if files exists
+        boolean cantLoad = !isZip && (!Files.exists(jsonPath) || !Files.exists(texturePath));
+
+        //check for zip files
+        if (isZip) {
+            try {
+                ZipFile zipFile = new ZipFile(file.getPath());
+
+                boolean hasModel = zipFile.getEntry("model.bbmodel") != null;
+                boolean hasTexture = zipFile.getEntry("texture.png") != null;
+
+                cantLoad = !hasModel || !hasTexture;
+            } catch (Exception e) {
+                FiguraMod.LOGGER.debug(e.toString());
+                cantLoad = true;
+            }
+        }
+
+        //log and clear player model
+        if (cantLoad) {
+            FiguraMod.LOGGER.error("Failed to load model " + fileName);
+            PlayerDataManager.clearLocalPlayer();
+            return;
         }
 
         if (!watchKeys.containsKey(contentDirectory.toString())) {
@@ -218,11 +242,10 @@ public class LocalPlayerData extends PlayerData {
                     contents = new String(Files.readAllBytes(scriptPath));
             }
 
-            //create script if found or log an info that no scripts was loaded
+            //create script if found
             if (contents != null)
                 this.script = new CustomScript(this, contents);
-            else
-                FiguraMod.LOGGER.warn("Model \"" + fileName + "\" doesn't have any valid scripts!");
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -253,9 +276,9 @@ public class LocalPlayerData extends PlayerData {
                     continue;
                 }
                 //folder - just load from folder
-                else if (directory)
+                else if (isDirectory)
                     location = file.toPath().resolve("texture" + textureType.toString() + ".png");
-                    //.bbmodel - remove * from name then loads from root folder
+                //.bbmodel - remove * from name then loads from root folder
                 else
                     location = contentDirectory.resolve(fileName.substring(0, fileName.length() - 1) + textureType.toString() + ".png");
 

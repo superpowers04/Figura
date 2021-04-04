@@ -2,6 +2,8 @@ package net.blancworks.figura.models;
 
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerDataManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
@@ -53,10 +55,10 @@ public class FiguraTexture extends ResourceTexture {
         MinecraftClient.getInstance().execute(() -> {
             try {
                 InputStream stream;
-                if (targetPath != null)
-                    stream = Files.newInputStream(targetPath);
-                else
+                if (targetPath == null || !Files.exists(targetPath))
                     stream = this.inputStream;
+                else
+                    stream = Files.newInputStream(targetPath);
                 data = IOUtils.toByteArray(stream);
                 stream.close();
                 ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
@@ -74,7 +76,9 @@ public class FiguraTexture extends ResourceTexture {
                 this.filePath = targetPath;
                 this.ready = true;
             } catch (Exception e) {
-                e.printStackTrace();
+                FiguraMod.LOGGER.error("Failed to load texture " + targetPath);
+                FiguraMod.LOGGER.debug(e.toString());
+                PlayerDataManager.clearLocalPlayer();
             }
         });
     }
