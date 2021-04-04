@@ -60,6 +60,7 @@ public class FiguraMod implements ClientModInitializer {
         FiguraMod.vertexConsumerProvider = vertexConsumerProvider;
         deltaTime = dt;
         modelMatrix = mdlMatrix;
+        currentModel = mdl;
     }
 
     //Returns the current custom model for rendering. 

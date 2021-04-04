@@ -55,17 +55,16 @@ public abstract class PlayerEntityRendererMixin
 
     @Inject(at = @At("RETURN"), method = "renderArm", cancellable = true)
     private void onRenderArmEnd(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo info) {
-        FiguraMod.setRenderingMode(player, vertexConsumers, this.getModel(), MinecraftClient.getInstance().getTickDelta(), matrices);
-        PlayerData playerData = FiguraMod.getCurrentData();
         PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
         PlayerEntityModel<AbstractClientPlayerEntity> model = realRenderer.getModel();
-        
+        FiguraMod.setRenderingMode(player, vertexConsumers, model, MinecraftClient.getInstance().getTickDelta(), matrices);
+        PlayerData playerData = FiguraMod.getCurrentData();
+
         //If there's player data and a model associated with it.
         if(playerData != null && playerData.model != null){
             //Only render if texture is ready
             if(playerData.texture == null || !playerData.texture.ready)
                 return;
-            
             
             playerData.model.renderArm(playerData, matrices, vertexConsumers, light, player, arm, sleeve);
         }
