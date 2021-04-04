@@ -153,7 +153,6 @@ public class CustomScript {
             @Override
             public LuaValue call(LuaValue arg) {
                 if (playerData == PlayerDataManager.localPlayer) {
-                    loadError = true;
                     FiguraMod.LOGGER.warn(arg.toString());
                     sendChatMessage(new LiteralText(arg.toString()));
                 }
@@ -306,7 +305,6 @@ public class CustomScript {
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
-        loadError = true;
         String nextDepthString = depthString;
         sendChatMessage(new LiteralText(depthString + "{"));
 
