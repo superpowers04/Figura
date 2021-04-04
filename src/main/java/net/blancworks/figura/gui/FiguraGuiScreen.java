@@ -189,6 +189,7 @@ public class FiguraGuiScreen extends Screen {
 
         deleteButton.active = false;
 
+        //reload status
         if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
             nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
             modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
@@ -207,7 +208,16 @@ public class FiguraGuiScreen extends Screen {
 
         if (tickCount > 20) {
             tickCount = 0;
+
+            //reload model list
             modelFileList.reloadFilters();
+
+            //reload data
+            if (PlayerDataManager.localPlayer.model != null) {
+                modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
+                fileSizeText = getFileSizeText();
+                scriptText = getScriptText();
+            }
         }
     }
 
@@ -248,7 +258,7 @@ public class FiguraGuiScreen extends Screen {
         if (rawNameText != null)
             if (rawNameText.getString().endsWith("*"))
                 drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
-        
+
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
 
@@ -265,7 +275,7 @@ public class FiguraGuiScreen extends Screen {
             renderTooltip(matrices, reloadTooltip, mouseX, mouseY);
             matrices.pop();
         }
-        
+
         if (!deleteButton.active) {
             deleteButton.active = true;
             boolean mouseOver = deleteButton.isMouseOver(mouseX, mouseY);
@@ -325,18 +335,29 @@ public class FiguraGuiScreen extends Screen {
             scriptText = getScriptText();
 
         }, Util.getMainWorkerExecutor());
-
     }
 
     public MutableText getScriptText() {
-        boolean scriptLoaded = PlayerDataManager.localPlayer.script != null;
-
         MutableText fsText = new LiteralText("Script: ");
-        if (scriptLoaded) {
-            TranslatableText text = new TranslatableText("gui.script.ok");
-            text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
+
+        if (PlayerDataManager.localPlayer.script != null) {
+            TranslatableText text;
+
+            //error loading script
+            if (PlayerDataManager.localPlayer.script.loadError) {
+                text = new TranslatableText("gui.script.error");
+                text.setStyle(text.getStyle().withColor(TextColor.parse("red")));
+            }
+            //loading okei
+            else {
+                text = new TranslatableText("gui.script.ok");
+                text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
+            }
+
             fsText.append(text);
-        } else {
+        }
+        //script not found
+        else {
             TranslatableText text = new TranslatableText("gui.script.none");
             text.setStyle(text.getStyle().withColor(TextColor.parse("white")));
             fsText.append(text);
