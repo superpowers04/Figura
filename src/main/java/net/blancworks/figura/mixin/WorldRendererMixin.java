@@ -44,10 +44,14 @@ public class WorldRendererMixin {
                 
                 //If playerdata
                 if(playerData != null) {
-                    if (playerData.script != null) {
+                    if (playerData.model == null || playerData.texture == null)
+                        return;
+                    if (!playerData.texture.ready)
+                        return;
+
+                    if (playerData.script != null)
                         playerData.script.render(FiguraMod.deltaTime);
-                    }
-                    
+
                     VertexConsumer vc = FiguraMod.vertexConsumerProvider.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
 
                     for (CustomModelPart part : playerData.model.allParts) {
@@ -56,7 +60,7 @@ public class WorldRendererMixin {
                             MatrixStack tempStack = new MatrixStack();
                             ((MatrixStackAccess) matrices).copyTo(tempStack);
                             tempStack.push();
-                            
+
                             tempStack.translate(-camera.getPos().getX(), -camera.getPos().getY(), -camera.getPos().getZ());
                             tempStack.scale(-1,-1,1);
 

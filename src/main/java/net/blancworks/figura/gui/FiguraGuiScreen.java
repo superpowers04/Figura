@@ -2,16 +2,18 @@ package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
 import net.blancworks.figura.gui.widgets.ModelFileListWidget;
+import net.blancworks.figura.gui.widgets.TexturedButtonWidget;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -26,38 +28,43 @@ import net.minecraft.util.Util;
 import net.minecraft.util.math.Quaternion;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.IOException;
 import java.math.RoundingMode;
+import java.nio.file.*;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class FiguraGuiScreen extends Screen {
 
     public Screen parentScreen;
 
     public Identifier uploadTexture = new Identifier("figura", "gui/menu/upload.png");
+    public Identifier reloadTexture = new Identifier("figura", "gui/menu/reload.png");
+    public Identifier deleteTexture = new Identifier("figura", "gui/menu/delete.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "gui/menu/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "gui/menu/scalable_box.png");
 
-    public static final List<Text> deletePrompt = new ArrayList<Text>(){{
-        add(new TranslatableText("gui.figura.button.tooltip.deleteavatarfirst"));
-        add(new TranslatableText("gui.figura.button.tooltip.deleteavatarsecond").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
-        add(new TranslatableText("gui.figura.button.tooltip.deleteavatarthird").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+    public static final List<Text> deleteTooltip = new ArrayList<Text>(){{
+        add(new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+        add(new TranslatableText("gui.figura.button.tooltip.deleteavatartwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
     }};
-    
+
     public static final TranslatableText uploadTooltip = new TranslatableText("gui.figura.button.tooltip.upload");
+    public static final TranslatableText reloadTooltip = new TranslatableText("gui.figura.button.tooltip.reloadavatar");
 
     public TexturedButtonWidget uploadButton;
-    public ButtonWidget deleteAvatarButton;
+    public TexturedButtonWidget reloadButton;
+    public TexturedButtonWidget deleteButton;
 
     public MutableText nameText;
     public MutableText rawNameText;
     public MutableText fileSizeText;
     public MutableText modelComplexityText;
+    public MutableText scriptText;
 
     private TextFieldWidget searchBox;
     private boolean filterOptionsShown = false;
@@ -66,9 +73,8 @@ public class FiguraGuiScreen extends Screen {
     private int rightPaneX;
     private int searchBoxX;
     private int filtersX;
-    
+
     private boolean isHoldingShift = false;
-    private boolean isHoldingAlt = false;
 
     //gui sizes
     private int guiScale, modelBgSize, modelSize;
@@ -86,7 +92,7 @@ public class FiguraGuiScreen extends Screen {
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
 
     public CustomListWidgetState modelFileListState = new CustomListWidgetState();
-    public ModelFileListWidget modelFileList;
+    public static ModelFileListWidget modelFileList;
 
     public FiguraGuiScreen(Screen parentScreen) {
         super(new LiteralText("Figura Menu"));
@@ -131,47 +137,77 @@ public class FiguraGuiScreen extends Screen {
 
         //open folder
         this.addButton(new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.openfolder"), (buttonWidgetx) -> {
-            Util.getOperatingSystem().open(FiguraMod.getModContentDirectory().toUri());
+            Path modelDir = LocalPlayerData.getContentDirectory();
+            try {
+                if (!Files.exists(modelDir))
+                    Files.createDirectory(modelDir);
+                Util.getOperatingSystem().open(modelDir.toUri());
+            } catch (Exception e) {
+                FiguraMod.LOGGER.error(e.toString());
+            }
         }));
 
         //back button
-        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> {
-            this.client.openScreen(parentScreen);
-        }));
+        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.openScreen(parentScreen)));
 
         //top buttons
-        this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> {
-            this.client.openScreen(trustScreen);
-        }));
-        this.addButton(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> {
-            Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
-        }));
+        this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.openScreen(trustScreen)));
+        this.addButton(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel")));
 
-        deleteAvatarButton = new ButtonWidget(this.width - 140 - 5, 65, 140, 20, new TranslatableText("gui.figura.button.deleteavatar"), (buttonWidgetx) -> {
-            if(isHoldingShift && isHoldingAlt)
-                FiguraNetworkManager.deleteModel();
-            else if(isHoldingShift)
-                PlayerDataManager.clearLocalPlayer();
-        });
-        this.addButton(deleteAvatarButton);
-
-        deleteAvatarButton.active = false;
+        //delete button
+        deleteButton = new TexturedButtonWidget(
+                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 - modelBgSize / 2,
+                25, 25,
+                0, 0, 25,
+                deleteTexture, 50, 50,
+                (bx) -> {
+                    if(isHoldingShift)
+                        FiguraNetworkManager.deleteModel();
+                }
+        );
+        this.addButton(deleteButton);
 
         //upload button
         uploadButton = new TexturedButtonWidget(
-                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 30,
-                30, 30,
-                0, 0, 30,
-                uploadTexture, 30, 60,
-                (bx) -> {
-                    FiguraNetworkManager.postModel();
-                }
+                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25,
+                25, 25,
+                0, 0, 25,
+                uploadTexture, 25, 50,
+                (bx) -> FiguraNetworkManager.postModel()
         );
         this.addButton(uploadButton);
 
+        //reload local button
+        reloadButton = new TexturedButtonWidget(
+                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25 - 30,
+                25, 25,
+                0, 0, 25,
+                reloadTexture, 25, 50,
+                (bx) -> PlayerDataManager.clearLocalPlayer()
+        );
+        this.addButton(reloadButton);
+
+        deleteButton.active = false;
+
         if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
+            nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
             modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
             fileSizeText = getFileSizeText();
+            scriptText = getScriptText();
+        }
+    }
+
+    int tickCount = 0;
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        tickCount++;
+
+        if (tickCount > 20) {
+            tickCount = 0;
+            modelFileList.reloadFilters();
         }
     }
 
@@ -189,7 +225,7 @@ public class FiguraGuiScreen extends Screen {
 
         //draw avatar info
         {
-            int currY = 75 + 12;
+            int currY = 45 + 12;
 
             if (nameText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 16777215);
@@ -197,6 +233,8 @@ public class FiguraGuiScreen extends Screen {
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, fileSizeText, this.width - this.textRenderer.getWidth(fileSizeText) - 8, currY += 12, 16777215);
             if (modelComplexityText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY += 12, 16777215);
+            if (scriptText != null)
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, scriptText, this.width - this.textRenderer.getWidth(scriptText) - 8, currY += 12, 16777215);
 
             if (this.getFocused() != null)
                 FiguraMod.LOGGER.debug(this.getFocused().toString());
@@ -220,16 +258,23 @@ public class FiguraGuiScreen extends Screen {
             renderTooltip(matrices, uploadTooltip, mouseX, mouseY);
             matrices.pop();
         }
+
+        if(reloadButton.isMouseOver(mouseX, mouseY)){
+            matrices.push();
+            matrices.translate(0, 0, 200);
+            renderTooltip(matrices, reloadTooltip, mouseX, mouseY);
+            matrices.pop();
+        }
         
-        if (!deleteAvatarButton.active) {
-            deleteAvatarButton.active = true;
-            boolean mouseOver = deleteAvatarButton.isMouseOver(mouseX, mouseY);
-            deleteAvatarButton.active = false;
+        if (!deleteButton.active) {
+            deleteButton.active = true;
+            boolean mouseOver = deleteButton.isMouseOver(mouseX, mouseY);
+            deleteButton.active = false;
 
             if(mouseOver) {
                 matrices.push();
                 matrices.translate(0, 0, 200);
-                renderTooltip(matrices, deletePrompt, mouseX, mouseY);
+                renderTooltip(matrices, deleteTooltip, mouseX, mouseY);
                 matrices.pop();
             }
         }
@@ -277,8 +322,26 @@ public class FiguraGuiScreen extends Screen {
             rawNameText = new LiteralText(fileName);
             modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
             fileSizeText = getFileSizeText();
+            scriptText = getScriptText();
+
         }, Util.getMainWorkerExecutor());
 
+    }
+
+    public MutableText getScriptText() {
+        boolean scriptLoaded = PlayerDataManager.localPlayer.script != null;
+
+        MutableText fsText = new LiteralText("Script: ");
+        if (scriptLoaded) {
+            TranslatableText text = new TranslatableText("gui.script.ok");
+            text.setStyle(text.getStyle().withColor(TextColor.parse("lime")));
+            fsText.append(text);
+        } else {
+            TranslatableText text = new TranslatableText("gui.script.none");
+            text.setStyle(text.getStyle().withColor(TextColor.parse("white")));
+            fsText.append(text);
+        }
+        return fsText;
     }
 
     public MutableText getFileSizeText() {
@@ -362,11 +425,7 @@ public class FiguraGuiScreen extends Screen {
 
         if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT) {
             isHoldingShift = false;
-            deleteAvatarButton.active = false;
-        }
-
-        if (keyCode == GLFW.GLFW_KEY_LEFT_ALT) {
-            isHoldingAlt = false;
+            deleteButton.active = false;
         }
 
         return result;
@@ -378,14 +437,47 @@ public class FiguraGuiScreen extends Screen {
 
         if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT) {
             isHoldingShift = true;
-            deleteAvatarButton.active = true;
-        }
-
-        if (keyCode == GLFW.GLFW_KEY_LEFT_ALT) {
-            isHoldingAlt = true;
+            deleteButton.active = true;
         }
 
         return result;
+    }
+
+    @Override
+    public void filesDragged(List<Path> paths) {
+        super.filesDragged(paths);
+
+        String string = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
+        this.client.openScreen(new ConfirmScreen((bl) -> {
+            Path destPath = LocalPlayerData.getContentDirectory();
+            if (bl) {
+                paths.forEach((path2) -> {
+                    try {
+                        Stream<Path> stream = Files.walk(path2);
+                        try {
+                            stream.forEach((path3) -> {
+                                try {
+                                    Util.relativeCopy(path2.getParent(), destPath, path3);
+                                } catch (IOException e) {
+                                    FiguraMod.LOGGER.error("Failed to copy model file from {} to {}", path3, destPath);
+                                    FiguraMod.LOGGER.debug(e.toString());
+                                }
+
+                            });
+                        } catch (Exception e) {
+                            FiguraMod.LOGGER.debug(e.toString());
+                        }
+
+                        stream.close();
+                    } catch (Exception e) {
+                        FiguraMod.LOGGER.error("Failed to copy model file from {} to {}", path2, destPath);
+                        FiguraMod.LOGGER.debug(e.toString());
+                    }
+
+                });
+            }
+            this.client.openScreen(this);
+        }, new TranslatableText("gui.dropconfirm"), new LiteralText(string)));
     }
 
     public static void drawEntity(int x, int y, int size, float rotationX, float rotationY, LivingEntity entity) {

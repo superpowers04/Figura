@@ -17,7 +17,6 @@ import java.util.zip.ZipFile;
 
 public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, ModelFileListWidget.ModelFileListWidgetEntry> {
 
-
     public ModelFileListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
     }
@@ -64,8 +63,8 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
                         addEntry(new ModelFileListWidgetEntry(file.getName(), this));
 
                 } catch (Exception e) {
-                    FiguraMod.LOGGER.error("Failed to load model " + file.getAbsolutePath());
-                    e.printStackTrace();
+                    FiguraMod.LOGGER.error("Failed to load model " + file.getName());
+                    FiguraMod.LOGGER.debug(e.toString());
                 }
             }
             //old system compatibility

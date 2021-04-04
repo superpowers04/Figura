@@ -12,6 +12,12 @@
   "gui.figura.allowvanillaedit": "Vanilla Avatar Changes",
   "gui.figura.maxparticles": "Maximum Particles Per Second",
 
+  "gui.dropconfirm": "Do you want to add the following models to Figura?",
+
+  "gui.script.none": "none",
+  "gui.script.ok": "OK",
+  "gui.script.error": "ERROR",
+
   "gui.figura.button.trustmenu": "Trust Menu",
   "gui.figura.button.back": "Back",
   "gui.figura.button.deleteavatar": "Clear Avatar",
@@ -24,10 +30,10 @@
   "gui.figura.button.reloadavatar": "Reload avatar",
   "gui.figura.button.search": "Search...",
 
-  "gui.figura.button.tooltip.upload": "Click to upload and show avatar in multiplayer.",
-  "gui.figura.button.tooltip.deleteavatarfirst": "Hold LEFT SHIFT and click to redownload your avatar locally.",
-  "gui.figura.button.tooltip.deleteavatarsecond": "Hold LEFT SHIFT and LEFT ALT and click to CLEAR YOUR AVATAR ONLINE.",
-  "gui.figura.button.tooltip.deleteavatarthird": "Doing so will clear your avatar for everyone else, too.",
+  "gui.figura.button.tooltip.upload": "Click to upload and show avatar in multiplayer",
+  "gui.figura.button.tooltip.reloadavatar": "Click to clear you avatar locally and redownload it",
+  "gui.figura.button.tooltip.deleteavatar": "Hold LEFT SHIFT and click to CLEAR YOUR AVATAR ONLINE",
+  "gui.figura.button.tooltip.deleteavatartwo": "Doing so will clear your avatar for everyone else, too",
   "gui.figura.button.tooltip.resetperm": "Hold LEFT SHIFT and click to reset the selected permission for this user",
   "gui.figura.button.tooltip.cantreset": "Cannot reset a Preset",
   "gui.figura.button.tooltip.resetallperm": "Hold LEFT SHIFT and click to reset the permissions for this user",
