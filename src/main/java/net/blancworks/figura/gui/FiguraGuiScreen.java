@@ -334,7 +334,7 @@ public class FiguraGuiScreen extends Screen {
         MutableText fsText = new LiteralText("Script: ");
         if (scriptLoaded) {
             TranslatableText text = new TranslatableText("gui.script.ok");
-            text.setStyle(text.getStyle().withColor(TextColor.parse("lime")));
+            text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
             fsText.append(text);
         } else {
             TranslatableText text = new TranslatableText("gui.script.none");
