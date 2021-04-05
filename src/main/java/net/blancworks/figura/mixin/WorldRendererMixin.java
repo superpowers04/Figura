@@ -44,9 +44,7 @@ public class WorldRendererMixin {
                 
                 //If playerdata
                 if(playerData != null) {
-                    if (playerData.model == null || playerData.texture == null)
-                        return;
-                    if (!playerData.texture.ready)
+                    if (playerData.model == null || playerData.texture == null || !playerData.texture.ready)
                         return;
 
                     if (playerData.script != null)
