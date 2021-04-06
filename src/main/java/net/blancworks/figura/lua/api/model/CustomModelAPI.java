@@ -1,11 +1,10 @@
 package net.blancworks.figura.lua.api.model;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
-import net.blancworks.figura.lua.api.VectorAPI;
+import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
@@ -60,15 +59,14 @@ public class CustomModelAPI {
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return VectorAPI.getVector(targetPart.pos);
+                    return LuaVector.of(targetPart.pos);
                 }
             });
 
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vector3f newPos = VectorAPI.checkVec3(arg1);
-                    targetPart.pos = newPos;
+                    targetPart.pos = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -76,15 +74,14 @@ public class CustomModelAPI {
             ret.set("getPivot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return VectorAPI.getVector(targetPart.pivot);
+                    return LuaVector.of(targetPart.pivot);
                 }
             });
 
             ret.set("setPivot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vector3f newPivot = VectorAPI.checkVec3(arg1);
-                    targetPart.pivot = newPivot;
+                    targetPart.pivot = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -92,15 +89,14 @@ public class CustomModelAPI {
             ret.set("getColor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return VectorAPI.getVector(targetPart.color);
+                    return LuaVector.of(targetPart.color);
                 }
             });
 
             ret.set("setColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vector3f newColor = VectorAPI.checkVec3(arg1);
-                    targetPart.color = newColor;
+                    targetPart.color = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -108,15 +104,14 @@ public class CustomModelAPI {
             ret.set("getScale", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return VectorAPI.getVector(targetPart.scale);
+                    return LuaVector.of(targetPart.scale);
                 }
             });
 
             ret.set("setScale", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vector3f newScale = VectorAPI.checkVec3(arg1);
-                    targetPart.scale = newScale;
+                    targetPart.scale = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -124,15 +119,14 @@ public class CustomModelAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return VectorAPI.getVector(targetPart.rot);
+                    return LuaVector.of(targetPart.rot);
                 }
             });
 
             ret.set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vector3f newRot = VectorAPI.checkVec3(arg1);
-                    targetPart.rot = newRot;
+                    targetPart.rot = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -140,14 +134,14 @@ public class CustomModelAPI {
             ret.set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return VectorAPI.getVector(targetPart.rot);
+                    return LuaVector.of(targetPart.rot);
                 }
             });
 
             ret.set("setUV", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vec2f newUV = VectorAPI.checkVec2f(arg1);
+                    Vec2f newUV = LuaVector.checkOrNew(arg1).asV2f();
                     targetPart.uOffset = newUV.x;
                     targetPart.vOffset = newUV.y;
                     return NIL;

@@ -3,7 +3,7 @@ package net.blancworks.figura.lua;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.lua.api.VectorAPI;
+import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.lua.api.model.ArmorModelAPI;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
@@ -23,7 +23,6 @@ import org.luaj.vm2.lib.jse.JseMathLib;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class FiguraLuaManager {
 
