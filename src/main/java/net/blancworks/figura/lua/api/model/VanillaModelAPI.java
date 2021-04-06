@@ -20,7 +20,7 @@ public class VanillaModelAPI {
     //Main body accessors
     public static final String VANILLA_HEAD = "HEAD";
     public static final String VANILLA_TORSO = "TORSO";
-    public static final String VANILLA_LEFT_ARM = "LEFT_LEG";
+    public static final String VANILLA_LEFT_ARM = "LEFT_ARM";
     public static final String VANILLA_RIGHT_ARM = "RIGHT_ARM";
     public static final String VANILLA_LEFT_LEG = "LEFT_LEG";
     public static final String VANILLA_RIGHT_LEG = "RIGHT_LEG";
