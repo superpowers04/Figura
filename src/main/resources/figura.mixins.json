@@ -16,7 +16,8 @@
     "MixinDebugHud",
     "ArmorFeatureRendererMixin",
     "LivingEntityRendererMixin",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "ElytraEntityModelMixin"
   ],
   "injectors": {
     "defaultRequire": 1

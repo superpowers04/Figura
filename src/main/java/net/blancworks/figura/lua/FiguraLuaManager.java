@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.VectorAPI;
 import net.blancworks.figura.lua.api.model.ArmorModelAPI;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
+import net.blancworks.figura.lua.api.model.ElytraModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
 import net.blancworks.figura.lua.api.sound.SoundAPI;
@@ -57,6 +58,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(PlayerEntityAPI.getID(), PlayerEntityAPI::getForScript);
         apiSuppliers.put(WorldAPI.getID(), WorldAPI::getForScript);
         apiSuppliers.put(ArmorModelAPI.getID(), ArmorModelAPI::getForScript);
+        apiSuppliers.put(ElytraModelAPI.getID(), ElytraModelAPI::getForScript);
         apiSuppliers.put(VectorAPI.getID(), VectorAPI::getForScript);
         apiSuppliers.put(SoundAPI.getID(), SoundAPI::getForScript);
     }
