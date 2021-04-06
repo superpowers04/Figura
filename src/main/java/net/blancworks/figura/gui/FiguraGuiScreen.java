@@ -214,7 +214,7 @@ public class FiguraGuiScreen extends Screen {
             modelFileList.reloadFilters();
 
             //reload data
-            if (PlayerDataManager.localPlayer.model != null) {
+            if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
                 if (PlayerDataManager.lastLoadedFileName == null)
                     nameText = null;
                 modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
