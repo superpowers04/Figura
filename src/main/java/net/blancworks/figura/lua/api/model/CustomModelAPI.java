@@ -1,8 +1,6 @@
 package net.blancworks.figura.lua.api.model;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.VectorAPI;

@@ -16,7 +16,6 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Matrix4f;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
