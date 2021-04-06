@@ -8,6 +8,7 @@ import net.blancworks.figura.lua.api.model.ArmorModelAPI;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
+import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.lua.api.world.WorldAPI;
 import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
 import net.minecraft.util.Identifier;
@@ -57,6 +58,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(WorldAPI.getID(), WorldAPI::getForScript);
         apiSuppliers.put(ArmorModelAPI.getID(), ArmorModelAPI::getForScript);
         apiSuppliers.put(VectorAPI.getID(), VectorAPI::getForScript);
+        apiSuppliers.put(SoundAPI.getID(), SoundAPI::getForScript);
     }
 
     public static void registerEvents(){
