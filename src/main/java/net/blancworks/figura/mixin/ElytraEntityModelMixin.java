@@ -1,6 +1,5 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
@@ -29,27 +28,31 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
 
     @Inject(at = @At("RETURN"), method = "setAngles(Lnet/minecraft/entity/LivingEntity;FFFFF)V")
     public void setAngles(T livingEntity, float f, float g, float h, float i, float j, CallbackInfo ci) {
-        ModelPart rightWing = field_3364;
-        ModelPart leftWing = field_3365;
+        try {
+            ModelPart rightWing = field_3364;
+            ModelPart leftWing = field_3365;
 
-        PlayerData currentData = null;
-        if(livingEntity instanceof PlayerEntity) currentData = PlayerDataManager.getDataForPlayer(((PlayerEntity) livingEntity).getGameProfile().getId());
-        CustomScript script = null;
-        if(currentData != null)
-            script = currentData.script;
+            PlayerData currentData = null;
+            if (livingEntity instanceof PlayerEntity)
+                currentData = PlayerDataManager.getDataForPlayer(((PlayerEntity) livingEntity).getGameProfile().getId());
+            CustomScript script = null;
+            if (currentData != null) script = currentData.script;
 
 
-        //Easy shortcut, null script = reset, so we can just set it to null if we don't have perms.
-        if(script != null && !script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
-            script = null;
+            //Easy shortcut, null script = reset, so we can just set it to null if we don't have perms.
+            if (script != null && !script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+                script = null;
 
-        VanillaModelPartCustomization customization = null;
-        if(script != null) customization = script.getPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING);
-        figura$applyCustomValueForPart(script, customization, rightWing);
-        
-        customization = null;
-        if(script != null) customization = script.getPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING);
-        figura$applyCustomValueForPart(script, customization, leftWing);
+            VanillaModelPartCustomization customization = null;
+            if (script != null) customization = script.getPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING);
+            figura$applyCustomValueForPart(script, customization, rightWing);
+
+            customization = null;
+            if (script != null) customization = script.getPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING);
+            figura$applyCustomValueForPart(script, customization, leftWing);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     @Override

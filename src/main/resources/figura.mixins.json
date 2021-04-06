@@ -17,7 +17,8 @@
     "ArmorFeatureRendererMixin",
     "LivingEntityRendererMixin",
     "WorldRendererMixin",
-    "ElytraEntityModelMixin"
+    "ElytraEntityModelMixin",
+    "HeldItemFeatureRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
