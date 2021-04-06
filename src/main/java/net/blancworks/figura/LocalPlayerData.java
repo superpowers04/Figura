@@ -237,10 +237,8 @@ public class LocalPlayerData extends PlayerData {
                     contents = new String(IOUtils.toByteArray(zipFile.getInputStream(scriptEntry)));
             }
             //then try to load from path
-            else {
-                if (Files.exists(scriptPath))
-                    contents = new String(Files.readAllBytes(scriptPath));
-            }
+            else if (Files.exists(scriptPath))
+                contents = new String(Files.readAllBytes(scriptPath));
 
             //create script if found
             if (contents != null)

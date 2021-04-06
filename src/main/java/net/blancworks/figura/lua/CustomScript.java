@@ -28,6 +28,7 @@ public class CustomScript {
 
     public PlayerData playerData;
     public String source;
+    public boolean loadError = false;
 
     //Global script values
     public Globals scriptGlobals = new Globals();
@@ -49,7 +50,7 @@ public class CustomScript {
     //References to the tick and render functions for easy use elsewhere.
     private LuaEvent tickLuaEvent = null;
     private LuaEvent renderLuaEvent = null;
-    
+
     private CompletableFuture lastTickFunction = null;
 
     public Map<String, LuaEvent> allEvents = new HashMap<>();
@@ -101,11 +102,12 @@ public class CustomScript {
             public LuaValue call() {
                 // A simple lua error may be caught by the script, but a
                 // Java Error will pass through to top and stop the script.
+                loadError = true;
                 sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                 throw new Error("Script overran resource limits.");
             }
         };
-        
+
         //Queue up a new task.
         currTask = CompletableFuture.runAsync(
                 () -> {
@@ -113,9 +115,10 @@ public class CustomScript {
                         setInstructionLimitPermission(PlayerTrustManager.MAX_INIT_ID);
                         scriptThread.resume(LuaValue.NIL);
                     } catch (LuaError error) {
+                        loadError = true;
                         error.printStackTrace();
                     }
-                    
+
                     currTask = null;
                 }
         );
@@ -130,7 +133,7 @@ public class CustomScript {
         load(data, tag.getString("src"));
     }
 
-    
+
     //Sets up and creates all the LuaEvents for this script
     public void setupEvents(){
         //Foreach event
@@ -138,11 +141,11 @@ public class CustomScript {
             //Add a new event created from the name here
             allEvents.put(entry.getKey(), entry.getValue().apply(entry.getKey()));
         }
-        
+
         tickLuaEvent = allEvents.get("tick");
         renderLuaEvent = allEvents.get("render");
     }
-    
+
     //Sets up global variables
     public void setupGlobals() {
         //Log! Only for local player.
@@ -174,28 +177,30 @@ public class CustomScript {
         globalMetaTable.set("__newindex", new ThreeArgFunction() {
             @Override
             public LuaValue call(LuaValue table, LuaValue key, LuaValue value) {
-                if(table != scriptGlobals)
+                if(table != scriptGlobals) {
+                    loadError = true;
                     error("Can't use global table metatable on other tables!");
-                
+                }
+
                 if(value.isfunction() && key.isstring()){
                     String funcName = key.checkjstring();
                     LuaFunction func = value.checkfunction();
-                    
+
                     LuaEvent possibleEvent = allEvents.get(funcName);
-                    
+
                     if(possibleEvent != null){
                         possibleEvent.subscribe(func);
                         return NIL;
                     }
                 }
                 table.rawset(key, value);
-                
+
                 return NIL;
             }
         });
-        
+
         scriptGlobals.setmetatable(globalMetaTable);
-        
+
         FiguraLuaManager.setupScriptAPI(this);
     }
 
@@ -237,7 +242,7 @@ public class CustomScript {
         //Prevents threading memory errors and also ensures that "long" ticks and events and such are penalized.
         if (tickLuaEvent == null || currTask == null || !currTask.isDone())
             return;
-        
+
         onRender(deltaTime);
     }
 
@@ -246,6 +251,7 @@ public class CustomScript {
         try {
             tickLuaEvent.call();
         } catch (Exception error) {
+            loadError = true;
             tickLuaEvent = null;
             if(error instanceof LuaError)
                 logLuaError((LuaError) error);
@@ -258,6 +264,7 @@ public class CustomScript {
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
         } catch (Exception error) {
+            loadError = true;
             renderLuaEvent = null;
             if(error instanceof LuaError)
                 logLuaError((LuaError) error);
@@ -284,7 +291,8 @@ public class CustomScript {
         //Never even log errors for other players, only the local player.
         if (playerData != PlayerDataManager.localPlayer)
             return;
-        
+
+        loadError = true;
         String msg = error.getMessage();
         msg = msg.replace("\t", "   ");
         String[] messageParts = msg.split("\n");
@@ -292,7 +300,7 @@ public class CustomScript {
         for (String part : messageParts) {
             sendChatMessage(new LiteralText(part).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
         }
-        
+
         error.printStackTrace();
     }
 
@@ -318,19 +326,19 @@ public class CustomScript {
     public static void sendChatMessage(Text text) {
         MinecraftClient.getInstance().inGameHud.getChatHud().addMessage(text);
     }
-    
+
     //--Vanilla Modifications--
 
     public VanillaModelPartCustomization getOrMakePartCustomization(String accessor){
         VanillaModelPartCustomization currCustomization = getPartCustomization(accessor);
-        
+
         if(currCustomization == null){
             currCustomization = new VanillaModelPartCustomization();
             allCustomizations.put(accessor, currCustomization);
         }
         return currCustomization;
     }
-    
+
     public VanillaModelPartCustomization getPartCustomization(String accessor){
         return allCustomizations.get(accessor);
     }

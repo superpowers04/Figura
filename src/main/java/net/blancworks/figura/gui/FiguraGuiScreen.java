@@ -127,9 +127,9 @@ public class FiguraGuiScreen extends Screen {
         int searchBoxWidth = paneWidth - 5;
         searchBoxX = 7;
         this.searchBox = new TextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("gui.figura.button.search"));
-        this.searchBox.setChangedListener((string_1) -> this.modelFileList.filter(string_1, false));
-        modelFileList = new ModelFileListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, this.modelFileList, this, modelFileListState);
-        this.modelFileList.setLeftPos(5);
+        this.searchBox.setChangedListener((string_1) -> modelFileList.filter(string_1, false));
+        modelFileList = new ModelFileListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, modelFileList, this, modelFileListState);
+        modelFileList.setLeftPos(5);
         this.addChild(modelFileList);
         this.addChild(searchBox);
 
@@ -156,41 +156,43 @@ public class FiguraGuiScreen extends Screen {
 
         //delete button
         deleteButton = new TexturedButtonWidget(
-                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 - modelBgSize / 2,
-                25, 25,
-                0, 0, 25,
-                deleteTexture, 50, 50,
-                (bx) -> {
-                    if(isHoldingShift)
-                        FiguraNetworkManager.deleteModel();
-                }
+            this.width / 2 + modelBgSize / 2 + 4, this.height / 2 - modelBgSize / 2,
+            25, 25,
+            0, 0, 25,
+            deleteTexture, 50, 50,
+            (bx) -> {
+                if(isHoldingShift)
+                    FiguraNetworkManager.deleteModel();
+            }
         );
         this.addButton(deleteButton);
 
         //upload button
         uploadButton = new TexturedButtonWidget(
-                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25,
-                25, 25,
-                0, 0, 25,
-                uploadTexture, 25, 50,
-                (bx) -> FiguraNetworkManager.postModel()
+            this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25,
+            25, 25,
+            0, 0, 25,
+            uploadTexture, 25, 50,
+            (bx) -> FiguraNetworkManager.postModel()
         );
         this.addButton(uploadButton);
 
         //reload local button
         reloadButton = new TexturedButtonWidget(
-                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25 - 30,
-                25, 25,
-                0, 0, 25,
-                reloadTexture, 25, 50,
-                (bx) -> PlayerDataManager.clearLocalPlayer()
+            this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25 - 30,
+            25, 25,
+            0, 0, 25,
+            reloadTexture, 25, 50,
+            (bx) -> PlayerDataManager.clearLocalPlayer()
         );
         this.addButton(reloadButton);
 
         deleteButton.active = false;
 
+        //reload status
         if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
-            nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
+            if (PlayerDataManager.lastLoadedFileName != null)
+                nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
             modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
             fileSizeText = getFileSizeText();
             scriptText = getScriptText();
@@ -207,7 +209,18 @@ public class FiguraGuiScreen extends Screen {
 
         if (tickCount > 20) {
             tickCount = 0;
+
+            //reload model list
             modelFileList.reloadFilters();
+
+            //reload data
+            if (PlayerDataManager.localPlayer.model != null) {
+                if (PlayerDataManager.lastLoadedFileName == null)
+                    nameText = null;
+                modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
+                fileSizeText = getFileSizeText();
+                scriptText = getScriptText();
+            }
         }
     }
 
@@ -245,10 +258,9 @@ public class FiguraGuiScreen extends Screen {
         searchBox.render(matrices, mouseX, mouseY, delta);
 
         //deprecated warning
-        if (rawNameText != null)
-            if (rawNameText.getString().endsWith("*"))
-                drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
-        
+        if (rawNameText != null && rawNameText.getString().endsWith("*"))
+            drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
+
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
 
@@ -265,7 +277,7 @@ public class FiguraGuiScreen extends Screen {
             renderTooltip(matrices, reloadTooltip, mouseX, mouseY);
             matrices.pop();
         }
-        
+
         if (!deleteButton.active) {
             deleteButton.active = true;
             boolean mouseOver = deleteButton.isMouseOver(mouseX, mouseY);
@@ -325,18 +337,29 @@ public class FiguraGuiScreen extends Screen {
             scriptText = getScriptText();
 
         }, Util.getMainWorkerExecutor());
-
     }
 
     public MutableText getScriptText() {
-        boolean scriptLoaded = PlayerDataManager.localPlayer.script != null;
-
         MutableText fsText = new LiteralText("Script: ");
-        if (scriptLoaded) {
-            TranslatableText text = new TranslatableText("gui.script.ok");
-            text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
+
+        if (PlayerDataManager.localPlayer.script != null) {
+            TranslatableText text;
+
+            //error loading script
+            if (PlayerDataManager.localPlayer.script.loadError) {
+                text = new TranslatableText("gui.script.error");
+                text.setStyle(text.getStyle().withColor(TextColor.parse("red")));
+            }
+            //loading okei
+            else {
+                text = new TranslatableText("gui.script.ok");
+                text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
+            }
+
             fsText.append(text);
-        } else {
+        }
+        //script not found
+        else {
             TranslatableText text = new TranslatableText("gui.script.none");
             text.setStyle(text.getStyle().withColor(TextColor.parse("white")));
             fsText.append(text);
@@ -367,18 +390,17 @@ public class FiguraGuiScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         //set anchor rotation
-        if (mouseX >= this.width / 2.0 - modelBgSize / 2.0 && mouseX <= this.width / 2.0 + modelBgSize / 2.0) {
-            if (mouseY >= this.height / 2.0 - modelBgSize / 2.0 && mouseY <= this.height / 2.0 + modelBgSize / 2.0) {
-                //get starter mouse pos
-                anchorX = mouseX;
-                anchorY = mouseY;
+        if (mouseX >= this.width / 2.0 - modelBgSize / 2.0 && mouseX <= this.width / 2.0 + modelBgSize / 2.0 &&
+                mouseY >= this.height / 2.0 - modelBgSize / 2.0 && mouseY <= this.height / 2.0 + modelBgSize / 2.0) {
+            //get starter mouse pos
+            anchorX = mouseX;
+            anchorY = mouseY;
 
-                //get starter rotation angles
-                anchorAngleX = angleX;
-                anchorAngleY = angleY;
+            //get starter rotation angles
+            anchorAngleX = angleX;
+            anchorAngleY = angleY;
 
-                canRotate = true;
-            }
+            canRotate = true;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
