@@ -172,35 +172,35 @@ public class FiguraGuiScreen extends Screen {
 
         //delete button
         deleteButton = new TexturedButtonWidget(
-            this.width / 2 + modelBgSize / 2 + 4, this.height / 2 - modelBgSize / 2,
-            25, 25,
-            0, 0, 25,
-            deleteTexture, 50, 50,
-            (bx) -> {
-                if(isHoldingShift)
-                    FiguraNetworkManager.deleteModel();
-            }
+                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 - modelBgSize / 2,
+                25, 25,
+                0, 0, 25,
+                deleteTexture, 50, 50,
+                (bx) -> {
+                    if(isHoldingShift)
+                        FiguraNetworkManager.deleteModel();
+                }
         );
         this.addButton(deleteButton);
         deleteButton.active = false;
 
         //upload button
         uploadButton = new TexturedButtonWidget(
-            this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25,
-            25, 25,
-            0, 0, 25,
-            uploadTexture, 25, 50,
-            (bx) -> FiguraNetworkManager.postModel()
+                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25,
+                25, 25,
+                0, 0, 25,
+                uploadTexture, 25, 50,
+                (bx) -> FiguraNetworkManager.postModel()
         );
         this.addButton(uploadButton);
 
         //reload local button
         reloadButton = new TexturedButtonWidget(
-            this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25 - 30,
-            25, 25,
-            0, 0, 25,
-            reloadTexture, 25, 50,
-            (bx) -> PlayerDataManager.clearLocalPlayer()
+                this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25 - 30,
+                25, 25,
+                0, 0, 25,
+                reloadTexture, 25, 50,
+                (bx) -> PlayerDataManager.clearLocalPlayer()
         );
         this.addButton(reloadButton);
 
