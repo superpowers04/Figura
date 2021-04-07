@@ -38,7 +38,9 @@ public class PlayerTrustManager {
     public static final Identifier MAX_COMPLEXITY_ID = new Identifier("setting", "maxcomplexity");
     public static final Identifier ALLOW_VANILLA_MOD_ID = new Identifier("setting", "allowvanillaedit");
     public static final Identifier MAX_PARTICLES_ID = new Identifier("setting", "maxparticles");
+    public static final Identifier MAX_SOUND_EFFECTS_ID = new Identifier("setting", "maxsfx");
 
+    
     public static Map<Identifier, TrustContainer> allContainers = new Object2ObjectOpenHashMap<>();
     public static List<Identifier> allGroups = new ArrayList<>();
     public static List<Identifier> defaultGroups = new ArrayList<>();
@@ -98,6 +100,16 @@ public class PlayerTrustManager {
             min = 0;
             max = 65;
             value = 5;
+            integer = true;
+            stepSize = 1;
+            isSlider = true;
+            allowInfinity = true;
+        }});
+
+        registerPermissionSetting(new PermissionFloatSetting(MAX_SOUND_EFFECTS_ID) {{
+            min = 0;
+            max = 65;
+            value = 0;
             integer = true;
             stepSize = 1;
             isSlider = true;

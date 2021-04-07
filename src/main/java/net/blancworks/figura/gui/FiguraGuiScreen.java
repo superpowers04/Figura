@@ -30,10 +30,14 @@ import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.math.RoundingMode;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -214,7 +218,7 @@ public class FiguraGuiScreen extends Screen {
             modelFileList.reloadFilters();
 
             //reload data
-            if (PlayerDataManager.localPlayer.model != null) {
+            if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
                 if (PlayerDataManager.lastLoadedFileName == null)
                     nameText = null;
                 modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());

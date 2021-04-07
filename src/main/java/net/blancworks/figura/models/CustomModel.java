@@ -2,7 +2,6 @@ package net.blancworks.figura.models;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.model.ModelPart;
@@ -16,7 +15,6 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayList;
 

@@ -4,10 +4,9 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.VectorAPI;
-import net.blancworks.figura.lua.api.model.ArmorModelAPI;
-import net.blancworks.figura.lua.api.model.CustomModelAPI;
-import net.blancworks.figura.lua.api.model.VanillaModelAPI;
+import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
+import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.lua.api.world.WorldAPI;
 import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
 import net.minecraft.util.Identifier;
@@ -23,7 +22,6 @@ import org.luaj.vm2.lib.jse.JseMathLib;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class FiguraLuaManager {
 
@@ -56,7 +54,10 @@ public class FiguraLuaManager {
         apiSuppliers.put(PlayerEntityAPI.getID(), PlayerEntityAPI::getForScript);
         apiSuppliers.put(WorldAPI.getID(), WorldAPI::getForScript);
         apiSuppliers.put(ArmorModelAPI.getID(), ArmorModelAPI::getForScript);
+        apiSuppliers.put(ElytraModelAPI.getID(), ElytraModelAPI::getForScript);
+        apiSuppliers.put(ItemModelAPI.getID(), ItemModelAPI::getForScript);
         apiSuppliers.put(VectorAPI.getID(), VectorAPI::getForScript);
+        apiSuppliers.put(SoundAPI.getID(), SoundAPI::getForScript);
     }
 
     public static void registerEvents(){

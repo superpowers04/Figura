@@ -16,7 +16,6 @@ import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
-import java.awt.*;
 import java.util.ArrayList;
 
 public class VectorAPI {
