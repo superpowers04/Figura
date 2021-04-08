@@ -79,7 +79,7 @@ public class CustomModel {
     }
     
     public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve){
-        VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
+        VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(playerData.texture.id));
 
         if (owner.script != null) {
             owner.script.render(FiguraMod.deltaTime);
