@@ -15,6 +15,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayList;
 
@@ -26,31 +27,14 @@ public class CustomModel {
 
     //The size of the avatar in bytes, either from when it was downloaded, or otherwise.
     public long totalSize = 0;
+    
+    public int lastComplexity = 0;
 
 
     public int getRenderComplexity() {
-
-        int ret = 0;
-
-        for (CustomModelPart all_part : allParts) {
-            ret += getComplexityRecursive(all_part);
-        }
-
-        return ret;
+        return lastComplexity;
     }
-
-    private int getComplexityRecursive(CustomModelPart part) {
-        int ret = 0;
-
-        ret += part.vertexCount / 4;
-
-        for (CustomModelPart child : part.children) {
-            ret += getComplexityRecursive(child);
-        }
-
-        return ret;
-    }
-
+    
     public int getMaxRenderAmount() {
         Identifier playerId = new Identifier("players", this.owner.playerId.toString());
         TrustContainer tc = PlayerTrustManager.getContainer(playerId);
@@ -59,6 +43,7 @@ public class CustomModel {
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         int leftToRender = getMaxRenderAmount();
+        int maxRender = leftToRender;
 
         if (owner.script != null) {
             owner.script.render(FiguraMod.deltaTime);
@@ -81,6 +66,8 @@ public class CustomModel {
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
                 
                 leftToRender = part.render(leftToRender, matrices, vertices, light, overlay);
+                
+                lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
             } catch (Exception e) {
                 e.printStackTrace();
             }

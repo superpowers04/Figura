@@ -13,6 +13,7 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
@@ -57,6 +58,9 @@ public class CustomScript {
     //Vanilla model part customizations made via this script
     public Map<String, VanillaModelPartCustomization> allCustomizations = new HashMap<>();
 
+    public float particleSpawnCount = 0;
+    public float soundSpawnCount = 0;
+    
     public CustomScript() {}
 
     public CustomScript(PlayerData data, String content) {
@@ -230,6 +234,12 @@ public class CustomScript {
 
     //Called whenever the global tick event happens
     public void tick() {
+        
+        if(particleSpawnCount > 0)
+            particleSpawnCount = MathHelper.clamp(particleSpawnCount - (1/20f), 0, 999);
+        if(soundSpawnCount > 0)
+            soundSpawnCount = MathHelper.clamp(soundSpawnCount - (1/20f), 0, 999);
+        
         //If the tick function exists, call it.
         if (tickLuaEvent != null && lastTickFunction == null || lastTickFunction.isDone())
             lastTickFunction = queueTask(this::onTick);

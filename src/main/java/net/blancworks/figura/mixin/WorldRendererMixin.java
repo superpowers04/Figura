@@ -47,7 +47,7 @@ public class WorldRendererMixin {
                     if (playerData.script != null)
                         playerData.script.render(FiguraMod.deltaTime);
 
-                    VertexConsumer vc = FiguraMod.vertexConsumerProvider.getBuffer(RenderLayer.getEntityCutout(playerData.texture.id));
+                    VertexConsumer vc = FiguraMod.vertexConsumerProvider.getBuffer(RenderLayer.getEntityCutoutNoCull(playerData.texture.id));
 
                     for (CustomModelPart part : playerData.model.allParts) {
                         if (part.parentType == CustomModelPart.ParentType.WORLD) {

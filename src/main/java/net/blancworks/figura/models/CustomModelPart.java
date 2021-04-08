@@ -58,10 +58,10 @@ public class CustomModelPart {
             return leftToRender;
         }
         MatrixStack tempStack = null;
-        
+
         //if(tempStack != null)
-            //matrices = tempStack;
-        
+        //matrices = tempStack;
+
         matrices.push();
 
         try {
@@ -92,7 +92,7 @@ public class CustomModelPart {
 
                 float multiply = 57.2958f;
                 this.rot.multiplyComponentwise(multiply, multiply, multiply);
-            } else if(parentType != CustomModelPart.ParentType.Model){
+            } else if (parentType != CustomModelPart.ParentType.Model) {
                 PlayerEntityModel playerModel = FiguraMod.currentModel;
 
                 switch (parentType) {
@@ -165,9 +165,9 @@ public class CustomModelPart {
 
             //Every 4 verts (1 face)
             if (i % 4 == 0) {
-                leftToRender--;
+                leftToRender -= 4;
 
-                if (leftToRender == 0)
+                if (leftToRender <= 0)
                     break;
             }
         }
@@ -175,7 +175,7 @@ public class CustomModelPart {
         for (CustomModelPart child : this.children) {
             if (leftToRender == 0)
                 break;
-            if(child.parentType == CustomModelPart.ParentType.WORLD)
+            if (child.parentType == CustomModelPart.ParentType.WORLD)
                 continue;
             leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor);
         }
@@ -371,7 +371,7 @@ public class CustomModelPart {
     /**
      * Writes a model part to an NBT compound.
      *
-     * @param nbt the NBT compound
+     * @param nbt  the NBT compound
      * @param part the model part
      */
     public static void writeToNbt(CompoundTag nbt, CustomModelPart part) {

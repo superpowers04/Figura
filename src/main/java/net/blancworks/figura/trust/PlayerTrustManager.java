@@ -88,10 +88,10 @@ public class PlayerTrustManager {
 
         registerPermissionSetting(new PermissionFloatSetting(MAX_COMPLEXITY_ID) {{
             min = 0;
-            max = 32 * 65;
-            value = 32 * 64;
+            max = 24 * 12 * 4 * 4;
+            value = 24 * 12 * 4;
             integer = true;
-            stepSize = 32;
+            stepSize = 24;
             isSlider = true;
             allowInfinity = true;
         }});
