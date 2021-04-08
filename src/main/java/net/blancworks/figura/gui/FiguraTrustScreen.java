@@ -11,7 +11,7 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -110,13 +110,15 @@ public class FiguraTrustScreen extends Screen {
 
             PlayerTrustManager.saveToDisk();
 
-            this.client.openScreen((Screen) parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
-        this.addButton(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
             //Open the trust menu from the Figura Wiki
-            Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
-        }));
+            if (bl)
+                Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
+            this.client.openScreen(this);
+        }, "https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu", true))));
 
         this.addButton(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> {
             PlayerDataManager.clearCache();
@@ -289,7 +291,7 @@ public class FiguraTrustScreen extends Screen {
     static void overlayBackground(int x1, int y1, int x2, int y2, int red, int green, int blue, int startAlpha, int endAlpha) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        Objects.requireNonNull(MinecraftClient.getInstance()).getTextureManager().bindTexture(DrawableHelper.OPTIONS_BACKGROUND_TEXTURE);
+        Objects.requireNonNull(MinecraftClient.getInstance()).getTextureManager().bindTexture(OPTIONS_BACKGROUND_TEXTURE);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         buffer.begin(7, VertexFormats.POSITION_TEXTURE_COLOR);
         buffer.vertex(x1, y2, 0.0D).texture(x1 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
