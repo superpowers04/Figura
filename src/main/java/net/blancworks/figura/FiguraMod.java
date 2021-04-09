@@ -88,43 +88,12 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static Path getModContentDirectory() {
-        Path oldPath = FabricLoader.INSTANCE.getGameDir().normalize().getParent().resolve("figura");
         Path p = FabricLoader.INSTANCE.getGameDir().normalize().resolve("figura");
         try {
             Files.createDirectories(p);
-
-            if (!oldPath.equals(p)) {
-                if (Files.exists(oldPath)) {
-                    copyDirectory(oldPath.toString(), p.toString());
-                    deleteDirectory(oldPath.toFile());
-                }
-            }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return p;
-    }
-
-    public static void copyDirectory(String sourceDirectoryLocation, String destinationDirectoryLocation) throws IOException {
-        Files.walk(Paths.get(sourceDirectoryLocation))
-                .forEach(source -> {
-                    Path destination = Paths.get(destinationDirectoryLocation, source.toString()
-                            .substring(sourceDirectoryLocation.length()));
-                    try {
-                        Files.copy(source, destination);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-    }
-
-    static boolean deleteDirectory(File directoryToBeDeleted) {
-        File[] allContents = directoryToBeDeleted.listFiles();
-        if (allContents != null) {
-            for (File file : allContents) {
-                deleteDirectory(file);
-            }
-        }
-        return directoryToBeDeleted.delete();
     }
 }
