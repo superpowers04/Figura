@@ -5,7 +5,6 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
@@ -19,7 +18,8 @@ import net.minecraft.util.Identifier;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -46,15 +46,16 @@ public class PlayerData {
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel vanillaModel;
 
+    //Extra textures for the model (like emission)
     public final List<FiguraTexture> extraTextures = new ArrayList<>();
 
     public PlayerEntity lastEntity;
 
-    public boolean isLoaded = false;
-    public LoadType loadType = LoadType.NONE;
-
+    //The last time we checked for a hash
     public Date lastHashCheckTime = new Date();
+    //The last hash code of the avatar.
     public String lastHash = "";
+    //True if the model needs to be re-loaded due to a hash mismatch.
     public boolean isInvalidated = false;
 
     private Identifier trustIdentifier;
@@ -81,8 +82,6 @@ public class PlayerData {
         //You cannot save a model that is incomplete.
         if (model == null || texture == null)
             return false;
-
-        nbt.putIntArray("version", CURRENT_VERSION);
 
         //Put ID.
         nbt.putUuid("id", playerId);
@@ -130,33 +129,38 @@ public class PlayerData {
      * @param nbt the nbt to read
      */
     public void readNbt(CompoundTag nbt) {
-        int[] version = nbt.getIntArray("version");
-
         playerId = nbt.getUuid("id");
 
-        //VERSION CHECKING.
-        if (version != null) {
-            boolean success = compareVersions(version);
-
-            if (!success)
-                return;
-        }
-
         try {
+            //Create model on main thread.
             CompoundTag modelNbt = (CompoundTag) nbt.get("model");
             model = new CustomModel();
-            model.readNbt(modelNbt);
-            model.owner = this;
+
+            //Load model on off-thread.
+            FiguraMod.doTask(() -> {
+                try {
+                    model.readNbt(modelNbt);
+                    model.owner = this;
+                    model.isDone = true;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
+            //Create texture on main thread
             CompoundTag textureNbt = (CompoundTag) nbt.get("texture");
             texture = new FiguraTexture();
             texture.id = new Identifier("figura", playerId.toString());
             getTextureManager().registerTexture(texture.id, texture);
-            texture.readNbt(textureNbt);
+
+            //Load texture on off-thread
+            FiguraMod.doTask(() -> {
+                texture.readNbt(textureNbt);
+            });
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -179,9 +183,12 @@ public class PlayerData {
                 for (Tag element : textureList) {
                     FiguraTexture newTexture = new FiguraTexture();
                     newTexture.id = new Identifier("figura", playerId.toString() + newTexture.type.toString());
-                    newTexture.readNbt((CompoundTag) element);
                     getTextureManager().registerTexture(newTexture.id, newTexture);
                     extraTextures.add(newTexture);
+
+                    FiguraMod.doTask(() -> {
+                        newTexture.readNbt((CompoundTag) element);
+                    });
                 }
             }
         } catch (Exception e) {
@@ -211,11 +218,6 @@ public class PlayerData {
 
     //Ticks from client.
     public void tick() {
-        if (!this.isLoaded) {
-            this.tickLoads();
-            return;
-        }
-
         if (this.isInvalidated)
             PlayerDataManager.clearPlayer(playerId);
 
@@ -244,59 +246,6 @@ public class PlayerData {
         }
     }
 
-    public void tickLoads() {
-        switch (loadType) {
-            case NONE:
-                loadType = LoadType.LOCAL;
-                break;
-            case LOCAL:
-                try {
-                    loadLocal();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
-            case SERVER:
-                try {
-                    loadServer();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                break;
-        }
-    }
-
-    /**
-     * Attempts to load assets locally of disk.
-     * @throws Exception
-     */
-    protected void loadLocal() throws Exception {
-        Path localPath = FabricLoader.getInstance().getGameDir().getParent().resolve("model_files").resolve("cache").resolve(playerId.toString() + ".nbt");
-
-        //If no local cache exists for the player in question, we switch to server loading.
-        if (!Files.exists(localPath)) {
-            loadType = LoadType.SERVER;
-            return;
-        }
-
-        loadFromNbtFile(localPath);
-        isLoaded = true;
-    }
-
-    /**
-     * Attempts to load assets off of the server
-     */
-    protected void loadServer() {
-        loadType = LoadType.NONE;
-        isLoaded = true;
-    }
-
-
-    public void loadFromNbtFile(Path path) throws Exception {
-        DataInputStream input = new DataInputStream(new FileInputStream(path.toFile()));
-        loadFromNbt(input);
-    }
-
     public void loadFromNbt(DataInputStream input) throws Exception {
         CompoundTag nbt = NbtIo.readCompressed(input);
 
@@ -305,39 +254,37 @@ public class PlayerData {
         getFileSize();
     }
 
-
-    //VERSION
-    //FORMAT IS
-    //0 = mega version for huge api changes to the fundamentals of the loading system
-    //1 = major version, for compatibility-breaking api changes
-    //2 = minor version, for non-compat breaking api changes
-    static final int[] CURRENT_VERSION = new int[3];
-
-    static {
-        CURRENT_VERSION[0] = 0;
-        CURRENT_VERSION[1] = 0;
-        CURRENT_VERSION[2] = 1;
-    }
-
-    public boolean compareVersions(int[] version) {
-        if (version[0] != CURRENT_VERSION[0]) {
-            System.out.printf("MEGA VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)", version[0], version[1], version[2], CURRENT_VERSION[0], CURRENT_VERSION[1], CURRENT_VERSION[2]);
-            return false;
-        }
-        if (version[1] != CURRENT_VERSION[1]) {
-            System.out.printf("MAJOR VERSION DIFFERENCE BETWEEN FILE VERSION (%i-%i-%i) AND MOD VERSION (%i-%i-%i)", version[0], version[1], version[2], CURRENT_VERSION[0], CURRENT_VERSION[1], CURRENT_VERSION[2]);
-            return false;
-        }
-        return true;
-    }
-
     public TrustContainer getTrustContainer() {
         return PlayerTrustManager.getContainer(getTrustIdentifier());
     }
 
-    public enum LoadType {
-        NONE,
-        LOCAL,
-        SERVER
+    //Saves this playerdata to the cache.
+    public void saveToCache(UUID id) {
+        
+        //We run this as a task to make sure all the previous load operations are done (since those are all also tasks)
+        FiguraMod.doTask(() -> {
+            Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
+
+            String[] splitID = id.toString().split("-");
+
+            for (int i = 0; i < splitID.length; i++) {
+                if (i != splitID.length - 1)
+                    destinationPath = destinationPath.resolve(splitID[i]);
+            }
+
+            Path nbtFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".nbt");
+            Path hashFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".hsh");
+
+            try {
+                CompoundTag targetTag = new CompoundTag();
+                this.writeNbt(targetTag);
+
+                Files.createDirectories(nbtFilePath.getParent());
+                NbtIo.writeCompressed(targetTag, new FileOutputStream(nbtFilePath.toFile()));
+                Files.write(hashFilePath, this.lastHash.getBytes(StandardCharsets.UTF_8));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 }

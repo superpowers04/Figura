@@ -9,8 +9,8 @@ import net.blancworks.figura.gui.widgets.ModelFileListWidget;
 import net.blancworks.figura.gui.widgets.TexturedButtonWidget;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -355,7 +355,7 @@ public class FiguraGuiScreen extends Screen {
 
         CompletableFuture.runAsync(() -> {
             for (int i = 0; i < 10; i++) {
-                if (PlayerDataManager.localPlayer.texture.ready) {
+                if (PlayerDataManager.localPlayer.texture.isDone) {
                     break;
                 }
                 try {

@@ -3,6 +3,7 @@ package net.blancworks.figura.lua;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -24,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-public class CustomScript {
+public class CustomScript extends FiguraAsset {
 
     public PlayerData playerData;
     public String source;
@@ -122,7 +123,9 @@ public class CustomScript {
                         error.printStackTrace();
                     }
 
+                    isDone = true;
                     currTask = null;
+                    FiguraMod.LOGGER.warn("Script Loading Finished");
                 }
         );
 
@@ -241,8 +244,11 @@ public class CustomScript {
             soundSpawnCount = MathHelper.clamp(soundSpawnCount - (1/20f), 0, 999);
         
         //If the tick function exists, call it.
-        if (tickLuaEvent != null && lastTickFunction == null || lastTickFunction.isDone())
+        if (tickLuaEvent != null) {
+            if(lastTickFunction != null && !lastTickFunction.isDone())
+                return;
             lastTickFunction = queueTask(this::onTick);
+        }
     }
 
     //Called whenever the game renders a new frame with this avatar in view
@@ -256,6 +262,8 @@ public class CustomScript {
     }
 
     public void onTick() {
+        if(!isDone)
+            return;
         if(tickLuaEvent == null)
             return;
         
@@ -272,6 +280,8 @@ public class CustomScript {
     }
 
     public void onRender(float deltaTime) {
+        if(!isDone)
+            return;
         if(renderLuaEvent == null)
             return;
         

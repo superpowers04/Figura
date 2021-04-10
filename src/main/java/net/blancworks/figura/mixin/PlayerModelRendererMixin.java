@@ -31,7 +31,7 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
             PlayerDataManager.checkForPlayerDataRefresh(playerData);
 
             if (playerData.model != null) {
-                if (playerData.texture == null || !playerData.texture.ready)
+                if (playerData.texture == null || !playerData.texture.isDone)
                     return;
 
                 VertexConsumer actualConsumer = FiguraMod.vertexConsumerProvider.getBuffer(RenderLayer.getEntityTranslucent(playerData.texture.id));
@@ -42,7 +42,7 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
                     for (int i = 0; i < playerData.extraTextures.size(); i++) {
                         FiguraTexture texture = playerData.extraTextures.get(i);
 
-                        if (!texture.ready) {
+                        if (!texture.isDone) {
                             continue;
                         }
 

@@ -6,14 +6,10 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.util.Util;
 
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -91,132 +87,133 @@ public final class PlayerDataManager {
         SERVER_REQUESTED_PLAYERS.add(id);
 
         try {
+            FiguraMod.doTask(() -> {
 
+                //Attempt to load from cache first.
+                if(!attemptCacheLoad(id, targetData))
+                    //If cache load fails or is invalid, load from server.
+                    loadFromNetwork(id, targetData);
+                
+                SERVER_REQUESTED_PLAYERS.remove(id);
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    //Loads the model out of the local cache, if the file for that exists.
+    //Returns true if loaded from cache.
+    //Cache load only happens if the hash on the server matches the local hash, meaning the avatar has not changed.
+    public static boolean attemptCacheLoad(UUID id, PlayerData targetData){
+        Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
+
+        String[] splitID = id.toString().split("-");
+
+        for (int i = 0; i < splitID.length; i++) {
+            if (i != splitID.length - 1)
+                destinationPath = destinationPath.resolve(splitID[i]);
+        }
+
+        Path nbtFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".nbt");
+        Path hashFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".hsh");
+
+        try {
+            if (Files.exists(nbtFilePath) && Files.exists(hashFilePath)) {
+                String hash = Files.readAllLines(hashFilePath).get(0);
+                String serverHash = hash;
+
+                try {
+                    serverHash = FiguraNetworkManager.getAvatarHash(id).get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                if (serverHash.length() == 0)
+                    serverHash = hash;
+
+                if (serverHash.equals(hash)) {
+                    FileInputStream fis = new FileInputStream(nbtFilePath.toFile());
+                    DataInputStream dis = new DataInputStream(fis);
+
+                    targetData.loadFromNbt(dis);
+                    targetData.lastHash = hash;
+                    targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
+                    
+                    FiguraMod.LOGGER.debug("Used cached model.");
+                    return true;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+
+
+    //Loads the model off of the network.
+    public static void loadFromNetwork(UUID id, PlayerData targetData){
+        HttpURLConnection httpURLConnection = null;
+        
+        try {
+            //Object to fill data with
+            JsonObject targetObject = null;
+            
+            //Url for this asset file.
             URL url = new URL(String.format("%s/api/avatar/%s", FiguraNetworkManager.getServerURL(), id));
 
-            CompletableFuture.runAsync(() -> {
-
-                Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
-
-                String[] splitID = id.toString().split("-");
-
-                for (int i = 0; i < splitID.length; i++) {
-                    if (i != splitID.length - 1)
-                        destinationPath = destinationPath.resolve(splitID[i]);
+            //Open connection and set things up.
+            httpURLConnection = (HttpURLConnection) (url).openConnection(MinecraftClient.getInstance().getNetworkProxy());
+            httpURLConnection.setDoInput(true);
+            httpURLConnection.setDoOutput(false);
+            httpURLConnection.connect();
+            
+            //If response code is OK, we know we got a valid avatar, so load it.
+            if (httpURLConnection.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                //Put JSON into string
+                BufferedReader in = new BufferedReader(
+                        new InputStreamReader(httpURLConnection.getInputStream()));
+                String inputLine;
+                StringBuilder content = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    content.append(inputLine);
                 }
+                in.close();
+                //Parse JSON
+                JsonParser parser = new JsonParser();
+                targetObject = parser.parse(content.toString()).getAsJsonObject();
+            }
 
-                Path nbtFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".nbt");
-                Path hashFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".hsh");
+            httpURLConnection.disconnect();
 
-                try {
-                    if (Files.exists(nbtFilePath) && Files.exists(hashFilePath)) {
-                        String hash = Files.readAllLines(hashFilePath).get(0);
-                        String serverHash = hash;
 
-                        try {
-                            serverHash = FiguraNetworkManager.getAvatarHash(id).get();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+            //Attempt to load data from the JSON we just got from the server
+            if (targetObject != null) {
+                String dataString = targetObject.get("data").getAsString();
+                if (dataString.length() != 0) {
+                    byte[] dataAsBytes = Base64.getDecoder().decode(dataString);
+                    InputStream dataAsStream = new ByteArrayInputStream(dataAsBytes);
+                    DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
+                    receivedDataToStream.reset();
 
-                        if (serverHash.length() == 0)
-                            serverHash = hash;
+                    targetData.loadFromNbt(receivedDataToStream);
+                    targetData.lastHash = FiguraNetworkManager.getAvatarHash(id).get();
+                    targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
 
-                        if (serverHash.equals(hash)) {
-                            FileInputStream fis = new FileInputStream(nbtFilePath.toFile());
-                            DataInputStream dis = new DataInputStream(fis);
-
-                            targetData.loadFromNbt(dis);
-                            targetData.lastHash = hash;
-                            targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
-
-                            SERVER_REQUESTED_PLAYERS.remove(id);
-
-                            return;
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                    //Save the target to the cache if it's valid.
+                    targetData.saveToCache(id);
                 }
-
-                HttpURLConnection httpURLConnection = null;
-
-                //Object to fill data with
-                JsonObject targetObject = null;
-
-                try {
-                    httpURLConnection = (HttpURLConnection) (url).openConnection(MinecraftClient.getInstance().getNetworkProxy());
-                    httpURLConnection.setDoInput(true);
-                    httpURLConnection.setDoOutput(false);
-                    httpURLConnection.connect();
-
-                    if (httpURLConnection.getResponseCode() / 100 == 2) {
-
-                        //Put JSON into string
-                        BufferedReader in = new BufferedReader(
-                                new InputStreamReader(httpURLConnection.getInputStream()));
-                        String inputLine;
-                        StringBuilder content = new StringBuilder();
-                        while ((inputLine = in.readLine()) != null) {
-                            content.append(inputLine);
-                        }
-                        in.close();
-                        //Parse JSON
-                        JsonParser parser = new JsonParser();
-                        targetObject = parser.parse(content.toString()).getAsJsonObject();
-                    }
-
-                    httpURLConnection.disconnect();
-
-
-                    //Attempt to load data from the JSON we just got from the server
-                    if (targetObject != null) {
-                        String dataString = targetObject.get("data").getAsString();
-                        if (dataString.length() != 0) {
-                            byte[] dataAsBytes = Base64.getDecoder().decode(dataString);
-                            InputStream dataAsStream = new ByteArrayInputStream(dataAsBytes);
-                            DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
-                            receivedDataToStream.reset();
-
-                            targetData.loadFromNbt(receivedDataToStream);
-                            targetData.lastHash = FiguraNetworkManager.getAvatarHash(id).get();
-                            targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
-
-
-                            while (!targetData.texture.ready)
-                                Thread.sleep(50);
-                            saveToCache(targetData, nbtFilePath, hashFilePath);
-                        }
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-
-                    if (httpURLConnection != null) {
-                        httpURLConnection.disconnect();
-                    }
-                }
-
-                SERVER_REQUESTED_PLAYERS.remove(id);
-
-            }, Util.getMainWorkerExecutor());
+            }
         } catch (Exception e) {
             e.printStackTrace();
+
+            if (httpURLConnection != null) {
+                httpURLConnection.disconnect();
+            }
         }
+
     }
-
-    public static void saveToCache(PlayerData data, Path targetPath, Path targetHashPath) {
-        try {
-            CompoundTag targetTag = new CompoundTag();
-            data.writeNbt(targetTag);
-
-            Files.createDirectories(targetPath.getParent());
-            NbtIo.writeCompressed(targetTag, new FileOutputStream(targetPath.toFile()));
-            Files.write(targetHashPath, data.lastHash.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
+    
     public static void clearPlayer(UUID id) {
         TO_CLEAR.add(id);
 
