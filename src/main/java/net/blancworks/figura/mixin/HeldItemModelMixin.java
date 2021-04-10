@@ -37,9 +37,6 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
         PlayerData data = FiguraMod.currentData;
 
         try {
-
-            System.out.println("TEST");
-
             if (data != null && data.script != null && data.script.allCustomizations != null) {
                 customization = data.script.allCustomizations.get(arm == Arm.LEFT ? ItemModelAPI.VANILLA_LEFT_HAND : ItemModelAPI.VANILLA_RIGHT_HAND);
                 if (customization != null) {

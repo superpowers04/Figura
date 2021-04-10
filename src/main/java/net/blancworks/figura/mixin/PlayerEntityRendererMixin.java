@@ -81,6 +81,8 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
     @Inject(at = @At("RETURN"), method = "renderArm")
     private void postRenderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo ci) {
+        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer)(Object)this;
+        PlayerEntityModel model = realRenderer.getModel();
         PlayerData playerData = FiguraMod.currentData;
 
         if(playerData != null && playerData.model != null){
@@ -90,7 +92,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
             arm.pitch = 0;
 
-            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, player, arm, sleeve);
+            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, player, arm, sleeve, model);
         }
 
         FiguraMod.clearRenderingData();
