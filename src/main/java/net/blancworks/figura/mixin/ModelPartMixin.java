@@ -1,7 +1,9 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,69 +27,73 @@ public class ModelPartMixin implements ModelPartAccess {
     @Shadow
     public float roll;
 
-    private Vector3f figura$additionalPos = new Vector3f();
-    private Vector3f figura$additionalRot = new Vector3f();
-    
-    //Used sometimes for copying stuff to armor, or similar.
-    private Vector3f figura$lastAdditionalPos = new Vector3f();
-    private Vector3f figura$lastAdditionalRot = new Vector3f();
+    @Shadow
+    public boolean visible;
+    private VanillaModelPartCustomization figura$customization = null;
 
-    @Inject(at = @At("HEAD"), method = "rotate", cancellable = true)
+    private boolean prevVisible;
+
+    //Modify transformation matrices for this part
+    @Inject(at = @At("HEAD"), method = "rotate")
     public void onRotate(MatrixStack matrices, CallbackInfo info) {
-        if (figura$additionalPos != null) {
-            matrices.translate((pivotX + figura$additionalPos.getX()) / 16.0f, (pivotY + figura$additionalPos.getY()) / 16.0f, (pivotZ + figura$additionalPos.getZ()) / 16.0f);
-        } else {
-            matrices.translate(pivotX / 16.0f, pivotY / 16.0f, pivotZ / 16.0f);
+        if (figura$customization != null) {
+            if (figura$customization.pos != null) {
+                pivotX += figura$customization.pos.getX();
+                pivotY += figura$customization.pos.getY();
+                pivotZ += figura$customization.pos.getZ();
+            }
+
+            if (figura$customization.rot != null) {
+                pitch += figura$customization.rot.getX();
+                yaw += figura$customization.rot.getY();
+                roll += figura$customization.rot.getZ();
+            }
         }
+    }
 
-        if (figura$additionalRot != null) {
-            matrices.multiply(Vector3f.POSITIVE_Z.getRadialQuaternion(roll + figura$additionalRot.getZ()));
-            matrices.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw + figura$additionalRot.getY()));
-            matrices.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch + figura$additionalRot.getX()));
-        } else {
-            matrices.multiply(Vector3f.POSITIVE_Z.getRadialQuaternion(roll));
-            matrices.multiply(Vector3f.POSITIVE_Y.getRadialQuaternion(yaw));
-            matrices.multiply(Vector3f.POSITIVE_X.getRadialQuaternion(pitch));
+    //Restore matrices
+    @Inject(at = @At("RETURN"), method = "rotate")
+    public void postRotate(MatrixStack matrices, CallbackInfo info) {
+        if (figura$customization != null) {
+            if (figura$customization.pos != null) {
+                pivotX -= figura$customization.pos.getX();
+                pivotY -= figura$customization.pos.getY();
+                pivotZ -= figura$customization.pos.getZ();
+            }
+
+            if (figura$customization.rot != null) {
+                pitch -= figura$customization.rot.getX();
+                yaw -= figura$customization.rot.getY();
+                roll -= figura$customization.rot.getZ();
+            }
         }
-
-        info.cancel();
     }
 
-    @Inject(at = @At("RETURN"), method = "copyPositionAndRotation(Lnet/minecraft/client/model/ModelPart;)V")
-    public void copyPositionAndRotation(ModelPart modelPart, CallbackInfo ci) {
-        setAdditionalPos(((ModelPartAccess) modelPart).getAdditionalPos());
-        setAdditionalRot(((ModelPartAccess) modelPart).getAdditionalRot());
+    //Store/Modify visible state
+    @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V")
+    public void onRender(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha, CallbackInfo ci) {
+        prevVisible = visible;
+        if (figura$customization != null) {
+
+            if (visible && figura$customization.visible != null) {
+                visible = figura$customization.visible;
+            }
+        }
     }
 
-    @Override
-    public void setAdditionalPos(Vector3f v) {
-        figura$lastAdditionalPos = figura$additionalPos;
-        figura$additionalPos = v;
-    }
-
-    @Override
-    public void setAdditionalRot(Vector3f v) {
-        figura$lastAdditionalRot = figura$additionalRot;
-        figura$additionalRot = v;
-    }
-
-    @Override
-    public Vector3f getAdditionalPos() {
-        return figura$additionalPos;
+    //Restore visible state
+    @Inject(at = @At("RETURN"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V")
+    public void postRender(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha, CallbackInfo ci) {
+        visible = prevVisible;
     }
 
     @Override
-    public Vector3f getAdditionalRot() {
-        return figura$additionalRot;
+    public VanillaModelPartCustomization figura$getPartCustomization() {
+        return figura$customization;
     }
 
-    // @TODO remove?
-    public Vector3f getLastAdditionalPos() {
-        return figura$lastAdditionalPos;
+    @Override
+    public void figura$setPartCustomization(VanillaModelPartCustomization toSet) {
+        figura$customization = toSet;
     }
-
-    public Vector3f getLastAdditionalRot() {
-        return figura$lastAdditionalRot;
-    }
-    
 }
