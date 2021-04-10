@@ -86,6 +86,10 @@ public class CustomModel {
     }
 
     public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumer vertexConsumer, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve) {
+        
+        if(part.parentType == CustomModelPart.ParentType.RightArm)
+            part.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+        
         for (CustomModelPart child : part.children) {
             if (child.parentType == CustomModelPart.ParentType.RightArm) {
                 matrices.push();
