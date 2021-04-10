@@ -256,6 +256,9 @@ public class CustomScript {
     }
 
     public void onTick() {
+        if(tickLuaEvent == null)
+            return;
+        
         setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
         try {
             tickLuaEvent.call();
@@ -269,6 +272,10 @@ public class CustomScript {
     }
 
     public void onRender(float deltaTime) {
+        if(renderLuaEvent == null)
+            return;
+        
+        
         setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
