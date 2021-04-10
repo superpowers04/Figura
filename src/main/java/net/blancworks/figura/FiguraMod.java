@@ -35,11 +35,9 @@ public class FiguraMod implements ClientModInitializer {
 
     //Used during rendering.
     public static AbstractClientPlayerEntity currentPlayer;
-    public static PlayerEntityModel currentModel;
-    private static PlayerData currentData;
+    public static PlayerData currentData;
     public static VertexConsumerProvider vertexConsumerProvider;
     public static float deltaTime;
-    public static MatrixStack modelMatrix;
 
     private static final boolean USE_DEBUG_MODEL = true;
     private static WatchKey watchKey;
@@ -52,22 +50,19 @@ public class FiguraMod implements ClientModInitializer {
     //Set current player.
     //If there is a model loaded for the player, it'll be assigned here to the current model.
     //Otherwise, sends the model to the request list.
-    public static void setRenderingMode(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt, MatrixStack mdlMatrix) {
+    public static void setRenderingData(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt) {
         currentPlayer = player;
         currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
         currentData.vanillaModel = mdl;
         FiguraMod.vertexConsumerProvider = vertexConsumerProvider;
         deltaTime = dt;
-        modelMatrix = mdlMatrix;
-        currentModel = mdl;
     }
 
-    //Returns the current custom model for rendering. 
-    //Set earlier by the player render function, used in the renderer mixin.
-    public static PlayerData getCurrentData() {
-        PlayerData ret = currentData;
+    public static void clearRenderingData(){
+        currentPlayer = null;
         currentData = null;
-        return ret;
+        vertexConsumerProvider = null;
+        deltaTime = 0;
     }
 
     @Override

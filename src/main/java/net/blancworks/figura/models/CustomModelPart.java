@@ -67,7 +67,7 @@ public class CustomModelPart {
         try {
 
             if (this.isMimicMode) {
-                PlayerEntityModel model = FiguraMod.currentModel;
+                PlayerEntityModel model = FiguraMod.currentData.vanillaModel;
 
                 switch (this.parentType) {
                     case Head:
@@ -93,7 +93,7 @@ public class CustomModelPart {
                 float multiply = 57.2958f;
                 this.rot.multiplyComponentwise(multiply, multiply, multiply);
             } else if (parentType != CustomModelPart.ParentType.Model) {
-                PlayerEntityModel playerModel = FiguraMod.currentModel;
+                PlayerEntityModel playerModel = FiguraMod.currentData.vanillaModel;
 
                 switch (parentType) {
                     case Head:
