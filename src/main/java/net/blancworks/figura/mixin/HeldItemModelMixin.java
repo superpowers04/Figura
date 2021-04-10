@@ -52,10 +52,14 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
                     
                     matrices.push();
 
-                    matrices.translate(customization.pos.getX() / 16.0f, customization.pos.getY()/ 16.0f, customization.pos.getZ()/ 16.0f);
-                    matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(customization.rot.getZ()));
-                    matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(customization.rot.getY()));
-                    matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(customization.rot.getX()));
+                    if(customization.pos != null)
+                        matrices.translate(customization.pos.getX() / 16.0f, customization.pos.getY()/ 16.0f, customization.pos.getZ()/ 16.0f);
+                    
+                    if(customization.rot != null) {
+                        matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(customization.rot.getZ()));
+                        matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(customization.rot.getY()));
+                        matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(customization.rot.getX()));
+                    }
                 }
             }
         } catch (Exception e){
