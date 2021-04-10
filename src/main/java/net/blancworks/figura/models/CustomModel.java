@@ -73,7 +73,7 @@ public class CustomModel {
         }
     }
 
-    public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve) {
+    public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model) {
         VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(playerData.texture.id));
 
         if (owner.script != null) {
@@ -81,17 +81,26 @@ public class CustomModel {
         }
 
         for (CustomModelPart part : playerData.model.allParts) {
-            renderArmRecursive(part, playerData, matrices, vc, light, player, arm, sleeve);
+            renderArmRecursive(part, playerData, matrices, vc, light, player, arm, sleeve, model);
         }
     }
 
-    public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumer vertexConsumer, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve) {
-        
-        if(part.parentType == CustomModelPart.ParentType.RightArm)
+    public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumer vertexConsumer, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model) {
+
+        if (part.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm)
             part.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
-        
+        else if (part.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm)
+            part.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+
         for (CustomModelPart child : part.children) {
-            if (child.parentType == CustomModelPart.ParentType.RightArm) {
+            if (child.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm) {
+                matrices.push();
+
+                child.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+
+                matrices.pop();
+            }
+            else if (child.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm) {
                 matrices.push();
 
                 child.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
