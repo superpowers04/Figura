@@ -14,6 +14,7 @@ import java.sql.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 /**
@@ -42,7 +43,7 @@ public class LocalPlayerData extends PlayerData {
         if (this.loadedName != null)
             this.lastHash = "";
         super.tick();
-        
+
         this.tickFileWatchers();
     }
 
@@ -292,40 +293,38 @@ public class LocalPlayerData extends PlayerData {
             }
         }
 
-        /*//load extra textures
-        extraTextures.clear();
+        //Load extra textures
         try {
+            extraTextures.clear();
+            
             for (FiguraTexture.TextureType textureType : FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.keySet()) {
-                Path location;
+                Path location = null;
 
-                //zip is special because it only passes an input stream, if have one
+                //If this is a zip file
                 if (isZip) {
-                    ZipFile zipFile = new ZipFile(file);
-                    ZipEntry textureEntry = zipFile.getEntry("texture" + textureType.toString() + ".png");
+                    //Get entry
+                    ZipEntry fileEntry = modelZip.getEntry("texture" + textureType.toString() + ".png");
+                    //If there is an entry that matches this texture
+                    if (fileEntry != null)
+                        inputStream = modelZip.getInputStream(fileEntry);
+                } else { //If this is not a zip file 
 
-                    if (textureEntry != null) {
-
-                        FiguraTexture extraTexture = new FiguraTexture();
-                        extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
-                        extraTexture.filePath = null;
-                        extraTexture.inputStream = zipFile.getInputStream(textureEntry);
-                        getTextureManager().registerTexture(extraTexture.id, extraTexture);
-                        extraTexture.type = textureType;
-
-                        extraTextures.add(extraTexture);
+                    //Check for directory first
+                    if (isDirectory) {
+                        location = file.toPath().resolve("texture" + textureType.toString() + ".png");
+                    } else { //Legacy support.
+                        location = contentDirectory.resolve(fileName.substring(0, fileName.length() - 1) + textureType.toString() + ".png");
                     }
 
-                    continue;
+                    //If file exists at that location, make a stream for it, and set it to be watched.
+                    if (Files.exists(location)) {
+                        inputStream = new FileInputStream(location.toFile());
+                        watchedFiles.add(location.toString());
+                    }
                 }
-                //folder - just load from folder
-                else if (isDirectory)
-                    location = file.toPath().resolve("texture" + textureType.toString() + ".png");
-                    //.bbmodel - remove * from name then loads from root folder
-                else
-                    location = contentDirectory.resolve(fileName.substring(0, fileName.length() - 1) + textureType.toString() + ".png");
 
-                //if location is valid, finish the loading
-                if (Files.exists(location)) {
+                //If there IS a stream for this extra texture
+                if (inputStream != null) {
                     FiguraTexture extraTexture = new FiguraTexture();
                     extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
                     extraTexture.filePath = location;
@@ -333,13 +332,18 @@ public class LocalPlayerData extends PlayerData {
                     extraTexture.type = textureType;
 
                     extraTextures.add(extraTexture);
-                    watchedFiles.add(location.toString());
+                    
+                    extraTexture.loadFromStream(inputStream);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }*/
+        }
+        
+        //We don't need to close the input stream here, because if it exists, it's an extra-texture stream.
+        //We keep those open until texture loading is finished.
 
+        //Close ZIP stream.
         try {
             if (isZip)
                 modelZip.close();
