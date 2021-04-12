@@ -324,6 +324,8 @@ public class CustomModelPart {
         return "na";
     }
 
+    public void applyTrueOffset(Vector3f offset) { }
+
     public enum ParentType {
         None,
         Model,

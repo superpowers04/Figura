@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
+import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
@@ -74,6 +75,7 @@ public class LocalPlayerData extends PlayerData {
 
         //reset paths
         Path jsonPath = null;
+        Path jsonPlayerPath = null;
         Path texturePath = null;
         Path scriptPath = null;
         Path metadataPath;
@@ -87,6 +89,7 @@ public class LocalPlayerData extends PlayerData {
 
             //set paths
             jsonPath = file.toPath().resolve("model.bbmodel");
+            jsonPlayerPath = file.toPath().resolve("player_model.bbmodel");
             texturePath = file.toPath().resolve("texture.png");
             scriptPath = file.toPath().resolve("script.lua");
             metadataPath = file.toPath().resolve("metadata.nbt");
@@ -113,6 +116,7 @@ public class LocalPlayerData extends PlayerData {
 
             //set paths
             jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
+            jsonPlayerPath = file.toPath().resolve(fileName + ".bbmodel");
             texturePath = contentDirectory.resolve(fileName + ".png");
             scriptPath = contentDirectory.resolve(fileName + ".lua");
             metadataPath = contentDirectory.resolve(fileName + ".nbt");
@@ -128,7 +132,7 @@ public class LocalPlayerData extends PlayerData {
         }
 
         //check if files exists
-        boolean cantLoad = !isZip && (!Files.exists(jsonPath) || !Files.exists(texturePath));
+        boolean cantLoad = !isZip && ((!Files.exists(jsonPath) && !Files.exists(jsonPlayerPath)) || !Files.exists(texturePath));
 
         //check for zip files
         if (isZip) {
@@ -183,12 +187,25 @@ public class LocalPlayerData extends PlayerData {
             this.model = null;
             //Set up string for later
             String modelJsonText = null;
+            
 
             //Get input stream, either from file, or from zip.
             if (isZip) {
-                inputStream = modelZip.getInputStream(modelZip.getEntry("model.bbmodel"));
+                ZipEntry modelEntry = modelZip.getEntry("model.bbmodel");
+
+                if (modelEntry == null){
+                    modelEntry = modelZip.getEntry("player_model.bbmodel");
+                    BlockbenchModelDeserializer.overrideAsPlayerModel = true;
+                }
+
+                inputStream = modelZip.getInputStream(modelEntry);
             } else {
-                inputStream = new FileInputStream(jsonPath.toFile());
+                if(!Files.exists(jsonPath)) {
+                    inputStream = new FileInputStream(jsonPlayerPath.toFile());
+                    BlockbenchModelDeserializer.overrideAsPlayerModel = true;
+                } else {
+                    inputStream = new FileInputStream(jsonPath.toFile());
+                }
             }
 
             //Try to read from input stream
@@ -265,7 +282,7 @@ public class LocalPlayerData extends PlayerData {
                 //If there is an script entry
                 if (fileEntry != null)
                     inputStream = modelZip.getInputStream(fileEntry);
-            } else if (Files.exists(scriptPath)){
+            } else if (Files.exists(scriptPath)) {
                 inputStream = new FileInputStream(scriptPath.toFile());
             }
 
@@ -303,7 +320,7 @@ public class LocalPlayerData extends PlayerData {
         //Load extra textures
         try {
             extraTextures.clear();
-            
+
             for (FiguraTexture.TextureType textureType : FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.keySet()) {
                 Path location = null;
 
@@ -339,14 +356,14 @@ public class LocalPlayerData extends PlayerData {
                     extraTexture.type = textureType;
 
                     extraTextures.add(extraTexture);
-                    
+
                     extraTexture.loadFromStream(inputStream);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         //We don't need to close the input stream here, because if it exists, it's an extra-texture stream.
         //We keep those open until texture loading is finished.
 
