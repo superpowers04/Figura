@@ -3,6 +3,7 @@ package net.blancworks.figura.models;
 import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerData;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.ResourceTexture;
@@ -59,6 +60,10 @@ public class FiguraTexture extends ResourceTexture {
         }
     }
 
+    public void registerTexture(){
+        PlayerData.getTextureManager().registerTexture(id, this);
+    }
+    
     private void uploadTexture(NativeImage image) {
         TextureUtil.allocate(this.getGlId(), image.getWidth(), image.getHeight());
         image.upload(0, 0, 0, true);

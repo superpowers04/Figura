@@ -9,11 +9,16 @@ import net.blancworks.figura.network.FiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.ResourceType;
+import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -29,14 +34,15 @@ public class FiguraMod implements ClientModInitializer {
             .setPrettyPrinting().create();
 
     public static final Logger LOGGER = LogManager.getLogger();
-    
+
     //Loading
-    
+
     //This task is what's used to manage all loading requests in the whole mod.
     //If an asset is set to load, it will attach to this if it exists, or create a new one if it doesn't.
     private static CompletableFuture globalLoadTask;
-    
-    
+
+    private PlayerDataManager dataManagerInstance;
+
 
     //Used during rendering.
     public static AbstractClientPlayerEntity currentPlayer;
@@ -61,7 +67,7 @@ public class FiguraMod implements ClientModInitializer {
         deltaTime = dt;
     }
 
-    public static void clearRenderingData(){
+    public static void clearRenderingData() {
         currentPlayer = null;
         currentData = null;
         vertexConsumerProvider = null;
@@ -74,6 +80,19 @@ public class FiguraMod implements ClientModInitializer {
         PlayerTrustManager.init();
 
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
+
+        dataManagerInstance = new PlayerDataManager();
+        ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
+            @Override
+            public Identifier getFabricId() {
+                return new Identifier("figura", "reloadtextures");
+            }
+
+            @Override
+            public void apply(ResourceManager manager) {
+                PlayerDataManager.reloadAllTextures();
+            }
+        });
 
         getModContentDirectory();
     }
@@ -94,13 +113,13 @@ public class FiguraMod implements ClientModInitializer {
         return p;
     }
 
-    public static CompletableFuture doTask(Runnable toRun){
+    public static CompletableFuture doTask(Runnable toRun) {
         return doTask(toRun, null);
     }
-    
-    public static CompletableFuture doTask(Runnable toRun, @Nullable Runnable onFinished){
+
+    public static CompletableFuture doTask(Runnable toRun, @Nullable Runnable onFinished) {
         //If the global load task doesn't exist, create it.
-        if(globalLoadTask == null || globalLoadTask.isDone()){
+        if (globalLoadTask == null || globalLoadTask.isDone()) {
             globalLoadTask = CompletableFuture.runAsync(
                     () -> {
                         runTask(toRun, onFinished);
@@ -114,14 +133,14 @@ public class FiguraMod implements ClientModInitializer {
                     }
             );
         }
-        
+
         return globalLoadTask;
     }
-    
-    private static void runTask(Runnable toRun, @Nullable Runnable onFinished){
+
+    private static void runTask(Runnable toRun, @Nullable Runnable onFinished) {
         toRun.run();
-        
-        if(onFinished != null)
+
+        if (onFinished != null)
             onFinished.run();
     }
 }

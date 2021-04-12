@@ -3,9 +3,15 @@ package net.blancworks.figura;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.network.FiguraNetworkManager;
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
+import net.minecraft.util.profiler.Profiler;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -14,6 +20,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 public final class PlayerDataManager {
     public static boolean didInitLocalPlayer = false;
@@ -304,5 +311,21 @@ public final class PlayerDataManager {
                 e.printStackTrace();
             }
         });
+    }
+    
+    //Reloads all textures, used for asset reloads in vanilla.
+    public static void reloadAllTextures(){
+        for (Map.Entry<UUID, PlayerData> entry : LOADED_PLAYER_DATA.entrySet()) {
+            PlayerData pDat = entry.getValue();
+            if(pDat.texture != null) {
+                pDat.texture.registerTexture();
+                pDat.texture.uploadUsingData();
+            }
+
+            for (FiguraTexture extraTexture : pDat.extraTextures) {
+                extraTexture.registerTexture();
+                extraTexture.uploadUsingData();
+            }
+        }
     }
 }

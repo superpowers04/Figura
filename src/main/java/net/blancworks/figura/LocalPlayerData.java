@@ -260,25 +260,32 @@ public class LocalPlayerData extends PlayerData {
 
             //Get input stream, either from file, or from zip.
             if (isZip) {
-                inputStream = modelZip.getInputStream(modelZip.getEntry("script.lua"));
-            } else {
+                //Get entry
+                ZipEntry fileEntry = modelZip.getEntry("script.lua");
+                //If there is an script entry
+                if (fileEntry != null)
+                    inputStream = modelZip.getInputStream(fileEntry);
+            } else if (Files.exists(scriptPath)){
                 inputStream = new FileInputStream(scriptPath.toFile());
             }
 
-            //Try to read from input stream
-            try (final Reader reader = new InputStreamReader(inputStream)) {
-                scriptSource = CharStreams.toString(reader);
+            //If there is a script, try to load it
+            if (inputStream != null) {
+                //Try to read from input stream
+                try (final Reader reader = new InputStreamReader(inputStream)) {
+                    scriptSource = CharStreams.toString(reader);
+                }
+
+                //Create script.
+                this.script = new CustomScript();
+
+                //Finalize script source for lambda.
+                String finalScriptSource = scriptSource;
+                //Load script on off-thread.
+                FiguraMod.doTask(() -> {
+                    this.script.load(this, finalScriptSource);
+                });
             }
-
-            //Create script.
-            this.script = new CustomScript();
-
-            //Finalize script source for lambda.
-            String finalScriptSource = scriptSource;
-            //Load script on off-thread.
-            FiguraMod.doTask(() -> {
-                this.script.load(this, finalScriptSource);
-            });
         } catch (Exception e) {
             e.printStackTrace();
         }
