@@ -33,8 +33,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("NO_PARENT", CustomModelPart.ParentType.WORLD)
                     .put("LEFT_HELD_ITEM", CustomModelPart.ParentType.LeftItemOrigin)
                     .put("RIGHT_HELD_ITEM", CustomModelPart.ParentType.RightItemOrigin)
-                    .put("LEFT_ELYTRA", CustomModelPart.ParentType.LeftElytraOrigin)
-                    .put("RIGHT_ELYTRA", CustomModelPart.ParentType.RightElytraOrigin)
+                    .put("LEFT_ELYTRA_ORIGIN", CustomModelPart.ParentType.LeftElytraOrigin)
+                    .put("RIGHT_ELYTRA_ORIGIN", CustomModelPart.ParentType.RightElytraOrigin)
+                    .put("LEFT_ELYTRA", CustomModelPart.ParentType.LeftElytra)
+                    .put("RIGHT_ELYTRA", CustomModelPart.ParentType.RightElytra)
                     .put("NAMETAG", CustomModelPart.ParentType.NameTag)
                     .build();
 
@@ -112,6 +114,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         //Reset this value.
         overrideAsPlayerModel = false;
+        retModel.sortAllParts();
         return retModel;
     }
 
@@ -196,8 +199,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         //Add part.
         if (parent == null)
             target.allParts.add(groupPart);
-        else
+        else {
             parent.children.add(groupPart);
+        }
     }
 
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {

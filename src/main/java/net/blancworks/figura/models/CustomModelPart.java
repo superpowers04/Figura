@@ -132,6 +132,7 @@ public class CustomModelPart {
                     case LeftElytraOrigin:
                         FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
+                            applyTransformsAsElytra(matrices);
                             stackReference = matrices.peek();
                             matrices.pop();
                         }});
@@ -139,6 +140,7 @@ public class CustomModelPart {
                     case RightElytraOrigin:
                         FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
+                            applyTransformsAsElytra(matrices);
                             stackReference = matrices.peek();
                             matrices.pop();
                         }});
@@ -204,7 +206,9 @@ public class CustomModelPart {
         for (CustomModelPart child : this.children) {
             if (leftToRender == 0)
                 break;
-            if (child.parentType == CustomModelPart.ParentType.WORLD)
+            
+            //Don't render special parts.
+            if(child.isParentSpecial())
                 continue;
             leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor);
         }
@@ -233,11 +237,21 @@ public class CustomModelPart {
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
     }
 
+    //TODO move these to the mixins, probably.
     public void applyTransformsAsItem(MatrixStack stack) {
         stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-90.0F));
         stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0F));
         //stack.translate(0, 0.125D, -0.625D);
         stack.translate(pivot.getX() / 16.0f, pivot.getZ() / 16.0f, pivot.getY() / 16.0f);
+        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+    }
+    
+    //TODO move these to the mixins, probably.
+    public void applyTransformsAsElytra(MatrixStack stack) {
+        stack.translate(pivot.getX() / 16.0f, pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
         stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
         stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
         stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
@@ -365,7 +379,7 @@ public class CustomModelPart {
     }
 
     public boolean isParentSpecial() {
-        if (parentType == ParentType.WORLD) {
+        if (parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra) {
             return true;
         }
         return false;
@@ -388,6 +402,8 @@ public class CustomModelPart {
         RightItemOrigin, //Origin position of the held item
         LeftElytraOrigin, //Left origin position of the elytra
         RightElytraOrigin, //Right origin position of the elytra
+        LeftElytra, //Left origin position of the elytra
+        RightElytra, //Right origin position of the elytra
         NameTag, //Parented to the nametag.
     }
 
