@@ -57,6 +57,18 @@ public class ArmorModelAPI {
 
         public LuaTable getTable() {
             LuaTable ret = new LuaTable();
+
+            ret.set("getPos", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    Vector3f v = targetScript.getOrMakePartCustomization(accessor).pos;
+
+                    if(v == null)
+                        return NIL;
+
+                    return LuaUtils.getTableFromVector3f(v);
+                }
+            });
             
             ret.set("setPos", new OneArgFunction() {
                 @Override
