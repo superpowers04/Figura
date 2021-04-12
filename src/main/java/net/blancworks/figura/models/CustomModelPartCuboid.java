@@ -201,6 +201,31 @@ public class CustomModelPartCuboid extends CustomModelPart {
         }
     }
 
+    @Override
+    public void applyTrueOffset(Vector3f offset) {
+        super.applyTrueOffset(offset);
+
+        Vector3f from = v3fFromNbtList((ListTag) cuboidProperties.get("f"));
+        Vector3f to = v3fFromNbtList((ListTag) cuboidProperties.get("t"));
+        
+        from.add(offset);
+        to.add(offset);
+
+        cuboidProperties.put("f", new ListTag() {{
+            add(FloatTag.of(from.getX()));
+            add(FloatTag.of(from.getY()));
+            add(FloatTag.of(from.getZ()));
+        }});
+
+        cuboidProperties.put("t", new ListTag() {{
+            add(FloatTag.of(to.getX()));
+            add(FloatTag.of(to.getY()));
+            add(FloatTag.of(to.getZ()));
+        }});
+        
+        rebuild();
+    }
+
     public void generateFace(Vector3f a, Vector3f b, Vector3f c, Vector3f d, List<Vec2f> uv, float texWidth, float texHeight) {
         Vector3f nA = b.copy();
         nA.subtract(a);

@@ -2,21 +2,19 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -81,13 +79,13 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
     @Inject(at = @At("RETURN"), method = "renderArm")
     private void postRenderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo ci) {
-        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer)(Object)this;
+        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
         PlayerEntityModel model = realRenderer.getModel();
         PlayerData playerData = FiguraMod.currentData;
 
-        if(playerData != null && playerData.model != null){
+        if (playerData != null && playerData.model != null) {
             //Only render if texture is ready
-            if(playerData.texture == null || !playerData.texture.ready)
+            if (playerData.texture == null || !playerData.texture.isDone)
                 return;
 
             arm.pitch = 0;
@@ -97,6 +95,12 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
         FiguraMod.clearRenderingData();
         figura$clearAllPartCustomizations();
+    }
+
+    @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
+    protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
+        //if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null)
+            //((LiteralText) text).append(new LiteralText(" △").setStyle(Style.EMPTY.withColor(TextColor.parse("cyan"))));
     }
 
     public void figura$applyPartCustomization(String id, ModelPart part) {

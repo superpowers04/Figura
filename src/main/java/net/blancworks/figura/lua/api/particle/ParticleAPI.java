@@ -1,7 +1,6 @@
 package net.blancworks.figura.lua.api.particle;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;

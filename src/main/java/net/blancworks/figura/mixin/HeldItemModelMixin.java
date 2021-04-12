@@ -2,7 +2,6 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ItemModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.minecraft.client.render.VertexConsumerProvider;

@@ -8,6 +8,8 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.blancworks.figura.models.CustomModelPartMesh;
+import net.fabricmc.fabric.impl.resource.loader.GroupResourcePack;
+import net.fabricmc.loader.util.sat4j.core.Vec;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.*;
@@ -19,7 +21,10 @@ import java.util.Map;
 import java.util.UUID;
 
 public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel> {
-    public static final Map<String, CustomModelPart.ParentType> NAME_PARENT_TYPE_TAGS =
+
+    public static boolean overrideAsPlayerModel = false;
+
+    private static final Map<String, CustomModelPart.ParentType> NAME_PARENT_TYPE_TAGS =
             new ImmutableMap.Builder<String, CustomModelPart.ParentType>()
                     .put("HEAD", CustomModelPart.ParentType.Head)
                     .put("TORSO", CustomModelPart.ParentType.Torso)
@@ -30,7 +35,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("NO_PARENT", CustomModelPart.ParentType.WORLD)
                     .build();
 
-    public static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =
+    private static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =
             new ImmutableMap.Builder<String, CustomModelPart.ParentType>()
                     .put("MIMIC_HEAD", CustomModelPart.ParentType.Head)
                     .put("MIMIC_TORSO", CustomModelPart.ParentType.Torso)
@@ -38,6 +43,26 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("MIMIC_RIGHT_ARM", CustomModelPart.ParentType.RightArm)
                     .put("MIMIC_LEFT_LEG", CustomModelPart.ParentType.LeftLeg)
                     .put("MIMIC_RIGHT_LEG", CustomModelPart.ParentType.RightLeg)
+                    .build();
+
+    static class PlayerSkinRemap {
+        public CustomModelPart.ParentType parentType;
+        public Vector3f offset;
+
+        public PlayerSkinRemap(CustomModelPart.ParentType parentType, Vector3f offset) {
+            this.parentType = parentType;
+            this.offset = offset;
+        }
+    }
+
+    private static final Map<String, PlayerSkinRemap> PLAYER_SKIN_REMAPS =
+            new ImmutableMap.Builder<String, PlayerSkinRemap>()
+                    .put("Head", new PlayerSkinRemap(CustomModelPart.ParentType.Head, new Vector3f(0, -24, 0)))
+                    .put("Body", new PlayerSkinRemap(CustomModelPart.ParentType.Torso, new Vector3f(0, -24, 0)))
+                    .put("RightArm", new PlayerSkinRemap(CustomModelPart.ParentType.RightArm, new Vector3f(-5, -22, 0)))
+                    .put("LeftArm", new PlayerSkinRemap(CustomModelPart.ParentType.LeftArm, new Vector3f(5, -22, 0)))
+                    .put("RightLeg", new PlayerSkinRemap(CustomModelPart.ParentType.RightLeg, new Vector3f(-2, -12, 0)))
+                    .put("LeftLeg", new PlayerSkinRemap(CustomModelPart.ParentType.LeftLeg, new Vector3f(2, -12, 0)))
                     .build();
 
     @Override
@@ -52,6 +77,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         JsonArray outliner = root.get("outliner").getAsJsonArray();
         JsonArray textures = root.get("textures").getAsJsonArray();
 
+        if(meta.has("model_format") && meta.get("model_format").getAsString().equals("skin"))
+            overrideAsPlayerModel = true;
+        
         retModel.texWidth = resolution.get("width").getAsFloat();
         retModel.texHeight = resolution.get("height").getAsFloat();
 
@@ -79,13 +107,17 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             }
         }
 
+        //Reset this value.
+        overrideAsPlayerModel = false;
         return retModel;
     }
 
     //Builds out a group from a JsonObject that specifies the group in the outline.
     public void buildGroup(JsonObject group, CustomModel target, Map<UUID, CustomModelPart> allParts, CustomModelPart parent) {
         CustomModelPart groupPart = new CustomModelPart();
-
+        
+        Vector3f playerModelOffset = new Vector3f();
+        
         if (group.has("name")) {
             groupPart.name = group.get("name").getAsString();
 
@@ -111,10 +143,22 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
             //Only set group parent if not mimicing. We can't mimic and be parented.
             if (!groupPart.isMimicMode) {
+                //Check for parent parts
                 for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_PARENT_TYPE_TAGS.entrySet()) {
                     if (groupPart.name.contains(entry.getKey())) {
                         groupPart.parentType = entry.getValue();
                         break;
+                    }
+                }
+                //Check for player model parts.
+                if(overrideAsPlayerModel){
+                    for (Map.Entry<String, PlayerSkinRemap> entry : PLAYER_SKIN_REMAPS.entrySet()) {
+                        if (groupPart.name.contains(entry.getKey())) {
+                            groupPart.parentType = entry.getValue().parentType;
+                            groupPart.pivot = entry.getValue().offset.copy();
+                            playerModelOffset = entry.getValue().offset.copy();
+                            break;
+                        }
                     }
                 }
             }
@@ -123,7 +167,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         if (group.has("origin")) {
             Vector3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
-            groupPart.pivot = corrected;
+            groupPart.pivot.add(corrected);
         }
         if (group.has("rotation")) groupPart.rot = v3fFromJArray(group.get("rotation").getAsJsonArray());
 
@@ -137,8 +181,14 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 //If the element is a string, it's an element, so just add it to the children.
                 String s = child.getAsString();
 
-                if (s != null)
-                    groupPart.children.add(allParts.get(UUID.fromString(s)));
+                if (s != null) {
+                    CustomModelPart part = allParts.get(UUID.fromString(s));
+                    groupPart.children.add(part);
+                    
+                    if(part != null){
+                        part.applyTrueOffset(playerModelOffset);
+                    }
+                }
             }
         }
 

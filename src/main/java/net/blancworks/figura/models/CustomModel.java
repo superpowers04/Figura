@@ -2,6 +2,7 @@ package net.blancworks.figura.models;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.model.ModelPart;
@@ -19,7 +20,7 @@ import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayList;
 
-public class CustomModel {
+public class CustomModel extends FiguraAsset {
     public PlayerData owner;
     public ArrayList<CustomModelPart> allParts = new ArrayList<CustomModelPart>();
 
