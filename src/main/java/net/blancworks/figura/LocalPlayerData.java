@@ -96,6 +96,7 @@ public class LocalPlayerData extends PlayerData {
 
             //add watchedfiles
             watchedFiles.add(jsonPath.toString());
+            watchedFiles.add(jsonPlayerPath.toString());
             watchedFiles.add(texturePath.toString());
             watchedFiles.add(scriptPath.toString());
             watchedFiles.add(metadataPath.toString());
@@ -116,7 +117,7 @@ public class LocalPlayerData extends PlayerData {
 
             //set paths
             jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
-            jsonPlayerPath = file.toPath().resolve(fileName + ".bbmodel");
+            jsonPlayerPath = null;
             texturePath = contentDirectory.resolve(fileName + ".png");
             scriptPath = contentDirectory.resolve(fileName + ".lua");
             metadataPath = contentDirectory.resolve(fileName + ".nbt");
