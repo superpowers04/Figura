@@ -19,6 +19,8 @@ public class ElytraModelAPI {
     public static final String VANILLA_LEFT_WING = "LEFT_WING";
     public static final String VANILLA_RIGHT_WING = "RIGHT_WING";
 
+    public static final Identifier VANILLA_LEFT_WING_ID = new Identifier("figura", "left_wing");
+    public static final Identifier VANILLA_RIGHT_WING_ID = new Identifier("figura", "right_wing");
     
     public static Identifier getID() {
         return new Identifier("default", "elytra_model");

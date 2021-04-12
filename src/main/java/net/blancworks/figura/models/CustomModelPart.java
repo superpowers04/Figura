@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.lua.api.model.ElytraModelAPI;
+import net.blancworks.figura.lua.api.model.ItemModelAPI;
+import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -57,10 +60,6 @@ public class CustomModelPart {
         if (!this.visible) {
             return leftToRender;
         }
-        MatrixStack tempStack = null;
-
-        //if(tempStack != null)
-        //matrices = tempStack;
 
         matrices.push();
 
@@ -113,6 +112,36 @@ public class CustomModelPart {
                         break;
                     case RightLeg:
                         playerModel.rightLeg.rotate(matrices);
+                        break;
+                    case LeftItemOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsItem(matrices);
+                            stackReference = matrices.peek();
+                            matrices.pop();
+                        }});
+                        break;
+                    case RightItemOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsItem(matrices);
+                            stackReference = matrices.peek();
+                            matrices.pop();
+                        }});
+                        break;
+                    case LeftElytraOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            stackReference = matrices.peek();
+                            matrices.pop();
+                        }});
+                        break;
+                    case RightElytraOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            stackReference = matrices.peek();
+                            matrices.pop();
+                        }});
                         break;
                 }
             }
@@ -202,6 +231,17 @@ public class CustomModelPart {
         stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
 
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
+    }
+
+    public void applyTransformsAsItem(MatrixStack stack) {
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-90.0F));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0F));
+        //stack.translate(0, 0.125D, -0.625D);
+        stack.translate(pivot.getX() / 16.0f, pivot.getZ() / 16.0f, pivot.getY() / 16.0f);
+        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
     //Re-builds the mesh data for a custom model part.
@@ -324,7 +364,15 @@ public class CustomModelPart {
         return "na";
     }
 
-    public void applyTrueOffset(Vector3f offset) { }
+    public boolean isParentSpecial() {
+        if (parentType == ParentType.WORLD) {
+            return true;
+        }
+        return false;
+    }
+
+    public void applyTrueOffset(Vector3f offset) {
+    }
 
     public enum ParentType {
         None,
@@ -335,7 +383,12 @@ public class CustomModelPart {
         LeftLeg,
         RightLeg,
         Torso,
-        WORLD
+        WORLD,
+        LeftItemOrigin, //Origin position of the held item in the left hand
+        RightItemOrigin, //Origin position of the held item
+        LeftElytraOrigin, //Left origin position of the elytra
+        RightElytraOrigin, //Right origin position of the elytra
+        NameTag, //Parented to the nametag.
     }
 
     public enum RotationType {

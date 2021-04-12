@@ -3,6 +3,7 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.assets.FiguraAsset;
+import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.model.ModelPart;
@@ -19,10 +20,14 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CustomModel extends FiguraAsset {
     public PlayerData owner;
     public ArrayList<CustomModelPart> allParts = new ArrayList<CustomModelPart>();
+
+    //Customized pivots for stuff like elytra, held items, that sort.
+    public HashMap<Identifier, CustomModelPart> customParents = new HashMap<>();
 
     public float texWidth = 64, texHeight = 64;
 
@@ -31,6 +36,10 @@ public class CustomModel extends FiguraAsset {
 
     public int lastComplexity = 0;
 
+    //This contains all the modifications to origins for stuff like elytra and held items.
+    //This is separate from script customizations, as these are groups from blockbench that are the new,
+    //override origins against vanilla.
+    public HashMap<Identifier, VanillaModelPartCustomization> originModifications = new HashMap<>();
 
     public int getRenderComplexity() {
         return lastComplexity;
@@ -100,8 +109,7 @@ public class CustomModel extends FiguraAsset {
                 child.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
 
                 matrices.pop();
-            }
-            else if (child.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm) {
+            } else if (child.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm) {
                 matrices.push();
 
                 child.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
@@ -138,5 +146,4 @@ public class CustomModel extends FiguraAsset {
             }
         }
     }
-
 }

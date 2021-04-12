@@ -19,7 +19,10 @@ public class ItemModelAPI {
     public static final String VANILLA_LEFT_HAND = "LEFT_HAND";
     public static final String VANILLA_RIGHT_HAND = "RIGHT_HAND";
 
-    
+    public static final Identifier VANILLA_LEFT_HAND_ID = new Identifier("figura", "left_hand");
+    public static final Identifier VANILLA_RIGHT_HAND_ID = new Identifier("figura", "right_hand");
+
+
     public static Identifier getID() {
         return new Identifier("default", "held_item_model");
     }
