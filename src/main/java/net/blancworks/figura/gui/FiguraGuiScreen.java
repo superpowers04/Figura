@@ -1,6 +1,7 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -97,12 +98,13 @@ public class FiguraGuiScreen extends Screen {
     public static boolean showOwnNametag = false;
 
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
+    public FiguraConfigScreen configScreen = new FiguraConfigScreen(this);
 
     public CustomListWidgetState modelFileListState = new CustomListWidgetState();
     public static ModelFileListWidget modelFileList;
 
     public FiguraGuiScreen(Screen parentScreen) {
-        super(new LiteralText("Figura Menu"));
+        super(new TranslatableText("gui.figura.menutitle"));
         this.parentScreen = parentScreen;
 
         //reset settings
@@ -162,8 +164,11 @@ public class FiguraGuiScreen extends Screen {
         //trust button
         this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.openScreen(trustScreen)));
 
+        //config button
+        this.addButton(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.configmenu"), (buttonWidgetx) -> this.client.openScreen(configScreen)));
+
         //help button
-        this.addButton(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
+        this.addButton(new ButtonWidget(this.width - 140 - 5, 65, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
             if (bl) {
                 Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
             }
@@ -229,6 +234,11 @@ public class FiguraGuiScreen extends Screen {
         updateExpand();
     }
 
+    @Override
+    public void onClose() {
+        this.client.openScreen(parentScreen);
+    }
+
     int tickCount = 0;
 
     @Override
@@ -277,7 +287,7 @@ public class FiguraGuiScreen extends Screen {
 
         //draw text
         if (!expand) {
-            int currY = 45 + 12;
+            int currY = 82;
 
             if (nameText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 16777215);
@@ -519,7 +529,7 @@ public class FiguraGuiScreen extends Screen {
             scale = ((modelSize + scale) * scaledir) - modelSize;
 
             //limit scale
-            if (scale <= 0) scale = 0.0F;
+            if (scale <= -35) scale = -35.0F;
             if (scale >= 250) scale = 250.0F;
         }
 
@@ -528,6 +538,12 @@ public class FiguraGuiScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE && expand) {
+            expand = false;
+            updateExpand();
+            return false;
+        }
+
         boolean result = super.keyPressed(keyCode, scanCode, modifiers);
 
         if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT) {
@@ -572,7 +588,7 @@ public class FiguraGuiScreen extends Screen {
                 });
             }
             this.client.openScreen(this);
-        }, new TranslatableText("gui.dropconfirm"), new LiteralText(string)));
+        }, new TranslatableText("gui.figura.dropconfirm"), new LiteralText(string)));
     }
 
     public static void drawEntity(int x, int y, int size, float rotationX, float rotationY, LivingEntity entity) {
@@ -598,7 +614,7 @@ public class FiguraGuiScreen extends Screen {
         entity.headYaw = entity.yaw;
         entity.prevHeadYaw = entity.yaw;
         entity.setInvisible(false);
-        showOwnNametag = true;
+        showOwnNametag = Config.previewNameTag.value;
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
         entityRenderDispatcher.setRotation(quaternion2);

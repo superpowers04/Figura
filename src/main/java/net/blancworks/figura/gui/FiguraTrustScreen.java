@@ -38,17 +38,10 @@ public class FiguraTrustScreen extends Screen {
 
     private TextFieldWidget searchBox;
 
-    private Text tooltip;
-    private boolean init = false;
-    private boolean filterOptionsShown = false;
     private int paneY;
     private int paneWidth;
     private int rightPaneX;
     private int searchBoxX;
-    private int filtersX;
-    private int filtersWidth;
-    private int searchRowWidth;
-    public final Set<String> showModChildren = new HashSet<>();
 
     public PlayerListWidget playerList;
     public PermissionListWidget permissionList;
@@ -136,30 +129,34 @@ public class FiguraTrustScreen extends Screen {
         }));
 
         resetPermissionButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetperm"), (btx) -> {
-            if (playerListState.selected instanceof PlayerListEntry) {
-                if (playerListState.selected != null) {
-                    TrustContainer tc = permissionList.getCurrentContainer();
+            try {
+                TrustContainer tc = permissionList.getCurrentContainer();
 
-                    try {
-                        tc.reset(((PermissionSetting) permissionListState.selected).id);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                //if a perm is selected, reset only this perm
+                if (playerListState != null && permissionListState.selected != null)
+                    tc.reset(((PermissionSetting) permissionListState.selected).id);
+                //else reset all the entry perms
+                else
+                    tc.resetAll();
 
-                    permissionList.rebuild();
-                }
+                permissionList.rebuild();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
             }
         });
 
-        resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetallperm"), (btx) -> {
-            if (playerListState.selected instanceof PlayerListEntry) {
-                if (playerListState.selected != null) {
+        resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetallperm").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))), (btx) -> {
+            try {
+                //for all entries, reset all perms
+                playerList.children().forEach(customListEntry -> {
+                    playerListState.selected = customListEntry.getEntryObject();
                     TrustContainer tc = permissionList.getCurrentContainer();
 
                     tc.resetAll();
-
-                    permissionList.rebuild();
-                }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
         resetAllPermissionsButton.visible = false;
@@ -226,12 +223,9 @@ public class FiguraTrustScreen extends Screen {
                     }
                 }
             }
-        } else if (playerListState.selected instanceof String) {
-
         }
 
         super.render(matrices, mouseX, mouseY, delta);
-
 
         if (!resetPermissionButton.active) {
             resetPermissionButton.active = true;
@@ -330,6 +324,12 @@ public class FiguraTrustScreen extends Screen {
         return this.searchBox.charTyped(char_1, int_1);
     }
 
+    @Override
+    public void onClose() {
+        PlayerTrustManager.saveToDisk();
+        this.client.openScreen(parentScreen);
+    }
+
     int tickCount = 0;
 
     @Override
@@ -376,6 +376,10 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        //unselect perm if clicked on entry
+        if (playerList.isMouseOver(mouseX, mouseY))
+            permissionList.unselect();
+
         if (draggedId != null)
             return true;
 
