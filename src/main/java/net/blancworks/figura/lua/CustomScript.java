@@ -61,8 +61,9 @@ public class CustomScript extends FiguraAsset {
 
     public float particleSpawnCount = 0;
     public float soundSpawnCount = 0;
-    
-    public CustomScript() {}
+
+    public CustomScript() {
+    }
 
     public CustomScript(PlayerData data, String content) {
         load(data, content);
@@ -98,37 +99,40 @@ public class CustomScript extends FiguraAsset {
         //Sets up the global values for the API and such in the script.
         setupGlobals();
 
-        //Load the script source.
-        LuaValue chunk = FiguraLuaManager.modGlobals.load(source, "main", scriptGlobals);
-        LuaThread scriptThread = new LuaThread(scriptGlobals, chunk);
+        try {
+            //Load the script source.
+            LuaValue chunk = FiguraLuaManager.modGlobals.load(source, "main", scriptGlobals);
+            LuaThread scriptThread = new LuaThread(scriptGlobals, chunk);
 
-        instructionCapFunction = new ZeroArgFunction() {
-            public LuaValue call() {
-                // A simple lua error may be caught by the script, but a
-                // Java Error will pass through to top and stop the script.
-                loadError = true;
-                sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
-                throw new Error("Script overran resource limits.");
-            }
-        };
-
-        //Queue up a new task.
-        currTask = CompletableFuture.runAsync(
-                () -> {
-                    try {
-                        setInstructionLimitPermission(PlayerTrustManager.MAX_INIT_ID);
-                        scriptThread.resume(LuaValue.NIL);
-                    } catch (LuaError error) {
-                        loadError = true;
-                        error.printStackTrace();
-                    }
-
-                    isDone = true;
-                    currTask = null;
-                    FiguraMod.LOGGER.warn("Script Loading Finished");
+            instructionCapFunction = new ZeroArgFunction() {
+                public LuaValue call() {
+                    // A simple lua error may be caught by the script, but a
+                    // Java Error will pass through to top and stop the script.
+                    loadError = true;
+                    sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+                    throw new Error("Script overran resource limits.");
                 }
-        );
+            };
 
+            //Queue up a new task.
+            currTask = CompletableFuture.runAsync(
+                    () -> {
+                        try {
+                            setInstructionLimitPermission(PlayerTrustManager.MAX_INIT_ID);
+                            scriptThread.resume(LuaValue.NIL);
+                        } catch (LuaError error) {
+                            loadError = true;
+                            error.printStackTrace();
+                        }
+
+                        isDone = true;
+                        currTask = null;
+                        FiguraMod.LOGGER.warn("Script Loading Finished");
+                    }
+            );
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void toNBT(CompoundTag tag) {
@@ -141,7 +145,7 @@ public class CustomScript extends FiguraAsset {
 
 
     //Sets up and creates all the LuaEvents for this script
-    public void setupEvents(){
+    public void setupEvents() {
         //Foreach event
         for (Map.Entry<String, Function<String, LuaEvent>> entry : FiguraLuaManager.registeredEvents.entrySet()) {
             //Add a new event created from the name here
@@ -183,18 +187,18 @@ public class CustomScript extends FiguraAsset {
         globalMetaTable.set("__newindex", new ThreeArgFunction() {
             @Override
             public LuaValue call(LuaValue table, LuaValue key, LuaValue value) {
-                if(table != scriptGlobals) {
+                if (table != scriptGlobals) {
                     loadError = true;
                     error("Can't use global table metatable on other tables!");
                 }
 
-                if(value.isfunction() && key.isstring()){
+                if (value.isfunction() && key.isstring()) {
                     String funcName = key.checkjstring();
                     LuaFunction func = value.checkfunction();
 
                     LuaEvent possibleEvent = allEvents.get(funcName);
 
-                    if(possibleEvent != null){
+                    if (possibleEvent != null) {
                         possibleEvent.subscribe(func);
                         return NIL;
                     }
@@ -237,15 +241,15 @@ public class CustomScript extends FiguraAsset {
 
     //Called whenever the global tick event happens
     public void tick() {
-        
-        if(particleSpawnCount > 0)
-            particleSpawnCount = MathHelper.clamp(particleSpawnCount - (1/20f), 0, 999);
-        if(soundSpawnCount > 0)
-            soundSpawnCount = MathHelper.clamp(soundSpawnCount - (1/20f), 0, 999);
-        
+
+        if (particleSpawnCount > 0)
+            particleSpawnCount = MathHelper.clamp(particleSpawnCount - (1 / 20f), 0, 999);
+        if (soundSpawnCount > 0)
+            soundSpawnCount = MathHelper.clamp(soundSpawnCount - (1 / 20f), 0, 999);
+
         //If the tick function exists, call it.
         if (tickLuaEvent != null) {
-            if(lastTickFunction != null && !lastTickFunction.isDone())
+            if (lastTickFunction != null && !lastTickFunction.isDone())
                 return;
             lastTickFunction = queueTask(this::onTick);
         }
@@ -262,37 +266,37 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onTick() {
-        if(!isDone)
+        if (!isDone)
             return;
-        if(tickLuaEvent == null)
+        if (tickLuaEvent == null)
             return;
-        
+
         setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
         try {
             tickLuaEvent.call();
         } catch (Exception error) {
             loadError = true;
             tickLuaEvent = null;
-            if(error instanceof LuaError)
+            if (error instanceof LuaError)
                 logLuaError((LuaError) error);
         }
         tickInstructionCount = scriptGlobals.running.state.bytecodes;
     }
 
     public void onRender(float deltaTime) {
-        if(!isDone)
+        if (!isDone)
             return;
-        if(renderLuaEvent == null)
+        if (renderLuaEvent == null)
             return;
-        
-        
+
+
         setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
         } catch (Exception error) {
             loadError = true;
             renderLuaEvent = null;
-            if(error instanceof LuaError)
+            if (error instanceof LuaError)
                 logLuaError((LuaError) error);
         }
         renderInstructionCount = scriptGlobals.running.state.bytecodes;
@@ -355,17 +359,17 @@ public class CustomScript extends FiguraAsset {
 
     //--Vanilla Modifications--
 
-    public VanillaModelPartCustomization getOrMakePartCustomization(String accessor){
+    public VanillaModelPartCustomization getOrMakePartCustomization(String accessor) {
         VanillaModelPartCustomization currCustomization = getPartCustomization(accessor);
 
-        if(currCustomization == null){
+        if (currCustomization == null) {
             currCustomization = new VanillaModelPartCustomization();
             allCustomizations.put(accessor, currCustomization);
         }
         return currCustomization;
     }
 
-    public VanillaModelPartCustomization getPartCustomization(String accessor){
+    public VanillaModelPartCustomization getPartCustomization(String accessor) {
         return allCustomizations.get(accessor);
     }
 }

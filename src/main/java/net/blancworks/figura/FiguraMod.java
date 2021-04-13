@@ -70,7 +70,6 @@ public class FiguraMod implements ClientModInitializer {
     public static void clearRenderingData() {
         currentPlayer = null;
         currentData = null;
-        vertexConsumerProvider = null;
         deltaTime = 0;
     }
 
