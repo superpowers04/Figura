@@ -1,5 +1,11 @@
 {
+  "figura.mark": "△",
+  "figura.star": "☆",
+
   "gui.figura.trustmenutitle": "Figura Trust Menu",
+  "gui.figura.configtitle": "Figura Config Menu",
+  "gui.figura.menutitle": "Figura Menu",
+
   "gui.figura.blocked": "Blocked",
   "gui.figura.untrusted": "Untrusted",
   "gui.figura.trusted": "Trusted",
@@ -13,19 +19,18 @@
   "gui.figura.maxparticles": "Maximum Particles Per Second",
   "gui.figura.maxsfx": "Maximum Sounds Per Second",
 
-  
-  "gui.dropconfirm": "Do you want to add the following models to Figura?",
+  "gui.figura.dropconfirm": "Do you want to add the following models to Figura?",
 
   "gui.script.none": "none",
   "gui.script.ok": "OK",
   "gui.script.error": "ERROR",
 
   "gui.figura.button.trustmenu": "Trust Menu",
+  "gui.figura.button.configmenu": "Settings",
   "gui.figura.button.back": "Back",
   "gui.figura.button.deleteavatar": "Clear Avatar",
   "gui.figura.button.clearall": "Clear ALL Avatars",
   "gui.figura.button.help": "Help",
-  "gui.figura.button.menutitle": "Figura Menu",
   "gui.figura.button.openfolder": "Open Models Folder",
   "gui.figura.button.resetallperm": "Reset ALL Permissions",
   "gui.figura.button.resetperm": "Reset Permission",
@@ -44,5 +49,13 @@
   "gui.figura.deprecatedwarning" : "*The use of models in the root folder is deprecated, see the wiki for more info",
   "gui.figura.complexity": "Complexity: %d",
   "gui.figura.filesize": "File Size: %dkb",
-  "gui.figura.name": "Name: %d"
+  "gui.figura.name": "Name: %d",
+
+  "gui.figura.config.nametag": "NameTag",
+
+  "gui.figura.config.previewnametag": "Display Preview NameTag",
+  "gui.figura.config.tooltip.previewnametag": "Displays your NameTag on the model preview screen",
+
+  "gui.figura.config.nametagmark": "Display Figura Mark",
+  "gui.figura.config.tooltip.nametagmark": "Adds The Mark △ to the NameTag of players using Figura"
 }

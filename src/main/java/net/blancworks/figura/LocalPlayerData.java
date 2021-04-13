@@ -117,7 +117,7 @@ public class LocalPlayerData extends PlayerData {
 
             //set paths
             jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
-            jsonPlayerPath = null;
+            jsonPlayerPath = contentDirectory.resolve("player_" + fileName + ".bbmodel");
             texturePath = contentDirectory.resolve(fileName + ".png");
             scriptPath = contentDirectory.resolve(fileName + ".lua");
             metadataPath = contentDirectory.resolve(fileName + ".nbt");
@@ -141,9 +141,10 @@ public class LocalPlayerData extends PlayerData {
                 ZipFile zipFile = new ZipFile(file.getPath());
 
                 boolean hasModel = zipFile.getEntry("model.bbmodel") != null;
+                boolean hasPlayerModel = zipFile.getEntry("player_model.bbmodel") != null;
                 boolean hasTexture = zipFile.getEntry("texture.png") != null;
 
-                cantLoad = !hasModel || !hasTexture;
+                cantLoad = (!hasModel && !hasPlayerModel) || !hasTexture;
             } catch (Exception e) {
                 FiguraMod.LOGGER.debug(e.toString());
                 cantLoad = true;
@@ -201,11 +202,11 @@ public class LocalPlayerData extends PlayerData {
 
                 inputStream = modelZip.getInputStream(modelEntry);
             } else {
-                if(!Files.exists(jsonPath)) {
+                if (Files.exists(jsonPath)) {
+                    inputStream = new FileInputStream(jsonPath.toFile());
+                } else {
                     inputStream = new FileInputStream(jsonPlayerPath.toFile());
                     BlockbenchModelDeserializer.overrideAsPlayerModel = true;
-                } else {
-                    inputStream = new FileInputStream(jsonPath.toFile());
                 }
             }
 

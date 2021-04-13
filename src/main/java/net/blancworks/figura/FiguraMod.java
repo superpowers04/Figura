@@ -78,6 +78,7 @@ public class FiguraMod implements ClientModInitializer {
     public void onInitializeClient() {
         FiguraLuaManager.initialize();
         PlayerTrustManager.init();
+        Config.initialize();
 
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
 

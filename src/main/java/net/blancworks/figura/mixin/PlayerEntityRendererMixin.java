@@ -1,7 +1,9 @@
 package net.blancworks.figura.mixin;
 
+import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -14,7 +16,9 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -99,8 +103,8 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
     @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
     protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
-        //if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null)
-            //((LiteralText) text).append(new LiteralText(" △").setStyle(Style.EMPTY.withColor(TextColor.parse("cyan"))));
+        if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && Config.nameTagMark.value)
+            ((LiteralText) text).append(new LiteralText(" △").setStyle(text.getStyle().withColor(TextColor.parse("cyan"))));
     }
 
     public void figura$applyPartCustomization(String id, ModelPart part) {
