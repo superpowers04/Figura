@@ -42,7 +42,7 @@ public class FiguraMod implements ClientModInitializer {
     private static CompletableFuture globalLoadTask;
 
     private PlayerDataManager dataManagerInstance;
-
+    
 
     //Used during rendering.
     public static AbstractClientPlayerEntity currentPlayer;
@@ -53,7 +53,7 @@ public class FiguraMod implements ClientModInitializer {
     private static final boolean USE_DEBUG_MODEL = true;
     private static WatchKey watchKey;
     private static Path path;
-
+    
     //Methods
 
     //Set current player.

@@ -5,13 +5,8 @@ import com.google.gson.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.network.FiguraNetworkManager;
-import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
-import net.minecraft.util.profiler.Profiler;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -20,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
 
 public final class PlayerDataManager {
     public static boolean didInitLocalPlayer = false;

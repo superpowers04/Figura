@@ -36,7 +36,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         FiguraMod.setRenderingData(abstractClientPlayerEntity, vertexConsumerProvider, this.getModel(), MinecraftClient.getInstance().getTickDelta());
-
+        
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().torso);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);

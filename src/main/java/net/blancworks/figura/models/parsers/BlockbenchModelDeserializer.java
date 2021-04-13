@@ -8,8 +8,6 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.blancworks.figura.models.CustomModelPartMesh;
-import net.fabricmc.fabric.impl.resource.loader.GroupResourcePack;
-import net.fabricmc.loader.util.sat4j.core.Vec;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.*;
@@ -33,6 +31,13 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("LEFT_LEG", CustomModelPart.ParentType.LeftLeg)
                     .put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg)
                     .put("NO_PARENT", CustomModelPart.ParentType.WORLD)
+                    .put("LEFT_HELD_ITEM", CustomModelPart.ParentType.LeftItemOrigin)
+                    .put("RIGHT_HELD_ITEM", CustomModelPart.ParentType.RightItemOrigin)
+                    .put("LEFT_ELYTRA_ORIGIN", CustomModelPart.ParentType.LeftElytraOrigin)
+                    .put("RIGHT_ELYTRA_ORIGIN", CustomModelPart.ParentType.RightElytraOrigin)
+                    .put("LEFT_ELYTRA", CustomModelPart.ParentType.LeftElytra)
+                    .put("RIGHT_ELYTRA", CustomModelPart.ParentType.RightElytra)
+                    .put("NAMETAG", CustomModelPart.ParentType.NameTag)
                     .build();
 
     private static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =
@@ -64,7 +69,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("RightLeg", new PlayerSkinRemap(CustomModelPart.ParentType.RightLeg, new Vector3f(-2, -12, 0)))
                     .put("LeftLeg", new PlayerSkinRemap(CustomModelPart.ParentType.LeftLeg, new Vector3f(2, -12, 0)))
                     .build();
-
+    
     @Override
     public CustomModel deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         CustomModel retModel = new CustomModel();
@@ -97,7 +102,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         for (JsonElement element : outliner) {
             if (element.isJsonObject()) {
                 //If the element is a json object, it's a group, so parse the group.
-                buildGroup(element.getAsJsonObject(), retModel, parsedParts, null);
+                buildGroup(element.getAsJsonObject(), retModel, parsedParts, null, new Vector3f());
             } else {
                 //If the element is a string, it's an element, so just add it to the children.
                 String s = element.getAsString();
@@ -109,14 +114,13 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         //Reset this value.
         overrideAsPlayerModel = false;
+        retModel.sortAllParts();
         return retModel;
     }
 
     //Builds out a group from a JsonObject that specifies the group in the outline.
-    public void buildGroup(JsonObject group, CustomModel target, Map<UUID, CustomModelPart> allParts, CustomModelPart parent) {
+    public void buildGroup(JsonObject group, CustomModel target, Map<UUID, CustomModelPart> allParts, CustomModelPart parent, Vector3f playerModelOffset) {
         CustomModelPart groupPart = new CustomModelPart();
-        
-        Vector3f playerModelOffset = new Vector3f();
         
         if (group.has("name")) {
             groupPart.name = group.get("name").getAsString();
@@ -155,7 +159,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     for (Map.Entry<String, PlayerSkinRemap> entry : PLAYER_SKIN_REMAPS.entrySet()) {
                         if (groupPart.name.contains(entry.getKey())) {
                             groupPart.parentType = entry.getValue().parentType;
-                            groupPart.pivot = entry.getValue().offset.copy();
                             playerModelOffset = entry.getValue().offset.copy();
                             break;
                         }
@@ -167,6 +170,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         if (group.has("origin")) {
             Vector3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
+            groupPart.pivot = playerModelOffset.copy();
             groupPart.pivot.add(corrected);
         }
         if (group.has("rotation")) groupPart.rot = v3fFromJArray(group.get("rotation").getAsJsonArray());
@@ -176,7 +180,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         for (JsonElement child : children) {
             if (child.isJsonObject()) {
                 //If the element is a json object, it's a group, so parse the group.
-                buildGroup(child.getAsJsonObject(), target, allParts, groupPart);
+                buildGroup(child.getAsJsonObject(), target, allParts, groupPart, playerModelOffset.copy());
             } else {
                 //If the element is a string, it's an element, so just add it to the children.
                 String s = child.getAsString();
@@ -186,7 +190,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     groupPart.children.add(part);
                     
                     if(part != null){
-                        part.applyTrueOffset(playerModelOffset);
+                        part.applyTrueOffset(playerModelOffset.copy());
                     }
                 }
             }
@@ -195,8 +199,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         //Add part.
         if (parent == null)
             target.allParts.add(groupPart);
-        else
+        else {
             parent.children.add(groupPart);
+        }
     }
 
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
