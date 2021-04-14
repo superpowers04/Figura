@@ -4,16 +4,20 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
+import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
+import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.resource.ResourceManager;
@@ -80,6 +84,7 @@ public class FiguraMod implements ClientModInitializer {
         Config.initialize();
 
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
+        WorldRenderEvents.AFTER_ENTITIES.register(FiguraMod::renderFirstPersonWorldParts);
 
         dataManagerInstance = new PlayerDataManager();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
@@ -142,5 +147,31 @@ public class FiguraMod implements ClientModInitializer {
 
         if (onFinished != null)
             onFinished.run();
+    }
+    
+    
+    private static void renderFirstPersonWorldParts(WorldRenderContext context){
+        try {
+            if (!context.camera().isThirdPerson()){
+                PlayerData data = PlayerDataManager.localPlayer;
+                FiguraMod.currentData = data;
+
+
+
+                context.matrixStack().push();
+                context.matrixStack().translate(-context.camera().getPos().x, -context.camera().getPos().y, -context.camera().getPos().z);
+                context.matrixStack().scale(-1, -1, 1);
+
+                if (data != null && data.model != null) {
+                    for (CustomModelPart part : data.model.worldParts) {
+                        data.model.leftToRender = part.renderUsingAllTextures(data,  context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV);
+                    }
+                }
+
+                context.matrixStack().pop();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

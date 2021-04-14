@@ -30,7 +30,9 @@ import org.lwjgl.glfw.GLFW;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.*;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.UUID;
 
 public class FiguraTrustScreen extends Screen {
 
