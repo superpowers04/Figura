@@ -260,9 +260,9 @@ public class CustomModelPart {
 
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
 
-        stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
-
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
+        
+        stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
     }
 
     //TODO move these to the mixins, probably.
