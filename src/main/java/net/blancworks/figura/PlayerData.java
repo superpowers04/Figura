@@ -170,7 +170,10 @@ public class PlayerData {
                 CompoundTag scriptNbt = (CompoundTag) nbt.get("script");
 
                 script = new CustomScript();
-                script.fromNBT(this, scriptNbt);
+
+                FiguraMod.doTask(() -> {
+                    script.fromNBT(this, scriptNbt);
+                });
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -223,8 +226,6 @@ public class PlayerData {
 
         PlayerEntity newEnt = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
         if (lastEntity != newEnt) {
-            lastEntity = newEnt;
-
             if (lastEntity != null) {
                 if (script != null) {
                     CustomScript reloadedScript = new CustomScript();
@@ -234,6 +235,7 @@ public class PlayerData {
                 }
             }
         }
+        lastEntity = newEnt;
 
         if (lastEntity != null) {
             if (script != null) {

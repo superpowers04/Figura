@@ -63,6 +63,7 @@ public class CustomScript extends FiguraAsset {
     public float soundSpawnCount = 0;
 
     public CustomScript() {
+        source = "";
     }
 
     public CustomScript(PlayerData data, String content) {
@@ -79,7 +80,7 @@ public class CustomScript extends FiguraAsset {
         //Loads the source into this string variable for later use.
         source = src;
 
-        //Load up the default libraries we wanna include.
+        //Load up the default libraries we wanna include.0
         scriptGlobals.load(new JseBaseLib());
         scriptGlobals.load(new PackageLib());
         scriptGlobals.load(new Bit32Lib());
@@ -136,7 +137,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void toNBT(CompoundTag tag) {
-        tag.putString("src", source);
+        tag.putString("src", cleanScriptSource(source));
     }
 
     public void fromNBT(PlayerData data, CompoundTag tag) {
@@ -313,6 +314,66 @@ public class CustomScript extends FiguraAsset {
         }
 
         return currTask;
+    }
+
+    public String cleanScriptSource(String s) {
+        String ret = "";
+
+        boolean commentRemoveMode = false;
+        boolean blockCommentMode = false;
+
+        //Filter out comments
+        for (int i = 0; i < s.length(); i++) {
+            char curr = s.charAt(i);
+
+            if(!commentRemoveMode && !blockCommentMode) {
+                if (curr == '-') {
+                    if (i < s.length() - 1 && s.charAt(i + 1) == '-') {
+                        commentRemoveMode = true;
+
+                        if (i < s.length() - 3 && s.charAt(i + 2) == '[' && s.charAt(i + 3) == '[') {
+                            blockCommentMode = true;
+
+                            i += 2; //Skip those 2 characters.
+                        }
+
+                        i++; //Skip the character we detected.
+                        continue;
+                    }
+                }
+            }
+
+            if (commentRemoveMode) {
+                if(blockCommentMode) {
+                    if (curr == '-') {
+                        if (i < s.length() - 1 && s.charAt(i + 1) == '-') {
+                            if (i < s.length() - 3 && s.charAt(i + 2) == ']' && s.charAt(i + 3) == ']') {
+                                blockCommentMode = false;
+                                commentRemoveMode = false;
+
+                                i += 2; //Skip those 2 characters.
+                            }
+
+                            i++; //Skip the character we detected.
+                            continue;
+                        }
+                    }
+                }
+
+                if(curr == '\n' && !blockCommentMode){
+                    commentRemoveMode = false;
+                    continue;
+                }
+
+            } else {
+                ret += s.charAt(i);
+            }
+        }
+
+        ret = ret.replaceAll("[\\t\\n\\r]+", " ");
+        ret = ret.replaceAll("\\s+", " ");
+
+        return ret;
     }
 
     //--Debugging--
