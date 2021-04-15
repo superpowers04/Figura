@@ -8,8 +8,9 @@ import java.io.FileReader;
 import java.io.FileWriter;
 
 public class Config {
-    public static BooleanConfig previewNameTag;
-    public static BooleanConfig nameTagMark;
+    public static ConfigEntry<Boolean> previewNameTag;
+    public static ConfigEntry<Boolean> nameTagMark;
+    public static ConfigEntry<Integer> buttonLocation;
 
     private static final File file = new File(FabricLoader.getInstance().getConfigDir().resolve("figura.properties").toString());
 
@@ -24,27 +25,34 @@ public class Config {
             if(file.exists()) {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String line = br.readLine();
-                do {
+
+                while (line != null) {
                     String[] content = line.split("=");
 
                     if (content.length >= 2 && line.charAt(0) != '#') {
                         switch (content[0]) {
                             case "previewNameTag":
-                                previewNameTag = new BooleanConfig(Boolean.parseBoolean(content[1]), true);
+                                previewNameTag = new ConfigEntry<>(Boolean.parseBoolean(content[1]), true);
                                 break;
                             case "nameTagMark":
-                                nameTagMark = new BooleanConfig(Boolean.parseBoolean(content[1]), true);
+                                nameTagMark = new ConfigEntry<>(Boolean.parseBoolean(content[1]), true);
+                                break;
+                            case "buttonLocation":
+                                int i = Integer.parseInt(content[1]) % 4;
+                                if (i < 0) i += 4;
+                                buttonLocation = new ConfigEntry<>(i, 3);
                                 break;
                         }
                     }
                     line = br.readLine();
-                } while (line != null);
+                }
 
                 br.close();
             }
         }
         catch (Exception e) {
             FiguraMod.LOGGER.warn("Failed to load config file! Generating a new one...");
+            e.printStackTrace();
             setDefaults();
             saveConfig();
         }
@@ -58,7 +66,11 @@ public class Config {
             writer.write("previewNameTag=" + previewNameTag.value + "\n\n");
 
             writer.write("### Adds The Mark △ to the NameTag of players using Figura ### - default true\n");
-            writer.write("nameTagMark=" + nameTagMark.value);
+            writer.write("nameTagMark=" + nameTagMark.value + "\n\n");
+
+            writer.write("### Location where the Figura settings button should be ###\n");
+            writer.write("### 0 - top left | 1 - top right | 2 - bottom left | 3 - bottom right ### - default 3\n");
+            writer.write("buttonLocation=" + buttonLocation.value);
 
             writer.close();
         }
@@ -69,15 +81,16 @@ public class Config {
     }
 
     public static void setDefaults() {
-        previewNameTag = new BooleanConfig(true, true);
-        nameTagMark = new BooleanConfig(true, true);
+        previewNameTag = new ConfigEntry<>(true, true);
+        nameTagMark = new ConfigEntry<>(true, true);
+        buttonLocation = new ConfigEntry<>(3, 3);
     }
 
-    public static class BooleanConfig {
-        public boolean value;
-        public boolean defaultValue;
+    public static class ConfigEntry<T> {
+        public T value;
+        public T defaultValue;
 
-        public BooleanConfig(boolean value, boolean defaultValue) {
+        public ConfigEntry(T value, T defaultValue) {
             this.value = value;
             this.defaultValue = defaultValue;
         }
