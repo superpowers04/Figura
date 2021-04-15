@@ -126,9 +126,7 @@ public class PlayerTrustManager {
 
         //if (Files.exists(p)) {
         try {
-            System.out.println(p);
             InputStream s = Files.newInputStream(p);
-            System.out.println(s);
             InputStreamReader fileReader = new InputStreamReader(s);
             JsonParser parser = new JsonParser();
             JsonObject rootObject = (JsonObject) parser.parse(fileReader);

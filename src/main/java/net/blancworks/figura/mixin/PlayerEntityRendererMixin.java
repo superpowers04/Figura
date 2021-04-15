@@ -19,7 +19,7 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -109,7 +109,10 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
     @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
     protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
         if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && Config.nameTagMark.value)
-            ((LiteralText) text).append(new LiteralText(" △").setStyle(text.getStyle().withColor(TextColor.parse("cyan"))));
+            ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark"));
+
+        if (FiguraMod.special.contains(abstractClientPlayerEntity.getUuid()) && Config.nameTagMark.value)
+            ((LiteralText) text).append(" ").append(new TranslatableText("figura.star"));
     }
 
     public void figura$applyPartCustomization(String id, ModelPart part) {
