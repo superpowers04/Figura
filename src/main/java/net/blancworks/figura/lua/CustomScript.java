@@ -111,7 +111,7 @@ public class CustomScript extends FiguraAsset {
                     // Java Error will pass through to top and stop the script.
                     loadError = true;
                     sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
-                    throw new Error("Script overran resource limits.");
+                    throw new RuntimeException("Script overran resource limits.");
                 }
             };
 
