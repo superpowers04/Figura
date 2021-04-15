@@ -110,7 +110,9 @@ public class CustomScript extends FiguraAsset {
                     // A simple lua error may be caught by the script, but a
                     // Java Error will pass through to top and stop the script.
                     loadError = true;
-                    sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+                    
+                    if(data == PlayerDataManager.localPlayer)
+                        sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                     throw new RuntimeException("Script overran resource limits.");
                 }
             };
