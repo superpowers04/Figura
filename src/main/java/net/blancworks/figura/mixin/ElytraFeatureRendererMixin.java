@@ -6,6 +6,7 @@ import net.blancworks.figura.access.ElytraEntityModelAccess;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.ElytraFeatureRenderer;
@@ -36,9 +37,14 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
 
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
+        PlayerData data = FiguraMod.currentData;
         
-        figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess)elytra).getLeftWing());
-        figura$applyPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING, ((ElytraEntityModelAccess)elytra).getRightWing());
+        if(data != null) {
+            if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+                figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess) elytra).getLeftWing());
+                figura$applyPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING, ((ElytraEntityModelAccess) elytra).getRightWing());
+            }
+        }
     }
 
     @Inject(at = @At("RETURN"), method = "render")

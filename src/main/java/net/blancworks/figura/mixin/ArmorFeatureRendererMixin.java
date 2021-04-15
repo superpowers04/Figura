@@ -5,6 +5,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ArmorModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.ArmorFeatureRenderer;
@@ -46,12 +47,18 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
         String partID = partMap.get(equipmentSlot);
         
         if(partID != null) {
-            figura$applyPartCustomization(partID, bipedEntityModel.head);
-            figura$applyPartCustomization(partID, bipedEntityModel.torso);
-            figura$applyPartCustomization(partID, bipedEntityModel.leftArm);
-            figura$applyPartCustomization(partID, bipedEntityModel.leftLeg);
-            figura$applyPartCustomization(partID, bipedEntityModel.rightArm);
-            figura$applyPartCustomization(partID, bipedEntityModel.rightLeg);
+            PlayerData data = FiguraMod.currentData;
+            
+            if(data != null) {
+                if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+                    figura$applyPartCustomization(partID, bipedEntityModel.head);
+                    figura$applyPartCustomization(partID, bipedEntityModel.torso);
+                    figura$applyPartCustomization(partID, bipedEntityModel.leftArm);
+                    figura$applyPartCustomization(partID, bipedEntityModel.leftLeg);
+                    figura$applyPartCustomization(partID, bipedEntityModel.rightArm);
+                    figura$applyPartCustomization(partID, bipedEntityModel.rightLeg);
+                }
+            }
         }
         
     }
