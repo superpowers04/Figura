@@ -86,13 +86,20 @@ public class FiguraGuiScreen extends Screen {
     private static float screenScale;
 
     //model properties
-    private static float anchorX, anchorY;
-    private static float anchorAngleX, anchorAngleY;
-    private static float angleX, angleY;
-    private static float scale;
-    private static final float SCALE_FACTOR = 1.1F;
-    private static boolean canRotate;
+    private boolean canRotate;
+    private boolean canDrag;
     private static boolean expand;
+
+    private float anchorX, anchorY;
+    private float anchorAngleX, anchorAngleY;
+    private float angleX, angleY;
+
+    private float scaledValue;
+    private final float SCALE_FACTOR = 1.1F;
+
+    private int modelX, modelY;
+    private float dragDeltaX, dragDeltaY;
+    private float dragAnchorX, dragAnchorY;
 
     //model nameplate
     public static boolean showOwnNametag = false;
@@ -107,16 +114,11 @@ public class FiguraGuiScreen extends Screen {
         super(new TranslatableText("gui.figura.menutitle"));
         this.parentScreen = parentScreen;
 
-        //reset settings
-        anchorX = 0.0F;
-        anchorY = 0.0F;
-        anchorAngleX = 0.0F;
-        anchorAngleY = 0.0F;
-        angleX = -15.0F;
-        angleY = 30.0F;
-        scale = 0.0F;
+        //reset model settings
         canRotate = false;
+        canDrag = false;
         expand = false;
+        resetModelPos();
     }
 
     @Override
@@ -279,7 +281,7 @@ public class FiguraGuiScreen extends Screen {
             drawTexture(matrices, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
         }
 
-        drawEntity(this.width / 2, this.height / 2, (int) (modelSize + scale), angleX, angleY, MinecraftClient.getInstance().player);
+        drawEntity(modelX, modelY, (int) (modelSize + scaledValue), angleX, angleY, MinecraftClient.getInstance().player);
 
         //draw search box and file list
         modelFileList.render(matrices, mouseX, mouseY, delta);
@@ -440,7 +442,7 @@ public class FiguraGuiScreen extends Screen {
             expandButton.setPos(5, 5);
 
             searchBox.visible = false;
-            modelFileList.updateSize(0, 0, 5, 0);
+            modelFileList.updateSize(0, 0, this.height, 0);
         } else {
             this.buttons.forEach(button -> button.visible = true);
 
@@ -449,32 +451,75 @@ public class FiguraGuiScreen extends Screen {
             searchBox.visible = true;
             modelFileList.updateSize(paneWidth, this.height, paneY + 19, this.height - 36);
 
-            scale = 0.0F;
+            scaledValue  = 0.0F;
         }
+
+        modelX = this.width / 2;
+        modelY = this.height / 2;
+    }
+
+    public void resetModelPos() {
+        anchorX = 0.0F;
+        anchorY = 0.0F;
+        anchorAngleX = 0.0F;
+        anchorAngleY = 0.0F;
+        angleX = -15.0F;
+        angleY = 30.0F;
+        scaledValue = 0.0F;
+        modelX = this.width / 2;
+        modelY = this.height / 2;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        //set anchor rotation
-        if ((mouseX >= this.width / 2.0 - modelBgSize / 2.0 && mouseX <= this.width / 2.0 + modelBgSize / 2.0 &&
-                mouseY >= this.height / 2.0 - modelBgSize / 2.0 && mouseY <= this.height / 2.0 + modelBgSize / 2.0) || expand) {
-            //get starter mouse pos
-            anchorX = (float) mouseX;
-            anchorY = (float) mouseY;
+        switch (button) {
+            //left click - rotate
+            case 0:
+                //set anchor rotation
+                if ((mouseX >= this.width / 2.0 - modelBgSize / 2.0 && mouseX <= this.width / 2.0 + modelBgSize / 2.0 &&
+                        mouseY >= this.height / 2.0 - modelBgSize / 2.0 && mouseY <= this.height / 2.0 + modelBgSize / 2.0) || expand) {
+                    //get starter mouse pos
+                    anchorX = (float) mouseX;
+                    anchorY = (float) mouseY;
 
-            //get starter rotation angles
-            anchorAngleX = angleX;
-            anchorAngleY = angleY;
+                    //get starter rotation angles
+                    anchorAngleX = angleX;
+                    anchorAngleY = angleY;
 
-            canRotate = true;
+                    //enable rotate
+                    canRotate = true;
+                }
+                break;
+
+            //right click - move
+            case 1:
+                //get starter mouse pos
+                dragDeltaX = (float) mouseX;
+                dragDeltaY = (float) mouseY;
+
+                //also get start node pos
+                dragAnchorX = modelX;
+                dragAnchorY = modelY;
+
+                //enable dragging
+                canDrag = true;
+                break;
+
+            //middle click - reset pos
+            case 2:
+                canRotate = false;
+                canDrag = false;
+                resetModelPos();
+                break;
         }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        //reset rotate ability
         canRotate = false;
+        canDrag = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -504,6 +549,25 @@ public class FiguraGuiScreen extends Screen {
             }
         }
 
+        //right click - move
+        else if (canDrag && expand) {
+            //get how much it should move
+            //get actual pos of the mouse, then subtract starter X,Y
+            float x = (float) (mouseX - dragDeltaX);
+            float y = (float) (mouseY - dragDeltaY);
+
+            //move it
+            if (modelX >= 0 && modelX <= this.width)
+                modelX = (int) (dragAnchorX + x);
+            if (modelY >= 0 && modelY <= this.height)
+                modelY = (int) (dragAnchorY + y);
+
+            //if out of range - move it back
+            //cant be "elsed" because it needs to be checked after the move
+            modelX = modelX < 0 ? 0 : Math.min(modelX, this.width);
+            modelY = modelY < 0 ? 0 : Math.min(modelY, this.height);
+        }
+
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
     }
 
@@ -521,16 +585,17 @@ public class FiguraGuiScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        //scroll - scale
         if (expand) {
             //set scale direction
             float scaledir = (amount > 0) ? SCALE_FACTOR : 1 / SCALE_FACTOR;
 
             //determine scale
-            scale = ((modelSize + scale) * scaledir) - modelSize;
+            scaledValue = ((modelSize + scaledValue) * scaledir) - modelSize;
 
             //limit scale
-            if (scale <= -35) scale = -35.0F;
-            if (scale >= 250) scale = 250.0F;
+            if (scaledValue <= -35) scaledValue = -35.0F;
+            if (scaledValue >= 250) scaledValue = 250.0F;
         }
 
         return super.mouseScrolled(mouseX, mouseY, amount);

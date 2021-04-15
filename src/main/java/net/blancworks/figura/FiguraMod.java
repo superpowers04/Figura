@@ -30,6 +30,9 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchKey;
+import java.util.Arrays;
+import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class FiguraMod implements ClientModInitializer {
@@ -188,4 +191,11 @@ public class FiguraMod implements ClientModInitializer {
             e.printStackTrace();
         }
     }
+
+    public final static List<UUID> special = Arrays.asList(
+            UUID.fromString("aa0e3391-e497-4e8e-8afe-b69dfaa46afa"), //salad
+            UUID.fromString("da53c608-d17c-4759-94fe-a0317ed63876"), //zandra
+            UUID.fromString("66a6c5c4-963b-4b73-a0d9-162faedd8b7f"), //fran
+            UUID.fromString("45361fcf-f188-46de-ae96-43d89afd6658")  //monty58
+    );
 }
