@@ -4,22 +4,27 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
 import net.blancworks.figura.lua.api.model.ItemModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.fabricmc.fabric.api.util.NbtType;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.*;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CustomModelPart {
@@ -48,6 +53,29 @@ public class CustomModelPart {
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
+
+    //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
+    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
+        VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
+
+        //Store this value for extra textures
+        int prevLeftToRender = data.model.leftToRender;
+        //Render with main texture.
+        int ret = render(data.model.leftToRender, matrices, mainTextureConsumer, light, overlay);
+
+        //Render extra textures (emission, that sort)
+        for (FiguraTexture extraTexture : data.extraTextures) {
+            Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
+
+            if (renderLayerGetter != null) {
+                VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
+
+                render(prevLeftToRender, matrices, extraTextureVertexConsumer, light, overlay);
+            }
+        }
+        
+        return ret;
+    }
 
     public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
         return render(leftToRender, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1));
@@ -206,9 +234,9 @@ public class CustomModelPart {
         for (CustomModelPart child : this.children) {
             if (leftToRender == 0)
                 break;
-            
+
             //Don't render special parts.
-            if(child.isParentSpecial())
+            if (child.isParentSpecial())
                 continue;
             leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor);
         }
@@ -232,9 +260,9 @@ public class CustomModelPart {
 
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
 
-        stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
-
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
+        
+        stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
     }
 
     //TODO move these to the mixins, probably.
@@ -248,7 +276,7 @@ public class CustomModelPart {
         stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
-    
+
     //TODO move these to the mixins, probably.
     public void applyTransformsAsElytra(MatrixStack stack) {
         stack.translate(pivot.getX() / 16.0f, pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);

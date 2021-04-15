@@ -21,6 +21,9 @@
   "entrypoints": {
     "client": [
       "net.blancworks.figura.FiguraMod"
+    ],
+    "dynamiclights": [
+      "net.blancworks.figura.othermods.lambdynamiclights.LambDynamicLightsEntrypoint"
     ]
   },
   "mixins": [

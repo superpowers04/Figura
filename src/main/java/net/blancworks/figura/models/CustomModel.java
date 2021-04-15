@@ -57,7 +57,7 @@ public class CustomModel extends FiguraAsset {
         return tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID);
     }
 
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
+    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
         leftToRender = getMaxRenderAmount();
         int maxRender = leftToRender;
 
@@ -78,7 +78,7 @@ public class CustomModel extends FiguraAsset {
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
 
-                leftToRender = part.render(leftToRender, matrices, vertices, light, overlay);
+                leftToRender = part.renderUsingAllTextures(owner, matrices, vcp, light, overlay);
 
                 lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
             } catch (Exception e) {
@@ -97,28 +97,28 @@ public class CustomModel extends FiguraAsset {
         }
 
         for (CustomModelPart part : playerData.model.allParts) {
-            renderArmRecursive(part, playerData, matrices, vc, light, player, arm, sleeve, model);
+            renderArmRecursive(part, playerData, matrices, vertexConsumers, light, player, arm, sleeve, model);
         }
     }
 
-    public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumer vertexConsumer, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model) {
-
+    public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vcp, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model) {
+        
         if (part.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm)
-            part.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+            part.renderUsingAllTextures(playerData, matrices, vcp, light, OverlayTexture.DEFAULT_UV);
         else if (part.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm)
-            part.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+            part.renderUsingAllTextures(playerData, matrices, vcp, light, OverlayTexture.DEFAULT_UV);
 
         for (CustomModelPart child : part.children) {
             if (child.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm) {
                 matrices.push();
 
-                child.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+                child.renderUsingAllTextures(owner, matrices, vcp, light, OverlayTexture.DEFAULT_UV);
 
                 matrices.pop();
             } else if (child.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm) {
                 matrices.push();
 
-                child.render(99999, matrices, vertexConsumer, light, OverlayTexture.DEFAULT_UV);
+                child.renderUsingAllTextures(owner, matrices, vcp, light, OverlayTexture.DEFAULT_UV);
 
                 matrices.pop();
             }

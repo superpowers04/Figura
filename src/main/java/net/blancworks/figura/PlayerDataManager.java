@@ -124,7 +124,7 @@ public final class PlayerDataManager {
                 String serverHash = hash;
 
                 try {
-                    serverHash = FiguraNetworkManager.getAvatarHash(id).get();
+                    serverHash = FiguraNetworkManager.getAvatarHashSync(id);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -291,13 +291,11 @@ public final class PlayerDataManager {
                 return;
             }
         }
-
-        hashCheckCooldown = 4;
-
-        CompletableFuture.runAsync(() -> {
+        
+        FiguraMod.doTask(() -> {
             try {
-                String hash = FiguraNetworkManager.getAvatarHash(id).get();
-
+                String hash = FiguraNetworkManager.getAvatarHashSync(id);
+                
                 if (!hash.equals(dat.lastHash) && hash.length() > 0) {
                     TO_CLEAR.add(id);
                 }

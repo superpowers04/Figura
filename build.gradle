@@ -13,6 +13,24 @@ group = project.maven_group
 repositories {
 	mavenCentral()
 	maven { url "https://maven.shedaniel.me/" }
+	maven {
+		name = "AperLambda"
+		url = 'https://aperlambda.github.io/maven'
+	}
+	maven { url 'https://jitpack.io' }
+
+	maven {
+		name = "entity reach"
+		url = "https://maven.jamieswhiteshirt.com/libs-release/"
+	}
+	maven {
+		name = "fall flying lib"
+		url = "https://dl.bintray.com/adriantodt/maven"
+	}
+	maven {
+		name = "cloth config"
+		url = "https://maven.shedaniel.me/"
+	}
 }
 
 dependencies {
@@ -31,6 +49,16 @@ dependencies {
 	// OBJ Loader
 	implementation group: 'de.javagl', name: 'obj', version: '0.3.0'
 	include group: 'de.javagl', name: 'obj', version: '0.3.0'
+	
+	//SpruceUI
+	modImplementation "com.github.lambdaurora:spruceui:${project.spruceui_version}"
+	include "com.github.lambdaurora:spruceui:${project.spruceui_version}"
+	
+	//LambDynamicLights
+	modImplementation 'com.github.LambdAurora:LambDynamicLights:1.3.4-1.16'
+	
+	//Origins
+	modImplementation "com.github.apace100:origins-fabric:${project.origins_version}"
 }
 
 processResources {

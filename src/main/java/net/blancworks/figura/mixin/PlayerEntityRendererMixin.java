@@ -7,6 +7,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -41,19 +42,23 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
     public void onRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         FiguraMod.setRenderingData(abstractClientPlayerEntity, vertexConsumerProvider, this.getModel(), MinecraftClient.getInstance().getTickDelta());
         
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().torso);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, this.getModel().rightArm);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, this.getModel().leftLeg);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, this.getModel().rightLeg);
+        if(FiguraMod.currentData != null) {
+            if(FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().torso);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, this.getModel().rightArm);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, this.getModel().leftLeg);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, this.getModel().rightLeg);
 
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().helmet);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, this.getModel().jacket);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, this.getModel().leftSleeve);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().helmet);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, this.getModel().jacket);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, this.getModel().leftSleeve);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
+            }
+        }
     }
 
     @Inject(at = @At("RETURN"), method = "render")
@@ -112,7 +117,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
         if (data != null && data.script != null && data.script.allCustomizations != null) {
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
-
+            
             if (customization != null) {
                 ((ModelPartAccess) part).figura$setPartCustomization(customization);
                 figura$customizedParts.add(part);
