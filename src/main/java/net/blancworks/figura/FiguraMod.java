@@ -46,7 +46,7 @@ public class FiguraMod implements ClientModInitializer {
     private static CompletableFuture globalLoadTask;
 
     private PlayerDataManager dataManagerInstance;
-    
+
 
     //Used during rendering.
     public static AbstractClientPlayerEntity currentPlayer;
@@ -57,7 +57,7 @@ public class FiguraMod implements ClientModInitializer {
     private static final boolean USE_DEBUG_MODEL = true;
     private static WatchKey watchKey;
     private static Path path;
-    
+
     //Methods
 
     //Set current player.
@@ -148,27 +148,35 @@ public class FiguraMod implements ClientModInitializer {
         if (onFinished != null)
             onFinished.run();
     }
-    
-    
-    private static void renderFirstPersonWorldParts(WorldRenderContext context){
+
+
+    private static void renderFirstPersonWorldParts(WorldRenderContext context) {
         try {
-            if (!context.camera().isThirdPerson()){
+            if (!context.camera().isThirdPerson()) {
                 PlayerData data = PlayerDataManager.localPlayer;
-                FiguraMod.currentData = data;
-                
-                context.matrixStack().push();
-                context.matrixStack().translate(-context.camera().getPos().x, -context.camera().getPos().y, -context.camera().getPos().z);
-                context.matrixStack().scale(-1, -1, 1);
 
-                if (data != null && data.model != null) {
-                    for (CustomModelPart part : data.model.worldParts) {
-                        part.renderUsingAllTextures(data,  context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV);
+                if (data.lastEntity != null) {
+
+                    FiguraMod.currentData = data;
+
+                    context.matrixStack().push();
+                    context.matrixStack().translate(-context.camera().getPos().x, -context.camera().getPos().y, -context.camera().getPos().z);
+                    context.matrixStack().scale(-1, -1, 1);
+
+                    try {
+                        if (data != null && data.model != null) {
+                            for (CustomModelPart part : data.model.worldParts) {
+                                part.renderUsingAllTextures(data, context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV);
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
+
+                    context.matrixStack().pop();
+
+                    FiguraMod.clearRenderingData();
                 }
-
-                context.matrixStack().pop();
-
-                FiguraMod.clearRenderingData();
             }
         } catch (Exception e) {
             e.printStackTrace();

@@ -226,13 +226,11 @@ public class PlayerData {
 
         PlayerEntity newEnt = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
         if (lastEntity != newEnt) {
-            if (lastEntity != null) {
-                if (script != null) {
-                    CustomScript reloadedScript = new CustomScript();
-                    reloadedScript.load(this, script.source);
+            if (lastEntity != null && script != null && newEnt != null) {
+                CustomScript reloadedScript = new CustomScript();
+                reloadedScript.load(this, script.source);
 
-                    script = reloadedScript;
-                }
+                script = reloadedScript;
             }
         }
         lastEntity = newEnt;
