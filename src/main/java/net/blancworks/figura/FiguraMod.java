@@ -155,7 +155,7 @@ public class FiguraMod implements ClientModInitializer {
             if (!context.camera().isThirdPerson()) {
                 PlayerData data = PlayerDataManager.localPlayer;
 
-                if (data.lastEntity != null) {
+                if (data != null && data.lastEntity != null) {
 
                     FiguraMod.currentData = data;
 
@@ -164,11 +164,17 @@ public class FiguraMod implements ClientModInitializer {
                     context.matrixStack().scale(-1, -1, 1);
 
                     try {
+                        
+                        int prevCount = data.model.leftToRender;
+                        data.model.leftToRender = 9999999;
+                        
                         if (data != null && data.model != null) {
                             for (CustomModelPart part : data.model.worldParts) {
                                 part.renderUsingAllTextures(data, context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV);
                             }
                         }
+                        
+                        data.model.leftToRender = prevCount;
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
