@@ -246,9 +246,9 @@ public class CustomScript extends FiguraAsset {
     public void tick() {
 
         if (particleSpawnCount > 0)
-            particleSpawnCount = MathHelper.clamp(particleSpawnCount - (1 / 20f), 0, 999);
+            particleSpawnCount = MathHelper.clamp(particleSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID)), 0, 999);
         if (soundSpawnCount > 0)
-            soundSpawnCount = MathHelper.clamp(soundSpawnCount - (1 / 20f), 0, 999);
+            soundSpawnCount = MathHelper.clamp(soundSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID)), 0, 999);
 
         //If the tick function exists, call it.
         if (tickLuaEvent != null) {
