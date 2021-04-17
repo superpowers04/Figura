@@ -143,7 +143,10 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void fromNBT(PlayerData data, CompoundTag tag) {
-        load(data, tag.getString("src"));
+        source = tag.getString("src");
+        
+        if(data.lastEntity != null)
+            load(data, source);
     }
 
 

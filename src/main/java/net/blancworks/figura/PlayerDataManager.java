@@ -251,7 +251,7 @@ public final class PlayerDataManager {
             LOADED_PLAYER_DATA.remove(uuid);
         }
         TO_CLEAR.clear();
-
+        
         for (Map.Entry<UUID, PlayerData> entry : LOADED_PLAYER_DATA.entrySet()) {
             entry.getValue().tick();
         }
