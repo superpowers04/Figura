@@ -141,6 +141,8 @@ public class CustomScript extends FiguraAsset {
                         FiguraMod.LOGGER.warn("Script Loading Finished");
                     }
             );
+        }catch (LuaError e){
+            logLuaError(e);
         } catch (Exception e) {
             e.printStackTrace();
         }
