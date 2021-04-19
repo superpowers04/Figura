@@ -6,6 +6,7 @@ import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.player.PlayerEntity;
@@ -223,13 +224,18 @@ public class PlayerData {
     public void tick() {
         if (this.isInvalidated)
             PlayerDataManager.clearPlayer(playerId);
-
+        
+        
+        vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
         PlayerEntity newEnt = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
-        if (lastEntity != newEnt) {
-            if (lastEntity != null && script != null && newEnt != null) {
+        if (lastEntity != newEnt && script != null) {
+            if(newEnt == null){
+                CustomScript reloadedScript = new CustomScript();
+                reloadedScript.source = script.source;
+                script = reloadedScript;
+            } else {
                 CustomScript reloadedScript = new CustomScript();
                 reloadedScript.load(this, script.source);
-
                 script = reloadedScript;
             }
         }

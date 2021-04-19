@@ -5,6 +5,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -41,9 +42,9 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         FiguraMod.setRenderingData(abstractClientPlayerEntity, vertexConsumerProvider, this.getModel(), MinecraftClient.getInstance().getTickDelta());
-        
-        if(FiguraMod.currentData != null) {
-            if(FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+
+        if (FiguraMod.currentData != null) {
+            if (FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().torso);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);
@@ -63,6 +64,15 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
     @Inject(at = @At("RETURN"), method = "render")
     public void postRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
+        if (FiguraMod.currentData != null) {
+            PlayerData currData = FiguraMod.currentData;
+
+            if (currData.script != null && currData.script.isDone) {
+                for (VanillaModelAPI.ModelPartTable partTable : currData.script.vanillaModelPartTables) {
+                    partTable.updateFromPart();
+                }
+            }
+        }
         FiguraMod.clearRenderingData();
         figura$clearAllPartCustomizations();
     }
@@ -94,8 +104,11 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
         if (playerData != null && playerData.model != null) {
             //Only render if texture is ready
-            if (playerData.texture == null || !playerData.texture.isDone)
+            if (playerData.texture == null || !playerData.texture.isDone) {
+                FiguraMod.clearRenderingData();
+                figura$clearAllPartCustomizations();
                 return;
+            }
 
             arm.pitch = 0;
 
@@ -120,7 +133,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
         if (data != null && data.script != null && data.script.allCustomizations != null) {
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
-            
+
             if (customization != null) {
                 ((ModelPartAccess) part).figura$setPartCustomization(customization);
                 figura$customizedParts.add(part);

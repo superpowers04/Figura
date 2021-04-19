@@ -70,8 +70,13 @@ public class VanillaModelAPI {
         return producedTable;
     }
 
-    private static class ModelPartTable extends ScriptLocalAPITable {
+    public static class ModelPartTable extends ScriptLocalAPITable {
         ModelPart targetPart;
+        
+        public float pivotX,pivotY,pivotZ;
+        public float pitch, yaw, roll;
+        public boolean visible;
+        
         String accessor;
 
         public ModelPartTable(ModelPart part, String accessor, CustomScript script) {
@@ -79,6 +84,8 @@ public class VanillaModelAPI {
             targetPart = part;
             this.accessor = accessor;
             super.setTable(getTable());
+            
+            script.vanillaModelPartTables.add(this);
         }
 
         public LuaTable getTable() {
@@ -169,26 +176,37 @@ public class VanillaModelAPI {
             ret.set("getOriginPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVector3f(new Vector3f(targetPart.pivotX, targetPart.pivotY, targetPart.pivotZ));
+                    return LuaUtils.getTableFromVector3f(new Vector3f(pivotX, pivotY, pivotZ));
                 }
             });
 
             ret.set("getOriginRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVector3f(new Vector3f(targetPart.pitch, targetPart.yaw, targetPart.roll));
+                    return LuaUtils.getTableFromVector3f(new Vector3f(pitch, yaw, roll));
                 }
             });
 
             ret.set("getOriginEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaBoolean.valueOf(targetPart.visible);
+                    return LuaBoolean.valueOf(visible);
                 }
             });
             
             
             return ret;
+        }
+        
+        public void updateFromPart(){
+            pivotX = targetPart.pivotX;
+            pivotY = targetPart.pivotY;
+            pivotZ = targetPart.pivotZ;
+            
+            pitch = targetPart.pitch;
+            yaw = targetPart.yaw;
+            roll = targetPart.roll;
+            visible = targetPart.visible;
         }
     }
 

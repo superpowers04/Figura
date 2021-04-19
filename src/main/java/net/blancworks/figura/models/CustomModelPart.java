@@ -246,6 +246,8 @@ public class CustomModelPart {
     }
 
     public void applyTransforms(MatrixStack stack) {
+        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+        
         stack.translate(-this.pivot.getX() / 16.0f, -this.pivot.getY() / 16.0f, -this.pivot.getZ() / 16.0f);
 
         if (this.isMimicMode || this.rotationType == RotationType.Vanilla) {
@@ -257,9 +259,6 @@ public class CustomModelPart {
             stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
             stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
         }
-
-        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
-
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
         
         stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);

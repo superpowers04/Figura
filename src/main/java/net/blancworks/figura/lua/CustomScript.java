@@ -5,14 +5,18 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
+import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.entity.PlayerModelPart;
+import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.luaj.vm2.*;
@@ -20,6 +24,7 @@ import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -58,6 +63,9 @@ public class CustomScript extends FiguraAsset {
 
     //Vanilla model part customizations made via this script
     public Map<String, VanillaModelPartCustomization> allCustomizations = new HashMap<>();
+
+    //Keep track of these because we want to apply data to them later.
+    public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();
 
     public float particleSpawnCount = 0;
     public float soundSpawnCount = 0;
@@ -110,8 +118,8 @@ public class CustomScript extends FiguraAsset {
                     // A simple lua error may be caught by the script, but a
                     // Java Error will pass through to top and stop the script.
                     loadError = true;
-                    
-                    if(data == PlayerDataManager.localPlayer)
+
+                    if (data == PlayerDataManager.localPlayer)
                         sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                     throw new RuntimeException("Script overran resource limits.");
                 }
@@ -143,7 +151,10 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void fromNBT(PlayerData data, CompoundTag tag) {
-        load(data, tag.getString("src"));
+        source = tag.getString("src");
+
+        if (data.lastEntity != null)
+            load(data, source);
     }
 
 
@@ -246,9 +257,9 @@ public class CustomScript extends FiguraAsset {
     public void tick() {
 
         if (particleSpawnCount > 0)
-            particleSpawnCount = MathHelper.clamp(particleSpawnCount - (1 / 20f), 0, 999);
+            particleSpawnCount = MathHelper.clamp(particleSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID)), 0, 999);
         if (soundSpawnCount > 0)
-            soundSpawnCount = MathHelper.clamp(soundSpawnCount - (1 / 20f), 0, 999);
+            soundSpawnCount = MathHelper.clamp(soundSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID)), 0, 999);
 
         //If the tick function exists, call it.
         if (tickLuaEvent != null) {
@@ -292,7 +303,6 @@ public class CustomScript extends FiguraAsset {
         if (renderLuaEvent == null)
             return;
 
-
         setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
@@ -328,7 +338,7 @@ public class CustomScript extends FiguraAsset {
         for (int i = 0; i < s.length(); i++) {
             char curr = s.charAt(i);
 
-            if(!commentRemoveMode && !blockCommentMode) {
+            if (!commentRemoveMode && !blockCommentMode) {
                 if (curr == '-') {
                     if (i < s.length() - 1 && s.charAt(i + 1) == '-') {
                         commentRemoveMode = true;
@@ -346,23 +356,21 @@ public class CustomScript extends FiguraAsset {
             }
 
             if (commentRemoveMode) {
-                if(blockCommentMode) {
-                    if (curr == '-') {
-                        if (i < s.length() - 1 && s.charAt(i + 1) == '-') {
-                            if (i < s.length() - 3 && s.charAt(i + 2) == ']' && s.charAt(i + 3) == ']') {
-                                blockCommentMode = false;
-                                commentRemoveMode = false;
+                if (blockCommentMode) {
+                    if (curr == ']') {
+                        if (i < s.length() - 1 && s.charAt(i + 1) == ']') {
+                            blockCommentMode = false;
+                            commentRemoveMode = false;
 
-                                i += 2; //Skip those 2 characters.
-                            }
-
-                            i++; //Skip the character we detected.
-                            continue;
+                            i += 1; //Skip those 2 characters.
                         }
+
+                        i++; //Skip the character we detected.
+                        continue;
                     }
                 }
 
-                if(curr == '\n' && !blockCommentMode){
+                if (curr == '\n' && !blockCommentMode) {
                     commentRemoveMode = false;
                     continue;
                 }

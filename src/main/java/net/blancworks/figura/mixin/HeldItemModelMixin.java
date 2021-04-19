@@ -34,6 +34,8 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
     }
 
     public VanillaModelPartCustomization figura$customization;
+    
+    private int figura$pushedMatrixCount = 0;
 
     @Inject(at = @At("HEAD"), cancellable = true, method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformation$Mode;Lnet/minecraft/util/Arm;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     private void onRenderItem(LivingEntity entity, ItemStack stack, ModelTransformation.Mode transformationMode, Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
@@ -47,14 +49,18 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
         if (tc == null || !tc.getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
             return;
         
-        if (data.model != null) {
-            VanillaModelPartCustomization originModification = arm == Arm.LEFT ? data.model.originModifications.get(ItemModelAPI.VANILLA_LEFT_HAND_ID) : data.model.originModifications.get(ItemModelAPI.VANILLA_RIGHT_HAND_ID);
+        try {
+            if (data.model != null) {
+                VanillaModelPartCustomization originModification = arm == Arm.LEFT ? data.model.originModifications.get(ItemModelAPI.VANILLA_LEFT_HAND_ID) : data.model.originModifications.get(ItemModelAPI.VANILLA_RIGHT_HAND_ID);
 
-            if (originModification != null && originModification.stackReference != null) {
-                figura$CustomOriginPointRender(entity, stack, transformationMode, arm, originModification.stackReference, vertexConsumers, light);
-                ci.cancel();
-                return;
+                if (originModification != null && originModification.stackReference != null) {
+                    figura$CustomOriginPointRender(entity, stack, transformationMode, arm, originModification.stackReference, vertexConsumers, light);
+                    ci.cancel();
+                    return;
+                }
             }
+        } catch (Exception e){
+            e.printStackTrace();
         }
 
         try {
@@ -69,6 +75,7 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
                     }
 
                     matrices.push();
+                    figura$pushedMatrixCount++;
 
                     if (figura$customization.pos != null)
                         matrices.translate(figura$customization.pos.getX() / 16.0f, figura$customization.pos.getY() / 16.0f, figura$customization.pos.getZ() / 16.0f);
@@ -88,14 +95,11 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
     @Inject(at = @At("RETURN"), method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformation$Mode;Lnet/minecraft/util/Arm;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     private void postRenderItem(LivingEntity entity, ItemStack stack, ModelTransformation.Mode transformationMode, Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         PlayerData data = FiguraMod.currentData;
-
-        if (data != null && data.script != null && data.script.allCustomizations != null) {
-            figura$customization = data.script.allCustomizations.get(arm == Arm.LEFT ? ItemModelAPI.VANILLA_LEFT_HAND : ItemModelAPI.VANILLA_RIGHT_HAND);
-
-            if (figura$customization != null) {
-                matrices.pop();
-            }
-        }
+        
+        for(int i = 0; i < figura$pushedMatrixCount; i++)
+            matrices.pop();
+        
+        figura$pushedMatrixCount = 0;
     }
 
     @Shadow
