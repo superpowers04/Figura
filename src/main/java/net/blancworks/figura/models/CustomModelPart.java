@@ -56,25 +56,29 @@ public class CustomModelPart {
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
-        VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
+        if(data.texture.isDone) {
+            VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
 
-        //Store this value for extra textures
-        int prevLeftToRender = data.model.leftToRender;
-        //Render with main texture.
-        int ret = render(data.model.leftToRender, matrices, mainTextureConsumer, light, overlay);
+            //Store this value for extra textures
+            int prevLeftToRender = data.model.leftToRender;
+            //Render with main texture.
+            int ret = render(data.model.leftToRender, matrices, mainTextureConsumer, light, overlay);
 
-        //Render extra textures (emission, that sort)
-        for (FiguraTexture extraTexture : data.extraTextures) {
-            Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
+            //Render extra textures (emission, that sort)
+            for (FiguraTexture extraTexture : data.extraTextures) {
+                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
 
-            if (renderLayerGetter != null) {
-                VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
+                if (renderLayerGetter != null) {
+                    VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
 
-                render(prevLeftToRender, matrices, extraTextureVertexConsumer, light, overlay);
+                    render(prevLeftToRender, matrices, extraTextureVertexConsumer, light, overlay);
+                }
             }
-        }
+
+            return ret;
+        } 
         
-        return ret;
+        return 0;
     }
 
     public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
