@@ -357,18 +357,16 @@ public class CustomScript extends FiguraAsset {
 
             if (commentRemoveMode) {
                 if (blockCommentMode) {
-                    if (curr == '-') {
-                        if (i < s.length() - 1 && s.charAt(i + 1) == '-') {
-                            if (i < s.length() - 3 && s.charAt(i + 2) == ']' && s.charAt(i + 3) == ']') {
-                                blockCommentMode = false;
-                                commentRemoveMode = false;
+                    if (curr == ']') {
+                        if (i < s.length() - 1 && s.charAt(i + 1) == ']') {
+                            blockCommentMode = false;
+                            commentRemoveMode = false;
 
-                                i += 2; //Skip those 2 characters.
-                            }
-
-                            i++; //Skip the character we detected.
-                            continue;
+                            i += 1; //Skip those 2 characters.
                         }
+
+                        i++; //Skip the character we detected.
+                        continue;
                     }
                 }
 
