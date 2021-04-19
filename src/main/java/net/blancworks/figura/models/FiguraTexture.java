@@ -116,6 +116,7 @@ public class FiguraTexture extends ResourceTexture {
 
     //Uploads the data for the texture to the render system, using the current data array.
     public void uploadUsingData() {
+        registerTexture();
         FiguraMod.doTask(() -> {
             try {
                 ByteBuffer wrapper = MemoryUtil.memAlloc(data.length);
