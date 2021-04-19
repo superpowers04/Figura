@@ -392,8 +392,10 @@ public class CustomScript extends FiguraAsset {
 
     public void logLuaError(LuaError error) {
         //Never even log errors for other players, only the local player.
-        if (playerData != PlayerDataManager.localPlayer)
+        if (playerData != PlayerDataManager.localPlayer) {
+            error.printStackTrace();
             return;
+        }
 
         loadError = true;
         String msg = error.getMessage();
