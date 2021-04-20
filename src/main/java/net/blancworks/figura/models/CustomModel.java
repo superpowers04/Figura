@@ -70,6 +70,9 @@ public class CustomModel extends FiguraAsset {
             if (part.isParentSpecial())
                 continue;
 
+            if (this.owner.lastEntity.isSpectator() && !(part.parentType == CustomModelPart.ParentType.Head))
+                continue;
+
             matrices.push();
 
             try {
@@ -78,7 +81,7 @@ public class CustomModel extends FiguraAsset {
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
 
-                leftToRender = part.renderUsingAllTextures(owner, matrices, vcp, light, overlay);
+                leftToRender = part.renderUsingAllTextures(owner, matrices, vcp, light, overlay, alpha);
 
                 lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
             } catch (Exception e) {

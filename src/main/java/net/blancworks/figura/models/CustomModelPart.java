@@ -55,13 +55,13 @@ public class CustomModelPart {
     public int vertexCount = 0;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
-    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
+    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
 
         //Store this value for extra textures
         int prevLeftToRender = data.model.leftToRender;
         //Render with main texture.
-        int ret = render(data.model.leftToRender, matrices, mainTextureConsumer, light, overlay);
+        int ret = render(data.model.leftToRender, matrices, mainTextureConsumer, light, overlay, alpha);
 
         //Render extra textures (emission, that sort)
         for (FiguraTexture extraTexture : data.extraTextures) {
@@ -70,20 +70,31 @@ public class CustomModelPart {
             if (renderLayerGetter != null) {
                 VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
 
-                render(prevLeftToRender, matrices, extraTextureVertexConsumer, light, overlay);
+                render(prevLeftToRender, matrices, extraTextureVertexConsumer, light, overlay, alpha);
             }
         }
         
         return ret;
     }
 
+    //default render
+    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
+        return renderUsingAllTextures(data, matrices, vcp, light, overlay, 1.0F);
+    }
+
+    //alpha render
+    public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float alpha) {
+        return render(leftToRender, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1), alpha);
+    }
+
+    //default render
     public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
-        return render(leftToRender, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1));
+        return render(leftToRender, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1), 1.0F);
     }
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
-    public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor) {
+    public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
         //Don't render invisible parts.
         if (!this.visible) {
             return leftToRender;
@@ -216,7 +227,7 @@ public class CustomModelPart {
             //Push vertex.
             vertices.vertex(
                     fullVert.getX(), fullVert.getY(), fullVert.getZ(),
-                    tempColor.getX(), tempColor.getY(), tempColor.getZ(), 1,
+                    tempColor.getX(), tempColor.getY(), tempColor.getZ(), alpha,
                     vertU + u, vertV + v,
                     overlay, light,
                     normal.getX(), normal.getY(), normal.getZ()
@@ -238,7 +249,7 @@ public class CustomModelPart {
             //Don't render special parts.
             if (child.isParentSpecial())
                 continue;
-            leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor);
+            leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor, alpha);
         }
 
         matrices.pop();
