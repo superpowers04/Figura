@@ -11,6 +11,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaBoolean;
+import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -22,17 +23,8 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class VectorAPI {
-
-    public static final ArrayList<String> componentNames = new ArrayList<String>() {{
-        add("x,u,r");
-        add("y,v,g");
-        add("z,b");
-        add("w,a");
-        add("t");
-        add("h");
-    }};
     private static ReadOnlyLuaTable globalLuaTable;
-    private static World lastWorld;
+    private static boolean initialized;
 
     private static World getWorld() {
         return MinecraftClient.getInstance().world;
@@ -43,8 +35,10 @@ public class VectorAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        if (getWorld() != lastWorld)
+        if (!initialized) {
             updateGlobalTable();
+            initialized = true;
+        }
 
         return globalLuaTable;
     }
@@ -69,7 +63,15 @@ public class VectorAPI {
                 }
             });
 
-            set("RGBtoHSV", new OneArgFunction() {
+            set("intToRGB", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    int i = arg.checkint();
+                    return RGBfromInt(i);
+                }
+            });
+
+            set("rgbToHSV", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     LuaVector rgb = LuaVector.check(arg);
@@ -77,43 +79,78 @@ public class VectorAPI {
                 }
             });
 
-            set("HSVtoRGB", new OneArgFunction() {
+            set("hsvToRGB", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     LuaVector hsv = LuaVector.check(arg);
                     return toRGB(hsv);
                 }
             });
+
+            set("worldToPart", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector vec = LuaVector.check(arg);
+                    return toModelSpace(vec);
+                }
+            });
+
+            set("getVector", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    int n = arg.checkint();
+                    return new LuaVector(new float[n]);
+                }
+            });
         }});
     }
 
     public static LuaVector lerp(LuaVector first, LuaVector second, float delta) {
-        return new LuaVector(
-                MathHelper.lerp(delta, first.x, second.x),
-                MathHelper.lerp(delta, first.y, second.y),
-                MathHelper.lerp(delta, first.z, second.z),
-                MathHelper.lerp(delta, first.w, second.w),
-                MathHelper.lerp(delta, first.t, second.t),
-                MathHelper.lerp(delta, first.h, second.h)
-        );
+        int n = Math.max(first._size(), second._size());
+        float[] vals = new float[n];
+        for (int i = 0; i < n; i++) {
+            vals[i] = MathHelper.lerp(delta, first._get(i + 1), second._get(i + 1));
+        }
+        return new LuaVector(vals);
     }
 
     public static LuaVector toHSV(LuaVector rgb) {
         float[] hsv = new float[3];
-        Color.RGBtoHSB((int)(rgb.x * 255), (int)(rgb.y * 255), (int)(rgb.z * 255), hsv);
-        return new LuaVector(hsv[0], hsv[1], hsv[2], rgb.w, rgb.t, rgb.h);
+        Color.RGBtoHSB((int)(rgb.x() * 255), (int)(rgb.y() * 255), (int)(rgb.z() * 255), hsv);
+        return new LuaVector(hsv);
     }
 
     public static LuaVector toRGB(LuaVector hsv) {
-        int c = Color.HSBtoRGB(hsv.x, hsv.y, hsv.z);
+        int c = Color.HSBtoRGB(hsv.x(), hsv.y(), hsv.z());
         int[] rgb = new int[3];
         ColorUtils.split(c, rgb);
-        return new LuaVector(((float)rgb[0]) / 255, ((float)rgb[1]) / 255, ((float)rgb[2]) / 255, hsv.w, hsv.t, hsv.h);
+        return new LuaVector(new float[] {((float)rgb[0]) / 255, ((float)rgb[1]) / 255, ((float)rgb[2]) / 255});
     }
 
     public static LuaVector RGBfromInt(int rgb) {
         int[] c = new int[3];
         ColorUtils.split(rgb, c);
-        return new LuaVector(((float)c[0]) / 255, ((float)c[1]) / 255, ((float)c[2]) / 255, 0, 0, 0);
+        return new LuaVector(new float[] {((float)c[0]) / 255, ((float)c[1]) / 255, ((float)c[2]) / 255});
+    }
+
+    private static final LuaVector[] MODEL_SPACE_FACTORS = new LuaVector[7];
+
+    public static LuaVector toModelSpace(LuaVector vec) {
+        return vec._mul(MODEL_SPACE_FACTORS[vec._size()]); // Multiplies the vector by the correct size vector in the factors array
+    }
+
+    static {
+        // Store seven vectors with sizes ranging from 0 to 6, as factors for converting from world to model space
+        for (int i = 0; i < 7; i++) {
+            // Create a float array with size i
+            float[] vals = new float[i];
+            // Iterate through this array
+            for (int j = 0; j < i; j++) {
+                if(j == 0) vals[j] = -16; // Set the x value to -16
+                else if(j == 1) vals[j] = -16; // Set the y value to -16
+                else vals[j] = 16; // Set all other values to 16
+            }
+            MODEL_SPACE_FACTORS[i] = new LuaVector(vals); // Put this vector to the factors array
+        }
     }
 }

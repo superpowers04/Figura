@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleType;
@@ -32,23 +33,19 @@ public class ParticleAPI {
         set("addParticle", new TwoArgFunction() {
             @Override
             public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                if(!arg1.isstring() || !arg2.istable())
+                if(!arg1.isstring())
                     return NIL;
 
                 DefaultParticleType targetType = particleTypes.get(arg1.checkjstring());
                 if(targetType == null)
                     return NIL;
-                
-                FloatArrayList floats = LuaUtils.getFloatsFromTable(arg2.checktable());
 
-                if(floats.size() != 6)
-                    return NIL;
+                LuaVector vec = LuaVector.checkOrNew(arg2);
                 
                 World w = MinecraftClient.getInstance().world;
 
                 w.addParticle(targetType,
-                        floats.getFloat(0),floats.getFloat(1),floats.getFloat(2),
-                        floats.getFloat(3),floats.getFloat(4),floats.getFloat(5)
+                        vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
                 );
 
                 return NIL;
