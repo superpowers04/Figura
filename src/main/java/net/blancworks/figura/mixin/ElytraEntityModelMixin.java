@@ -54,53 +54,64 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         PlayerData data = FiguraMod.currentData;
 
-        if (data != null && data.model != null) {
+        
+        try {
+            if (data != null && data.model != null) {
 
-            //Left wing
-            {
-                VanillaModelPartCustomization originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_LEFT_WING_ID);
+                //Left wing
+                {
+                    VanillaModelPartCustomization originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_LEFT_WING_ID);
 
-                if (originModification != null && originModification.stackReference != null) {
-                    if (originModification.visible == null || originModification.visible == true) {
-                        MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
-                        msa.pushEntry(originModification.stackReference);
-                        getLeftWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
+                    if (originModification != null && originModification.stackReference != null) {
+                        if (originModification.visible == null || originModification.visible == true) {
+                            MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
+                            msa.pushEntry(originModification.stackReference);
+                            getLeftWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
+                        }
+
+                        getLeftWing().visible = false;
                     }
+                }
 
-                    getLeftWing().visible = false;
+                {
+                    VanillaModelPartCustomization originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_RIGHT_WING_ID);
+
+                    if (originModification != null && originModification.stackReference != null) {
+                        if (originModification.visible == null || originModification.visible == true) {
+                            MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
+                            msa.pushEntry(originModification.stackReference);
+                            getRightWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
+                        }
+
+                        getRightWing().visible = false;
+                    }
                 }
             }
 
-            {
-                VanillaModelPartCustomization originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_RIGHT_WING_ID);
+            super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
+        } catch (Exception e){
+            //e.printStackTrace();
 
-                if (originModification != null && originModification.stackReference != null) {
-                    if (originModification.visible == null || originModification.visible == true) {
-                        MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
-                        msa.pushEntry(originModification.stackReference);
-                        getRightWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
-                    }
-
-                    getRightWing().visible = false;
-                }
-            }
+            super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
         }
 
-        super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
+        try {
+            getLeftWing().visible = true;
+            getRightWing().visible = true;
 
-        getLeftWing().visible = true;
-        getRightWing().visible = true;
+            if (data != null && data.model != null) {
+                figura$renderExtraElytraPartsWithTexture(data, RenderLayer.getEntityTranslucent(data.texture.id), matrices, light, overlay);
 
-        if (data != null && data.model != null) {
-            figura$renderExtraElytraPartsWithTexture(data, RenderLayer.getEntityTranslucent(data.texture.id), matrices, light, overlay);
+                for (FiguraTexture extraTexture : data.extraTextures) {
+                    Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
 
-            for (FiguraTexture extraTexture : data.extraTextures) {
-                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
-
-                if (renderLayerGetter != null) {
-                    figura$renderExtraElytraPartsWithTexture(data, renderLayerGetter.apply(extraTexture.id), matrices, light, overlay);
+                    if (renderLayerGetter != null) {
+                        figura$renderExtraElytraPartsWithTexture(data, renderLayerGetter.apply(extraTexture.id), matrices, light, overlay);
+                    }
                 }
             }
+        } catch (Exception e){
+            //e.printStackTrace();
         }
     }
 

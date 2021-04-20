@@ -52,6 +52,7 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
             if(data != null) {
                 if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                     figura$applyPartCustomization(partID, bipedEntityModel.head);
+                    figura$applyPartCustomization(partID, bipedEntityModel.helmet);
                     figura$applyPartCustomization(partID, bipedEntityModel.torso);
                     figura$applyPartCustomization(partID, bipedEntityModel.leftArm);
                     figura$applyPartCustomization(partID, bipedEntityModel.leftLeg);

@@ -73,6 +73,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
                 }
             }
         }
+        
         FiguraMod.clearRenderingData();
         figura$clearAllPartCustomizations();
     }

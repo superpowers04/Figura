@@ -96,9 +96,14 @@ public class CustomModel extends FiguraAsset {
             owner.script.render(FiguraMod.deltaTime);
         }
 
+        int prevCount = playerData.model.leftToRender;
+        playerData.model.leftToRender = 9999999;
+        
         for (CustomModelPart part : playerData.model.allParts) {
             renderArmRecursive(part, playerData, matrices, vertexConsumers, light, player, arm, sleeve, model);
         }
+
+        playerData.model.leftToRender = prevCount;
     }
 
     public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vcp, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model) {
