@@ -15,6 +15,7 @@ import java.util.Iterator;
 
 public class LuaVector extends LuaValue implements Iterable<Float> {
     public static final int TYPE = LuaValue.TVALUE;
+    public static final LuaVector ORIGIN = new LuaVector();
 
     private final float[] values;
     private Double cachedLength = null;
@@ -27,22 +28,27 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public static LuaVector of(Vector4f vec) {
+        if (vec == null) return (LuaVector)NIL;
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ(), vec.getW());
     }
 
     public static LuaVector of(Vector3f vec) {
+        if (vec == null) return (LuaVector)NIL;
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ());
     }
 
     public static LuaVector of(Vec3d vec) {
+        if (vec == null) return (LuaVector)NIL;
         return new LuaVector((float) vec.x, (float) vec.y, (float) vec.z);
     }
 
     public static LuaVector of(Vec3i vec) {
+        if (vec == null) return (LuaVector)NIL;
         return new LuaVector((float) vec.getX(), (float) vec.getY(), (float) vec.getZ());
     }
 
     public static LuaVector of(Vec2f vec) {
+        if (vec == null) return (LuaVector)NIL;
         return new LuaVector(vec.x, vec.y);
     }
 
