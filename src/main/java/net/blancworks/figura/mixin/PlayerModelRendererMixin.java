@@ -36,7 +36,7 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
                 matrices.push();
 
                 try {
-                    playerData.model.render((PlayerEntityModel<T>) (Object) this, matrices, FiguraMod.vertexConsumerProvider, light, overlay, 1, 1, 1, alpha);
+                    playerData.model.render((PlayerEntityModel<T>) (Object) this, matrices, FiguraMod.vertexConsumerProvider, light, overlay, 1, 1, 1, 1);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
