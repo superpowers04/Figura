@@ -1,5 +1,6 @@
 package net.blancworks.figura.mixin;
 
+import net.blancworks.figura.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.GameMenuScreen;
@@ -26,11 +27,33 @@ public class GameMenuScreenMixin extends Screen {
         if (this.figura$screen == null)
             this.figura$screen = new FiguraGuiScreen(this);
 
-        int y = this.height - 20 - 5;
-        if (FabricLoader.getInstance().isModLoaded("modmenu"))
-            y -= 12;
+        int x = 5;
+        int y = 5;
 
-        addButton(new ButtonWidget(this.width - 64 - 5, y, 64, 20, new LiteralText("Figura"),
+        switch (Config.buttonLocation.value) {
+            case 0: //top left
+                if (FabricLoader.getInstance().isModLoaded("modmenu"))
+                    y += 12;
+                break;
+            case 1: //top right
+                x = this.width - 64 - 5;
+                if (FabricLoader.getInstance().isModLoaded("modmenu"))
+                    y += 12;
+                break;
+            case 2: //bottom left
+                y = this.height - 20 - 5;
+                if (FabricLoader.getInstance().isModLoaded("modmenu"))
+                    y -= 12;
+                break;
+            case 3: //bottom right
+                x = this.width - 64 - 5;
+                y = this.height - 20 - 5;
+                if (FabricLoader.getInstance().isModLoaded("modmenu"))
+                    y -= 12;
+                break;
+        }
+
+        addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
                 btn -> this.client.openScreen(figura$screen)));
     }
 }

@@ -141,9 +141,9 @@ public class CustomModelAPI {
             ret.set("setUV", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    Vec2f newUV = LuaVector.checkOrNew(arg1).asV2f();
-                    targetPart.uOffset = newUV.x;
-                    targetPart.vOffset = newUV.y;
+                    LuaVector v = LuaVector.checkOrNew(arg1);
+                    targetPart.uOffset = v.x();
+                    targetPart.vOffset = v.y();
                     return NIL;
                 }
             });

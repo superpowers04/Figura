@@ -1,10 +1,9 @@
 package net.blancworks.figura.lua.api.particle;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.particle.DefaultParticleType;
 import net.minecraft.particle.ParticleType;
@@ -28,36 +27,39 @@ public class ParticleAPI {
             }
         }
     }};
-    
-    private static final ReadOnlyLuaTable globalLuaTable = new ReadOnlyLuaTable(new LuaTable() {{
-        set("addParticle", new TwoArgFunction() {
-            @Override
-            public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                if(!arg1.isstring())
-                    return NIL;
-
-                DefaultParticleType targetType = particleTypes.get(arg1.checkjstring());
-                if(targetType == null)
-                    return NIL;
-
-                LuaVector vec = LuaVector.checkOrNew(arg2);
-                
-                World w = MinecraftClient.getInstance().world;
-
-                w.addParticle(targetType,
-                        vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
-                );
-
-                return NIL;
-            }
-        });
-    }});
 
     public static Identifier getID() {
         return new Identifier("default", "particle");
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return globalLuaTable;
+        return new ReadOnlyLuaTable(new LuaTable() {{
+            set("addParticle", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    if(!arg1.isstring())
+                        return NIL;
+
+                    if(script.particleSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID))
+                        return NIL;
+                    script.particleSpawnCount++;
+                    
+
+                    DefaultParticleType targetType = particleTypes.get(arg1.checkjstring());
+                    if(targetType == null)
+                        return NIL;
+
+                    LuaVector vec = LuaVector.checkOrNew(arg2);
+
+                    World w = MinecraftClient.getInstance().world;
+
+                    w.addParticle(targetType,
+                            vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
+                    );
+
+                    return NIL;
+                }
+            });
+        }});
     }
 }

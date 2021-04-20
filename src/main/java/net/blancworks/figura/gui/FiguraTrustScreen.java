@@ -11,7 +11,7 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
@@ -30,7 +30,9 @@ import org.lwjgl.glfw.GLFW;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.*;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.UUID;
 
 public class FiguraTrustScreen extends Screen {
 
@@ -38,17 +40,10 @@ public class FiguraTrustScreen extends Screen {
 
     private TextFieldWidget searchBox;
 
-    private Text tooltip;
-    private boolean init = false;
-    private boolean filterOptionsShown = false;
     private int paneY;
     private int paneWidth;
     private int rightPaneX;
     private int searchBoxX;
-    private int filtersX;
-    private int filtersWidth;
-    private int searchRowWidth;
-    public final Set<String> showModChildren = new HashSet<>();
 
     public PlayerListWidget playerList;
     public PermissionListWidget permissionList;
@@ -110,13 +105,15 @@ public class FiguraTrustScreen extends Screen {
 
             PlayerTrustManager.saveToDisk();
 
-            this.client.openScreen((Screen) parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
-        this.addButton(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
             //Open the trust menu from the Figura Wiki
-            Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
-        }));
+            if (bl)
+                Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
+            this.client.openScreen(this);
+        }, "https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu", true))));
 
         this.addButton(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> {
             PlayerDataManager.clearCache();
@@ -134,30 +131,34 @@ public class FiguraTrustScreen extends Screen {
         }));
 
         resetPermissionButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetperm"), (btx) -> {
-            if (playerListState.selected instanceof PlayerListEntry) {
-                if (playerListState.selected != null) {
-                    TrustContainer tc = permissionList.getCurrentContainer();
+            try {
+                TrustContainer tc = permissionList.getCurrentContainer();
 
-                    try {
-                        tc.reset(((PermissionSetting) permissionListState.selected).id);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+                //if a perm is selected, reset only this perm
+                if (playerListState != null && permissionListState.selected != null)
+                    tc.reset(((PermissionSetting) permissionListState.selected).id);
+                //else reset all the entry perms
+                else
+                    tc.resetAll();
 
-                    permissionList.rebuild();
-                }
+                permissionList.rebuild();
+            }
+            catch (Exception e) {
+                e.printStackTrace();
             }
         });
 
-        resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetallperm"), (btx) -> {
-            if (playerListState.selected instanceof PlayerListEntry) {
-                if (playerListState.selected != null) {
+        resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetallperm").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))), (btx) -> {
+            try {
+                //for all entries, reset all perms
+                playerList.children().forEach(customListEntry -> {
+                    playerListState.selected = customListEntry.getEntryObject();
                     TrustContainer tc = permissionList.getCurrentContainer();
 
                     tc.resetAll();
-
-                    permissionList.rebuild();
-                }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
         resetAllPermissionsButton.visible = false;
@@ -224,12 +225,9 @@ public class FiguraTrustScreen extends Screen {
                     }
                 }
             }
-        } else if (playerListState.selected instanceof String) {
-
         }
 
         super.render(matrices, mouseX, mouseY, delta);
-
 
         if (!resetPermissionButton.active) {
             resetPermissionButton.active = true;
@@ -289,7 +287,7 @@ public class FiguraTrustScreen extends Screen {
     static void overlayBackground(int x1, int y1, int x2, int y2, int red, int green, int blue, int startAlpha, int endAlpha) {
         Tessellator tessellator = Tessellator.getInstance();
         BufferBuilder buffer = tessellator.getBuffer();
-        Objects.requireNonNull(MinecraftClient.getInstance()).getTextureManager().bindTexture(DrawableHelper.OPTIONS_BACKGROUND_TEXTURE);
+        Objects.requireNonNull(MinecraftClient.getInstance()).getTextureManager().bindTexture(OPTIONS_BACKGROUND_TEXTURE);
         RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
         buffer.begin(7, VertexFormats.POSITION_TEXTURE_COLOR);
         buffer.vertex(x1, y2, 0.0D).texture(x1 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
@@ -326,6 +324,12 @@ public class FiguraTrustScreen extends Screen {
             return permissionList.charTyped(char_1, int_1);
         }
         return this.searchBox.charTyped(char_1, int_1);
+    }
+
+    @Override
+    public void onClose() {
+        PlayerTrustManager.saveToDisk();
+        this.client.openScreen(parentScreen);
     }
 
     int tickCount = 0;
@@ -374,6 +378,10 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        //unselect perm if clicked on entry
+        if (playerList.isMouseOver(mouseX, mouseY))
+            permissionList.unselect();
+
         if (draggedId != null)
             return true;
 

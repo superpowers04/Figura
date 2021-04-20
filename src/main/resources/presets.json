@@ -3,9 +3,10 @@
     "maxInitInstructions" : 16384,
     "maxTickInstructions" : 4096,
     "maxRenderInstructions": 1024,
-    "maxComplexity" : 256,
+    "maxComplexity" : 1152,
     "allowVanillaEdit" : false,
-    "maxparticles" : 4
+    "maxparticles" : 4,
+    "maxsfx" : 4 
   },
   "blocked": {
     "maxInitInstructions" : 0,
@@ -14,6 +15,7 @@
     "maxComplexity" : 0,
     "allowVanillaEdit" : false,
     "maxparticles" : 0,
+    "maxsfx" : 0,
     "parent" : "base"
   },
   "untrusted": {
@@ -23,27 +25,30 @@
     "maxInitInstructions" : 16384,
     "maxTickInstructions" : 8192,
     "maxRenderInstructions": 2048,
-    "maxComplexity" : 512,
+    "maxComplexity" : 3456,
     "allowVanillaEdit" : true,
     "maxparticles" : 16,
+    "maxsfx" : 16,
     "parent" : "base"
   },
   "friend": {
-    "maxInitInstructions" : 99999,
-    "maxTickInstructions" : 99999,
-    "maxRenderInstructions": 99999,
-    "maxComplexity" : 99999,
+    "maxInitInstructions" : 999999,
+    "maxTickInstructions" : 999999,
+    "maxRenderInstructions": 999999,
+    "maxComplexity" : 999999,
     "allowVanillaEdit" : true,
-    "maxparticles" : 99999,
+    "maxparticles" : 999999,
+    "maxsfx" : 999999,
     "parent" : "base"
   },
   "local": {
-    "maxTickInstructions" : 99999,
-    "maxRenderInstructions": 99999,
-    "maxComplexity" : 99999,
+    "maxTickInstructions" : 999999,
+    "maxRenderInstructions": 999999,
+    "maxComplexity" : 999999,
     "allowVanillaEdit" : true,
     "parent" : "base",
-    "maxparticles" : 99999,
+    "maxparticles" : 999999,
+    "maxsfx" : 999999,
     "hidden" : true
   }
 }

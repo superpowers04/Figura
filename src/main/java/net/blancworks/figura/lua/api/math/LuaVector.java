@@ -275,7 +275,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         LuaVector vec = check(vector);
         int n = Math.max(_size(), vec._size()); // Only calculate for as many values as actually exist between both vectors
         float s = 0; // Sum value
-        for (int i = 0; i < n; i++) {
+        for (int i = 1; i <= n; i++) {
             float a = this._get(i); // This vector's value at current index
             float b = vec._get(i); // The passed vector's value at current index
             if(a == 0 && b == 0) continue; // Do not operate on values that are zero for both
@@ -297,7 +297,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         if (cachedLength == null) {
             int n = _size();
             float s = 0;
-            for (int i = 0; i < n; i++) {
+            for (int i = 1; i <= n; i++) {
                 float v = this._get(i);
                 if(v != 0) s += v * v;
             }
@@ -310,13 +310,13 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         int n = _size();
         float s = 0;
         float[] vals = new float[n];
-        for (int i = 0; i < n; i++) {
+        for (int i = 1; i <= n; i++) {
             float v = this._get(i);
             if(v != 0) s += v * v;
         }
         float r = MathHelper.fastInverseSqrt(s);
         for (int j = 0; j < n; j++) {
-            float v = this._get(j);
+            float v = this._get(j+1);
             if(v != 0) vals[j] = v * r;
         }
         return new LuaVector(vals);
@@ -347,6 +347,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
             case "g":
             case "v":
             case "yaw":
+            case "volume":
                 return y();
             case "z":
             case "b":

@@ -1,7 +1,6 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.gui.FiguraGuiScreen;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -24,9 +23,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
 
     @Inject(method = "hasLabel", at = @At("HEAD"), cancellable = true)
     public void hasLabel(T livingEntity, CallbackInfoReturnable<Boolean> cir) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (FiguraGuiScreen.showOwnNametag && livingEntity == client.cameraEntity
-                && MinecraftClient.isHudEnabled() && !livingEntity.isInvisible())
+        if (FiguraGuiScreen.showOwnNametag)
             cir.setReturnValue(true);
     }
 }

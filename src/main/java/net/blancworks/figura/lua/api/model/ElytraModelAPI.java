@@ -15,42 +15,38 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
-public class ArmorModelAPI {
+public class ElytraModelAPI {
 
-    public static final String VANILLA_HELMET = "HELMET";
-    public static final String VANILLA_CHESTPLATE = "CHESTPLATE";
-    public static final String VANILLA_LEGGINGS = "LEGGINGS";
-    public static final String VANILLA_BOOTS = "BOOTS";
+    public static final String VANILLA_LEFT_WING = "LEFT_WING";
+    public static final String VANILLA_RIGHT_WING = "RIGHT_WING";
 
+    public static final Identifier VANILLA_LEFT_WING_ID = new Identifier("figura", "left_wing");
+    public static final Identifier VANILLA_RIGHT_WING_ID = new Identifier("figura", "right_wing");
     
     public static Identifier getID() {
-        return new Identifier("default", "armor_model");
+        return new Identifier("default", "elytra_model");
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
             PlayerEntityModel mdl = script.playerData.vanillaModel;
 
-            set(VANILLA_HELMET, getTableForPart(VANILLA_HELMET, script));
-
-            set(VANILLA_CHESTPLATE, getTableForPart(VANILLA_CHESTPLATE, script));
-            set(VANILLA_LEGGINGS, getTableForPart(VANILLA_LEGGINGS, script));
-
-            set(VANILLA_BOOTS, getTableForPart(VANILLA_BOOTS, script));
+            set(VANILLA_LEFT_WING, getTableForPart(VANILLA_LEFT_WING, script));
+            set(VANILLA_RIGHT_WING, getTableForPart(VANILLA_RIGHT_WING, script));
         }});
 
         return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        ArmorPartTable producedTable = new ArmorPartTable(accessor, script);
+        ElytraPartTable producedTable = new ElytraPartTable(accessor, script);
         return producedTable;
     }
 
-    private static class ArmorPartTable extends ScriptLocalAPITable {
+    private static class ElytraPartTable extends ScriptLocalAPITable {
         String accessor;
 
-        public ArmorPartTable(String accessor, CustomScript script) {
+        public ElytraPartTable(String accessor, CustomScript script) {
             super(script);
             this.accessor = accessor;
             super.setTable(getTable());
@@ -88,6 +84,7 @@ public class ArmorModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
                     customization.rot = LuaVector.checkOrNew(arg1).asV3f();
+
                     return NIL;
                 }
             });

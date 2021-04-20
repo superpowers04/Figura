@@ -38,7 +38,9 @@ public class PlayerTrustManager {
     public static final Identifier MAX_COMPLEXITY_ID = new Identifier("setting", "maxcomplexity");
     public static final Identifier ALLOW_VANILLA_MOD_ID = new Identifier("setting", "allowvanillaedit");
     public static final Identifier MAX_PARTICLES_ID = new Identifier("setting", "maxparticles");
+    public static final Identifier MAX_SOUND_EFFECTS_ID = new Identifier("setting", "maxsfx");
 
+    
     public static Map<Identifier, TrustContainer> allContainers = new Object2ObjectOpenHashMap<>();
     public static List<Identifier> allGroups = new ArrayList<>();
     public static List<Identifier> defaultGroups = new ArrayList<>();
@@ -86,10 +88,10 @@ public class PlayerTrustManager {
 
         registerPermissionSetting(new PermissionFloatSetting(MAX_COMPLEXITY_ID) {{
             min = 0;
-            max = 32 * 65;
-            value = 32 * 64;
+            max = 24 * 12 * 4 * 4;
+            value = 24 * 12 * 4;
             integer = true;
-            stepSize = 32;
+            stepSize = 24;
             isSlider = true;
             allowInfinity = true;
         }});
@@ -98,6 +100,16 @@ public class PlayerTrustManager {
             min = 0;
             max = 65;
             value = 5;
+            integer = true;
+            stepSize = 1;
+            isSlider = true;
+            allowInfinity = true;
+        }});
+
+        registerPermissionSetting(new PermissionFloatSetting(MAX_SOUND_EFFECTS_ID) {{
+            min = 0;
+            max = 65;
+            value = 0;
             integer = true;
             stepSize = 1;
             isSlider = true;
@@ -114,9 +126,7 @@ public class PlayerTrustManager {
 
         //if (Files.exists(p)) {
         try {
-            System.out.println(p);
             InputStream s = Files.newInputStream(p);
-            System.out.println(s);
             InputStreamReader fileReader = new InputStreamReader(s);
             JsonParser parser = new JsonParser();
             JsonObject rootObject = (JsonObject) parser.parse(fileReader);

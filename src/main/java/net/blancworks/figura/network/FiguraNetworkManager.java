@@ -284,12 +284,11 @@ public class FiguraNetworkManager {
         );
     }
 
-    private static String getAvatarHashSync(UUID id) {
+    public static String getAvatarHashSync(UUID id) {
 
         try {
             String uuidString = id.toString();
             HttpURLConnection httpURLConnection = createReadConnection(String.format("%s/api/avatar/hash/%s", FiguraNetworkManager.getServerURL(), uuidString));
-            httpURLConnection.setConnectTimeout(100);
             httpURLConnection.connect();
 
             //Only continue if response was OK.
@@ -298,7 +297,7 @@ public class FiguraNetworkManager {
             }
             return "";
         } catch (Exception e) {
-            //e.printStackTrace();
+            e.printStackTrace();
             return "";
         }
     }

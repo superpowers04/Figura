@@ -124,13 +124,13 @@ public class VectorAPI {
         int c = Color.HSBtoRGB(hsv.x(), hsv.y(), hsv.z());
         int[] rgb = new int[3];
         ColorUtils.split(c, rgb);
-        return new LuaVector(new float[] {((float)rgb[0]) / 255, ((float)rgb[1]) / 255, ((float)rgb[2]) / 255});
+        return new LuaVector(((float)rgb[0]) / 255, ((float)rgb[1]) / 255, ((float)rgb[2]) / 255);
     }
 
     public static LuaVector RGBfromInt(int rgb) {
         int[] c = new int[3];
         ColorUtils.split(rgb, c);
-        return new LuaVector(new float[] {((float)c[0]) / 255, ((float)c[1]) / 255, ((float)c[2]) / 255});
+        return new LuaVector(((float)c[0]) / 255, ((float)c[1]) / 255, ((float)c[2]) / 255);
     }
 
     private static final LuaVector[] MODEL_SPACE_FACTORS = new LuaVector[7];

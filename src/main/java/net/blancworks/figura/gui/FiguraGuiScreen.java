@@ -1,6 +1,7 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -10,6 +11,7 @@ import net.blancworks.figura.gui.widgets.TexturedButtonWidget;
 import net.blancworks.figura.network.FiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -30,10 +32,14 @@ import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.math.RoundingMode;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -45,6 +51,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier uploadTexture = new Identifier("figura", "gui/menu/upload.png");
     public Identifier reloadTexture = new Identifier("figura", "gui/menu/reload.png");
     public Identifier deleteTexture = new Identifier("figura", "gui/menu/delete.png");
+    public Identifier expandTexture = new Identifier("figura", "gui/menu/expand.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "gui/menu/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "gui/menu/scalable_box.png");
 
@@ -59,6 +66,7 @@ public class FiguraGuiScreen extends Screen {
     public TexturedButtonWidget uploadButton;
     public TexturedButtonWidget reloadButton;
     public TexturedButtonWidget deleteButton;
+    public TexturedButtonWidget expandButton;
 
     public MutableText nameText;
     public MutableText rawNameText;
@@ -67,44 +75,50 @@ public class FiguraGuiScreen extends Screen {
     public MutableText scriptText;
 
     private TextFieldWidget searchBox;
-    private boolean filterOptionsShown = false;
     private int paneY;
     private int paneWidth;
-    private int rightPaneX;
     private int searchBoxX;
-    private int filtersX;
 
     private boolean isHoldingShift = false;
 
     //gui sizes
-    private int guiScale, modelBgSize, modelSize;
-    private double screenScale;
+    private static int guiScale, modelBgSize, modelSize;
+    private static float screenScale;
 
-    //model rotation
-    private double anchorX, anchorY;
-    private double anchorAngleX, anchorAngleY;
-    private double angleX, angleY;
+    //model properties
     private boolean canRotate;
+    private boolean canDrag;
+    private static boolean expand;
+
+    private float anchorX, anchorY;
+    private float anchorAngleX, anchorAngleY;
+    private float angleX, angleY;
+
+    private float scaledValue;
+    private final float SCALE_FACTOR = 1.1F;
+
+    private int modelX, modelY;
+    private float dragDeltaX, dragDeltaY;
+    private float dragAnchorX, dragAnchorY;
 
     //model nameplate
     public static boolean showOwnNametag = false;
 
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
+    public FiguraConfigScreen configScreen = new FiguraConfigScreen(this);
 
     public CustomListWidgetState modelFileListState = new CustomListWidgetState();
     public static ModelFileListWidget modelFileList;
 
     public FiguraGuiScreen(Screen parentScreen) {
-        super(new LiteralText("Figura Menu"));
+        super(new TranslatableText("gui.figura.menutitle"));
         this.parentScreen = parentScreen;
 
-        //reset model rotation
-        anchorX = 0.0D;
-        anchorY = 0.0D;
-        anchorAngleX = 0.0D;
-        anchorAngleY = 0.0D;
-        angleX = -15.0D;
-        angleY = 30.0D;
+        //reset model settings
+        canRotate = false;
+        canDrag = false;
+        expand = false;
+        resetModelPos();
     }
 
     @Override
@@ -113,23 +127,22 @@ public class FiguraGuiScreen extends Screen {
 
         //screen size
         guiScale = (int) this.client.getWindow().getScaleFactor();
-        screenScale = Math.min(this.width, this.height) / 1018.0;
+        screenScale = (float) (Math.min(this.width, this.height) / 1018.0);
 
         //model size
-        modelBgSize = (int) ((512 / guiScale) * (screenScale * guiScale));
-        modelSize = (int) ((192 / guiScale) * (screenScale * guiScale));
+        modelBgSize = Math.min((int) ((512 / guiScale) * (screenScale * guiScale)), 258);
+        modelSize = Math.min((int) ((192 / guiScale) * (screenScale * guiScale)), 96);
 
         //search box and model list
         paneY = 48;
         paneWidth = this.width / 3 - 8;
-        rightPaneX = paneWidth + 10;
 
         int searchBoxWidth = paneWidth - 5;
         searchBoxX = 7;
         this.searchBox = new TextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("gui.figura.button.search"));
-        this.searchBox.setChangedListener((string_1) -> this.modelFileList.filter(string_1, false));
-        modelFileList = new ModelFileListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, this.modelFileList, this, modelFileListState);
-        this.modelFileList.setLeftPos(5);
+        this.searchBox.setChangedListener((string_1) -> modelFileList.filter(string_1, false));
+        modelFileList = new ModelFileListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, modelFileList, this, modelFileListState);
+        modelFileList.setLeftPos(5);
         this.addChild(modelFileList);
         this.addChild(searchBox);
 
@@ -150,9 +163,19 @@ public class FiguraGuiScreen extends Screen {
         //back button
         this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.openScreen(parentScreen)));
 
-        //top buttons
+        //trust button
         this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.openScreen(trustScreen)));
-        this.addButton(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel")));
+
+        //config button
+        this.addButton(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.configmenu"), (buttonWidgetx) -> this.client.openScreen(configScreen)));
+
+        //help button
+        this.addButton(new ButtonWidget(this.width - 140 - 5, 65, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
+            if (bl) {
+                Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
+            }
+            this.client.openScreen(this);
+        }, "https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel", true))));
 
         //delete button
         deleteButton = new TexturedButtonWidget(
@@ -166,6 +189,7 @@ public class FiguraGuiScreen extends Screen {
                 }
         );
         this.addButton(deleteButton);
+        deleteButton.active = false;
 
         //upload button
         uploadButton = new TexturedButtonWidget(
@@ -187,14 +211,34 @@ public class FiguraGuiScreen extends Screen {
         );
         this.addButton(reloadButton);
 
-        deleteButton.active = false;
+        //expand button
+        expandButton = new TexturedButtonWidget(
+                this.width / 2 - modelBgSize / 2, this.height / 2 - modelBgSize / 2 - 15,
+                15, 15,
+                0, 0, 15,
+                expandTexture, 15, 30,
+                (bx) -> {
+                    expand = !expand;
+                    updateExpand();
+                }
+        );
+        this.addButton(expandButton);
 
+        //reload status
         if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
-            nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
+            if (PlayerDataManager.lastLoadedFileName != null)
+                nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
             modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
             fileSizeText = getFileSizeText();
             scriptText = getScriptText();
         }
+
+        updateExpand();
+    }
+
+    @Override
+    public void onClose() {
+        this.client.openScreen(parentScreen);
     }
 
     int tickCount = 0;
@@ -207,7 +251,18 @@ public class FiguraGuiScreen extends Screen {
 
         if (tickCount > 20) {
             tickCount = 0;
+
+            //reload model list
             modelFileList.reloadFilters();
+
+            //reload data
+            if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
+                if (PlayerDataManager.lastLoadedFileName == null)
+                    nameText = null;
+                modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
+                fileSizeText = getFileSizeText();
+                scriptText = getScriptText();
+            }
         }
     }
 
@@ -216,16 +271,25 @@ public class FiguraGuiScreen extends Screen {
         renderBackground(matrices);
 
         //draw player preview
-        {
+        if (!expand) {
             MinecraftClient.getInstance().getTextureManager().bindTexture(playerBackgroundTexture);
-
             drawTexture(matrices, this.width / 2 - modelBgSize / 2, this.height / 2 - modelBgSize / 2, 0, 0, modelBgSize, modelBgSize, modelBgSize, modelBgSize);
-            drawEntity(this.width / 2, this.height / 2, modelSize, (float) angleX, (float) angleY, MinecraftClient.getInstance().player);
+        }
+        else {
+
+            MinecraftClient.getInstance().getTextureManager().bindTexture(scalableBoxTexture);
+            drawTexture(matrices, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
         }
 
-        //draw avatar info
-        {
-            int currY = 45 + 12;
+        drawEntity(modelX, modelY, (int) (modelSize + scaledValue), angleX, angleY, MinecraftClient.getInstance().player);
+
+        //draw search box and file list
+        modelFileList.render(matrices, mouseX, mouseY, delta);
+        searchBox.render(matrices, mouseX, mouseY, delta);
+
+        //draw text
+        if (!expand) {
+            int currY = 82;
 
             if (nameText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 16777215);
@@ -234,38 +298,33 @@ public class FiguraGuiScreen extends Screen {
             if (modelComplexityText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY += 12, 16777215);
             if (scriptText != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, scriptText, this.width - this.textRenderer.getWidth(scriptText) - 8, currY += 12, 16777215);
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, scriptText, this.width - this.textRenderer.getWidth(scriptText) - 8, currY + 12, 16777215);
 
             if (this.getFocused() != null)
                 FiguraMod.LOGGER.debug(this.getFocused().toString());
+
+            //deprecated warning
+            if (rawNameText != null && rawNameText.getString().endsWith("*"))
+                drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
         }
 
-        //draw search box and file list
-        modelFileList.render(matrices, mouseX, mouseY, delta);
-        searchBox.render(matrices, mouseX, mouseY, delta);
-
-        //deprecated warning
-        if (rawNameText != null)
-            if (rawNameText.getString().endsWith("*"))
-                drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
-        
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
 
         if(uploadButton.isMouseOver(mouseX, mouseY)){
             matrices.push();
-            matrices.translate(0, 0, 200);
+            matrices.translate(0, 0, 599);
             renderTooltip(matrices, uploadTooltip, mouseX, mouseY);
             matrices.pop();
         }
 
         if(reloadButton.isMouseOver(mouseX, mouseY)){
             matrices.push();
-            matrices.translate(0, 0, 200);
+            matrices.translate(0, 0, 599);
             renderTooltip(matrices, reloadTooltip, mouseX, mouseY);
             matrices.pop();
         }
-        
+
         if (!deleteButton.active) {
             deleteButton.active = true;
             boolean mouseOver = deleteButton.isMouseOver(mouseX, mouseY);
@@ -273,7 +332,7 @@ public class FiguraGuiScreen extends Screen {
 
             if(mouseOver) {
                 matrices.push();
-                matrices.translate(0, 0, 200);
+                matrices.translate(0, 0, 599);
                 renderTooltip(matrices, deleteTooltip, mouseX, mouseY);
                 matrices.pop();
             }
@@ -308,7 +367,7 @@ public class FiguraGuiScreen extends Screen {
 
         CompletableFuture.runAsync(() -> {
             for (int i = 0; i < 10; i++) {
-                if (PlayerDataManager.localPlayer.texture.ready) {
+                if (PlayerDataManager.localPlayer.texture.isDone) {
                     break;
                 }
                 try {
@@ -325,18 +384,29 @@ public class FiguraGuiScreen extends Screen {
             scriptText = getScriptText();
 
         }, Util.getMainWorkerExecutor());
-
     }
 
     public MutableText getScriptText() {
-        boolean scriptLoaded = PlayerDataManager.localPlayer.script != null;
-
         MutableText fsText = new LiteralText("Script: ");
-        if (scriptLoaded) {
-            TranslatableText text = new TranslatableText("gui.script.ok");
-            text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
+
+        if (PlayerDataManager.localPlayer.script != null) {
+            TranslatableText text;
+
+            //error loading script
+            if (PlayerDataManager.localPlayer.script.loadError) {
+                text = new TranslatableText("gui.script.error");
+                text.setStyle(text.getStyle().withColor(TextColor.parse("red")));
+            }
+            //loading okei
+            else {
+                text = new TranslatableText("gui.script.ok");
+                text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
+            }
+
             fsText.append(text);
-        } else {
+        }
+        //script not found
+        else {
             TranslatableText text = new TranslatableText("gui.script.none");
             text.setStyle(text.getStyle().withColor(TextColor.parse("white")));
             fsText.append(text);
@@ -364,29 +434,92 @@ public class FiguraGuiScreen extends Screen {
         return fsText;
     }
 
+    public void updateExpand() {
+        if (expand) {
+            this.buttons.forEach(button -> button.visible = false);
+
+            expandButton.visible = true;
+            expandButton.setPos(5, 5);
+
+            searchBox.visible = false;
+            modelFileList.updateSize(0, 0, this.height, 0);
+        } else {
+            this.buttons.forEach(button -> button.visible = true);
+
+            expandButton.setPos(this.width / 2 - modelBgSize / 2, this.height / 2 - modelBgSize / 2 - 15);
+
+            searchBox.visible = true;
+            modelFileList.updateSize(paneWidth, this.height, paneY + 19, this.height - 36);
+
+            scaledValue  = 0.0F;
+        }
+
+        modelX = this.width / 2;
+        modelY = this.height / 2;
+    }
+
+    public void resetModelPos() {
+        anchorX = 0.0F;
+        anchorY = 0.0F;
+        anchorAngleX = 0.0F;
+        anchorAngleY = 0.0F;
+        angleX = -15.0F;
+        angleY = 30.0F;
+        scaledValue = 0.0F;
+        modelX = this.width / 2;
+        modelY = this.height / 2;
+    }
+
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        //set anchor rotation
-        if (mouseX >= this.width / 2.0 - modelBgSize / 2.0 && mouseX <= this.width / 2.0 + modelBgSize / 2.0) {
-            if (mouseY >= this.height / 2.0 - modelBgSize / 2.0 && mouseY <= this.height / 2.0 + modelBgSize / 2.0) {
+        switch (button) {
+            //left click - rotate
+            case 0:
+                //set anchor rotation
+                if ((mouseX >= this.width / 2.0 - modelBgSize / 2.0 && mouseX <= this.width / 2.0 + modelBgSize / 2.0 &&
+                        mouseY >= this.height / 2.0 - modelBgSize / 2.0 && mouseY <= this.height / 2.0 + modelBgSize / 2.0) || expand) {
+                    //get starter mouse pos
+                    anchorX = (float) mouseX;
+                    anchorY = (float) mouseY;
+
+                    //get starter rotation angles
+                    anchorAngleX = angleX;
+                    anchorAngleY = angleY;
+
+                    //enable rotate
+                    canRotate = true;
+                }
+                break;
+
+            //right click - move
+            case 1:
                 //get starter mouse pos
-                anchorX = mouseX;
-                anchorY = mouseY;
+                dragDeltaX = (float) mouseX;
+                dragDeltaY = (float) mouseY;
 
-                //get starter rotation angles
-                anchorAngleX = angleX;
-                anchorAngleY = angleY;
+                //also get start node pos
+                dragAnchorX = modelX;
+                dragAnchorY = modelY;
 
-                canRotate = true;
-            }
+                //enable dragging
+                canDrag = true;
+                break;
+
+            //middle click - reset pos
+            case 2:
+                canRotate = false;
+                canDrag = false;
+                resetModelPos();
+                break;
         }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        //reset rotate ability
         canRotate = false;
+        canDrag = false;
         return super.mouseReleased(mouseX, mouseY, button);
     }
 
@@ -395,25 +528,44 @@ public class FiguraGuiScreen extends Screen {
         //set rotations
         if (canRotate) {
             //get starter rotation angle then get hot much is moved and divided by a slow factor
-            angleX = anchorAngleX + (anchorY - mouseY) / (3.0 / guiScale);
-            angleY = anchorAngleY - (anchorX - mouseX) / (3.0 / guiScale);
+            angleX = (float) (anchorAngleX + (anchorY - mouseY) / (3.0 / guiScale));
+            angleY = (float) (anchorAngleY - (anchorX - mouseX) / (3.0 / guiScale));
 
             //prevent rating so much down and up
             if (angleX > 90) {
-                anchorY = mouseY;
+                anchorY = (float) mouseY;
                 anchorAngleX = 90;
                 angleX = 90;
             } else if (angleX < -90) {
-                anchorY = mouseY;
+                anchorY = (float) mouseY;
                 anchorAngleX = -90;
                 angleX = -90;
             }
             //cap to 360 so we don't get extremely high unnecessary rotation values
             if (angleY >= 360 || angleY <= -360) {
-                anchorX = mouseX;
+                anchorX = (float) mouseX;
                 anchorAngleY = 0;
                 angleY = 0;
             }
+        }
+
+        //right click - move
+        else if (canDrag && expand) {
+            //get how much it should move
+            //get actual pos of the mouse, then subtract starter X,Y
+            float x = (float) (mouseX - dragDeltaX);
+            float y = (float) (mouseY - dragDeltaY);
+
+            //move it
+            if (modelX >= 0 && modelX <= this.width)
+                modelX = (int) (dragAnchorX + x);
+            if (modelY >= 0 && modelY <= this.height)
+                modelY = (int) (dragAnchorY + y);
+
+            //if out of range - move it back
+            //cant be "elsed" because it needs to be checked after the move
+            modelX = modelX < 0 ? 0 : Math.min(modelX, this.width);
+            modelY = modelY < 0 ? 0 : Math.min(modelY, this.height);
         }
 
         return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
@@ -432,7 +584,31 @@ public class FiguraGuiScreen extends Screen {
     }
 
     @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double amount) {
+        //scroll - scale
+        if (expand) {
+            //set scale direction
+            float scaledir = (amount > 0) ? SCALE_FACTOR : 1 / SCALE_FACTOR;
+
+            //determine scale
+            scaledValue = ((modelSize + scaledValue) * scaledir) - modelSize;
+
+            //limit scale
+            if (scaledValue <= -35) scaledValue = -35.0F;
+            if (scaledValue >= 250) scaledValue = 250.0F;
+        }
+
+        return super.mouseScrolled(mouseX, mouseY, amount);
+    }
+
+    @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_ESCAPE && expand) {
+            expand = false;
+            updateExpand();
+            return false;
+        }
+
         boolean result = super.keyPressed(keyCode, scanCode, modifiers);
 
         if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT) {
@@ -477,7 +653,7 @@ public class FiguraGuiScreen extends Screen {
                 });
             }
             this.client.openScreen(this);
-        }, new TranslatableText("gui.dropconfirm"), new LiteralText(string)));
+        }, new TranslatableText("gui.figura.dropconfirm"), new LiteralText(string)));
     }
 
     public static void drawEntity(int x, int y, int size, float rotationX, float rotationY, LivingEntity entity) {
@@ -503,15 +679,17 @@ public class FiguraGuiScreen extends Screen {
         entity.headYaw = entity.yaw;
         entity.prevHeadYaw = entity.yaw;
         entity.setInvisible(false);
-        showOwnNametag = true;
+        showOwnNametag = Config.previewNameTag.value;
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
         entityRenderDispatcher.setRotation(quaternion2);
         entityRenderDispatcher.setRenderShadows(false);
         VertexConsumerProvider.Immediate immediate = MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
-        RenderSystem.runAsFancy(() -> {
-            entityRenderDispatcher.render(entity, 0.0D, -1.0D, 0.0D, 0.0F, 1.0F, matrixStack, immediate, 15728880);
-        });
+        int box = modelBgSize * guiScale;
+        if (!expand)
+            RenderSystem.enableScissor(x * guiScale - box / 2, y * guiScale - box / 2, box, box);
+        RenderSystem.runAsFancy(() -> entityRenderDispatcher.render(entity, 0.0D, -1.0D, 0.0D, 0.0F, 1.0F, matrixStack, immediate, 15728880));
+        RenderSystem.disableScissor();
         immediate.draw();
         entityRenderDispatcher.setRenderShadows(true);
         entity.bodyYaw = h;

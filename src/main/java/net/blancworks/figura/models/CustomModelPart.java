@@ -4,21 +4,27 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.access.MatrixStackAccess;
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.lua.api.model.ElytraModelAPI;
+import net.blancworks.figura.lua.api.model.ItemModelAPI;
+import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.fabricmc.fabric.api.util.NbtType;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.nbt.*;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Matrix4f;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CustomModelPart {
@@ -48,6 +54,33 @@ public class CustomModelPart {
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
 
+    //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
+    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
+        if(data.texture.isDone) {
+            VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
+
+            //Store this value for extra textures
+            int prevLeftToRender = data.model.leftToRender;
+            //Render with main texture.
+            int ret = render(data.model.leftToRender, matrices, mainTextureConsumer, light, overlay);
+
+            //Render extra textures (emission, that sort)
+            for (FiguraTexture extraTexture : data.extraTextures) {
+                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
+
+                if (renderLayerGetter != null) {
+                    VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
+
+                    render(prevLeftToRender, matrices, extraTextureVertexConsumer, light, overlay);
+                }
+            }
+
+            return ret;
+        } 
+        
+        return 0;
+    }
+
     public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
         return render(leftToRender, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1));
     }
@@ -59,17 +92,13 @@ public class CustomModelPart {
         if (!this.visible) {
             return leftToRender;
         }
-        MatrixStack tempStack = null;
-        
-        //if(tempStack != null)
-            //matrices = tempStack;
-        
+
         matrices.push();
 
         try {
 
             if (this.isMimicMode) {
-                PlayerEntityModel model = FiguraMod.currentModel;
+                PlayerEntityModel model = FiguraMod.currentData.vanillaModel;
 
                 switch (this.parentType) {
                     case Head:
@@ -94,8 +123,8 @@ public class CustomModelPart {
 
                 float multiply = 57.2958f;
                 this.rot.multiplyComponentwise(multiply, multiply, multiply);
-            } else if(parentType != CustomModelPart.ParentType.Model){
-                PlayerEntityModel playerModel = FiguraMod.currentModel;
+            } else if (parentType != CustomModelPart.ParentType.Model) {
+                PlayerEntityModel playerModel = FiguraMod.currentData.vanillaModel;
 
                 switch (parentType) {
                     case Head:
@@ -115,6 +144,38 @@ public class CustomModelPart {
                         break;
                     case RightLeg:
                         playerModel.rightLeg.rotate(matrices);
+                        break;
+                    case LeftItemOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsItem(matrices);
+                            stackReference = matrices.peek();
+                            matrices.pop();
+                        }});
+                        break;
+                    case RightItemOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsItem(matrices);
+                            stackReference = matrices.peek();
+                            matrices.pop();
+                        }});
+                        break;
+                    case LeftElytraOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytra(matrices);
+                            stackReference = matrices.peek();
+                            matrices.pop();
+                        }});
+                        break;
+                    case RightElytraOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytra(matrices);
+                            stackReference = matrices.peek();
+                            matrices.pop();
+                        }});
                         break;
                 }
             }
@@ -167,9 +228,9 @@ public class CustomModelPart {
 
             //Every 4 verts (1 face)
             if (i % 4 == 0) {
-                leftToRender--;
+                leftToRender -= 4;
 
-                if (leftToRender == 0)
+                if (leftToRender <= 0)
                     break;
             }
         }
@@ -177,7 +238,9 @@ public class CustomModelPart {
         for (CustomModelPart child : this.children) {
             if (leftToRender == 0)
                 break;
-            if(child.parentType == CustomModelPart.ParentType.WORLD)
+
+            //Don't render special parts.
+            if (child.isParentSpecial())
                 continue;
             leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor);
         }
@@ -187,6 +250,8 @@ public class CustomModelPart {
     }
 
     public void applyTransforms(MatrixStack stack) {
+        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+        
         stack.translate(-this.pivot.getX() / 16.0f, -this.pivot.getY() / 16.0f, -this.pivot.getZ() / 16.0f);
 
         if (this.isMimicMode || this.rotationType == RotationType.Vanilla) {
@@ -198,12 +263,30 @@ public class CustomModelPart {
             stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
             stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
         }
-
-        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
-
-        stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
-
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
+        
+        stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
+    }
+
+    //TODO move these to the mixins, probably.
+    public void applyTransformsAsItem(MatrixStack stack) {
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-90.0F));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0F));
+        //stack.translate(0, 0.125D, -0.625D);
+        stack.translate(pivot.getX() / 16.0f, pivot.getZ() / 16.0f, pivot.getY() / 16.0f);
+        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+    }
+
+    //TODO move these to the mixins, probably.
+    public void applyTransformsAsElytra(MatrixStack stack) {
+        stack.translate(pivot.getX() / 16.0f, pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
+        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
     //Re-builds the mesh data for a custom model part.
@@ -326,6 +409,16 @@ public class CustomModelPart {
         return "na";
     }
 
+    public boolean isParentSpecial() {
+        if (parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra) {
+            return true;
+        }
+        return false;
+    }
+
+    public void applyTrueOffset(Vector3f offset) {
+    }
+
     public enum ParentType {
         None,
         Model,
@@ -335,7 +428,14 @@ public class CustomModelPart {
         LeftLeg,
         RightLeg,
         Torso,
-        WORLD
+        WORLD,
+        LeftItemOrigin, //Origin position of the held item in the left hand
+        RightItemOrigin, //Origin position of the held item
+        LeftElytraOrigin, //Left origin position of the elytra
+        RightElytraOrigin, //Right origin position of the elytra
+        LeftElytra, //Left origin position of the elytra
+        RightElytra, //Right origin position of the elytra
+        NameTag, //Parented to the nametag.
     }
 
     public enum RotationType {
@@ -373,7 +473,7 @@ public class CustomModelPart {
     /**
      * Writes a model part to an NBT compound.
      *
-     * @param nbt the NBT compound
+     * @param nbt  the NBT compound
      * @param part the model part
      */
     public static void writeToNbt(CompoundTag nbt, CustomModelPart part) {

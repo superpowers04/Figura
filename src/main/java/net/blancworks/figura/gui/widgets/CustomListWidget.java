@@ -61,6 +61,12 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
         return parent.getFocused() == this;
     }
 
+    public void unselect() {
+        super.setSelected(null);
+        state.selected = null;
+        selectedplayerId = null;
+    }
+
     public void select(T2 entry) {
         this.setSelected(entry);
     }

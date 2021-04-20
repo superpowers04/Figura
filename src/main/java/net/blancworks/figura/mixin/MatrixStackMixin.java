@@ -18,4 +18,8 @@ public class MatrixStackMixin implements MatrixStackAccess {
         MatrixStackMixin access = (MatrixStackMixin) (Object) otherStack;
         access.stack.addAll(stack);
     }
+    
+    public void pushEntry(MatrixStack.Entry entry){
+        stack.addLast(entry);
+    }
 }
