@@ -19,7 +19,8 @@
     "ElytraFeatureRendererMixin",
     "HeldItemModelMixin",
     "PlayerModelRendererMixin",
-    "PlayerListHudMixin"
+    "PlayerListHudMixin",
+    "InGameHudMixin"
   ],
   "injectors": {
     "defaultRequire": 1
