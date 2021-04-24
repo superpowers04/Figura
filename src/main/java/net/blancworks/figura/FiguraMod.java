@@ -11,6 +11,7 @@ import net.blancworks.figura.network.IFiguraNetwork;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
@@ -51,12 +52,12 @@ public class FiguraMod implements ClientModInitializer {
     private static CompletableFuture globalLoadTask;
 
     private PlayerDataManager dataManagerInstance;
-    
+
     public static IFiguraNetwork networkManager;
-    
+
     private static FiguraNetworkManager oldNetworkManager;
     private static NewFiguraNetworkManager newNetworkManager;
-    
+
     //Used during rendering.
     public static AbstractClientPlayerEntity currentPlayer;
     public static PlayerData currentData;
@@ -95,16 +96,19 @@ public class FiguraMod implements ClientModInitializer {
         //Set up network
         oldNetworkManager = new FiguraNetworkManager();
         newNetworkManager = new NewFiguraNetworkManager();
-        
-        if(Config.useNewNetwork.value){
+
+        if (Config.useNewNetwork.value) {
             networkManager = newNetworkManager;
         } else {
             networkManager = oldNetworkManager;
         }
-        
+
         //Register fabric events
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
         WorldRenderEvents.AFTER_ENTITIES.register(FiguraMod::renderFirstPersonWorldParts);
+        ClientLifecycleEvents.CLIENT_STOPPING.register((v) -> {
+            networkManager.onClose();
+        });
 
         dataManagerInstance = new PlayerDataManager();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
@@ -125,14 +129,14 @@ public class FiguraMod implements ClientModInitializer {
     //Client-side ticks.
     public static void ClientEndTick(MinecraftClient client) {
         PlayerDataManager.tick();
-        
-        if(Config.useNewNetwork.value){
+
+        if (Config.useNewNetwork.value) {
             networkManager = newNetworkManager;
         } else {
             networkManager = oldNetworkManager;
         }
-     
-        if(networkManager != null)
+
+        if (networkManager != null)
             networkManager.tickNetwork();
     }
 
@@ -192,8 +196,8 @@ public class FiguraMod implements ClientModInitializer {
                     context.matrixStack().scale(-1, -1, 1);
 
                     try {
-                        
-                        if(data.model != null) {
+
+                        if (data.model != null) {
                             int prevCount = data.model.leftToRender;
                             data.model.leftToRender = 9999999;
 

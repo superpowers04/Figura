@@ -162,6 +162,11 @@ public class FiguraNetworkManager implements IFiguraNetwork {
         parseAuthKeyFromDisconnectMessage(reason);
     }
 
+    @Override
+    public void onClose() {
+        
+    }
+
 
     //--AUTH--
 
@@ -213,11 +218,6 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                 figuraSessionKey = Integer.parseInt(keyText.asString());
                 hasAuthKey = true;
                 lastAuthDate = new Date();
-
-                LiteralText garbleText = new LiteralText("-------------------------\n\n\n");
-                garbleText.setStyle(Style.EMPTY.withFormatting(Formatting.OBFUSCATED));
-
-                reason.getSiblings().set(1, garbleText);
             }
         } catch (Exception e) {
             e.printStackTrace();

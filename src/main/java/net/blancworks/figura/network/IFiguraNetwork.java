@@ -27,4 +27,6 @@ public interface IFiguraNetwork {
     CompletableFuture<String> asyncGetAvatarHash(UUID avatarID);
     
     void parseKickAuthMessage(Text reason);
+    
+    void onClose();
 }
