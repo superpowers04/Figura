@@ -70,6 +70,9 @@ public class CustomModel extends FiguraAsset {
             if (part.isParentSpecial())
                 continue;
 
+            if (this.owner.lastEntity.isSpectator() && !(part.parentType == CustomModelPart.ParentType.Head))
+                continue;
+
             matrices.push();
 
             try {
@@ -78,7 +81,7 @@ public class CustomModel extends FiguraAsset {
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
 
-                leftToRender = part.renderUsingAllTextures(owner, matrices, vcp, light, overlay);
+                leftToRender = part.renderUsingAllTextures(owner, matrices, vcp, light, overlay, alpha);
 
                 lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
             } catch (Exception e) {
@@ -96,9 +99,14 @@ public class CustomModel extends FiguraAsset {
             owner.script.render(FiguraMod.deltaTime);
         }
 
+        int prevCount = playerData.model.leftToRender;
+        playerData.model.leftToRender = 9999999;
+        
         for (CustomModelPart part : playerData.model.allParts) {
             renderArmRecursive(part, playerData, matrices, vertexConsumers, light, player, arm, sleeve, model);
         }
+
+        playerData.model.leftToRender = prevCount;
     }
 
     public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vcp, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model) {

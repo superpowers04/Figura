@@ -59,6 +59,9 @@ dependencies {
 	
 	//Origins
 	modImplementation "com.github.apace100:origins-fabric:${project.origins_version}"
+
+	//WebSocket library
+	compile 'com.neovisionaries:nv-websocket-client:2.14'
 }
 
 processResources {
