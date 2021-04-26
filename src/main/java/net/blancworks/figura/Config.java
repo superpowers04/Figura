@@ -50,12 +50,12 @@ public class Config {
                                 break;
                             case "buttonLocation":
                                 int i = Integer.parseInt(content[1]) % 5;
-                                if (i < 0) i += 4;
+                                if (i < 0) i += 5;
                                 buttonLocation = new ConfigEntry<>(i, 3);
                                 break;
                             case "scriptLog":
                                 int j = Integer.parseInt(content[1]) % 3;
-                                if (j < 0) j += 2;
+                                if (j < 0) j += 3;
                                 scriptLog = new ConfigEntry<>(j, 0);
                                 break;
                             case "listMark":
