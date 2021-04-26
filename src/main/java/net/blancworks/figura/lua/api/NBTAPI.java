@@ -18,7 +18,7 @@ public class NBTAPI {
         put(LongTag.class, NBTAPI::fromLongTag);
         put(StringTag.class, NBTAPI::fromStringTag);
 
-        put(IntArrayTag.class, NBTAPI::fromIntTag);
+        put(IntArrayTag.class, NBTAPI::fromIntArrayTag);
         put(ByteArrayTag.class, NBTAPI::fromByteArrayTag);
         put(LongArrayTag.class, NBTAPI::fromLongArrayTag);
         put(ListTag.class, NBTAPI::fromListTag);

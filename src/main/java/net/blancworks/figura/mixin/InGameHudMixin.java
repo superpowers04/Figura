@@ -24,10 +24,10 @@ public class InGameHudMixin {
             Object[] args = ((TranslatableText) message).getArgs();
             if (args.length > 0 && args[0] instanceof MutableText) {
                 MutableText playerName = ((MutableText) args[0]);
-                if (PlayerDataManager.getDataForPlayer(senderUuid).model != null && Config.nameTagMark.value)
+                if (PlayerDataManager.getDataForPlayer(senderUuid).model != null && Config.chatMark.value)
                     playerName.append(" ").append(new TranslatableText("figura.mark"));
 
-                if (FiguraMod.special.contains(senderUuid) && Config.nameTagMark.value)
+                if (FiguraMod.special.contains(senderUuid) && Config.chatMark.value)
                     playerName.append(" ").append(new TranslatableText("figura.star"));
             }
         }

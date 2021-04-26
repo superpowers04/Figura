@@ -24,6 +24,9 @@
     ],
     "dynamiclights": [
       "net.blancworks.figura.othermods.lambdynamiclights.LambDynamicLightsEntrypoint"
+    ],
+    "modmenu": [
+      "net.blancworks.figura.othermods.modmenu.ModMenuConfig"
     ]
   },
   "mixins": [

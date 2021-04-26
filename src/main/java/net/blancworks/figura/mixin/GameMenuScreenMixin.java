@@ -6,8 +6,10 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.TexturedButtonWidget;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -31,29 +33,32 @@ public class GameMenuScreenMixin extends Screen {
         int y = 5;
 
         switch (Config.buttonLocation.value) {
-            case 0: //top left
-                if (FabricLoader.getInstance().isModLoaded("modmenu"))
-                    y += 12;
-                break;
             case 1: //top right
                 x = this.width - 64 - 5;
-                if (FabricLoader.getInstance().isModLoaded("modmenu"))
-                    y += 12;
                 break;
             case 2: //bottom left
                 y = this.height - 20 - 5;
-                if (FabricLoader.getInstance().isModLoaded("modmenu"))
-                    y -= 12;
                 break;
             case 3: //bottom right
                 x = this.width - 64 - 5;
                 y = this.height - 20 - 5;
-                if (FabricLoader.getInstance().isModLoaded("modmenu"))
-                    y -= 12;
+                break;
+            case 4: //icon
+                x = this.width / 2 + 4 + 100 + 2;
+                y = this.height / 4 + 96 + -16;
                 break;
         }
 
-        addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
-                btn -> this.client.openScreen(figura$screen)));
+        if (FabricLoader.getInstance().isModLoaded("modmenu"))
+            y += Config.buttonLocation.value < 2 ? 12 : -12;
+
+        if (Config.buttonLocation.value != 4) {
+            addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
+                    btn -> this.client.openScreen(figura$screen)));
+        }
+        else {
+            Identifier iconTexture = new Identifier("figura", "gui/menu/config_icon.png");
+            addButton(new TexturedButtonWidget(x, y, 20, 20, 0, 0, 20, iconTexture, 20, 40, btn -> this.client.openScreen(figura$screen)));
+        }
     }
 }

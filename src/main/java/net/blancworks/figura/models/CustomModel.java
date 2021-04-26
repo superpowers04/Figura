@@ -24,7 +24,7 @@ import java.util.HashMap;
 
 public class CustomModel extends FiguraAsset {
     public PlayerData owner;
-    public ArrayList<CustomModelPart> allParts = new ArrayList<CustomModelPart>();
+    public ArrayList<CustomModelPart> allParts = new ArrayList<>();
 
     //Customized pivots for stuff like elytra, held items, that sort.
     public HashMap<Identifier, CustomModelPart> customParents = new HashMap<>();

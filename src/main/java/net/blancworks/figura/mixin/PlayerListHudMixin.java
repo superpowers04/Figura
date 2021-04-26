@@ -20,10 +20,10 @@ public class PlayerListHudMixin {
     private void getPlayerName(PlayerListEntry entry, CallbackInfoReturnable<Text> cir) {
         Text text = cir.getReturnValue();
 
-        if (PlayerDataManager.getDataForPlayer(entry.getProfile().getId()).model != null && Config.nameTagMark.value)
+        if (PlayerDataManager.getDataForPlayer(entry.getProfile().getId()).model != null && Config.listMark.value)
             ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark"));
 
-        if (FiguraMod.special.contains(entry.getProfile().getId()) && Config.nameTagMark.value)
+        if (FiguraMod.special.contains(entry.getProfile().getId()) && Config.listMark.value)
             ((LiteralText) text).append(" ").append(new TranslatableText("figura.star"));
 
         cir.setReturnValue(text);

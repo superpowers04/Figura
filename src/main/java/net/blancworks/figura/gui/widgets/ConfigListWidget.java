@@ -31,6 +31,8 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         //entries
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.previewnametag"), new TranslatableText("gui.figura.config.tooltip.previewnametag"), Config.previewNameTag));
+        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.listmark"), new TranslatableText("gui.figura.config.tooltip.listmark"), Config.listMark));
+        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.chatmark"), new TranslatableText("gui.figura.config.tooltip.chatmark"), Config.chatMark));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.nametagmark"), new TranslatableText("gui.figura.config.tooltip.nametagmark"), Config.nameTagMark));
 
         //category title
@@ -41,11 +43,18 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
                 new TranslatableText("gui.figura.config.buttonlocation.topleft"),
                 new TranslatableText("gui.figura.config.buttonlocation.topright"),
                 new TranslatableText("gui.figura.config.buttonlocation.bottomleft"),
-                new TranslatableText("gui.figura.config.buttonlocation.bottomright")
+                new TranslatableText("gui.figura.config.buttonlocation.bottomright"),
+                new TranslatableText("gui.figura.config.buttonlocation.icon")
         );
         this.addEntry(new MultiStateEntry(new TranslatableText("gui.figura.config.buttonlocation"), new TranslatableText("gui.figura.config.tooltip.buttonlocation"), Config.buttonLocation, buttonLocationEntries));
-        
-        
+
+        List<Text> scriptLogEntries = Arrays.asList(
+                new TranslatableText("gui.figura.config.scriptlog.console_chat"),
+                new TranslatableText("gui.figura.config.scriptlog.console"),
+                new TranslatableText("gui.figura.config.scriptlog.chat")
+        );
+        this.addEntry(new MultiStateEntry(new TranslatableText("gui.figura.config.scriptlog"), new TranslatableText("gui.figura.config.tooltip.scriptlog"), Config.scriptLog, scriptLogEntries));
+
         //category title
         this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.dev").formatted(Formatting.RED)));
 

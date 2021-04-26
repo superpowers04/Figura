@@ -1,54 +1,55 @@
 {
   "base": {
-    "maxInitInstructions" : 16384,
-    "maxTickInstructions" : 4096,
+    "maxInitInstructions": 16384,
+    "maxTickInstructions": 4096,
     "maxRenderInstructions": 1024,
-    "maxComplexity" : 1152,
-    "allowVanillaEdit" : false,
-    "maxparticles" : 4,
-    "maxsfx" : 4 
+    "maxComplexity": 1152,
+    "maxparticles": 4,
+    "maxsfx": 4 ,
+    "allowVanillaEdit": false
   },
   "blocked": {
-    "maxInitInstructions" : 0,
-    "maxTickInstructions" : 0,
-    "maxRenderInstructions" : 0,
-    "maxComplexity" : 0,
-    "allowVanillaEdit" : false,
-    "maxparticles" : 0,
-    "maxsfx" : 0,
-    "parent" : "base"
+    "maxInitInstructions": 0,
+    "maxTickInstructions": 0,
+    "maxRenderInstructions": 0,
+    "maxComplexity": 0,
+    "maxparticles": 0,
+    "maxsfx": 0,
+    "allowVanillaEdit": false,
+    "parent": "base"
   },
   "untrusted": {
-    "parent" : "base"
+    "parent": "base"
   },
   "trusted": {
-    "maxInitInstructions" : 16384,
-    "maxTickInstructions" : 8192,
+    "maxInitInstructions": 16384,
+    "maxTickInstructions": 8192,
     "maxRenderInstructions": 2048,
-    "maxComplexity" : 3456,
-    "allowVanillaEdit" : true,
-    "maxparticles" : 16,
-    "maxsfx" : 16,
-    "parent" : "base"
+    "maxComplexity": 3456,
+    "maxparticles": 16,
+    "maxsfx": 16,
+    "allowVanillaEdit": true,
+    "parent": "base"
   },
   "friend": {
-    "maxInitInstructions" : 999999,
-    "maxTickInstructions" : 999999,
-    "maxRenderInstructions": 999999,
-    "maxComplexity" : 999999,
-    "allowVanillaEdit" : true,
-    "maxparticles" : 999999,
-    "maxsfx" : 999999,
-    "parent" : "base"
+    "maxInitInstructions": 2147483647,
+    "maxTickInstructions": 2147483647,
+    "maxRenderInstructions": 2147483647,
+    "maxComplexity": 2147483647,
+    "maxparticles": 2147483647,
+    "maxsfx": 2147483647,
+    "allowVanillaEdit": true,
+    "parent": "base"
   },
   "local": {
-    "maxTickInstructions" : 999999,
-    "maxRenderInstructions": 999999,
-    "maxComplexity" : 999999,
-    "allowVanillaEdit" : true,
-    "parent" : "base",
-    "maxparticles" : 999999,
-    "maxsfx" : 999999,
-    "hidden" : true
+    "maxInitInstructions": 2147483647,
+    "maxTickInstructions": 2147483647,
+    "maxRenderInstructions": 2147483647,
+    "maxComplexity": 2147483647,
+    "maxparticles": 2147483647,
+    "maxsfx": 2147483647,
+    "allowVanillaEdit": true,
+    "parent": "base",
+    "hidden": true
   }
 }

@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua;
 
+import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -176,8 +177,16 @@ public class CustomScript extends FiguraAsset {
             @Override
             public LuaValue call(LuaValue arg) {
                 if (playerData == PlayerDataManager.localPlayer) {
-                    FiguraMod.LOGGER.warn(arg.toString());
-                    sendChatMessage(new LiteralText(arg.toString()));
+                    if (Config.scriptLog.value == 0) {
+                        FiguraMod.LOGGER.warn(arg.toString());
+                        sendChatMessage(new LiteralText(arg.toString()));
+                    }
+                    else if (Config.scriptLog.value == 1) {
+                        FiguraMod.LOGGER.warn(arg.toString());
+                    }
+                    else {
+                        sendChatMessage(new LiteralText(arg.toString()));
+                    }
                 }
                 return NIL;
             }

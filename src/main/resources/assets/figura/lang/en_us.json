@@ -59,8 +59,14 @@
   "gui.figura.config.previewnametag": "Show Preview NameTag",
   "gui.figura.config.tooltip.previewnametag": "Displays your NameTag on the model preview screen",
 
-  "gui.figura.config.nametagmark": "Show Figura Mark",
+  "gui.figura.config.nametagmark": "NameTag Figura Mark",
   "gui.figura.config.tooltip.nametagmark": "Adds The Mark △ to the NameTag of players using Figura",
+
+  "gui.figura.config.listmark": "Player List Figura Mark",
+  "gui.figura.config.tooltip.listmark": "Adds The Mark △ to the tab list of players using Figura",
+
+  "gui.figura.config.chatmark": "Chat Figura Mark",
+  "gui.figura.config.tooltip.chatmark": "Adds The Mark △ to the chat names of players using Figura",
 
   "gui.figura.config.usenewnetwork": "Use New Network",
   "gui.figura.config.tooltip.usenewnetwork": "Toggles between using the new or old network for online models",
@@ -73,5 +79,12 @@
   "gui.figura.config.buttonlocation.topleft": "Top Left",
   "gui.figura.config.buttonlocation.topright": "Top Right",
   "gui.figura.config.buttonlocation.bottomleft": "Bottom Left",
-  "gui.figura.config.buttonlocation.bottomright": "Bottom Right"
+  "gui.figura.config.buttonlocation.bottomright": "Bottom Right",
+  "gui.figura.config.buttonlocation.icon": "Icon",
+
+  "gui.figura.config.scriptlog": "Script Log",
+  "gui.figura.config.tooltip.scriptlog": "Script debug log output location",
+  "gui.figura.config.scriptlog.console_chat": "Console/Chat",
+  "gui.figura.config.scriptlog.console": "Console",
+  "gui.figura.config.scriptlog.chat": "Chat"
 }
