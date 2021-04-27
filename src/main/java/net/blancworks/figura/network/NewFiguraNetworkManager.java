@@ -6,6 +6,8 @@ import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.network.messages.DebugMessageHandler;
+import net.blancworks.figura.network.messages.DebugMessageSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.nbt.CompoundTag;
@@ -27,20 +29,23 @@ import java.util.function.Supplier;
 
 public class NewFiguraNetworkManager implements IFiguraNetwork {
 
-    private static CompletableFuture networkTasks;
+    public static CompletableFuture networkTasks;
 
+    //The protocol version for this version of the mod.
+    public static final int PROTOCOL_VERSION = 0;
+    
     //----- WEBSOCKETS -----
 
     //The factory that creates all sockets
-    private static WebSocketFactory socketFactory;
+    public static WebSocketFactory socketFactory;
     //The last socket we were using
-    private static WebSocket currWebSocket;
+    public static WebSocket currWebSocket;
 
     //The JWT token handed to us by the server.
-    private String jwtToken;
+    public static String jwtToken;
 
     //Timeout before a connection with a socket is considered dead.
-    private static final int timeoutSeconds = 10;
+    public static final int timeoutSeconds = 10;
 
     private static CompletableFuture doTask(Runnable toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
@@ -74,17 +79,16 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     @Override
     public CompletableFuture<UUID> postAvatar() {
         return doTask(() -> {
-            authUser();
-
             try {
                 ensureConnection();
             } catch (Exception e){
                 e.printStackTrace();
                 return;
             }
+
+            DebugMessageSender sender = new DebugMessageSender();
             
-            currWebSocket.sendText("From Minecraft, with love!");
-            currWebSocket.sendBinary(new byte[28]);
+            sender.sendMessage(currWebSocket);
         });
     }
 
@@ -172,14 +176,16 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         //Ensure user is authed, we need the JWT to verify this user.
         authUser();
-
+        
         closeSocketConnection();
         WebSocket newSocket = socketFactory.createSocket(String.format("wss://%s/connect", mainServerURL()), timeoutSeconds * 1000);
-        newSocket.addListener(new FiguraWebSocketAdapter());
+        newSocket.addListener(new FiguraNetworkMessageHandler(this));
 
         newSocket.connect();
 
         newSocket.sendText(jwtToken);
+        
+        newSocket.sendText(String.format("{\"protocol\":%d}", PROTOCOL_VERSION));
 
         return newSocket;
     }
@@ -197,32 +203,11 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         currWebSocket = null;
     }
 
-    private static class FiguraWebSocketAdapter extends WebSocketAdapter {
-
-        @Override
-        public void onConnected(WebSocket websocket, Map<String, List<String>> headers) throws Exception {
-            super.onConnected(websocket, headers);
-        }
-
-        @Override
-        public void onBinaryMessage(WebSocket websocket, byte[] binary) throws Exception {
-            super.onBinaryMessage(websocket, binary);
-        }
-
-        @Override
-        public void onCloseFrame(WebSocket websocket, WebSocketFrame frame) throws Exception {
-            super.onCloseFrame(websocket, frame);
-        }
-
-        @Override
-        public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame, boolean closedByServer) throws Exception {
-            super.onDisconnected(websocket, serverCloseFrame, clientCloseFrame, closedByServer);
-            currWebSocket = null;
-        }
-
-    }
-
     public void authUser() {
+        
+        if(jwtToken != null)
+            return;
+        
         try {
             String address = authServerURL();
             InetAddress inetAddress = InetAddress.getByName(address);
@@ -232,7 +217,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             }));
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
-
+            
             while (connection.isOpen())
                 Thread.sleep(1);
 
