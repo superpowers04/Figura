@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua;
 
+import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -176,8 +177,13 @@ public class CustomScript extends FiguraAsset {
             @Override
             public LuaValue call(LuaValue arg) {
                 if (playerData == PlayerDataManager.localPlayer) {
-                    FiguraMod.LOGGER.warn(arg.toString());
-                    sendChatMessage(new LiteralText(arg.toString()));
+
+                    if (Config.scriptLog.value != 2) {
+                        FiguraMod.LOGGER.warn(arg.toString());
+                    }
+                    if (Config.scriptLog.value != 1) {
+                        sendChatMessage(new LiteralText(arg.toString()));
+                    }
                 }
                 return NIL;
             }
@@ -408,7 +414,14 @@ public class CustomScript extends FiguraAsset {
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
         String nextDepthString = depthString;
-        sendChatMessage(new LiteralText(depthString + "{"));
+        int logConfig = Config.scriptLog.value;
+
+        if (logConfig != 2) {
+            FiguraMod.LOGGER.warn(depthString + "{");
+        }
+        if (logConfig != 1) {
+            sendChatMessage(new LiteralText(depthString + "{"));
+        }
 
         for (LuaValue key : table.keys()) {
             LuaValue value = table.get(key);
@@ -416,13 +429,29 @@ public class CustomScript extends FiguraAsset {
             String valString = depthString + '"' + key.toString() + '"' + " : " + value.toString();
 
             if (value.istable()) {
-                sendChatMessage(new LiteralText(valString));
+                if (logConfig != 2) {
+                    FiguraMod.LOGGER.warn(valString);
+                }
+                if (logConfig != 1) {
+                    sendChatMessage(new LiteralText(valString));
+                }
+
                 logTableContents(value.checktable(), depth + 1, nextDepthString);
             } else {
-                sendChatMessage(new LiteralText(valString + ","));
+                if (logConfig != 2) {
+                    FiguraMod.LOGGER.warn(valString + ",");
+                }
+                if (logConfig != 1) {
+                    sendChatMessage(new LiteralText(valString + ","));
+                }
             }
         }
-        sendChatMessage(new LiteralText(depthString + "},"));
+        if (logConfig != 2) {
+            FiguraMod.LOGGER.warn(depthString + "},");
+        }
+        if (logConfig != 1) {
+            sendChatMessage(new LiteralText(depthString + "},"));
+        }
     }
 
     public static void sendChatMessage(Text text) {

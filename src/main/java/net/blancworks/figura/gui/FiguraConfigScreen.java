@@ -18,7 +18,7 @@ public class FiguraConfigScreen extends Screen {
     public Screen parentScreen;
     private ConfigListWidget configListWidget;
 
-    protected FiguraConfigScreen(Screen parentScreen) {
+    public FiguraConfigScreen(Screen parentScreen) {
         super(new TranslatableText("gui.figura.configtitle"));
         this.parentScreen = parentScreen;
     }

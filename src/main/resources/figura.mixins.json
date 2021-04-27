@@ -6,21 +6,21 @@
   "mixins": [
   ],
   "client": [
-    "ClientLoginNetworkHandlerMixin",
-    "ModelPartMixin",
-    "GameMenuScreenMixin",
-    "MatrixStackMixin",
-    "MixinDebugHud",
-    "LivingEntityRendererMixin",
-    "WorldRendererMixin",
-    "PlayerEntityRendererMixin",
     "ArmorFeatureRendererMixin",
+    "ClientLoginNetworkHandlerMixin",
     "ElytraEntityModelMixin",
     "ElytraFeatureRendererMixin",
+    "GameMenuScreenMixin",
     "HeldItemModelMixin",
-    "PlayerModelRendererMixin",
+    "InGameHudMixin",
+    "LivingEntityRendererMixin",
+    "MatrixStackMixin",
+    "MixinDebugHud",
+    "ModelPartMixin",
+    "PlayerEntityRendererMixin",
     "PlayerListHudMixin",
-    "InGameHudMixin"
+    "PlayerModelRendererMixin",
+    "WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1

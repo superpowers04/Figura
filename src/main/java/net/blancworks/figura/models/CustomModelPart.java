@@ -161,6 +161,7 @@ public class CustomModelPart {
                             matrices.push();
                             applyTransformsAsItem(matrices);
                             stackReference = matrices.peek();
+                            part = CustomModelPart.this;
                             matrices.pop();
                         }});
                         break;
@@ -169,6 +170,7 @@ public class CustomModelPart {
                             matrices.push();
                             applyTransformsAsItem(matrices);
                             stackReference = matrices.peek();
+                            part = CustomModelPart.this;
                             matrices.pop();
                         }});
                         break;
@@ -177,6 +179,7 @@ public class CustomModelPart {
                             matrices.push();
                             applyTransformsAsElytra(matrices);
                             stackReference = matrices.peek();
+                            part = CustomModelPart.this;
                             matrices.pop();
                         }});
                         break;
@@ -185,6 +188,7 @@ public class CustomModelPart {
                             matrices.push();
                             applyTransformsAsElytra(matrices);
                             stackReference = matrices.peek();
+                            part = CustomModelPart.this;
                             matrices.pop();
                         }});
                         break;
