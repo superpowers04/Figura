@@ -49,10 +49,11 @@ public class GameMenuScreenMixin extends Screen {
                 break;
         }
 
-        if (FabricLoader.getInstance().isModLoaded("modmenu"))
-            y += Config.buttonLocation.value < 2 ? 12 : -12;
-
         if (Config.buttonLocation.value != 4) {
+            if (FabricLoader.getInstance().isModLoaded("modmenu")) {
+                y += Config.buttonLocation.value < 2 ? 12 : -12;
+            }
+
             addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
                     btn -> this.client.openScreen(figura$screen)));
         }
