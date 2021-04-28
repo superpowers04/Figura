@@ -11,14 +11,12 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
-import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -111,14 +109,16 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
                     .replace("%u", entity.getName().getString());
             Style style = text.getStyle();
             if (style.getColor() == null) {
-                style = style.withColor(TextColor.fromRgb(playerData.nameplate.rgb));
+                style = style.withColor(TextColor.fromRgb(playerData.nameplate.RGB));
             }
-            if (!data.decorations_disabled) {
-                style = style.withBold(data.bold).withItalic(data.italic).withUnderline(data.underlined);
-                if (data.strikethrough) {
+            if ((data.textProperties & 0b10000000) != 0b10000000) {
+                style = style.withBold((data.textProperties & 0b00000001) == 0b0000001)
+                        .withItalic((data.textProperties & 0b00000010) == 0b0000010)
+                        .withUnderline((data.textProperties & 0b00000100) == 0b0000100);
+                if ((data.textProperties & 0b00001000) == 0b00001000) {
                     style = style.withFormatting(Formatting.STRIKETHROUGH);
                 }
-                if (data.obfuscated) {
+                if ((data.textProperties & 0b00001000) == 0b0001000) {
                     style = style.withFormatting(Formatting.OBFUSCATED);
                 }
             }
@@ -176,10 +176,10 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
     @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
     protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
         if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && Config.nameTagMark.value)
-            ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark"));
+            ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.AQUA)));
 
         if (FiguraMod.special.contains(abstractClientPlayerEntity.getUuid()) && Config.nameTagMark.value)
-            ((LiteralText) text).append(" ").append(new TranslatableText("figura.star"));
+            ((LiteralText) text).append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.AQUA)));
     }
 
     public void figura$applyPartCustomization(String id, ModelPart part) {

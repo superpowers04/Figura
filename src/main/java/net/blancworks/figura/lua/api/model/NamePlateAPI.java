@@ -90,11 +90,11 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     if (arg.isnil()) {
-                        data.rgb = -1;
+                        data.RGB = -1;
                         return NIL;
                     }
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg.checktable());
-                    data.rgb = ((Math.round(fas.getFloat(0)) << 16) & 0xFF) | ((Math.round(fas.getFloat(1)) << 8) & 0xFF) | (Math.round(fas.getFloat(2)) & 0xFF);
+                    data.RGB = ((Math.round(fas.getFloat(0)) & 0xFF) << 16) | ((Math.round(fas.getFloat(1)) & 0xFF) << 8) | (Math.round(fas.getFloat(2)) & 0xFF);
                     return NIL;
                 }
             });
@@ -102,9 +102,9 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable val = new LuaTable();
-                    val.set("r", data.rgb >> 16 & 0xFF);
-                    val.set("g", data.rgb >> 8 & 0xFF);
-                    val.set("b", data.rgb & 0xFF);
+                    val.set("r", data.RGB >> 16 & 0xFF);
+                    val.set("g", data.RGB >> 8 & 0xFF);
+                    val.set("b", data.RGB & 0xFF);
                     return val;
                 }
             });
@@ -115,25 +115,69 @@ public class NamePlateAPI {
                     if (!arg.isnumber()) {
                         return NIL;
                     }
-                    byte val = arg.tobyte();
-                    data.bold = (val & 0b00000001) == 0b000000001;
-                    data.italic = (val & 0b00000010) == 0b000000010;
-                    data.underlined = (val & 0b00000100) == 0b000000100;
-                    data.strikethrough = (val & 0b00001000) == 0b000001000;
-                    data.obfuscated = (val & 0b00010000) == 0b00010000;
-                    data.decorations_disabled = (val & 0b10000000) == 0b10000000;
+                    data.textProperties = arg.tobyte();
                     return NIL;
                 }
             });
             ret.set("getProperties", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf((data.decorations_disabled ? 0b10000000 : 0) |
-                            (data.obfuscated ? 0b00010000 : 0) |
-                            (data.strikethrough ? 0b00001000 : 0) |
-                            (data.underlined ? 0b00000100 : 0) |
-                            (data.italic ? 0b00000010 : 0) |
-                            (data.bold ? 0b00000001 : 0));
+                    return LuaValue.valueOf(data.textProperties);
+                }
+            });
+            ret.set("setChatProperties", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (!arg.isnumber()) {
+                        return NIL;
+                    }
+                    data.chatTextProperties = arg.tobyte();
+                    return NIL;
+                }
+            });
+            ret.set("getChatProperties", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(data.chatTextProperties);
+                }
+            });
+            ret.set("setChatText", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (arg.isnil()) {
+                        data.chatText = "%n";
+                        return NIL;
+                    }
+                    data.chatText = arg.checkjstring();
+                    return NIL;
+                }
+            });
+            ret.set("getChatText", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(data.chatText);
+                }
+            });
+            ret.set("setChatColor", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (arg.isnil()) {
+                        data.chatRGB = -1;
+                        return NIL;
+                    }
+                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg.checktable());
+                    data.chatRGB = ((Math.round(fas.getFloat(0)) & 0xFF) << 16) | ((Math.round(fas.getFloat(1)) & 0xFF) << 8) | (Math.round(fas.getFloat(2)) & 0xFF);
+                    return NIL;
+                }
+            });
+            ret.set("getChatColor", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    LuaTable val = new LuaTable();
+                    val.set("r", data.chatRGB >> 16 & 0xFF);
+                    val.set("g", data.chatRGB >> 8 & 0xFF);
+                    val.set("b", data.chatRGB & 0xFF);
+                    return val;
                 }
             });
             return ret;
