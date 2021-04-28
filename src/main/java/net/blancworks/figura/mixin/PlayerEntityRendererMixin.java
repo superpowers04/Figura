@@ -1,30 +1,33 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.Config;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.*;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -94,6 +97,57 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
+    }
+
+    @Redirect(method = "renderLabelIfPresent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;renderLabelIfPresent(Lnet/minecraft/entity/Entity;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", ordinal = 1))
+    private<T extends Entity> void renderFiguraLabelIfPresent(LivingEntityRenderer livingEntityRenderer, T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        PlayerData playerData = PlayerDataManager.getDataForPlayer(entity.getUuid());
+        if (playerData != null) {
+            NamePlateData data = playerData.nameplate;
+            if (!data.enabled) return;
+            String formattedText = data.text
+                    .replace("%n", text.getString())
+                    .replace("%h", String.valueOf(((LivingEntity) entity).getHealth()))
+                    .replace("%u", entity.getName().getString());
+            Style style = text.getStyle();
+            if (style.getColor() == null) {
+                style = style.withColor(TextColor.fromRgb(playerData.nameplate.rgb));
+            }
+            if (!data.decorations_disabled) {
+                style = style.withBold(data.bold).withItalic(data.italic).withUnderline(data.underlined);
+                if (data.strikethrough) {
+                    style = style.withFormatting(Formatting.STRIKETHROUGH);
+                }
+                if (data.obfuscated) {
+                    style = style.withFormatting(Formatting.OBFUSCATED);
+                }
+            }
+            text = new LiteralText(formattedText).setStyle(style);
+        }
+        double d = this.dispatcher.getSquaredDistanceToCamera(entity);
+        if (!(d > 4096.0D)) {
+            boolean bl = !entity.isSneaky();
+            float f = entity.getHeight() + 0.5F;
+            matrices.push();
+            if (playerData == null) {
+                matrices.translate(0.0D, f, 0.0D);
+            } else {
+                matrices.translate(playerData.nameplate.position.getX(), playerData.nameplate.position.getY(), playerData.nameplate.position.getZ());
+            }
+            matrices.multiply(this.dispatcher.getRotation());
+            matrices.scale(-0.025F, -0.025F, 0.025F);
+            Matrix4f matrix4f = matrices.peek().getModel();
+            float g = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
+            int j = (int)(g * 255.0F) << 24;
+            TextRenderer textRenderer = this.getFontRenderer();
+            float h = (float)(-textRenderer.getWidth(text) / 2);
+            textRenderer.draw(text, h, 0, 553648127, false, matrix4f, vertexConsumers, bl, j, light);
+            if (bl) {
+                textRenderer.draw((Text)text, h, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
+            }
+
+            matrices.pop();
+        }
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm")

@@ -58,6 +58,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(ItemModelAPI.getID(), ItemModelAPI::getForScript);
         apiSuppliers.put(VectorAPI.getID(), VectorAPI::getForScript);
         apiSuppliers.put(SoundAPI.getID(), SoundAPI::getForScript);
+        apiSuppliers.put(NamePlateAPI.getID(), NamePlateAPI::getForScript);
     }
 
     public static void registerEvents(){
