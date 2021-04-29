@@ -230,7 +230,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         authUser();
 
         closeSocketConnection();
-        WebSocket newSocket = socketFactory.createSocket(String.format("ws://%s/connect/", mainServerURL()), TIMEOUT_SECONDS * 1000);
+        WebSocket newSocket = socketFactory.createSocket(String.format("wss://%s/connect/", mainServerURL()), TIMEOUT_SECONDS * 1000);
         newSocket.addListener(new FiguraNetworkMessageHandler(this));
 
         newSocket.connect();
