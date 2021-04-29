@@ -47,12 +47,12 @@ public class FiguraGuiScreen extends Screen {
 
     public Screen parentScreen;
 
-    public Identifier uploadTexture = new Identifier("figura", "gui/menu/upload.png");
-    public Identifier reloadTexture = new Identifier("figura", "gui/menu/reload.png");
-    public Identifier deleteTexture = new Identifier("figura", "gui/menu/delete.png");
-    public Identifier expandTexture = new Identifier("figura", "gui/menu/expand.png");
-    public Identifier playerBackgroundTexture = new Identifier("figura", "gui/menu/player_background.png");
-    public Identifier scalableBoxTexture = new Identifier("figura", "gui/menu/scalable_box.png");
+    public Identifier uploadTexture = new Identifier("figura", "textures/gui/upload.png");
+    public Identifier reloadTexture = new Identifier("figura", "textures/gui/reload.png");
+    public Identifier deleteTexture = new Identifier("figura", "textures/gui/delete.png");
+    public Identifier expandTexture = new Identifier("figura", "textures/gui/expand.png");
+    public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
+    public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
 
     public static final List<Text> deleteTooltip = new ArrayList<Text>(){{
         add(new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
@@ -680,7 +680,7 @@ public class FiguraGuiScreen extends Screen {
         entity.headYaw = entity.yaw;
         entity.prevHeadYaw = entity.yaw;
         entity.setInvisible(false);
-        showOwnNametag = Config.previewNameTag.value;
+        showOwnNametag = (boolean) Config.entries.get("previewNameTag").value;
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
         entityRenderDispatcher.setRotation(quaternion2);

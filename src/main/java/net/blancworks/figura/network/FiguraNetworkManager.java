@@ -419,14 +419,14 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     //figura.blancworks.org for proper online use.
     //TODO - Add support for a server list later for people who want to have their own avatar servers
     private String getServerAddress() {
-        if (Config.useLocalServer.value) {
+        if ((boolean) Config.entries.get("useLocalServer").value) {
             return "localhost:5001";
         }
         return "figura.blancworks.org";
     }
 
     private String getMinecraftAuthServerAddress() {
-        if (Config.useLocalServer.value) {
+        if ((boolean) Config.entries.get("useLocalServer").value) {
             return "localhost";
         }
         return "mc.blancworks.org";

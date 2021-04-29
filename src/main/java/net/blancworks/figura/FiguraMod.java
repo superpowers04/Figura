@@ -97,7 +97,7 @@ public class FiguraMod implements ClientModInitializer {
         oldNetworkManager = new FiguraNetworkManager();
         newNetworkManager = new NewFiguraNetworkManager();
 
-        if (Config.useNewNetwork.value) {
+        if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
         } else {
             networkManager = oldNetworkManager;
@@ -130,7 +130,7 @@ public class FiguraMod implements ClientModInitializer {
     public static void ClientEndTick(MinecraftClient client) {
         PlayerDataManager.tick();
 
-        if (Config.useNewNetwork.value) {
+        if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
         } else {
             networkManager = oldNetworkManager;

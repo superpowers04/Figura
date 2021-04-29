@@ -127,20 +127,20 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     //Minecraft authentication server URL
     public String authServerURL() {
-        if (Config.useLocalServer.value)
+        if ((boolean) Config.entries.get("useLocalServer").value)
             return "localhost";
         return "";
     }
 
     //Main server for distributing files URL
     public String mainServerURL() {
-        if (Config.useLocalServer.value)
+        if ((boolean) Config.entries.get("useLocalServer").value)
             return "localhost:6001";
         return "";
     }
 
     public void setupSocketFactory(WebSocketFactory factory) {
-        if (!Config.useLocalServer.value) {
+        if (!(boolean) Config.entries.get("useLocalServer").value) {
 
         } else {
 
@@ -151,21 +151,21 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     
     //Ensures there is a connection open with the server, if there was not before.
     public void ensureConnection() throws Exception {
-        
-        if(localLastCheck != Config.useLocalServer.value){
-            localLastCheck = Config.useLocalServer.value;
+
+        if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value) {
+            localLastCheck = (boolean) Config.entries.get("useLocalServer").value;
 
             socketFactory = new WebSocketFactory();
 
             //Don't verify hostname for local servers.
             if(localLastCheck){
                 SSLContext ctx = NaiveSSLContext.getInstance("TLS");
-                
+
                 socketFactory.setSSLContext(ctx);
                 socketFactory.setVerifyHostname(false);
             }
         }
-        
+
         if (currWebSocket == null || currWebSocket.isOpen() == false) {
             currWebSocket = openNewConnection();
         }
