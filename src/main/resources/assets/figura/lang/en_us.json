@@ -16,6 +16,7 @@
   "gui.figura.maxrenderinstructions": "Max Render Instructions",
   "gui.figura.maxcomplexity": "Max Complexity",
   "gui.figura.allowvanillaedit": "Vanilla Avatar Changes",
+  "gui.figura.allownameplateedit": "Nameplate/Chat Name Changes",
   "gui.figura.maxparticles": "Maximum Particles Per Second",
   "gui.figura.maxsfx": "Maximum Sounds Per Second",
 

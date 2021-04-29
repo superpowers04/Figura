@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.*;
 import net.blancworks.figura.gui.SetText;
+import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.hud.PlayerListHud;
@@ -30,7 +31,7 @@ public class InGameHudMixin {
             if (args.length > 0 && args[0] instanceof MutableText) {
                 MutableText playerName = ((MutableText) args[0]);
                 PlayerData playerData = PlayerDataManager.getDataForPlayer(senderUuid);
-                if (playerData.nameplate != null) {
+                if (FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID) && playerData.nameplate != null) {
                     NamePlateData data = playerData.nameplate;
                     Style style = playerName.getStyle();
                     if ((data.chatTextProperties & 0b10000000) != 0b10000000) {

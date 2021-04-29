@@ -6,7 +6,8 @@
     "maxComplexity": 1152,
     "maxparticles": 4,
     "maxsfx": 4 ,
-    "allowVanillaEdit": false
+    "allowVanillaEdit": false,
+    "allowNameplateEdit": false
   },
   "blocked": {
     "maxInitInstructions": 0,
@@ -16,6 +17,7 @@
     "maxparticles": 0,
     "maxsfx": 0,
     "allowVanillaEdit": false,
+    "allowNameplateEdit": false,
     "parent": "base"
   },
   "untrusted": {
@@ -29,6 +31,7 @@
     "maxparticles": 16,
     "maxsfx": 16,
     "allowVanillaEdit": true,
+    "allowNameplateEdit": true,
     "parent": "base"
   },
   "friend": {
@@ -39,6 +42,7 @@
     "maxparticles": 2147483647,
     "maxsfx": 2147483647,
     "allowVanillaEdit": true,
+    "allowNameplateEdit": true,
     "parent": "base"
   },
   "local": {
@@ -49,6 +53,7 @@
     "maxparticles": 2147483647,
     "maxsfx": 2147483647,
     "allowVanillaEdit": true,
+    "allowNameplateEdit": true,
     "parent": "base",
     "hidden": true
   }
