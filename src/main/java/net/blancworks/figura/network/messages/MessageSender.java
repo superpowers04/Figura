@@ -6,6 +6,8 @@ import com.neovisionaries.ws.client.WebSocket;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 
 public class MessageSender {
 
@@ -80,5 +82,16 @@ public class MessageSender {
     }
 
     protected void writeBody(LittleEndianDataOutputStream stream) throws IOException {
+    }
+    
+    public void writeString(String str, LittleEndianDataOutputStream stream) throws IOException {
+        byte[] data = str.getBytes(StandardCharsets.UTF_8);
+
+        stream.writeInt(data.length);
+        stream.write(data);
+    }
+    
+    public void writeUUID(UUID id, LittleEndianDataOutputStream stream) throws IOException {
+        writeString(id.toString(), stream);
     }
 }

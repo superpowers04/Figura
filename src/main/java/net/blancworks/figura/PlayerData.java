@@ -131,6 +131,12 @@ public class PlayerData {
      */
     public void readNbt(CompoundTag nbt) {
         playerId = nbt.getUuid("id");
+        
+        model = null;
+        texture = null;
+        script = null;
+        
+        extraTextures.clear();
 
         try {
             //Create model on main thread.
@@ -258,6 +264,9 @@ public class PlayerData {
     }
 
     public void loadFromNbt(CompoundTag tag) {
+        
+        
+        
         this.readNbt(tag);
         getFileSize();
     }

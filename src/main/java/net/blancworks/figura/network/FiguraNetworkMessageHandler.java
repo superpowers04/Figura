@@ -6,11 +6,13 @@ import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketFrame;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.network.messages.AvatarDownloadMessageHandler;
-import net.blancworks.figura.network.messages.DebugMessageHandler;
+import net.blancworks.figura.network.messages.MessageIDs;
+import net.blancworks.figura.network.messages.avatar.AvatarProvideResponseHandler;
 import net.blancworks.figura.network.messages.MessageHandler;
+import net.blancworks.figura.network.messages.avatar.AvatarUploadResponseHandler;
+import net.blancworks.figura.network.messages.user.UserAvatarHashProvideResponseHandler;
+import net.blancworks.figura.network.messages.user.UserAvatarProvideResponseHandler;
 
-import java.io.DataInputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,14 +24,21 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
 
     private final HashMap<Byte, Supplier<MessageHandler>> allMessageHandlers = new HashMap<Byte, Supplier<MessageHandler>>() {{
 
-        //Avatar download request handler.
         put(
-                (byte) -128,
-                AvatarDownloadMessageHandler::new
+                MessageIDs.AVATAR_PROVIDE_RESPONSE_HANDLER_ID,
+                AvatarProvideResponseHandler::new
         );
         put(
-                (byte) 0,
-                DebugMessageHandler::new
+                MessageIDs.AVATAR_UPLOAD_MESSAGE_ID,
+                AvatarUploadResponseHandler::new
+        );
+        put(
+                MessageIDs.USER_GET_AVATAR_UUID_RESPONSE_HANDLER_ID,
+                UserAvatarProvideResponseHandler::new
+        );
+        put(
+                MessageIDs.USER_AVATAR_HASH_RESPONSE_HANDLER_ID,
+                UserAvatarHashProvideResponseHandler::new
         );
     }};
 
@@ -72,19 +81,24 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
                     //Get it
                     lastHandler = supplier.get();
                     
+                    lastHandler.bodyLength = bodyLength;
+                    
                     //Handle the header.
                     lastHandler.handleHeader(dis);
 
-                    if (!lastHandler.expectBody()) {
+                    if (!lastHandler.expectBody())
                         lastHandler = null;
-                        skipNext = true;
-                    }
                 } else {
-                    skipNext = true;
+                    FiguraMod.LOGGER.error("INVALID MESSAGE HANDLER ID " + handlerID);
+                    if(lastHandler.expectBody())
+                        skipNext = true;
+                    lastHandler = null;
                     return;
                 }
             } catch (Exception e) {
-                skipNext = true;
+                if(lastHandler.expectBody())
+                    skipNext = true;
+                lastHandler = null;
                 e.printStackTrace();
             }
             dis.close();
@@ -98,6 +112,8 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
             }
 
             dis.close();
+
+            lastHandler = null;
         }
 
     }
@@ -115,8 +131,10 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
         if (closedByServer) {
             FiguraMod.LOGGER.warn("Disconnected from Figura Server with reason '" + serverCloseFrame.getCloseReason() + "'");
             
+            if(serverCloseFrame.getCloseReason().equals("Invalid Authentication")){
+                NewFiguraNetworkManager.jwtToken = null;
+                NewFiguraNetworkManager.tokenReceivedTime = null;
+            }
         }
-
-        NewFiguraNetworkManager.jwtToken = null;
     }
 }

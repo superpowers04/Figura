@@ -6,7 +6,6 @@ import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.nbt.CompoundTag;
@@ -15,10 +14,7 @@ import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Util;
 import org.apache.logging.log4j.Level;
 
@@ -26,7 +22,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
@@ -142,7 +137,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
 
     //Does nothing for this.
     @Override
-    public CompletableFuture setAvatarCurr(UUID avatarID) {
+    public CompletableFuture setCurrentUserAvatar(UUID avatarID) {
         return CompletableFuture.runAsync(() -> {
         });
     }
@@ -153,8 +148,15 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     }
 
     @Override
-    public CompletableFuture<String> asyncGetAvatarHash(UUID avatarID) {
-        return asyncGetAvatarHash(avatarID);
+    public CompletableFuture checkAvatarHash(UUID playerID, String previousHash) {
+        return CompletableFuture.runAsync(()->{
+            String newHash = getAvatarHashSync(playerID);
+            
+            if(!newHash.equals(previousHash)){
+                PlayerData data = PlayerDataManager.getDataForPlayer(playerID);
+                data.isInvalidated = true;
+            }
+        });
     }
 
     @Override
