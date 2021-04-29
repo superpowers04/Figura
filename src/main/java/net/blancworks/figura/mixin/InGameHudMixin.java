@@ -52,10 +52,10 @@ public class InGameHudMixin {
                     playerName.setStyle(style);
                 }
                 if (playerData.model != null && Config.chatMark.value)
-                    playerName.append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.AQUA)));
+                    playerName.append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
 
                 if (FiguraMod.special.contains(senderUuid) && Config.chatMark.value)
-                    playerName.append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.AQUA)));
+                    playerName.append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
 
             }
         }
