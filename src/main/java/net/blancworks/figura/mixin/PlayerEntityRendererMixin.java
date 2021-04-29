@@ -105,40 +105,42 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
             return;
         }
         PlayerData playerData = PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (playerData != null) {
-            NamePlateData data = playerData.nameplate;
-            if (!data.enabled) return;
-            String formattedText = data.text
-                    .replace("%n", text.getString())
-                    .replace("%h", String.valueOf(((LivingEntity) entity).getHealth()))
-                    .replace("%u", entity.getName().getString());
-            Style style = text.getStyle();
-            if (style.getColor() == null) {
-                style = style.withColor(TextColor.fromRgb(playerData.nameplate.RGB));
-            }
-            if ((data.textProperties & 0b10000000) != 0b10000000) {
-                style = style.withBold((data.textProperties & 0b00000001) == 0b0000001)
-                        .withItalic((data.textProperties & 0b00000010) == 0b0000010)
-                        .withUnderline((data.textProperties & 0b00000100) == 0b0000100);
-                if ((data.textProperties & 0b00001000) == 0b00001000) {
-                    style = style.withFormatting(Formatting.STRIKETHROUGH);
-                }
-                if ((data.textProperties & 0b00001000) == 0b0001000) {
-                    style = style.withFormatting(Formatting.OBFUSCATED);
-                }
-            }
-            text = new LiteralText(formattedText).setStyle(style);
+        if (playerData.script == null) {
+            super.renderLabelIfPresent((AbstractClientPlayerEntity) entity, text, matrices, vertexConsumers, light);
+            return;
         }
+        NamePlateData data = playerData.script.nameplate;
+        if (!data.enabled) return;
+        String formattedText = data.text
+                .replace("%n", text.getString())
+                .replace("%h", String.valueOf(Math.round(((LivingEntity) entity).getHealth()/2f)))
+                .replace("%u", entity.getName().getString());
+        Style style = text.getStyle();
+        if (style.getColor() == null) {
+            style = style.withColor(TextColor.fromRgb(data.RGB));
+        }
+        if ((data.textProperties & 0b10000000) != 0b10000000) {
+            style = style.withBold((data.textProperties & 0b00000001) == 0b0000001)
+                    .withItalic((data.textProperties & 0b00000010) == 0b0000010)
+                    .withUnderline((data.textProperties & 0b00000100) == 0b0000100);
+            if ((data.textProperties & 0b00001000) == 0b00001000) {
+                style = style.withFormatting(Formatting.STRIKETHROUGH);
+            }
+            if ((data.textProperties & 0b00010000) == 0b0010000) {
+                style = style.withFormatting(Formatting.OBFUSCATED);
+            }
+        }
+        text = new LiteralText(formattedText).setStyle(style);
+        if (playerData.model != null && Config.nameTagMark.value)
+            ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
+
+        if (FiguraMod.special.contains(entity.getUuid()) && Config.nameTagMark.value)
+            ((LiteralText) text).append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
         double d = this.dispatcher.getSquaredDistanceToCamera(entity);
         if (!(d > 4096.0D)) {
             boolean bl = !entity.isSneaky();
-            float f = entity.getHeight() + 0.5F;
             matrices.push();
-            if (playerData == null) {
-                matrices.translate(0.0D, f, 0.0D);
-            } else {
-                matrices.translate(playerData.nameplate.position.getX(), playerData.nameplate.position.getY(), playerData.nameplate.position.getZ());
-            }
+            matrices.translate(playerData.script.nameplate.position.getX(), playerData.script.nameplate.position.getY(), playerData.script.nameplate.position.getZ());
             matrices.multiply(this.dispatcher.getRotation());
             matrices.scale(-0.025F, -0.025F, 0.025F);
             Matrix4f matrix4f = matrices.peek().getModel();
@@ -148,7 +150,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
             float h = (float)(-textRenderer.getWidth(text) / 2);
             textRenderer.draw(text, h, 0, 553648127, false, matrix4f, vertexConsumers, bl, j, light);
             if (bl) {
-                textRenderer.draw((Text)text, h, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
+                textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
             }
 
             matrices.pop();
@@ -176,15 +178,6 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
         FiguraMod.clearRenderingData();
         figura$clearAllPartCustomizations();
-    }
-
-    @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
-    protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
-        if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && Config.nameTagMark.value)
-            ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
-
-        if (FiguraMod.special.contains(abstractClientPlayerEntity.getUuid()) && Config.nameTagMark.value)
-            ((LiteralText) text).append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
     }
 
     public void figura$applyPartCustomization(String id, ModelPart part) {

@@ -24,7 +24,7 @@ public class NamePlateAPI {
         NamePlateData data;
         public NamePlateTable(CustomScript script) {
             super(script);
-            this.data = script.playerData.nameplate;
+            this.data = script.nameplate;
             super.setTable(getTable());
         }
 

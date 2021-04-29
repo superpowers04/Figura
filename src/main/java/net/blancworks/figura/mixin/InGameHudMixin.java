@@ -31,9 +31,13 @@ public class InGameHudMixin {
             if (args.length > 0 && args[0] instanceof MutableText) {
                 MutableText playerName = ((MutableText) args[0]);
                 PlayerData playerData = PlayerDataManager.getDataForPlayer(senderUuid);
-                if (FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID) && playerData.nameplate != null) {
-                    NamePlateData data = playerData.nameplate;
+                if (playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)
+                        && playerData.script != null && playerData.script.nameplate != null) {
+                    NamePlateData data = playerData.script.nameplate;
                     Style style = playerName.getStyle();
+                    if (style == null) {
+                        style = Style.EMPTY;
+                    }
                     if ((data.chatTextProperties & 0b10000000) != 0b10000000) {
                         style = style.withBold((data.chatTextProperties & 0b00000001) == 0b0000001)
                                 .withItalic((data.chatTextProperties & 0b00000010) == 0b0000010)
@@ -41,14 +45,14 @@ public class InGameHudMixin {
                         if ((data.chatTextProperties & 0b00001000) == 0b00001000) {
                             style = style.withFormatting(Formatting.STRIKETHROUGH);
                         }
-                        if ((data.chatTextProperties & 0b00001000) == 0b0001000) {
+                        if ((data.chatTextProperties & 0b00010000) == 0b0010000) {
                             style = style.withFormatting(Formatting.OBFUSCATED);
                         }
                     }
                     if (style.getColor() == null) {
                         style = style.withColor(TextColor.fromRgb(data.chatRGB));
                     }
-                    ((SetText) playerName).figura$setText(playerData.nameplate.chatText.replace("%n", playerName.getString())
+                    ((SetText) playerName).figura$setText(data.chatText.replace("%n", playerName.getString())
                             .replace("%u", playerName.getString()));
                     playerName.setStyle(style);
                 }

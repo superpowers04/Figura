@@ -46,8 +46,6 @@ public class PlayerData {
     public CustomScript script;
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel vanillaModel;
-    //Vanilla nameplate (which isn't a model...)
-    public NamePlateData nameplate = new NamePlateData();
 
     //Extra textures for the model (like emission)
     public final List<FiguraTexture> extraTextures = new ArrayList<>();
