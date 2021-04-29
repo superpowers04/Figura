@@ -88,7 +88,10 @@ public class Config {
             writer.write("listMark=" + entries.get("listMark").value + "\n\n");
 
             writer.write("### Adds The Mark △ to the chat names of players using Figura ### - default true\n");
-            writer.write("chatMark=" + entries.get("chatMark").value);
+            writer.write("chatMark=" + entries.get("chatMark").value + "\n\n");
+
+            writer.write("### Display The Mark △ as an icon on the NameTag ### - default true\n");
+            writer.write("nameTagIcon=" + entries.get("nameTagIcon").value);
 
             writer.close();
         }
@@ -116,6 +119,7 @@ public class Config {
         entries.put("scriptLog", new ConfigEntry<>(0, 3));
         entries.put("listMark", new ConfigEntry<>(true));
         entries.put("chatMark", new ConfigEntry<>(true));
+        entries.put("nameTagIcon", new ConfigEntry<>(true));
     }
 
     public static class ConfigEntry<T> {

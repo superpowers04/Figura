@@ -3,6 +3,7 @@ package net.blancworks.figura.gui.widgets;
 import com.google.common.collect.ImmutableList;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.Config.ConfigEntry;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.gui.FiguraConfigScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -12,9 +13,11 @@ import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -43,6 +46,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.listmark"), new TranslatableText("gui.figura.config.tooltip.listmark"), Config.entries.get("listMark")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.chatmark"), new TranslatableText("gui.figura.config.tooltip.chatmark"), Config.entries.get("chatMark")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.nametagmark"), new TranslatableText("gui.figura.config.tooltip.nametagmark"), Config.entries.get("nameTagMark")));
+        this.addEntry(new ConfigListWidget.BooleanEntry(
+                new TranslatableText("gui.figura.config.nametagicon"),
+                new TranslatableText("gui.figura.config.tooltip.nametagicon", new LiteralText("△").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT))),
+                Config.entries.get("nameTagIcon"))
+        );
 
         //category title
         this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.misc")));

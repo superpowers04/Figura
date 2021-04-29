@@ -5,9 +5,8 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.network.MessageType;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,12 +22,19 @@ public class InGameHudMixin {
         if (senderUuid != Util.NIL_UUID && message instanceof TranslatableText && ((TranslatableText) message).getKey().equals("chat.type.text")) {
             Object[] args = ((TranslatableText) message).getArgs();
             if (args.length > 0 && args[0] instanceof MutableText) {
+
+                Identifier font;
+                if ((boolean) Config.entries.get("nameTagIcon").value)
+                    font = FiguraMod.FIGURA_FONT;
+                else
+                    font = Style.DEFAULT_FONT_ID;
+
                 MutableText playerName = ((MutableText) args[0]);
                 if (PlayerDataManager.getDataForPlayer(senderUuid).model != null && (boolean) Config.entries.get("chatMark").value)
-                    playerName.append(" ").append(new TranslatableText("figura.mark"));
+                    playerName.append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font)));
 
                 if (FiguraMod.special.contains(senderUuid) && (boolean) Config.entries.get("chatMark").value)
-                    playerName.append(" ").append(new TranslatableText("figura.star"));
+                    playerName.append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font)));
             }
         }
     }
