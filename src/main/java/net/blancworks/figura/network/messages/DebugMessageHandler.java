@@ -8,7 +8,7 @@ import java.io.DataInputStream;
 public class DebugMessageHandler extends MessageHandler {
 
     @Override
-    public void handleHeader(LittleEndianDataInputStream stream) {
+    public void handleHeader(LittleEndianDataInputStream stream) throws Exception {
         super.handleHeader(stream);
 
         try {
@@ -19,7 +19,7 @@ public class DebugMessageHandler extends MessageHandler {
     }
 
     @Override
-    public void handleBody(LittleEndianDataInputStream stream) {
+    public void handleBody(LittleEndianDataInputStream stream) throws Exception {
         super.handleBody(stream);
 
         try {

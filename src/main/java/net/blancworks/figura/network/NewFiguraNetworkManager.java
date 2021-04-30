@@ -1,16 +1,18 @@
 package net.blancworks.figura.network;
 
-import com.neovisionaries.ws.client.WebSocket;
-import com.neovisionaries.ws.client.WebSocketAdapter;
-import com.neovisionaries.ws.client.WebSocketFactory;
-import com.neovisionaries.ws.client.WebSocketFrame;
+import com.neovisionaries.ws.client.*;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.network.messages.DebugMessageHandler;
-import net.blancworks.figura.network.messages.DebugMessageSender;
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
+import net.blancworks.figura.network.messages.user.UserDeleteCurrentAvatarMessageSender;
+import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarHashMessageSender;
+import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarMessageSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
@@ -19,9 +21,10 @@ import net.minecraft.text.Text;
 import org.apache.logging.log4j.Level;
 
 import javax.net.ssl.SSLContext;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.net.InetAddress;
-import java.util.List;
-import java.util.Map;
+import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -33,7 +36,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     //The protocol version for this version of the mod.
     public static final int PROTOCOL_VERSION = 0;
-    
+
     //----- WEBSOCKETS -----
 
     //The factory that creates all sockets
@@ -44,16 +47,26 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //The JWT token handed to us by the server.
     public static String jwtToken;
 
+    //The time the JWT token was gotten at
+    public static Date tokenReceivedTime;
+    
+    //The time tokens last for. (default is 20 minutes)
+    public static final int TOKEN_LIFETIME = 1000 * 60 * 20;
+    //The time we wait to automatically re-auth once a token has expired. (default is 1 minute)
+    public static final int TOKEN_REAUTH_WAIT_TIME = 1000 * 60;
+    
     //Timeout before a connection with a socket is considered dead.
-    public static final int timeoutSeconds = 10;
+    public static final int TIMEOUT_SECONDS = 10;
 
+    private static boolean hasInited = false;
+    
     private static CompletableFuture doTask(Runnable toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = CompletableFuture.runAsync(toRun);
         } else {
             networkTasks.thenRun(toRun);
         }
-        
+
         return networkTasks;
     }
 
@@ -69,11 +82,26 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public void tickNetwork() {
+        //If the old token we had is old enough, re-auth us.
+        Date currTime = new Date();
+        if(tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME){
+            tokenReceivedTime = new Date(tokenReceivedTime.getTime() + TOKEN_REAUTH_WAIT_TIME);
+            authUser(true);
+        }
     }
 
     @Override
-    public CompletableFuture<CompoundTag> getAvatarData(UUID id) {
-        return null;
+    public CompletableFuture getAvatarData(UUID id) {
+        return doTask(()->{
+            try {
+                ensureConnection();
+
+                new UserGetCurrentAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+        });
     }
 
     @Override
@@ -81,30 +109,61 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         return doTask(() -> {
             try {
                 ensureConnection();
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
                 return;
             }
 
-            DebugMessageSender sender = new DebugMessageSender();
-            
-            sender.sendMessage(currWebSocket);
+            //Get NBT tag for local player avatar
+            PlayerData data = PlayerDataManager.localPlayer;
+            CompoundTag infoNbt = new CompoundTag();
+            data.writeNbt(infoNbt);
+
+            try {
+                //Set up streams.
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                DataOutputStream nbtDataStream = new DataOutputStream(baos);
+
+                NbtIo.writeCompressed(infoNbt, nbtDataStream);
+
+                byte[] result = baos.toByteArray();
+
+                new AvatarUploadMessageSender(result).sendMessage(currWebSocket);
+
+                nbtDataStream.close();
+                baos.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
     }
 
     @Override
-    public CompletableFuture setAvatarCurr(UUID avatarID) {
+    public CompletableFuture setCurrentUserAvatar(UUID avatarID) {
         return null;
     }
 
     @Override
     public CompletableFuture deleteAvatar() {
-        return null;
+        return doTask(() -> {
+            try {
+                ensureConnection();
+
+                new UserDeleteCurrentAvatarMessageSender().sendMessage(currWebSocket);
+
+                PlayerDataManager.clearLocalPlayer();
+            } catch (Exception e) {
+                e.printStackTrace();
+                return;
+            }
+        });
     }
 
     @Override
-    public CompletableFuture<String> asyncGetAvatarHash(UUID avatarID) {
-        return null;
+    public CompletableFuture checkAvatarHash(UUID playerID, String lastHash) {
+        return doTask(()->{
+            new UserGetCurrentAvatarHashMessageSender(playerID).sendMessage(currWebSocket);
+        });
     }
 
     @Override
@@ -114,12 +173,13 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             Text tokenText = reason.getSiblings().get(1);
 
             jwtToken = tokenText.asString();
+            tokenReceivedTime = new Date();
         }
     }
 
     @Override
     public void onClose() {
-        if(currWebSocket != null && currWebSocket.isOpen()) {
+        if (currWebSocket != null && currWebSocket.isOpen()) {
             currWebSocket.sendClose();
             currWebSocket.disconnect();
         }
@@ -129,36 +189,28 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     public String authServerURL() {
         if ((boolean) Config.entries.get("useLocalServer").value)
             return "localhost";
-        return "";
+        return "figuranew.blancworks.org";
     }
 
     //Main server for distributing files URL
     public String mainServerURL() {
         if ((boolean) Config.entries.get("useLocalServer").value)
-            return "localhost:6001";
-        return "";
+            return "localhost:6050";
+        return "figuranew.blancworks.org";
     }
 
-    public void setupSocketFactory(WebSocketFactory factory) {
-        if (!(boolean) Config.entries.get("useLocalServer").value) {
-
-        } else {
-
-        }
-    }
-    
     private static boolean localLastCheck = false;
-    
+
     //Ensures there is a connection open with the server, if there was not before.
     public void ensureConnection() throws Exception {
 
-        if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value) {
+        if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value || socketFactory == null) {
             localLastCheck = (boolean) Config.entries.get("useLocalServer").value;
 
             socketFactory = new WebSocketFactory();
 
             //Don't verify hostname for local servers.
-            if(localLastCheck){
+            if (localLastCheck) {
                 SSLContext ctx = NaiveSSLContext.getInstance("TLS");
 
                 socketFactory.setSSLContext(ctx);
@@ -176,15 +228,15 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         //Ensure user is authed, we need the JWT to verify this user.
         authUser();
-        
+
         closeSocketConnection();
-        WebSocket newSocket = socketFactory.createSocket(String.format("wss://%s/connect", mainServerURL()), timeoutSeconds * 1000);
+        WebSocket newSocket = socketFactory.createSocket(String.format("wss://%s/connect/", mainServerURL()), TIMEOUT_SECONDS * 1000);
         newSocket.addListener(new FiguraNetworkMessageHandler(this));
 
         newSocket.connect();
 
         newSocket.sendText(jwtToken);
-        
+
         newSocket.sendText(String.format("{\"protocol\":%d}", PROTOCOL_VERSION));
 
         return newSocket;
@@ -203,11 +255,15 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         currWebSocket = null;
     }
 
-    public void authUser() {
-        
-        if(jwtToken != null)
+    public void authUser(){
+        authUser(false);
+    }
+    
+    public void authUser(boolean force) {
+
+        if (!force && jwtToken != null)
             return;
-        
+
         try {
             String address = authServerURL();
             InetAddress inetAddress = InetAddress.getByName(address);
@@ -217,13 +273,13 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             }));
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
-            
+
             while (connection.isOpen())
                 Thread.sleep(1);
 
             Text dcReason = connection.getDisconnectReason();
 
-            if (dcReason instanceof Text) {
+            if (dcReason != null) {
                 Text tc = dcReason;
                 parseKickAuthMessage(tc);
             }
