@@ -30,6 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchKey;
@@ -92,6 +93,12 @@ public class FiguraMod implements ClientModInitializer {
         FiguraLuaManager.initialize();
         PlayerTrustManager.init();
         Config.initialize();
+
+        try {
+            SSLFixer.main();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         //Set up network
         oldNetworkManager = new FiguraNetworkManager();

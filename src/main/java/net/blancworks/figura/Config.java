@@ -122,7 +122,7 @@ public class Config {
         previewNameTag = new ConfigEntry<>(true);
         nameTagMark = new ConfigEntry<>(true);
         buttonLocation = new ConfigEntry<>(3);
-        useNewNetwork = new ConfigEntry<>(false);
+        useNewNetwork = new ConfigEntry<>(true);
         useLocalServer = new ConfigEntry<>(false);
         scriptLog = new ConfigEntry<>(0);
         listMark = new ConfigEntry<>(true);
