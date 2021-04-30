@@ -1,6 +1,5 @@
 package net.blancworks.figura.gui.widgets;
 
-import com.google.common.collect.ImmutableList;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.Config.ConfigEntry;
 import net.blancworks.figura.FiguraMod;
@@ -17,7 +16,6 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -31,8 +29,8 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
     //text types
     public static final Predicate<String> ANY = s -> true;
-    public static final Predicate<String> INT = s -> s.matches("^[0-9]*$");
-    public static final Predicate<String> FLOAT = s -> s.matches("[0-9]*\\.[0-9]+|[0-9]+") || s.endsWith(".") || s.isEmpty();
+    public static final Predicate<String> INT = s -> s.matches("^[\\-+]?[0-9]*$");
+    public static final Predicate<String> FLOAT = s -> s.matches("[\\-+]?[0-9]*(\\.[0-9]+)?") || s.endsWith(".") || s.isEmpty();
 
     public ConfigListWidget(FiguraConfigScreen parent, MinecraftClient client) {
         super(client, parent.width + 45, parent.height, 43, parent.height - 32, 20);
@@ -187,7 +185,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         public List<? extends Element> children() {
-            return ImmutableList.of(this.toggle, this.reset);
+            return Arrays.asList(this.toggle, this.reset);
         }
 
         @Override
@@ -262,7 +260,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         public List<? extends Element> children() {
-            return ImmutableList.of(this.toggle, this.reset);
+            return Arrays.asList(this.toggle, this.reset);
         }
 
         @Override
@@ -326,7 +324,12 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
             //if setting is changed
             if (!this.config.configValue.equals(this.initValue + ""))
-                this.field.setEditableColor(Formatting.AQUA.getColorValue());
+                try {
+                    this.config.defaultValue.getClass().getConstructor(new Class[] {String.class}).newInstance(this.config.configValue);
+                    this.field.setEditableColor(Formatting.AQUA.getColorValue());
+                } catch (Exception e) {
+                    this.field.setEditableColor(Formatting.RED.getColorValue());
+                }
             else
                 this.field.setEditableColor(Formatting.WHITE.getColorValue());
 
@@ -342,7 +345,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         public List<? extends Element> children() {
-            return ImmutableList.of(this.field, this.reset);
+            return Arrays.asList(this.field, this.reset);
         }
 
         @Override
