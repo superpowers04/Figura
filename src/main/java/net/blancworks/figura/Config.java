@@ -64,34 +64,9 @@ public class Config {
         try {
             FileWriter writer = new FileWriter(file);
 
-            writer.write("### Displays your NameTag on the model preview screen ### - default true\n");
-            writer.write("previewNameTag=" + entries.get("previewNameTag").value + "\n\n");
-
-            writer.write("### Adds The Mark △ to the NameTag of players using Figura ### - default true\n");
-            writer.write("nameTagMark=" + entries.get("nameTagMark").value + "\n\n");
-
-            writer.write("### Toggles between using the new or old network for online models\n");
-            writer.write("useNewNetwork=" + entries.get("useNewNetwork").value + "\n\n");
-
-            writer.write("### Toggles between using a local server or the main online server for online models\n");
-            writer.write("useLocalServer=" + entries.get("useLocalServer").value + "\n\n");
-            
-            writer.write("### Location where the Figura settings button should be ###\n");
-            writer.write("### 0 - top left | 1 - top right | 2 - bottom left | 3 - bottom right | 4 - icon ### - default 3\n");
-            writer.write("buttonLocation=" + entries.get("buttonLocation").value + "\n\n");
-
-            writer.write("### Script debug log output location ###\n");
-            writer.write("### 0 - console and chat | 1 - console only | 2 - chat only ### - default 0\n");
-            writer.write("scriptLog=" + entries.get("scriptLog").value + "\n\n");
-
-            writer.write("### Adds The Mark △ to the tab list of players using Figura ### - default true\n");
-            writer.write("listMark=" + entries.get("listMark").value + "\n\n");
-
-            writer.write("### Adds The Mark △ to the chat names of players using Figura ### - default true\n");
-            writer.write("chatMark=" + entries.get("chatMark").value + "\n\n");
-
-            writer.write("### Display The Mark △ as an icon on the NameTag ### - default true\n");
-            writer.write("nameTagIcon=" + entries.get("nameTagIcon").value);
+            for (Map.Entry<String, ConfigEntry> entry : entries.entrySet()) {
+                writer.write(entry.getKey() + "=" + entry.getValue().value + "\n");
+            }
 
             writer.close();
         }
@@ -114,7 +89,7 @@ public class Config {
         entries.put("previewNameTag", new ConfigEntry<>(true));
         entries.put("nameTagMark", new ConfigEntry<>(true));
         entries.put("buttonLocation", new ConfigEntry<>(3, 5));
-        entries.put("useNewNetwork", new ConfigEntry<>(false));
+        entries.put("useNewNetwork", new ConfigEntry<>(true));
         entries.put("useLocalServer", new ConfigEntry<>(false));
         entries.put("scriptLog", new ConfigEntry<>(0, 3));
         entries.put("listMark", new ConfigEntry<>(true));
