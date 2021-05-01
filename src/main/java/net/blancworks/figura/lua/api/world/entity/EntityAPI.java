@@ -115,7 +115,7 @@ public class EntityAPI {
                 set("getAirPercentage", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaNumber.valueOf(targetEntity.getAir() / targetEntity.getMaxAir());
+                        return LuaNumber.valueOf(((float)targetEntity.getAir()) / targetEntity.getMaxAir());
                     }
                 });
 
