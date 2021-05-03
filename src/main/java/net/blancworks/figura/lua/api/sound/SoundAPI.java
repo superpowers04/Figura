@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.sound.SoundCategory;
@@ -35,9 +36,10 @@ public class SoundAPI {
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
             set("playSound", new TwoArgFunction() {
+                // DEPRECATED
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    
+                    // INCREDIBLY DEPRECATED
                     if(script.soundSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID))
                         return NIL;
                     script.soundSpawnCount++;
@@ -57,6 +59,30 @@ public class SoundAPI {
                             floats.getFloat(0), floats.getFloat(1), floats.getFloat(2),
                             targetEvent, SoundCategory.PLAYERS,
                             floats.getFloat(3), floats.getFloat(4), true
+                    );
+
+                    return NIL;
+                }
+
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                    if(script.soundSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID))
+                        return NIL;
+                    script.soundSpawnCount++;
+
+                    SoundEvent targetEvent = soundEvents.get(arg1.checkjstring());
+                    if (targetEvent == null)
+                        return NIL;
+
+                    LuaVector pos = LuaVector.check(arg2);
+                    LuaVector pitchVol = LuaVector.check(arg3);
+
+                    World w = MinecraftClient.getInstance().world;
+
+                    w.playSound(
+                            pos.x(), pos.y(), pos.z(),
+                            targetEvent, SoundCategory.PLAYERS,
+                            pitchVol.y(), pitchVol.x(), true
                     );
 
                     return NIL;

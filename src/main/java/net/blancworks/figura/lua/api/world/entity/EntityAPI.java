@@ -4,6 +4,8 @@ import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
+import net.blancworks.figura.lua.api.math.LuaVector;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
@@ -41,25 +43,14 @@ public class EntityAPI {
                 set("getPos", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaUtils.getTableFromVec3d(targetEntity.getPos());
+                        return LuaVector.of(targetEntity.getPos());
                     }
                 });
 
                 set("getRot", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        LuaTable t = new LuaTable();
-
-                        LuaValue pitch = LuaNumber.valueOf(targetEntity.pitch);
-                        LuaValue yaw = LuaNumber.valueOf(targetEntity.yaw);
-                        
-                        t.set("pitch", pitch);
-                        t.set("yaw", yaw);
-
-                        t.set(1, pitch);
-                        t.set(2, yaw);
-
-                        return t;
+                        return new LuaVector(targetEntity.pitch, targetEntity.yaw);
                     }
                 });
                 
@@ -73,14 +64,14 @@ public class EntityAPI {
                 set("getVelocity", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaUtils.getTableFromVec3d(targetEntity.getVelocity());
+                        return LuaVector.of(targetEntity.getVelocity());
                     }
                 });
 
                 set("getLookDir", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaUtils.getTableFromVec3d(targetEntity.getRotationVector());
+                        return LuaVector.of(targetEntity.getRotationVector());
                     }
                 });
 
