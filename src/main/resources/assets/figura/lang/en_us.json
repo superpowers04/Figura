@@ -74,6 +74,9 @@
   "gui.figura.config.uselocalserver": "Use Local Server",
   "gui.figura.config.tooltip.uselocalserver": "Toggles between using a local server or the main online server for online models",
 
+  "gui.figura.config.nametagicon": "NameTag Mark as Icon",
+  "gui.figura.config.tooltip.nametagicon": "Display The Mark △ as an icon %d on the NameTag",
+
   "gui.figura.config.buttonlocation": "Figura Button Location",
   "gui.figura.config.tooltip.buttonlocation": "Location where the Figura settings button should be",
   "gui.figura.config.buttonlocation.topleft": "Top Left",

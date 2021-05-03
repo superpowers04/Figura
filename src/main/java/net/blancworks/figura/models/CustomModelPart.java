@@ -54,6 +54,9 @@ public class CustomModelPart {
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
 
+    //Spectator
+    public boolean ownerSpectator = false;
+
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
@@ -62,7 +65,7 @@ public class CustomModelPart {
             //Store this value for extra textures
             int prevLeftToRender = data.model.leftToRender;
             //Render with main texture.
-            int ret = render(data.model.leftToRender, matrices, mainTextureConsumer, light, overlay, alpha);
+            int ret = render(prevLeftToRender, matrices, mainTextureConsumer, light, overlay, alpha);
 
             //Render extra textures (emission, that sort)
             for (FiguraTexture extraTexture : data.extraTextures) {
@@ -257,6 +260,11 @@ public class CustomModelPart {
             //Don't render special parts.
             if (child.isParentSpecial())
                 continue;
+
+            //only render head parts when in spectator
+            if (ownerSpectator && !(child.parentType == ParentType.Head))
+                continue;
+
             leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor, alpha);
         }
 
@@ -425,10 +433,7 @@ public class CustomModelPart {
     }
 
     public boolean isParentSpecial() {
-        if (parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra) {
-            return true;
-        }
-        return false;
+        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra;
     }
 
     public void applyTrueOffset(Vector3f offset) {

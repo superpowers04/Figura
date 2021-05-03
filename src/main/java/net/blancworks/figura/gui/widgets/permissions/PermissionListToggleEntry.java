@@ -46,7 +46,7 @@ public class PermissionListToggleEntry extends PermissionListEntry{
             }
         };
         
-        widget.setTextureUV(0, 0, 16, 16, new Identifier("figura", "gui/menu/togglebox.png"));
+        widget.setTextureUV(0, 0, 16, 16, new Identifier("figura", "textures/gui/togglebox.png"));
 
         if(((PermissionListWidget) list).getCurrentContainer().isLocked)
             widget.active = false;
@@ -59,7 +59,7 @@ public class PermissionListToggleEntry extends PermissionListEntry{
         widget.x = x + 2 + (rowWidth / 2);
         widget.y = y + 2;
         if(!widget.active)
-            widget.setTextureUV(32, 0, 16, 16, new Identifier("figura", "gui/menu/togglebox.png"));
+            widget.setTextureUV(32, 0, 16, 16, new Identifier("figura", "textures/gui/togglebox.png"));
         
         widget.render(matrices, mouseX, mouseY, delta);
     }

@@ -46,6 +46,8 @@ public class FiguraMod implements ClientModInitializer {
 
     public static final Logger LOGGER = LogManager.getLogger();
 
+    public static final Identifier FIGURA_FONT = new Identifier("figura", "default");
+
     //Loading
 
     //This task is what's used to manage all loading requests in the whole mod.
@@ -104,7 +106,7 @@ public class FiguraMod implements ClientModInitializer {
         oldNetworkManager = new FiguraNetworkManager();
         newNetworkManager = new NewFiguraNetworkManager();
 
-        if (Config.useNewNetwork.value) {
+        if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
         } else {
             networkManager = oldNetworkManager;
@@ -137,7 +139,7 @@ public class FiguraMod implements ClientModInitializer {
     public static void ClientEndTick(MinecraftClient client) {
         PlayerDataManager.tick();
 
-        if (Config.useNewNetwork.value) {
+        if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
         } else {
             networkManager = oldNetworkManager;

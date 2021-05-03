@@ -70,13 +70,13 @@ public class CustomModel extends FiguraAsset {
             if (part.isParentSpecial())
                 continue;
 
-            if (this.owner.lastEntity.isSpectator() && !(part.parentType == CustomModelPart.ParentType.Head))
-                continue;
-
             matrices.push();
 
             try {
                 player_model.setVisible(false);
+
+                //Set spectator
+                part.ownerSpectator = this.owner.lastEntity.isSpectator();
 
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;

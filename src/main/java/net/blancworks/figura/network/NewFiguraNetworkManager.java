@@ -192,14 +192,14 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     //Minecraft authentication server URL
     public String authServerURL() {
-        if (Config.useLocalServer.value)
+        if ((boolean) Config.entries.get("useLocalServer").value)
             return "localhost";
         return "figuranew.blancworks.org";
     }
 
     //Main server for distributing files URL
     public String mainServerURL() {
-        if (Config.useLocalServer.value)
+        if ((boolean) Config.entries.get("useLocalServer").value)
             return "localhost:6050";
         return "figuranew.blancworks.org";
     }
@@ -209,8 +209,8 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //Ensures there is a connection open with the server, if there was not before.
     public void ensureConnection() throws Exception {
 
-        if (localLastCheck != Config.useLocalServer.value || socketFactory == null) {
-            localLastCheck = Config.useLocalServer.value;
+        if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value || socketFactory == null) {
+            localLastCheck = (boolean) Config.entries.get("useLocalServer").value;
 
             socketFactory = new WebSocketFactory();
 

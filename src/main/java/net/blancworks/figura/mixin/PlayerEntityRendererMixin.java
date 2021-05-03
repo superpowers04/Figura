@@ -18,8 +18,8 @@ import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -121,11 +121,18 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
     @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
     protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
-        if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && Config.nameTagMark.value)
-            ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark"));
 
-        if (FiguraMod.special.contains(abstractClientPlayerEntity.getUuid()) && Config.nameTagMark.value)
-            ((LiteralText) text).append(" ").append(new TranslatableText("figura.star"));
+        Identifier font;
+        if ((boolean) Config.entries.get("nameTagIcon").value)
+            font = FiguraMod.FIGURA_FONT;
+        else
+            font = Style.DEFAULT_FONT_ID;
+
+        if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && (boolean) Config.entries.get("nameTagMark").value)
+            ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font)));
+
+        if (FiguraMod.special.contains(abstractClientPlayerEntity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
+            ((LiteralText) text).append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font)));
     }
 
     public void figura$applyPartCustomization(String id, ModelPart part) {

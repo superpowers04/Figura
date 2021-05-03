@@ -1,6 +1,7 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.Config;
 import net.blancworks.figura.gui.widgets.ConfigListWidget;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -27,7 +28,16 @@ public class FiguraConfigScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.addButton(new ButtonWidget(this.width / 2 - 75, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> this.client.openScreen(parentScreen)));
+        this.addButton(new ButtonWidget(this.width / 2 - 154, this.height - 29, 150, 20, new TranslatableText("gui.cancel"), (buttonWidgetx) -> {
+            Config.discardConfig();
+            this.client.openScreen(parentScreen);
+        }));
+
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
+            Config.copyConfig();
+            Config.saveConfig();
+            this.client.openScreen(parentScreen);
+        }));
 
         this.configListWidget = new ConfigListWidget(this, this.client);
         this.children.add(this.configListWidget);

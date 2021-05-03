@@ -18,7 +18,7 @@ import java.util.HashMap;
 
 public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerListWidget.PlayerListWidgetEntry> {
 
-    public static final Identifier lockTextureID = new Identifier("figura", "gui/menu/lock.png");
+    public static final Identifier lockTextureID = new Identifier("figura", "textures/gui/lock.png");
 
     public PlayerListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
