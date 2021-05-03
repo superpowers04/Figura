@@ -192,7 +192,22 @@ public class CustomModelAPI {
                     return null;
                 }
             });
-            
+
+            ret.set("getShader", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(targetPart.shaderType.toString());
+                }
+            });
+
+            ret.set("setShader", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    targetPart.shaderType = CustomModelPart.ShaderType.valueOf(arg1.checkjstring());
+                    return NIL;
+                }
+            });
+
             return ret;
         }
     }

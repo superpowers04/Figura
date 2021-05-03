@@ -50,21 +50,31 @@ public class CustomModelPart {
 
     public ArrayList<CustomModelPart> children = new ArrayList<>();
 
+    public boolean isOwnerSpectator = false;
+
+    public ShaderType shaderType = ShaderType.None;
+
+    public boolean shouldRender = true;
+
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
 
-    //Spectator
-    public boolean ownerSpectator = false;
-
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
-            VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
+
+            //render only heads in spectator
+            this.isOwnerSpectator = data.lastEntity.isSpectator();
+            if (isOwnerSpectator) {
+                filterParentGroups(this, ParentType.Head);
+            }
 
             //Store this value for extra textures
             int prevLeftToRender = data.model.leftToRender;
+
             //Render with main texture.
+            VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
             int ret = render(prevLeftToRender, matrices, mainTextureConsumer, light, overlay, alpha);
 
             //Render extra textures (emission, that sort)
@@ -78,9 +88,19 @@ public class CustomModelPart {
                 }
             }
 
+            //render shader groups
+            filterShaderGroups(this, ShaderType.EndPortal);
+
+            for (int i = 0; i < 17; i++) {
+                VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i + 1));
+                render(prevLeftToRender, matrices, portalExtraConsumer, light, overlay, alpha);
+            }
+
+            //reset rendering status
+            setRenderStatus(this, true);
+
             return ret;
-        } 
-        
+        }
         return 0;
     }
 
@@ -103,7 +123,7 @@ public class CustomModelPart {
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
     public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
         //Don't render invisible parts.
-        if (!this.visible) {
+        if (!this.visible || !this.shouldRender) {
             return leftToRender;
         }
 
@@ -258,18 +278,57 @@ public class CustomModelPart {
                 break;
 
             //Don't render special parts.
-            if (child.isParentSpecial())
+            if (child.isParentSpecial() || !child.shouldRender)
                 continue;
 
-            //only render head parts when in spectator
-            if (ownerSpectator && !(child.parentType == ParentType.Head))
-                continue;
-
+            //render part
             leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor, alpha);
         }
 
         matrices.pop();
         return leftToRender;
+    }
+
+    public void setRenderStatus(CustomModelPart part, boolean status) {
+        //set parent
+        part.shouldRender = status;
+
+        //iterate over the children
+        for (CustomModelPart child : part.children) {
+            setRenderStatus(child, status);
+        }
+    }
+
+    public void filterParentGroups(CustomModelPart part, Object filter) {
+        if (part.parentType == filter) {
+            setRenderStatus(part, true);
+        }
+        else {
+            setRenderStatus(part, false);
+
+            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof  CustomModelPartMesh)) {
+                part.shouldRender = true;
+                for (CustomModelPart child : part.children) {
+                    filterParentGroups(child, filter);
+                }
+            }
+        }
+    }
+
+    public void filterShaderGroups(CustomModelPart part, Object filter) {
+        if (part.shaderType == filter) {
+            setRenderStatus(part, true);
+        }
+        else {
+            setRenderStatus(part, false);
+
+            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof  CustomModelPartMesh)) {
+                part.shouldRender = true;
+                for (CustomModelPart child : part.children) {
+                    filterShaderGroups(child, filter);
+                }
+            }
+        }
     }
 
     public void applyTransforms(MatrixStack stack) {
@@ -366,6 +425,10 @@ public class CustomModelPart {
             this.vOffset = uvOffsetNbt.getFloat(1);
         }
 
+        if (partNbt.contains("stype")) {
+            this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
+        }
+
         if (partNbt.contains("chld")) {
             ListTag childrenNbt = (ListTag) partNbt.get("chld");
             if (childrenNbt == null || childrenNbt.getElementType() != NbtType.COMPOUND)
@@ -411,6 +474,10 @@ public class CustomModelPart {
 
         if (!this.visible) {
             partNbt.put("vsb", ByteTag.of(false));
+        }
+
+        if (this.shaderType != ShaderType.None) {
+            partNbt.put("stype", StringTag.of(this.shaderType.toString()));
         }
 
         //Parse children.
@@ -461,6 +528,11 @@ public class CustomModelPart {
     public enum RotationType {
         BlockBench,
         Vanilla
+    }
+
+    public enum ShaderType {
+        None,
+        EndPortal
     }
 
     //---------MODEL PART TYPES---------

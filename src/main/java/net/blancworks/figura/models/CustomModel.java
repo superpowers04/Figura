@@ -75,9 +75,6 @@ public class CustomModel extends FiguraAsset {
             try {
                 player_model.setVisible(false);
 
-                //Set spectator
-                part.ownerSpectator = this.owner.lastEntity.isSpectator();
-
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
 
