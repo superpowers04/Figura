@@ -9,6 +9,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -70,9 +71,19 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
         }
     }
 
+    @Override
+    public boolean shouldRender(AbstractClientPlayerEntity entity, Frustum frustum, double x, double y, double z) {
+        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
+        
+        if(data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_OFFSCREEN_RENDERING))
+            return true;
+        
+        return super.shouldRender(entity, frustum, x, y, z);
+    }
+
     @Inject(at = @At("RETURN"), method = "render")
     public void postRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
-        if (FiguraMod.currentData != null) {
+        if (FiguraMod.currentData != null && FiguraMod.currentData.lastEntity != null) {
             PlayerData currData = FiguraMod.currentData;
 
             if (currData.script != null && currData.script.isDone) {
