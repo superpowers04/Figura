@@ -3,6 +3,7 @@ package net.blancworks.figura.lua.api.world;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -44,10 +45,8 @@ public class WorldAPI {
             set("getBlockState", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    LuaTable getPosTable = arg.checktable();
-                    BlockPos pos = LuaUtils.getBlockPosFromTable(getPosTable);
-
-                    if(pos == null) return NIL;
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
 
                     World w = getWorld();
 
@@ -62,10 +61,8 @@ public class WorldAPI {
             set("getRedstonePower", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    LuaTable getPosTable = arg.checktable();
-                    BlockPos pos = LuaUtils.getBlockPosFromTable(getPosTable);
-
-                    if(pos == null) return NIL;
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
 
                     World w = getWorld();
 
@@ -78,10 +75,8 @@ public class WorldAPI {
             set("getStrongRedstonePower", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    LuaTable getPosTable = arg.checktable();
-                    BlockPos pos = LuaUtils.getBlockPosFromTable(getPosTable);
-
-                    if(pos == null) return NIL;
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
 
                     World w = getWorld();
 
@@ -139,12 +134,10 @@ public class WorldAPI {
             set("getLightLevel", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue a) {
-                    BlockPos pos = LuaUtils.getBlockPosFromTable(a.checktable());
+                    LuaVector vec = LuaVector.checkOrNew(a);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
 
-                    if(pos == null)
-                        return LuaInteger.valueOf(0);
                     if(!getWorld().isChunkLoaded(pos)) return NIL;
-
 
                     getWorld().calculateAmbientDarkness();
                     int dark = getWorld().getAmbientDarkness();
@@ -157,10 +150,9 @@ public class WorldAPI {
             set("getSkyLightLevel", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue a) {
-                    BlockPos pos = LuaUtils.getBlockPosFromTable(a.checktable());
+                    LuaVector vec = LuaVector.checkOrNew(a);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
 
-                    if(pos == null)
-                        return LuaInteger.valueOf(0);
                     if(!getWorld().isChunkLoaded(pos)) return NIL;
 
                     return LuaInteger.valueOf(getWorld().getLightLevel(LightType.SKY, pos));
@@ -170,10 +162,9 @@ public class WorldAPI {
             set("getBlockLightLevel", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue a) {
-                    BlockPos pos = LuaUtils.getBlockPosFromTable(a.checktable());
+                    LuaVector vec = LuaVector.checkOrNew(a);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
 
-                    if(pos == null)
-                        return LuaInteger.valueOf(0);
                     if(!getWorld().isChunkLoaded(pos)) return NIL;
 
                     return LuaInteger.valueOf(getWorld().getLightLevel(LightType.BLOCK, pos));
@@ -184,10 +175,9 @@ public class WorldAPI {
                 @Override
                 public LuaValue call(LuaValue a) {
 
-                    BlockPos pos = LuaUtils.getBlockPosFromTable(a.checktable());
+                    LuaVector vec = LuaVector.checkOrNew(a);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
 
-                    if(pos == null)
-                        return NIL;
                     if(!getWorld().isChunkLoaded(pos)) return NIL;
 
                     Biome b = getWorld().getBiome(pos);

@@ -1,12 +1,10 @@
 package net.blancworks.figura.network.messages.user;
 
-import com.google.common.base.Utf8;
 import com.google.common.io.LittleEndianDataOutputStream;
 import net.blancworks.figura.network.messages.MessageIDs;
 import net.blancworks.figura.network.messages.MessageSender;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 public class UserGetCurrentAvatarMessageSender extends MessageSender {
@@ -18,8 +16,8 @@ public class UserGetCurrentAvatarMessageSender extends MessageSender {
     }
 
     @Override
-    protected void writeHeader(LittleEndianDataOutputStream stream) throws IOException {
-        super.writeHeader(stream);
+    protected void write(LittleEndianDataOutputStream stream) throws IOException {
+        super.write(stream);
         
         writeUUID(id, stream);
     }

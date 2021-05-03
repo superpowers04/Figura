@@ -8,20 +8,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 public class MessageHandler {
-    public int bodyLength;
-    
-    public void handleHeader(LittleEndianDataInputStream stream) throws Exception{
+    public void handleMessage(LittleEndianDataInputStream stream) throws Exception{
         
     }
 
-    public void handleBody(LittleEndianDataInputStream stream) throws Exception{
-
-    }
-    
-    public boolean expectBody(){
-        return false;
-    }
-    
     public String readString(LittleEndianDataInputStream stream) throws IOException {
         int length = stream.readInt();
         byte[] strData = new byte[length];

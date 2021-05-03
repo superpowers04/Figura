@@ -9,7 +9,6 @@ import net.minecraft.nbt.NbtIo;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Date;
@@ -20,19 +19,15 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
     public UUID targetUser;
 
     @Override
-    public void handleHeader(LittleEndianDataInputStream stream) throws Exception {
-        super.handleHeader(stream);
+    public void handleMessage(LittleEndianDataInputStream stream) throws Exception {
+        super.handleMessage(stream);
 
         targetUser = readUUID(stream);
-    }
-
-    @Override
-    public void handleBody(LittleEndianDataInputStream stream) throws Exception {
-        super.handleBody(stream);
 
         try {
-            byte[] allAvatarData = new byte[bodyLength];
-            stream.read(allAvatarData, 0, bodyLength);
+            int avatarLength = stream.readInt();
+            byte[] allAvatarData = new byte[avatarLength];
+            stream.read(allAvatarData, 0, avatarLength);
 
             ByteArrayInputStream bis = new ByteArrayInputStream(allAvatarData);
             DataInputStream dis = new DataInputStream(bis);
@@ -55,10 +50,5 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public boolean expectBody() {
-        return true;
     }
 }

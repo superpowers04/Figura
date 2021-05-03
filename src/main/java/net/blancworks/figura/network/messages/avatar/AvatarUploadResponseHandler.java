@@ -18,8 +18,8 @@ public class AvatarUploadResponseHandler extends MessageHandler {
 
 
     @Override
-    public void handleHeader(LittleEndianDataInputStream stream) throws Exception {
-        super.handleHeader(stream);
+    public void handleMessage(LittleEndianDataInputStream stream) throws Exception {
+        super.handleMessage(stream);
 
         byte returnCode = stream.readByte();
 
@@ -55,10 +55,5 @@ public class AvatarUploadResponseHandler extends MessageHandler {
 
     public void handleNotEnoughSpace() {
         FiguraMod.LOGGER.error("Failed to upload avatar : Not Enough Space On Server");
-    }
-
-    @Override
-    public boolean expectBody() {
-        return false;
     }
 }

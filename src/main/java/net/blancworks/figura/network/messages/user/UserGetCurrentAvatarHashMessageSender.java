@@ -17,8 +17,8 @@ public class UserGetCurrentAvatarHashMessageSender extends MessageSender {
     }
 
     @Override
-    protected void writeHeader(LittleEndianDataOutputStream stream) throws IOException {
-        super.writeHeader(stream);
+    protected void write(LittleEndianDataOutputStream stream) throws IOException {
+        super.write(stream);
         
         writeUUID(id, stream);
     }

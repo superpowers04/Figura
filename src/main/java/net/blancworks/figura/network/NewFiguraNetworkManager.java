@@ -162,7 +162,12 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     @Override
     public CompletableFuture checkAvatarHash(UUID playerID, String lastHash) {
         return doTask(()->{
-            new UserGetCurrentAvatarHashMessageSender(playerID).sendMessage(currWebSocket);
+            try {
+                ensureConnection();
+                new UserGetCurrentAvatarHashMessageSender(playerID).sendMessage(currWebSocket);
+            } catch (Exception e){
+                e.printStackTrace();
+            }
         });
     }
 
@@ -216,6 +221,8 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 socketFactory.setSSLContext(ctx);
                 socketFactory.setVerifyHostname(false);
             }
+            
+            socketFactory.setServerName("figuranew.blancworks.org");
         }
 
         if (currWebSocket == null || currWebSocket.isOpen() == false) {
@@ -230,7 +237,11 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         authUser();
 
         closeSocketConnection();
-        WebSocket newSocket = socketFactory.createSocket(String.format("wss://%s/connect/", mainServerURL()), TIMEOUT_SECONDS * 1000);
+        String connectionString = String.format("https://%s/connect/", mainServerURL());
+        
+        FiguraMod.LOGGER.error("Connecting to websocket server " + connectionString);
+        
+        WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
         newSocket.addListener(new FiguraNetworkMessageHandler(this));
 
         newSocket.connect();

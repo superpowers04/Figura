@@ -10,8 +10,8 @@ import java.util.UUID;
 public class UserAvatarHashProvideResponseHandler extends MessageHandler {
 
     @Override
-    public void handleHeader(LittleEndianDataInputStream stream) throws Exception {
-        super.handleHeader(stream);
+    public void handleMessage(LittleEndianDataInputStream stream) throws Exception {
+        super.handleMessage(stream);
         
         UUID id = readUUID(stream);
         String hash = readString(stream);

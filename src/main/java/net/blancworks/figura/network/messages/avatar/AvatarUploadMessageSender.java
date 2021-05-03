@@ -22,15 +22,11 @@ public class AvatarUploadMessageSender extends MessageSender {
     }
 
     @Override
-    protected void writeHeader(LittleEndianDataOutputStream stream) throws IOException {
-        super.writeHeader(stream);
-    }
+    protected void write(LittleEndianDataOutputStream stream) throws IOException {
+        super.write(stream);
 
-    @Override
-    protected void writeBody(LittleEndianDataOutputStream stream) throws IOException {
-        super.writeBody(stream);
-        
         //Write the main payload for the avatar.
+        stream.writeInt(avatarPayload.length);
         stream.write(avatarPayload);
     }
 }

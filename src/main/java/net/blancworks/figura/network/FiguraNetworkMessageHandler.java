@@ -42,7 +42,6 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
         );
     }};
 
-    private MessageHandler lastHandler = null;
     private boolean skipNext = false;
 
     public FiguraNetworkMessageHandler(NewFiguraNetworkManager manager) {
@@ -63,59 +62,31 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
             return;
         }
 
-        //If there was no handler last message
-        if (lastHandler == null) {
-            //Get a stream for the bytes
-            LittleEndianDataInputStream dis = new LittleEndianDataInputStream(ByteSource.wrap(binary).openStream());
+        //Get a stream for the bytes
+        LittleEndianDataInputStream dis = new LittleEndianDataInputStream(ByteSource.wrap(binary).openStream());
 
-            try {
-                //Read the first byte, use that as the ID of the handler.
-                byte handlerID = dis.readByte();
-                int bodyLength = dis.readInt();
+        try {
+            //Read the first byte, use that as the ID of the handler.
+            byte handlerID = dis.readByte();
 
-                //Get the handler.
-                Supplier<MessageHandler> supplier = allMessageHandlers.get(handlerID);
+            //Get the handler.
+            Supplier<MessageHandler> supplier = allMessageHandlers.get(handlerID);
 
-                //If there is a supplier for this ID
-                if (supplier != null) {
-                    //Get it
-                    lastHandler = supplier.get();
-                    
-                    lastHandler.bodyLength = bodyLength;
-                    
-                    //Handle the header.
-                    lastHandler.handleHeader(dis);
+            //If there is a supplier for this ID
+            if (supplier != null) {
+                //Get it
+                MessageHandler handler = supplier.get();
 
-                    if (!lastHandler.expectBody())
-                        lastHandler = null;
-                } else {
-                    FiguraMod.LOGGER.error("INVALID MESSAGE HANDLER ID " + handlerID);
-                    if(lastHandler.expectBody())
-                        skipNext = true;
-                    lastHandler = null;
-                    return;
-                }
-            } catch (Exception e) {
-                if(lastHandler.expectBody())
-                    skipNext = true;
-                lastHandler = null;
-                e.printStackTrace();
+                handler.handleMessage(dis);
+
+            } else {
+                FiguraMod.LOGGER.error("INVALID MESSAGE HANDLER ID " + handlerID);
+                return;
             }
-            dis.close();
-        } else {
-            LittleEndianDataInputStream dis = new LittleEndianDataInputStream(ByteSource.wrap(binary).openStream());
-
-            try {
-                lastHandler.handleBody(dis);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            dis.close();
-
-            lastHandler = null;
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
+        dis.close();
     }
 
     @Override
