@@ -3,8 +3,6 @@
   "minVersion": "0.8",
   "package": "net.blancworks.figura.mixin",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [
-  ],
   "client": [
     "ArmorFeatureRendererMixin",
     "ClientLoginNetworkHandlerMixin",
@@ -20,6 +18,7 @@
     "PlayerEntityRendererMixin",
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
+    "SetTextImplMixin",
     "WorldRendererMixin"
   ],
   "injectors": {

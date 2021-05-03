@@ -1,9 +1,6 @@
 package net.blancworks.figura.lua;
 
-import net.blancworks.figura.Config;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.*;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
@@ -31,6 +28,7 @@ import java.util.function.Function;
 public class CustomScript extends FiguraAsset {
 
     public PlayerData playerData;
+    public NamePlateData nameplate = new NamePlateData();
     public String source;
     public boolean loadError = false;
 

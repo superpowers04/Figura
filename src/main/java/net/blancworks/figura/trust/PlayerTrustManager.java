@@ -37,6 +37,7 @@ public class PlayerTrustManager {
     public static final Identifier MAX_RENDER_ID = new Identifier("setting", "maxrenderinstructions");
     public static final Identifier MAX_COMPLEXITY_ID = new Identifier("setting", "maxcomplexity");
     public static final Identifier ALLOW_VANILLA_MOD_ID = new Identifier("setting", "allowvanillaedit");
+    public static final Identifier ALLOW_NAMEPLATE_MOD_ID = new Identifier("setting", "allownameplateedit");
     public static final Identifier MAX_PARTICLES_ID = new Identifier("setting", "maxparticles");
     public static final Identifier MAX_SOUND_EFFECTS_ID = new Identifier("setting", "maxsfx");
 
@@ -117,6 +118,10 @@ public class PlayerTrustManager {
         }});
 
         registerPermissionSetting(new PermissionBooleanSetting(ALLOW_VANILLA_MOD_ID) {{
+            value = true;
+        }});
+
+        registerPermissionSetting(new PermissionBooleanSetting(ALLOW_NAMEPLATE_MOD_ID) {{
             value = true;
         }});
     }

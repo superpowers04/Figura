@@ -1,14 +1,12 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.Config;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.*;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -17,14 +15,18 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -96,6 +98,66 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
     }
 
+    @Redirect(method = "renderLabelIfPresent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;renderLabelIfPresent(Lnet/minecraft/entity/Entity;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", ordinal = 1))
+    private<T extends Entity> void renderFiguraLabelIfPresent(LivingEntityRenderer livingEntityRenderer, T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        if (!FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
+            super.renderLabelIfPresent((AbstractClientPlayerEntity) entity, text, matrices, vertexConsumers, light);
+            return;
+        }
+        PlayerData playerData = PlayerDataManager.getDataForPlayer(entity.getUuid());
+        if (playerData.script == null) {
+            super.renderLabelIfPresent((AbstractClientPlayerEntity) entity, text, matrices, vertexConsumers, light);
+            return;
+        }
+        NamePlateData data = playerData.script.nameplate;
+        if (!data.enabled) return;
+        String formattedText = data.text
+                .replace("%n", text.getString())
+                .replace("%h", String.valueOf(Math.round(((LivingEntity) entity).getHealth()/2f)))
+                .replace("%u", entity.getName().getString());
+        Style style = text.getStyle();
+        if (style.getColor() == null) {
+            style = style.withColor(TextColor.fromRgb(data.RGB));
+        }
+        if ((data.textProperties & 0b10000000) != 0b10000000) {
+            style = style.withBold((data.textProperties & 0b00000001) == 0b0000001)
+                    .withItalic((data.textProperties & 0b00000010) == 0b0000010)
+                    .withUnderline((data.textProperties & 0b00000100) == 0b0000100);
+            if ((data.textProperties & 0b00001000) == 0b00001000) {
+                style = style.withFormatting(Formatting.STRIKETHROUGH);
+            }
+            if ((data.textProperties & 0b00010000) == 0b0010000) {
+                style = style.withFormatting(Formatting.OBFUSCATED);
+            }
+        }
+        text = new LiteralText(formattedText).setStyle(style);
+        if (playerData.model != null && (boolean) Config.entries.get("nameTagMark").value)
+            ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
+
+        if (FiguraMod.special.contains(entity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
+            ((LiteralText) text).append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
+        
+        double d = this.dispatcher.getSquaredDistanceToCamera(entity);
+        if (!(d > 4096.0D)) {
+            boolean bl = !entity.isSneaky();
+            matrices.push();
+            matrices.translate(playerData.script.nameplate.position.getX(), playerData.script.nameplate.position.getY(), playerData.script.nameplate.position.getZ());
+            matrices.multiply(this.dispatcher.getRotation());
+            matrices.scale(-0.025F, -0.025F, 0.025F);
+            Matrix4f matrix4f = matrices.peek().getModel();
+            float g = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
+            int j = (int)(g * 255.0F) << 24;
+            TextRenderer textRenderer = this.getFontRenderer();
+            float h = (float)(-textRenderer.getWidth(text) / 2);
+            textRenderer.draw(text, h, 0, 553648127, false, matrix4f, vertexConsumers, bl, j, light);
+            if (bl) {
+                textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
+            }
+
+            matrices.pop();
+        }
+    }
+
     @Inject(at = @At("RETURN"), method = "renderArm")
     private void postRenderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo ci) {
         PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
@@ -117,22 +179,6 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
         FiguraMod.clearRenderingData();
         figura$clearAllPartCustomizations();
-    }
-
-    @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
-    protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
-
-        Identifier font;
-        if ((boolean) Config.entries.get("nameTagIcon").value)
-            font = FiguraMod.FIGURA_FONT;
-        else
-            font = Style.DEFAULT_FONT_ID;
-
-        if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font)));
-
-        if (FiguraMod.special.contains(abstractClientPlayerEntity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font)));
     }
 
     public void figura$applyPartCustomization(String id, ModelPart part) {
