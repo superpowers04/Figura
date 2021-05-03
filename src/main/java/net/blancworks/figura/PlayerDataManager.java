@@ -132,23 +132,7 @@ public final class PlayerDataManager {
 
     //Loads the model off of the network.
     public static void loadFromNetwork(UUID id, PlayerData targetData) {
-        FiguraMod.networkManager.getAvatarData(id).thenApply((tag) -> {
-            try {
-                //If no avatar.
-                if(tag == null){
-                    return null;
-                }
-                
-                targetData.loadFromNbt(tag);
-                targetData.lastHash = tag.getString("hash"); //This is put here up in getAvatarData, so we can access it here easily.
-                targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
-                targetData.saveToCache(id);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            
-            return null;
-        });
+        FiguraMod.networkManager.getAvatarData(id);
     }
 
     public static void clearPlayer(UUID id) {

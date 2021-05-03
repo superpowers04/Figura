@@ -105,7 +105,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     }
 
     @Override
-    public CompletableFuture<UUID> postAvatar() {
+    public CompletableFuture postAvatar() {
         return doTask(() -> {
             try {
                 ensureConnection();
@@ -200,8 +200,8 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //Main server for distributing files URL
     public String mainServerURL() {
         if ((boolean) Config.entries.get("useLocalServer").value)
-            return "localhost:6050";
-        return "figuranew.blancworks.org";
+            return "http://localhost:6050";
+        return "https://figuranew.blancworks.org";
     }
 
     private static boolean localLastCheck = false;
@@ -237,7 +237,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         authUser();
 
         closeSocketConnection();
-        String connectionString = String.format("https://%s/connect/", mainServerURL());
+        String connectionString = String.format("%s/connect/", mainServerURL());
         
         FiguraMod.LOGGER.error("Connecting to websocket server " + connectionString);
         

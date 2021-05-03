@@ -13,10 +13,10 @@ public interface IFiguraNetwork {
     void tickNetwork();
     
     //Returns a CompoundTag contianing all the data this network reports for the avatar of a given UUID.
-    CompletableFuture<CompoundTag> getAvatarData(UUID id);
+    CompletableFuture getAvatarData(UUID id);
     
     //Posts an avatar to the server.
-    CompletableFuture<UUID> postAvatar();
+    CompletableFuture postAvatar();
     
     //Sets a player's avatar to the provided UUID.
     CompletableFuture setCurrentUserAvatar(UUID avatarID);

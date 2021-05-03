@@ -22,6 +22,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Date;
 import java.util.UUID;
@@ -68,8 +70,8 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     }
 
     @Override
-    public CompletableFuture<CompoundTag> getAvatarData(UUID id) {
-        return CompletableFuture.supplyAsync(()-> {
+    public CompletableFuture getAvatarData(UUID id) {
+        return CompletableFuture.runAsync(()-> {
             HttpURLConnection httpURLConnection = null;
 
             
@@ -114,8 +116,18 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                         DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
                         receivedDataToStream.reset();
                         CompoundTag nbt = NbtIo.readCompressed(receivedDataToStream);
+
+                        MessageDigest md = MessageDigest.getInstance("SHA-256");
+                        byte[] hashBytes = md.digest(dataAsBytes);
+
+                        String hashString = Base64.getEncoder().encodeToString(hashBytes);
                         
-                        return nbt;
+                        PlayerData data =  PlayerDataManager.getDataForPlayer(id);
+                        
+                        data.loadFromNbt(nbt);
+                        data.lastHash = getAvatarHashSync(id);
+                        data.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
+                        data.saveToCache(id);
                     }
                 }
             } catch (Exception e){
@@ -123,7 +135,6 @@ public class FiguraNetworkManager implements IFiguraNetwork {
             }
 
             httpURLConnection.disconnect();
-            return null;
         });
     }
 

@@ -49,7 +49,7 @@ public class WorldRendererMixin {
                 PlayerData data = PlayerDataManager.getDataForPlayer(ent.getUuid());
                 FiguraMod.currentData = data;
 
-                if (data != null && data.model != null) {
+                if (data != null && data.model != null && data.lastEntity != null) {
                     for (CustomModelPart part : data.model.worldParts) {
                         data.model.leftToRender = part.renderUsingAllTextures(data, matrices, FiguraMod.vertexConsumerProvider, entityRenderDispatcher.getLight(data.lastEntity, tickDelta), OverlayTexture.DEFAULT_UV);
                     }
