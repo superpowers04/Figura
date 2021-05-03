@@ -50,8 +50,6 @@ public class CustomModelPart {
 
     public ArrayList<CustomModelPart> children = new ArrayList<>();
 
-    public boolean isOwnerSpectator = false;
-
     public ShaderType shaderType = ShaderType.None;
 
     public boolean shouldRender = true;
@@ -65,8 +63,7 @@ public class CustomModelPart {
         if(data.texture.isDone) {
 
             //render only heads in spectator
-            this.isOwnerSpectator = data.lastEntity.isSpectator();
-            if (isOwnerSpectator) {
+            if (data.lastEntity.isSpectator()) {
                 filterParentGroups(this, ParentType.Head);
             }
 
