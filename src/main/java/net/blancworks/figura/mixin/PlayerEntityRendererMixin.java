@@ -131,11 +131,12 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
             }
         }
         text = new LiteralText(formattedText).setStyle(style);
-        if (playerData.model != null && Config.nameTagMark.value)
+        if (playerData.model != null && (boolean) Config.entries.get("nameTagMark").value)
             ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
 
-        if (FiguraMod.special.contains(entity.getUuid()) && Config.nameTagMark.value)
+        if (FiguraMod.special.contains(entity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
             ((LiteralText) text).append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
+        
         double d = this.dispatcher.getSquaredDistanceToCamera(entity);
         if (!(d > 4096.0D)) {
             boolean bl = !entity.isSneaky();
@@ -178,22 +179,6 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
         FiguraMod.clearRenderingData();
         figura$clearAllPartCustomizations();
-    }
-
-    @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
-    protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
-
-        Identifier font;
-        if ((boolean) Config.entries.get("nameTagIcon").value)
-            font = FiguraMod.FIGURA_FONT;
-        else
-            font = Style.DEFAULT_FONT_ID;
-
-        if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font)));
-
-        if (FiguraMod.special.contains(abstractClientPlayerEntity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font)));
     }
 
     public void figura$applyPartCustomization(String id, ModelPart part) {
