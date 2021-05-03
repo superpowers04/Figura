@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
@@ -57,25 +58,15 @@ public class ElytraModelAPI {
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f v = targetScript.getOrMakePartCustomization(accessor).pos;
-
-                    if(v == null)
-                        return NIL;
-
-                    return LuaUtils.getTableFromVector3f(v);
+                    return LuaVector.of(targetScript.getOrMakePartCustomization(accessor).pos);
                 }
             });
             
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
                     VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-                    customization.pos = new Vector3f(
-                            fas.getFloat(0),
-                            fas.getFloat(1),
-                            fas.getFloat(2)
-                    );
+                    customization.pos = LuaVector.checkOrNew(arg1).asV3f();
 
                     return NIL;
                 }
@@ -84,25 +75,16 @@ public class ElytraModelAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f v = targetScript.getOrMakePartCustomization(accessor).rot;
-
-                    if (v == null)
-                        return NIL;
-
-                    return LuaUtils.getTableFromVector3f(v);
+                    return LuaVector.of(targetScript.getOrMakePartCustomization(accessor).rot);
                 }
             });
 
             ret.set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
                     VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-                    customization.rot = new Vector3f(
-                            fas.getFloat(0),
-                            fas.getFloat(1),
-                            fas.getFloat(2)
-                    );
+                    customization.rot = LuaVector.checkOrNew(arg1).asV3f();
+
                     return NIL;
                 }
             });

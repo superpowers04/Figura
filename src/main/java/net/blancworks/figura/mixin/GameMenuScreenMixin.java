@@ -32,7 +32,8 @@ public class GameMenuScreenMixin extends Screen {
         int x = 5;
         int y = 5;
 
-        switch (Config.buttonLocation.value) {
+        int config = (int) Config.entries.get("buttonLocation").value;
+        switch (config) {
             case 1: //top right
                 x = this.width - 64 - 5;
                 break;
@@ -49,16 +50,16 @@ public class GameMenuScreenMixin extends Screen {
                 break;
         }
 
-        if (Config.buttonLocation.value != 4) {
+        if (config != 4) {
             if (FabricLoader.getInstance().isModLoaded("modmenu")) {
-                y += Config.buttonLocation.value < 2 ? 12 : -12;
+                y += config < 2 ? 12 : -12;
             }
 
             addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
                     btn -> this.client.openScreen(figura$screen)));
         }
         else {
-            Identifier iconTexture = new Identifier("figura", "gui/menu/config_icon.png");
+            Identifier iconTexture = new Identifier("figura", "textures/gui/config_icon.png");
             addButton(new TexturedButtonWidget(x, y, 20, 20, 0, 0, 20, iconTexture, 20, 40, btn -> this.client.openScreen(figura$screen)));
         }
     }

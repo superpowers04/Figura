@@ -1,5 +1,6 @@
 package net.blancworks.figura.network;
 
+import net.blancworks.figura.PlayerData;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.Text;
 
@@ -18,13 +19,13 @@ public interface IFiguraNetwork {
     CompletableFuture<UUID> postAvatar();
     
     //Sets a player's avatar to the provided UUID.
-    CompletableFuture setAvatarCurr(UUID avatarID);
+    CompletableFuture setCurrentUserAvatar(UUID avatarID);
     
     //Deletes the avatar from the server for this player.
     CompletableFuture deleteAvatar();
     
     //Gets the hash for a given avatar from the network.
-    CompletableFuture<String> asyncGetAvatarHash(UUID avatarID);
+    CompletableFuture checkAvatarHash(UUID playerID, String previousHash);
     
     void parseKickAuthMessage(Text reason);
     

@@ -61,7 +61,8 @@ dependencies {
 	modImplementation "com.github.apace100:origins-fabric:${project.origins_version}"
 
 	//WebSocket library
-	compile 'com.neovisionaries:nv-websocket-client:2.14'
+	modImplementation 'com.neovisionaries:nv-websocket-client:2.14'
+	include 'com.neovisionaries:nv-websocket-client:2.14'
 
 	//Google has better IO options than java, 4head
 	// https://mvnrepository.com/artifact/com.google.guava/guava

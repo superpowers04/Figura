@@ -9,8 +9,9 @@ import net.minecraft.client.gui.hud.PlayerListHud;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.network.MessageType;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
+import net.minecraft.text.*;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -29,6 +30,13 @@ public class InGameHudMixin {
         if (senderUuid != Util.NIL_UUID && message instanceof TranslatableText && ((TranslatableText) message).getKey().equals("chat.type.text")) {
             Object[] args = ((TranslatableText) message).getArgs();
             if (args.length > 0 && args[0] instanceof MutableText) {
+
+                Identifier font;
+                if ((boolean) Config.entries.get("nameTagIcon").value)
+                    font = FiguraMod.FIGURA_FONT;
+                else
+                    font = Style.DEFAULT_FONT_ID;
+
                 MutableText playerName = ((MutableText) args[0]);
                 PlayerData playerData = PlayerDataManager.getDataForPlayer(senderUuid);
                 if (playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)
@@ -61,7 +69,6 @@ public class InGameHudMixin {
 
                 if (FiguraMod.special.contains(senderUuid) && Config.chatMark.value)
                     playerName.append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
-
             }
         }
     }

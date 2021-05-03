@@ -180,6 +180,22 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
         figura$clearAllPartCustomizations();
     }
 
+    @Inject(at = @At("HEAD"), method = "renderLabelIfPresent")
+    protected void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo inf) {
+
+        Identifier font;
+        if ((boolean) Config.entries.get("nameTagIcon").value)
+            font = FiguraMod.FIGURA_FONT;
+        else
+            font = Style.DEFAULT_FONT_ID;
+
+        if (PlayerDataManager.getDataForPlayer(abstractClientPlayerEntity.getUuid()).model != null && (boolean) Config.entries.get("nameTagMark").value)
+            ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font)));
+
+        if (FiguraMod.special.contains(abstractClientPlayerEntity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
+            ((LiteralText) text).append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font)));
+    }
+
     public void figura$applyPartCustomization(String id, ModelPart part) {
         PlayerData data = FiguraMod.currentData;
 

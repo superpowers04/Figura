@@ -30,6 +30,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.WatchKey;
@@ -44,6 +45,8 @@ public class FiguraMod implements ClientModInitializer {
             .setPrettyPrinting().create();
 
     public static final Logger LOGGER = LogManager.getLogger();
+
+    public static final Identifier FIGURA_FONT = new Identifier("figura", "default");
 
     //Loading
 
@@ -93,11 +96,17 @@ public class FiguraMod implements ClientModInitializer {
         PlayerTrustManager.init();
         Config.initialize();
 
+        try {
+            SSLFixer.main();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         //Set up network
         oldNetworkManager = new FiguraNetworkManager();
         newNetworkManager = new NewFiguraNetworkManager();
 
-        if (Config.useNewNetwork.value) {
+        if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
         } else {
             networkManager = oldNetworkManager;
@@ -130,7 +139,7 @@ public class FiguraMod implements ClientModInitializer {
     public static void ClientEndTick(MinecraftClient client) {
         PlayerDataManager.tick();
 
-        if (Config.useNewNetwork.value) {
+        if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
         } else {
             networkManager = oldNetworkManager;

@@ -1,0 +1,34 @@
+{
+  "providers": [
+    {
+      "type": "bitmap",
+      "file": "figura:font/mark.png",
+      "ascent": 8,
+      "chars": ["△"]
+    },
+    {
+      "type": "bitmap",
+      "file": "figura:font/mark_red.png",
+      "ascent": 8,
+      "chars": ["▲"]
+    },
+    {
+      "type": "bitmap",
+      "file": "figura:font/star_pink.png",
+      "ascent": 8,
+      "chars": ["★"]
+    },
+    {
+      "type": "bitmap",
+      "file": "figura:font/star.png",
+      "ascent": 8,
+      "chars": ["☆"]
+    },
+    {
+      "type": "bitmap",
+      "file": "figura:font/starite.png",
+      "ascent": 8,
+      "chars": ["✭"]
+    }
+  ]
+}

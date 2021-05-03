@@ -85,8 +85,9 @@ public final class PlayerDataManager {
         FiguraMod.doTask(() -> {
 
             try {
-                //Attempt to load from cache first.
-                if (!attemptCacheLoad(id, targetData))
+                //TODO - Re-enable cache
+                    //Attempt to load from cache first.
+                    //attemptCacheLoad(id, targetData);
                     //If cache load fails or is invalid, load from server.
                     loadFromNetwork(id, targetData);
             } catch (Exception e){
@@ -98,9 +99,7 @@ public final class PlayerDataManager {
     }
 
     //Loads the model out of the local cache, if the file for that exists.
-    //Returns true if loaded from cache.
-    //Cache load only happens if the hash on the server matches the local hash, meaning the avatar has not changed.
-    public static boolean attemptCacheLoad(UUID id, PlayerData targetData) {
+    public static void attemptCacheLoad(UUID id, PlayerData targetData) {
         Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
 
         String[] splitID = id.toString().split("-");
@@ -116,34 +115,18 @@ public final class PlayerDataManager {
         try {
             if (Files.exists(nbtFilePath) && Files.exists(hashFilePath)) {
                 String hash = Files.readAllLines(hashFilePath).get(0);
-                String serverHash = hash;
+                FileInputStream fis = new FileInputStream(nbtFilePath.toFile());
+                DataInputStream dis = new DataInputStream(fis);
 
-                try {
-                    serverHash = FiguraMod.networkManager.asyncGetAvatarHash(id).get();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                targetData.loadFromNbt(dis);
+                targetData.lastHash = hash;
+                targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
 
-                if (serverHash.length() == 0)
-                    serverHash = hash;
-
-                if (serverHash.equals(hash)) {
-                    FileInputStream fis = new FileInputStream(nbtFilePath.toFile());
-                    DataInputStream dis = new DataInputStream(fis);
-
-                    targetData.loadFromNbt(dis);
-                    targetData.lastHash = hash;
-                    targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
-
-                    FiguraMod.LOGGER.debug("Used cached model.");
-                    return true;
-                }
+                FiguraMod.LOGGER.debug("Used cached model.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return false;
     }
 
 
@@ -151,14 +134,13 @@ public final class PlayerDataManager {
     public static void loadFromNetwork(UUID id, PlayerData targetData) {
         FiguraMod.networkManager.getAvatarData(id).thenApply((tag) -> {
             try {
-                
                 //If no avatar.
                 if(tag == null){
                     return null;
                 }
                 
                 targetData.loadFromNbt(tag);
-                targetData.lastHash = FiguraMod.networkManager.asyncGetAvatarHash(id).get();
+                targetData.lastHash = tag.getString("hash"); //This is put here up in getAvatarData, so we can access it here easily.
                 targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
                 targetData.saveToCache(id);
             } catch (Exception e) {
@@ -248,11 +230,7 @@ public final class PlayerDataManager {
 
         FiguraMod.doTask(() -> {
             try {
-                String hash = FiguraMod.networkManager.asyncGetAvatarHash(id).get();
-
-                if (!hash.equals(dat.lastHash) && hash.length() > 0) {
-                    TO_CLEAR.add(id);
-                }
+                FiguraMod.networkManager.checkAvatarHash(id, dat.lastHash).get();
             } catch (Exception e) {
                 e.printStackTrace();
             }
