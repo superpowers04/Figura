@@ -44,6 +44,9 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
     public void onRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         FiguraMod.setRenderingData(abstractClientPlayerEntity, vertexConsumerProvider, this.getModel(), MinecraftClient.getInstance().getTickDelta());
 
+        shadowRadius = 0.5f; //Vanilla shadow radius.
+        //Reset this here because... Execution order.
+
         if (FiguraMod.currentData != null) {
             if (FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
@@ -59,6 +62,10 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
+                
+                if(FiguraMod.currentData.script != null && FiguraMod.currentData.script.customShadowSize != null){
+                    shadowRadius = FiguraMod.currentData.script.customShadowSize;
+                }
             }
         }
     }
@@ -211,4 +218,6 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
     public Identifier getTexture(AbstractClientPlayerEntity entity) {
         return null;
     }
+    
+    
 }

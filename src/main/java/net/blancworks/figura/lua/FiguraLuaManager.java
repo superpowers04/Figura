@@ -4,6 +4,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.RendererAPI;
 import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
@@ -61,6 +62,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(SoundAPI.getID(), SoundAPI::getForScript);
         apiSuppliers.put(NamePlateAPI.getID(), NamePlateAPI::getForScript);
         apiSuppliers.put(MetaAPI.getID(), MetaAPI::getForScript);
+        apiSuppliers.put(RendererAPI.getID(), RendererAPI::getForScript);
     }
 
     public static void registerEvents(){

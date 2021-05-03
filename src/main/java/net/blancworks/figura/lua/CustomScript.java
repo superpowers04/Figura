@@ -65,6 +65,8 @@ public class CustomScript extends FiguraAsset {
 
     public float particleSpawnCount = 0;
     public float soundSpawnCount = 0;
+    
+    public Float customShadowSize = null;
 
     public CustomScript() {
         source = "";
