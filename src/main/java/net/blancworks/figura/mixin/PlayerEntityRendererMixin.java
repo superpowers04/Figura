@@ -100,16 +100,14 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
     @Redirect(method = "renderLabelIfPresent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;renderLabelIfPresent(Lnet/minecraft/entity/Entity;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", ordinal = 1))
     private<T extends Entity> void renderFiguraLabelIfPresent(LivingEntityRenderer livingEntityRenderer, T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-        if (!FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
+        PlayerData currentData = FiguraMod.currentData;
+        
+        if(currentData == null || !currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID) || currentData.script == null){
             super.renderLabelIfPresent((AbstractClientPlayerEntity) entity, text, matrices, vertexConsumers, light);
             return;
         }
-        PlayerData playerData = PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (playerData.script == null) {
-            super.renderLabelIfPresent((AbstractClientPlayerEntity) entity, text, matrices, vertexConsumers, light);
-            return;
-        }
-        NamePlateData data = playerData.script.nameplate;
+        
+        NamePlateData data = currentData.script.nameplate;
         if (!data.enabled) return;
         String formattedText = data.text
                 .replace("%n", text.getString())
@@ -130,18 +128,25 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
                 style = style.withFormatting(Formatting.OBFUSCATED);
             }
         }
+
+        Identifier font;
+        if ((boolean) Config.entries.get("nameTagIcon").value)
+            font = FiguraMod.FIGURA_FONT;
+        else
+            font = Style.DEFAULT_FONT_ID;
+        
         text = new LiteralText(formattedText).setStyle(style);
-        if (playerData.model != null && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
+        if (currentData.model != null && (boolean) Config.entries.get("nameTagMark").value)
+            ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
 
         if (FiguraMod.special.contains(entity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
+            ((LiteralText) text).append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
         
         double d = this.dispatcher.getSquaredDistanceToCamera(entity);
         if (!(d > 4096.0D)) {
             boolean bl = !entity.isSneaky();
             matrices.push();
-            matrices.translate(playerData.script.nameplate.position.getX(), playerData.script.nameplate.position.getY(), playerData.script.nameplate.position.getZ());
+            matrices.translate(currentData.script.nameplate.position.getX(), currentData.script.nameplate.position.getY(), currentData.script.nameplate.position.getZ());
             matrices.multiply(this.dispatcher.getRotation());
             matrices.scale(-0.025F, -0.025F, 0.025F);
             Matrix4f matrix4f = matrices.peek().getModel();

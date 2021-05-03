@@ -64,11 +64,12 @@ public class InGameHudMixin {
                             .replace("%u", playerName.getString()));
                     playerName.setStyle(style);
                 }
-                if (playerData.model != null && (boolean) Config.entries.get("chatMark").value)
-                    playerName.append(" ").append(new TranslatableText("figura.mark").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
+
+                if (PlayerDataManager.getDataForPlayer(senderUuid).model != null && (boolean) Config.entries.get("chatMark").value)
+                    playerName.append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
 
                 if (FiguraMod.special.contains(senderUuid) && (boolean) Config.entries.get("chatMark").value)
-                    playerName.append(" ").append(new TranslatableText("figura.star").setStyle(Style.EMPTY.withColor(Formatting.WHITE)));
+                    playerName.append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
             }
         }
     }
