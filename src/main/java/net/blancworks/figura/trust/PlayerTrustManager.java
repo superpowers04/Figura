@@ -281,7 +281,7 @@ public class PlayerTrustManager {
             CompoundTag targetTag = new CompoundTag();
             writeNbt(targetTag);
 
-            Path targetPath = net.fabricmc.loader.FabricLoader.INSTANCE.getGameDir().resolve("figura");
+            Path targetPath = FabricLoader.getInstance().getGameDir().resolve("figura");
             Files.createDirectories(targetPath);
             targetPath = targetPath.resolve("trustSettings.nbt");
 
@@ -299,7 +299,7 @@ public class PlayerTrustManager {
 
     public static void loadFromDisk() {
         try {
-            Path targetPath = net.fabricmc.loader.FabricLoader.INSTANCE.getGameDir().resolve("figura").resolve("trustSettings.nbt");
+            Path targetPath = FabricLoader.getInstance().getGameDir().resolve("figura").resolve("trustSettings.nbt");
 
             if (!Files.exists(targetPath))
                 return;
