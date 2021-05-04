@@ -208,11 +208,11 @@ public class FiguraMod implements ClientModInitializer {
 
                         if (data.model != null) {
                             int prevCount = data.model.leftToRender;
-                            data.model.leftToRender = 9999999;
+                            data.model.leftToRender = Integer.MAX_VALUE;
 
                             if (data != null && data.model != null) {
                                 for (CustomModelPart part : data.model.worldParts) {
-                                    part.renderUsingAllTextures(data, context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV);
+                                    part.renderUsingAllTextures(data, context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
                                 }
                             }
 

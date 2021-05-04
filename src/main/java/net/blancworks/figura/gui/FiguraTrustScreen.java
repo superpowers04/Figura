@@ -203,7 +203,7 @@ public class FiguraTrustScreen extends Screen {
 
                         if (trustData != null) {
                             if (complexity >= trustData.getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                                complexityText = complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
+                                complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
                             }
                         }
 

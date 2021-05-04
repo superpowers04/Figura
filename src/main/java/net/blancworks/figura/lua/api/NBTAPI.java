@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.function.Function;
 
 public class NBTAPI {
-    public Tag target;
 
     public static HashMap<Class, Function<Tag, LuaValue>> nbtConverters = new HashMap<Class, Function<Tag, LuaValue>>(){{
         put(CompoundTag.class, NBTAPI::fromCompoundTag);
@@ -23,7 +22,6 @@ public class NBTAPI {
         put(LongArrayTag.class, NBTAPI::fromLongArrayTag);
         put(ListTag.class, NBTAPI::fromListTag);
     }};
-
 
     //Automatically determines the tag type and converts it.
     public static LuaValue fromTag(Tag tag){
@@ -63,7 +61,7 @@ public class NBTAPI {
         return LuaNumber.valueOf(((LongTag)tag).getLong());
     }
     public static LuaValue fromStringTag(Tag tag){
-        return LuaString.valueOf(((StringTag)tag).asString());
+        return LuaString.valueOf(tag.asString());
     }
 
 

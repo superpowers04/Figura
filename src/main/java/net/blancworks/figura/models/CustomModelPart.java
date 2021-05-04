@@ -54,6 +54,8 @@ public class CustomModelPart {
 
     public boolean shouldRender = true;
 
+    public RenderType renderType = RenderType.None;
+
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
@@ -63,9 +65,8 @@ public class CustomModelPart {
         if(data.texture.isDone) {
 
             //render only heads in spectator
-            if (data.lastEntity.isSpectator()) {
-                filterParentGroups(this, ParentType.Head);
-            }
+            if (data.lastEntity != null && data.lastEntity.isSpectator())
+                filterParts(this, ParentType.Head);
 
             //Store this value for extra textures
             int prevLeftToRender = data.model.leftToRender;
@@ -86,12 +87,20 @@ public class CustomModelPart {
             }
 
             //render shader groups
-            filterShaderGroups(this, ShaderType.EndPortal);
+
+            //end portal
+            filterParts(this, ShaderType.EndPortal);
 
             for (int i = 0; i < 17; i++) {
                 VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i + 1));
                 render(prevLeftToRender, matrices, portalExtraConsumer, light, overlay, alpha);
             }
+
+            //glint
+            filterParts(this, ShaderType.Glint);
+
+            VertexConsumer glintConsumer = vcp.getBuffer(RenderLayer.getGlint());
+            render(prevLeftToRender, matrices, glintConsumer, light, overlay, alpha);
 
             //reset rendering status
             setRenderStatus(this, true);
@@ -101,19 +110,8 @@ public class CustomModelPart {
         return 0;
     }
 
-    //default render
-    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
-        return renderUsingAllTextures(data, matrices, vcp, light, overlay, 1.0F);
-    }
-
-    //alpha render
     public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float alpha) {
         return render(leftToRender, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1), alpha);
-    }
-
-    //default render
-    public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay) {
-        return render(leftToRender, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1), 1.0F);
     }
 
     //Renders this custom model part and all its children.
@@ -127,7 +125,6 @@ public class CustomModelPart {
         matrices.push();
 
         try {
-
             if (this.isMimicMode) {
                 PlayerEntityModel model = FiguraMod.currentData.vanillaModel;
 
@@ -286,8 +283,23 @@ public class CustomModelPart {
         return leftToRender;
     }
 
+    public int getComplexity() {
+        int complexity = 0;
+
+        complexity += this.vertexCount;
+
+        for (CustomModelPart child : this.children) {
+            if (child.isParentSpecial() || !child.shouldRender)
+                continue;
+
+            complexity += child.getComplexity();
+        }
+
+        return complexity;
+    }
+
     public void setRenderStatus(CustomModelPart part, boolean status) {
-        //set parent
+        //set for parent
         part.shouldRender = status;
 
         //iterate over the children
@@ -296,33 +308,43 @@ public class CustomModelPart {
         }
     }
 
-    public void filterParentGroups(CustomModelPart part, Object filter) {
-        if (part.parentType == filter) {
-            setRenderStatus(part, true);
+    public void filterParts(CustomModelPart part, Object filter) {
+        //error temp variable
+        boolean unmatched = false;
+
+        //check for filter type, then flag to render if the property matches the filter
+        if (filter instanceof ParentType) {
+            if (part.parentType == filter)
+                setRenderStatus(part, true);
+            else
+                unmatched = true;
+        }
+        else if (filter instanceof ShaderType) {
+            if (part.shaderType == filter)
+                setRenderStatus(part, true);
+            else
+                unmatched = true;
+        }
+        else if (filter instanceof RenderType) {
+            if (part.renderType == filter)
+                setRenderStatus(part, true);
+            else
+                unmatched = true;
         }
         else {
+            //filter not found, then no elements should render
+            setRenderStatus(part, false);
+        }
+
+        if (unmatched) {
+            //flag it to dont render
             setRenderStatus(part, false);
 
-            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof  CustomModelPartMesh)) {
+            //if is a group, enable the group rendering and iterate through its children
+            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof CustomModelPartMesh)) {
                 part.shouldRender = true;
                 for (CustomModelPart child : part.children) {
-                    filterParentGroups(child, filter);
-                }
-            }
-        }
-    }
-
-    public void filterShaderGroups(CustomModelPart part, Object filter) {
-        if (part.shaderType == filter) {
-            setRenderStatus(part, true);
-        }
-        else {
-            setRenderStatus(part, false);
-
-            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof  CustomModelPartMesh)) {
-                part.shouldRender = true;
-                for (CustomModelPart child : part.children) {
-                    filterShaderGroups(child, filter);
+                    filterParts(child, filter);
                 }
             }
         }
@@ -529,7 +551,17 @@ public class CustomModelPart {
 
     public enum ShaderType {
         None,
-        EndPortal
+        EndPortal,
+        Glint
+    }
+
+    public enum RenderType {
+        None,
+        Cutout,
+        CutoutNoCull,
+        Translucent,
+        TranslucentNoCull,
+        NoTransparent
     }
 
     //---------MODEL PART TYPES---------

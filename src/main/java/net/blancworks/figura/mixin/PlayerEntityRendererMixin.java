@@ -18,6 +18,9 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -33,7 +36,9 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 
 @Mixin(PlayerEntityRenderer.class)
-public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
+public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
+
+    @Shadow protected abstract void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i);
 
     private ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
 
@@ -64,7 +69,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
                 
-                if(FiguraMod.currentData.script != null && FiguraMod.currentData.script.customShadowSize != null){
+                if (FiguraMod.currentData.script != null && FiguraMod.currentData.script.customShadowSize != null && FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                     shadowRadius = FiguraMod.currentData.script.customShadowSize;
                 }
             }
@@ -116,55 +121,85 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
     }
 
-    @Redirect(method = "renderLabelIfPresent", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;renderLabelIfPresent(Lnet/minecraft/entity/Entity;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", ordinal = 1))
-    private<T extends Entity> void renderFiguraLabelIfPresent(LivingEntityRenderer livingEntityRenderer, T entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+    @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
+    private<T extends Entity> void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+
+        float f = entity.getHeight() + 0.5F;
+        float translateX = 0.0f;
+        float translateY = f;
+        float translateZ = 0.0f;
+
         PlayerData currentData = FiguraMod.currentData;
-        
-        if(currentData == null || !currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID) || currentData.script == null){
-            super.renderLabelIfPresent((AbstractClientPlayerEntity) entity, text, matrices, vertexConsumers, light);
-            return;
-        }
-        
-        NamePlateData data = currentData.script.nameplate;
-        if (!data.enabled) return;
-        String formattedText = data.text
-                .replace("%n", text.getString())
-                .replace("%h", String.valueOf(Math.round(((LivingEntity) entity).getHealth()/2f)))
-                .replace("%u", entity.getName().getString());
-        Style style = text.getStyle();
-        if (style.getColor() == null) {
-            style = style.withColor(TextColor.fromRgb(data.RGB));
-        }
-        if ((data.textProperties & 0b10000000) != 0b10000000) {
-            style = style.withBold((data.textProperties & 0b00000001) == 0b0000001)
-                    .withItalic((data.textProperties & 0b00000010) == 0b0000010)
-                    .withUnderline((data.textProperties & 0b00000100) == 0b0000100);
-            if ((data.textProperties & 0b00001000) == 0b00001000) {
-                style = style.withFormatting(Formatting.STRIKETHROUGH);
+        if (currentData != null && currentData.script != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
+            NamePlateData data = currentData.script.nameplate;
+            if (!data.enabled) return;
+            String formattedText = data.text
+                    .replace("%n", text.getString())
+                    .replace("%h", String.valueOf(Math.round(entity.getHealth())))
+                    .replace("%u", entity.getName().getString());
+            Style style = text.getStyle();
+            if (style.getColor() == null) {
+                style = style.withColor(TextColor.fromRgb(data.RGB));
             }
-            if ((data.textProperties & 0b00010000) == 0b0010000) {
-                style = style.withFormatting(Formatting.OBFUSCATED);
+            if ((data.textProperties & 0b10000000) != 0b10000000) {
+                style = style.withBold((data.textProperties & 0b00000001) == 0b0000001)
+                        .withItalic((data.textProperties & 0b00000010) == 0b0000010)
+                        .withUnderline((data.textProperties & 0b00000100) == 0b0000100);
+                if ((data.textProperties & 0b00001000) == 0b00001000) {
+                    style = style.withFormatting(Formatting.STRIKETHROUGH);
+                }
+                if ((data.textProperties & 0b00010000) == 0b0010000) {
+                    style = style.withFormatting(Formatting.OBFUSCATED);
+                }
             }
+
+            text = new LiteralText(formattedText).setStyle(style);
+
+            translateX += currentData.script.nameplate.position.getX();
+            translateY += currentData.script.nameplate.position.getY();
+            translateZ += currentData.script.nameplate.position.getZ();
         }
 
+        //add badges
         Identifier font;
         if ((boolean) Config.entries.get("nameTagIcon").value)
             font = FiguraMod.FIGURA_FONT;
         else
             font = Style.DEFAULT_FONT_ID;
-        
-        text = new LiteralText(formattedText).setStyle(style);
-        if (currentData.model != null && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+
+        if (currentData != null && currentData.model != null && (boolean) Config.entries.get("nameTagMark").value) {
+            if (currentData.model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
+                ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+            }
+            else {
+                ((LiteralText) text).append(" ").append(new LiteralText("▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+            }
+        }
 
         if (FiguraMod.special.contains(entity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
             ((LiteralText) text).append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
-        
+
+        matrices.push();
+        matrices.translate(translateX, translateY, translateZ);
+
+        //render scoreboard
         double d = this.dispatcher.getSquaredDistanceToCamera(entity);
+        if (d < 100.0D) {
+            Scoreboard scoreboard = entity.getScoreboard();
+            ScoreboardObjective scoreboardObjective = scoreboard.getObjectiveForSlot(2);
+            if (scoreboardObjective != null) {
+                matrices.translate(0.0D, -f, 0.0D);
+                ScoreboardPlayerScore scoreboardPlayerScore = scoreboard.getPlayerScore(entity.getEntityName(), scoreboardObjective);
+                super.renderLabelIfPresent(entity, (new LiteralText(Integer.toString(scoreboardPlayerScore.getScore()))).append(" ").append(scoreboardObjective.getDisplayName()), matrices, vertexConsumers, light);
+                this.getFontRenderer().getClass();
+                matrices.translate(0.0D, 9.0F * 1.15F * 0.025F + f, 0.0D);
+            }
+        }
+
+        //render nametag
         if (!(d > 4096.0D)) {
             boolean bl = !entity.isSneaky();
             matrices.push();
-            matrices.translate(currentData.script.nameplate.position.getX(), currentData.script.nameplate.position.getY(), currentData.script.nameplate.position.getZ());
             matrices.multiply(this.dispatcher.getRotation());
             matrices.scale(-0.025F, -0.025F, 0.025F);
             Matrix4f matrix4f = matrices.peek().getModel();
@@ -176,9 +211,12 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
             if (bl) {
                 textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
             }
-
             matrices.pop();
         }
+
+        matrices.pop();
+
+        ci.cancel();
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm")
@@ -197,7 +235,7 @@ public class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClie
 
             arm.pitch = 0;
 
-            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, player, arm, sleeve, model);
+            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, player, arm, sleeve, model, 1.0f);
         }
 
         FiguraMod.clearRenderingData();
