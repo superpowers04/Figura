@@ -100,13 +100,13 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
             getRightWing().visible = true;
 
             if (data != null && data.model != null) {
-                figura$renderExtraElytraPartsWithTexture(data, RenderLayer.getEntityTranslucent(data.texture.id), matrices, light, overlay);
+                figura$renderExtraElytraPartsWithTexture(data, RenderLayer.getEntityTranslucent(data.texture.id), matrices, light, overlay, alpha);
 
                 for (FiguraTexture extraTexture : data.extraTextures) {
                     Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
 
                     if (renderLayerGetter != null) {
-                        figura$renderExtraElytraPartsWithTexture(data, renderLayerGetter.apply(extraTexture.id), matrices, light, overlay);
+                        figura$renderExtraElytraPartsWithTexture(data, renderLayerGetter.apply(extraTexture.id), matrices, light, overlay, alpha);
                     }
                 }
             }
@@ -123,7 +123,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         return field_3364;
     }
 
-    public void figura$renderExtraElytraPartsWithTexture(PlayerData data, RenderLayer layer, MatrixStack matrices, int light, int overlay) {
+    public void figura$renderExtraElytraPartsWithTexture(PlayerData data, RenderLayer layer, MatrixStack matrices, int light, int overlay, float alpha) {
         VertexConsumer actualConsumer = FiguraMod.vertexConsumerProvider.getBuffer(layer);
 
         //Render left parts.
@@ -131,7 +131,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         getLeftWing().rotate(matrices);
 
         for (CustomModelPart modelPart : data.model.leftElytraParts) {
-            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, actualConsumer, light, overlay);
+            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, actualConsumer, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;
@@ -144,7 +144,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         getRightWing().rotate(matrices);
 
         for (CustomModelPart modelPart : data.model.rightElytraParts) {
-            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, actualConsumer, light, overlay);
+            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, actualConsumer, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;

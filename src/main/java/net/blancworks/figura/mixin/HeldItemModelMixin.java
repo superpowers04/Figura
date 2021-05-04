@@ -55,7 +55,7 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
                 VanillaModelPartCustomization originModification = arm == Arm.LEFT ? data.model.originModifications.get(ItemModelAPI.VANILLA_LEFT_HAND_ID) : data.model.originModifications.get(ItemModelAPI.VANILLA_RIGHT_HAND_ID);
 
                 if (originModification != null) {
-                    if (originModification.part != null && !originModification.part.visible) {
+                    if (originModification.part == null || !originModification.part.visible || data.model.lastComplexity >= data.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
                         ci.cancel();
                         return;
                     }

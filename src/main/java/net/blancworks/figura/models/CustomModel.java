@@ -48,6 +48,18 @@ public class CustomModel extends FiguraAsset {
     public HashMap<Identifier, VanillaModelPartCustomization> originModifications = new HashMap<>();
 
     public int getRenderComplexity() {
+        lastComplexity = 0;
+        for (CustomModelPart part : allParts) {
+
+            if (part.isParentSpecial())
+                continue;
+
+            try {
+                lastComplexity = part.getComplexity();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return lastComplexity;
     }
 
@@ -89,7 +101,7 @@ public class CustomModel extends FiguraAsset {
         }
     }
 
-    public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model) {
+    public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model, float alpha) {
         VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(playerData.texture.id));
 
         if (owner.script != null) {
@@ -97,33 +109,33 @@ public class CustomModel extends FiguraAsset {
         }
 
         int prevCount = playerData.model.leftToRender;
-        playerData.model.leftToRender = 9999999;
+        playerData.model.leftToRender = Integer.MAX_VALUE;
         
         for (CustomModelPart part : playerData.model.allParts) {
-            renderArmRecursive(part, playerData, matrices, vertexConsumers, light, player, arm, sleeve, model);
+            renderArmRecursive(part, playerData, matrices, vertexConsumers, light, player, arm, sleeve, model, alpha);
         }
 
         playerData.model.leftToRender = prevCount;
     }
 
-    public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vcp, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model) {
+    public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vcp, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model, float alpha) {
         
         if (part.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm)
-            part.renderUsingAllTextures(playerData, matrices, vcp, light, OverlayTexture.DEFAULT_UV);
+            part.renderUsingAllTextures(playerData, matrices, vcp, light, OverlayTexture.DEFAULT_UV, alpha);
         else if (part.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm)
-            part.renderUsingAllTextures(playerData, matrices, vcp, light, OverlayTexture.DEFAULT_UV);
+            part.renderUsingAllTextures(playerData, matrices, vcp, light, OverlayTexture.DEFAULT_UV, alpha);
 
         for (CustomModelPart child : part.children) {
             if (child.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm) {
                 matrices.push();
 
-                child.renderUsingAllTextures(owner, matrices, vcp, light, OverlayTexture.DEFAULT_UV);
+                child.renderUsingAllTextures(owner, matrices, vcp, light, OverlayTexture.DEFAULT_UV, alpha);
 
                 matrices.pop();
             } else if (child.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm) {
                 matrices.push();
 
-                child.renderUsingAllTextures(owner, matrices, vcp, light, OverlayTexture.DEFAULT_UV);
+                child.renderUsingAllTextures(owner, matrices, vcp, light, OverlayTexture.DEFAULT_UV, alpha);
 
                 matrices.pop();
             }
