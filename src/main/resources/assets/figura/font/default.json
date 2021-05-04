@@ -20,6 +20,12 @@
     },
     {
       "type": "bitmap",
+      "file": "figura:font/star_burned.png",
+      "ascent": 8,
+      "chars": ["✯"]
+    },
+    {
+      "type": "bitmap",
       "file": "figura:font/star.png",
       "ascent": 8,
       "chars": ["☆"]

@@ -88,13 +88,14 @@ public class Config {
         entries.clear();
         entries.put("previewNameTag", new ConfigEntry<>(true));
         entries.put("nameTagMark", new ConfigEntry<>(true));
-        entries.put("buttonLocation", new ConfigEntry<>(3, 5));
+        entries.put("buttonLocation", new ConfigEntry<>(4, 5));
         entries.put("useNewNetwork", new ConfigEntry<>(true));
         entries.put("useLocalServer", new ConfigEntry<>(false));
         entries.put("scriptLog", new ConfigEntry<>(0, 3));
         entries.put("listMark", new ConfigEntry<>(true));
         entries.put("chatMark", new ConfigEntry<>(true));
         entries.put("nameTagIcon", new ConfigEntry<>(true));
+        entries.put("ownNameTag", new ConfigEntry<>(false));
     }
 
     public static class ConfigEntry<T> {

@@ -180,6 +180,63 @@ public class NamePlateAPI {
                     return val;
                 }
             });
+
+            ret.set("setListProperties", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (!arg.isnumber()) {
+                        return NIL;
+                    }
+                    data.listTextProperties = arg.tobyte();
+                    return NIL;
+                }
+            });
+            ret.set("getListProperties", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(data.listTextProperties);
+                }
+            });
+            ret.set("setListText", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (arg.isnil()) {
+                        data.listText = "%n";
+                        return NIL;
+                    }
+                    data.listText = arg.checkjstring();
+                    return NIL;
+                }
+            });
+            ret.set("getListText", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(data.listText);
+                }
+            });
+            ret.set("setListColor", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (arg.isnil()) {
+                        data.listRGB = -1;
+                        return NIL;
+                    }
+                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg.checktable());
+                    data.listRGB = ((Math.round(fas.getFloat(0)) & 0xFF) << 16) | ((Math.round(fas.getFloat(1)) & 0xFF) << 8) | (Math.round(fas.getFloat(2)) & 0xFF);
+                    return NIL;
+                }
+            });
+            ret.set("getListColor", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    LuaTable val = new LuaTable();
+                    val.set("r", data.listRGB >> 16 & 0xFF);
+                    val.set("g", data.listRGB >> 8 & 0xFF);
+                    val.set("b", data.listRGB & 0xFF);
+                    return val;
+                }
+            });
+
             return ret;
         }
     }

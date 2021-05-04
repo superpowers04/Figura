@@ -1,5 +1,6 @@
 package net.blancworks.figura.mixin;
 
+import net.blancworks.figura.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -12,10 +13,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-
 @Mixin(LivingEntityRenderer.class)
-public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>>
-        extends EntityRenderer<T> implements FeatureRendererContext<T, M> {
+public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extends EntityModel<T>> extends EntityRenderer<T> implements FeatureRendererContext<T, M> {
 
     protected LivingEntityRendererMixin(EntityRenderDispatcher dispatcher) {
         super(dispatcher);
@@ -23,7 +22,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
 
     @Inject(method = "hasLabel", at = @At("HEAD"), cancellable = true)
     public void hasLabel(T livingEntity, CallbackInfoReturnable<Boolean> cir) {
-        if (FiguraGuiScreen.showOwnNametag)
+        if (FiguraGuiScreen.showOwnNametag || (Boolean) Config.entries.get("ownNameTag").value)
             cir.setReturnValue(true);
     }
 }

@@ -38,13 +38,16 @@ public class InGameHudMixin {
                     font = Style.DEFAULT_FONT_ID;
 
                 MutableText playerName = ((MutableText) args[0]);
-                PlayerData playerData = PlayerDataManager.getDataForPlayer(senderUuid);
-                if (playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)
-                        && playerData.script != null && playerData.script.nameplate != null) {
-                    NamePlateData data = playerData.script.nameplate;
+                PlayerData currentData = PlayerDataManager.getDataForPlayer(senderUuid);
+                if (currentData != null && currentData.script != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
+                    NamePlateData data = currentData.script.nameplate;
+
+                    String formattedText = data.chatText
+                            .replace("%n", playerName.getString())
+                            .replace("%u", playerName.getString());
                     Style style = playerName.getStyle();
-                    if (style == null) {
-                        style = Style.EMPTY;
+                    if (style.getColor() == null) {
+                        style = style.withColor(TextColor.fromRgb(data.chatRGB));
                     }
                     if ((data.chatTextProperties & 0b10000000) != 0b10000000) {
                         style = style.withBold((data.chatTextProperties & 0b00000001) == 0b0000001)
@@ -57,16 +60,19 @@ public class InGameHudMixin {
                             style = style.withFormatting(Formatting.OBFUSCATED);
                         }
                     }
-                    if (style.getColor() == null) {
-                        style = style.withColor(TextColor.fromRgb(data.chatRGB));
-                    }
-                    ((SetText) playerName).figura$setText(data.chatText.replace("%n", playerName.getString())
-                            .replace("%u", playerName.getString()));
+
+                    ((SetText) playerName).figura$setText(formattedText);
                     playerName.setStyle(style);
                 }
 
-                if (PlayerDataManager.getDataForPlayer(senderUuid).model != null && (boolean) Config.entries.get("chatMark").value)
-                    playerName.append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                if (currentData != null && currentData.model != null && (boolean) Config.entries.get("chatMark").value) {
+                    if (PlayerDataManager.getDataForPlayer(senderUuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
+                        playerName.append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                    }
+                    else {
+                        playerName.append(" ").append(new LiteralText("▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                    }
+                }
 
                 if (FiguraMod.special.contains(senderUuid) && (boolean) Config.entries.get("chatMark").value)
                     playerName.append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));

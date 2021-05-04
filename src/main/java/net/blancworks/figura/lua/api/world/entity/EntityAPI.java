@@ -1,11 +1,9 @@
 package net.blancworks.figura.lua.api.world.entity;
 
-import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
@@ -22,22 +20,21 @@ import java.util.Iterator;
 
 public class EntityAPI {
 
-
     public static class EntityLuaAPITable<T extends Entity> extends ReadOnlyLuaTable {
 
         public T targetEntity;
 
         public LuaString typeString;
-        
+
         public EntityLuaAPITable(T targetEntity) {
             this.targetEntity = targetEntity;
         }
 
 
         public LuaTable getTable() {
-            
+
             typeString = LuaString.valueOf(Registry.ENTITY_TYPE.getId(targetEntity.getType()).toString());
-            
+
             return new LuaTable() {{
 
                 set("getPos", new ZeroArgFunction() {
@@ -53,7 +50,7 @@ public class EntityAPI {
                         return new LuaVector(targetEntity.pitch, targetEntity.yaw);
                     }
                 });
-                
+
                 set("getType", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
@@ -119,7 +116,7 @@ public class EntityAPI {
                         return LuaString.valueOf(w.getRegistryKey().getValue().toString());
                     }
                 });
-                
+
                 set("getEquipmentItem", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
@@ -163,6 +160,24 @@ public class EntityAPI {
                     }
                 });
 
+                set("getEyeHeight", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaNumber.valueOf(targetEntity.getEyeHeight(targetEntity.getPose()));
+                    }
+                });
+
+                set("getBoundingBox", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        float x = targetEntity.getDimensions(targetEntity.getPose()).width;
+                        float y = targetEntity.getDimensions(targetEntity.getPose()).height;
+                        float z = targetEntity.getDimensions(targetEntity.getPose()).width;
+
+                        return new LuaVector(x, y, z);
+                    }
+                });
+
                 set("getNbtValue", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
@@ -187,7 +202,7 @@ public class EntityAPI {
                         return NBTAPI.fromTag(current);
                     }
                 });
-                
+
             }};
         }
 
