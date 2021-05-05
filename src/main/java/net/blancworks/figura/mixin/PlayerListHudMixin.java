@@ -45,7 +45,8 @@ public class PlayerListHudMixin {
                 }
             }
 
-            text = new LiteralText(formattedText).setStyle(style);
+            text = new LiteralText("");
+            ((LiteralText) text).append(new LiteralText(formattedText).setStyle(style));
         }
 
         Identifier font;
@@ -56,15 +57,15 @@ public class PlayerListHudMixin {
 
         if (currentData != null && currentData.model != null && (boolean) Config.entries.get("listMark").value) {
             if (currentData.model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                ((LiteralText) text).append(new LiteralText(" △").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
             }
             else {
-                ((LiteralText) text).append(" ").append(new LiteralText("▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                ((LiteralText) text).append(new LiteralText(" ▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
             }
         }
 
         if (FiguraMod.special.contains(entry.getProfile().getId()) && (boolean) Config.entries.get("listMark").value)
-            ((LiteralText) text).append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+            ((LiteralText) text).append(new LiteralText(" ✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
 
         cir.setReturnValue(text);
     }

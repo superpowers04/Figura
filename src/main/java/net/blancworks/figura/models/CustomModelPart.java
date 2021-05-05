@@ -91,7 +91,7 @@ public class CustomModelPart {
             //end portal
             filterParts(this, ShaderType.EndPortal);
 
-            for (int i = 0; i < 17; i++) {
+            for (int i = 0; i < 16; i++) {
                 VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i + 1));
                 render(prevLeftToRender, matrices, portalExtraConsumer, light, overlay, alpha);
             }
@@ -428,7 +428,9 @@ public class CustomModelPart {
         }
 
         if (partNbt.contains("ptype")) {
-            this.parentType = ParentType.valueOf(partNbt.get("ptype").asString());
+            try {
+                this.parentType = ParentType.valueOf(partNbt.get("ptype").asString());
+            } catch (Exception ignored) {}
         }
         if (partNbt.contains("mmc")) {
             this.isMimicMode = ((ByteTag) partNbt.get("mmc")).getByte() == 1;
@@ -445,7 +447,9 @@ public class CustomModelPart {
         }
 
         if (partNbt.contains("stype")) {
-            this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
+            try {
+                this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
+            } catch (Exception ignored) {}
         }
 
         if (partNbt.contains("chld")) {
