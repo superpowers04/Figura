@@ -109,7 +109,7 @@ public class CustomModel extends FiguraAsset {
         }
 
         int prevCount = playerData.model.leftToRender;
-        playerData.model.leftToRender = Integer.MAX_VALUE;
+        playerData.model.leftToRender = Integer.MAX_VALUE - 100;
         
         for (CustomModelPart part : playerData.model.allParts) {
             renderArmRecursive(part, playerData, matrices, vertexConsumers, light, player, arm, sleeve, model, alpha);

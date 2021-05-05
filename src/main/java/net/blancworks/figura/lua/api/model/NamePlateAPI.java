@@ -69,6 +69,8 @@ public class NamePlateAPI {
                     return NIL;
                 }
             });
+
+
             ret.set("setText", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -86,6 +88,44 @@ public class NamePlateAPI {
                     return LuaString.valueOf(data.text);
                 }
             });
+
+            ret.set("setChatText", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (arg.isnil()) {
+                        data.chatText = "%n";
+                        return NIL;
+                    }
+                    data.chatText = arg.checkjstring();
+                    return NIL;
+                }
+            });
+            ret.set("getChatText", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(data.chatText);
+                }
+            });
+
+            ret.set("setListText", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (arg.isnil()) {
+                        data.listText = "%n";
+                        return NIL;
+                    }
+                    data.listText = arg.checkjstring();
+                    return NIL;
+                }
+            });
+            ret.set("getListText", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(data.listText);
+                }
+            });
+
+
             ret.set("setColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -108,56 +148,7 @@ public class NamePlateAPI {
                     return val;
                 }
             });
-            // TODO: use a custom type instead. This is less user-friendly, but it works.
-            ret.set("setProperties", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    if (!arg.isnumber()) {
-                        return NIL;
-                    }
-                    data.textProperties = arg.tobyte();
-                    return NIL;
-                }
-            });
-            ret.set("getProperties", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(data.textProperties);
-                }
-            });
-            ret.set("setChatProperties", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    if (!arg.isnumber()) {
-                        return NIL;
-                    }
-                    data.chatTextProperties = arg.tobyte();
-                    return NIL;
-                }
-            });
-            ret.set("getChatProperties", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(data.chatTextProperties);
-                }
-            });
-            ret.set("setChatText", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    if (arg.isnil()) {
-                        data.chatText = "%n";
-                        return NIL;
-                    }
-                    data.chatText = arg.checkjstring();
-                    return NIL;
-                }
-            });
-            ret.set("getChatText", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaString.valueOf(data.chatText);
-                }
-            });
+
             ret.set("setChatColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -181,39 +172,6 @@ public class NamePlateAPI {
                 }
             });
 
-            ret.set("setListProperties", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    if (!arg.isnumber()) {
-                        return NIL;
-                    }
-                    data.listTextProperties = arg.tobyte();
-                    return NIL;
-                }
-            });
-            ret.set("getListProperties", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(data.listTextProperties);
-                }
-            });
-            ret.set("setListText", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    if (arg.isnil()) {
-                        data.listText = "%n";
-                        return NIL;
-                    }
-                    data.listText = arg.checkjstring();
-                    return NIL;
-                }
-            });
-            ret.set("getListText", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaString.valueOf(data.listText);
-                }
-            });
             ret.set("setListColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -236,6 +194,60 @@ public class NamePlateAPI {
                     return val;
                 }
             });
+
+
+            // TODO: use a custom type instead. This is less user-friendly, but it works.
+            ret.set("setProperties", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (!arg.isnumber()) {
+                        return NIL;
+                    }
+                    data.textProperties = arg.tobyte();
+                    return NIL;
+                }
+            });
+            ret.set("getProperties", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(data.textProperties);
+                }
+            });
+
+            ret.set("setChatProperties", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (!arg.isnumber()) {
+                        return NIL;
+                    }
+                    data.chatTextProperties = arg.tobyte();
+                    return NIL;
+                }
+            });
+            ret.set("getChatProperties", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(data.chatTextProperties);
+                }
+            });
+
+            ret.set("setListProperties", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (!arg.isnumber()) {
+                        return NIL;
+                    }
+                    data.listTextProperties = arg.tobyte();
+                    return NIL;
+                }
+            });
+            ret.set("getListProperties", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(data.listTextProperties);
+                }
+            });
+
 
             return ret;
         }

@@ -17,20 +17,20 @@ import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
-import net.minecraft.text.*;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
@@ -153,7 +153,8 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 }
             }
 
-            text = new LiteralText(formattedText).setStyle(style);
+            text = new LiteralText("");
+            ((LiteralText) text).append(new LiteralText(formattedText).setStyle(style));
 
             translateX += currentData.script.nameplate.position.getX();
             translateY += currentData.script.nameplate.position.getY();
@@ -169,15 +170,15 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         if (currentData != null && currentData.model != null && (boolean) Config.entries.get("nameTagMark").value) {
             if (currentData.model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                ((LiteralText) text).append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                ((LiteralText) text).append(new LiteralText(" △").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
             }
             else {
-                ((LiteralText) text).append(" ").append(new LiteralText("▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                ((LiteralText) text).append(new LiteralText(" ▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
             }
         }
 
         if (FiguraMod.special.contains(entity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+            ((LiteralText) text).append(new LiteralText(" ✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
 
         matrices.push();
         matrices.translate(translateX, translateY, translateZ);
@@ -267,6 +268,5 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
     public Identifier getTexture(AbstractClientPlayerEntity entity) {
         return null;
     }
-    
-    
+
 }

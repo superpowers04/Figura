@@ -208,7 +208,7 @@ public class FiguraMod implements ClientModInitializer {
 
                         if (data.model != null) {
                             int prevCount = data.model.leftToRender;
-                            data.model.leftToRender = Integer.MAX_VALUE;
+                            data.model.leftToRender = Integer.MAX_VALUE - 100;
 
                             if (data != null && data.model != null) {
                                 for (CustomModelPart part : data.model.worldParts) {
