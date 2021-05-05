@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.math;
 
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.MathHelper;
@@ -54,13 +55,26 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public static LuaVector of(LuaTable t) {
         int n = Math.min(6, t.length());
-        float[] arr = new float[n];
+        FloatArrayList fal = new FloatArrayList();
         for (int i = 0; i < n; i++) {
             LuaValue l =  t.get(i + 1);
-            l.checknumber();
-            arr[i] = l.tofloat();
+            
+            if(l.isnumber()){
+                l.checknumber();
+                fal.add(l.tofloat());
+            } else if(l.istable()){
+                LuaTable tbl = l.checktable();
+                LuaVector v = of(tbl);
+                
+                for(int j = 0; j < tbl.length(); j++){
+                    fal.add(v.values[j]);
+                }
+            }
         }
-        return new LuaVector(arr);
+        
+        //Ensure size.
+        fal.size(6);
+        return new LuaVector(fal.toFloatArray());
     }
 
     public static LuaVector check(LuaValue val) {
@@ -143,7 +157,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     @Override
     public LuaValue get(int key) {
-        Float f = _get(key + 1);
+        Float f = _get(key);
         if (f == null) return NIL;
         return LuaNumber.valueOf(f);
     }
@@ -155,6 +169,8 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     @Override
     public LuaValue rawget(LuaValue key) {
+        if(key.isnumber())
+            return get(key.checkint());
         return get(key.tojstring());
     }
 

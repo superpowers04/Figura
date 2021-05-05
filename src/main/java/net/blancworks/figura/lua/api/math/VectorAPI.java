@@ -56,8 +56,8 @@ public class VectorAPI {
             set("lerp", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                    LuaVector a = LuaVector.check(arg1);
-                    LuaVector b = LuaVector.check(arg2);
+                    LuaVector a = LuaVector.checkOrNew(arg1);
+                    LuaVector b = LuaVector.checkOrNew(arg2);
                     arg3.checknumber();
                     return lerp(a, b, arg3.tofloat());
                 }
@@ -74,7 +74,7 @@ public class VectorAPI {
             set("rgbToHSV", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    LuaVector rgb = LuaVector.check(arg);
+                    LuaVector rgb = LuaVector.checkOrNew(arg);
                     return toHSV(rgb);
                 }
             });
@@ -82,7 +82,7 @@ public class VectorAPI {
             set("hsvToRGB", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    LuaVector hsv = LuaVector.check(arg);
+                    LuaVector hsv = LuaVector.checkOrNew(arg);
                     return toRGB(hsv);
                 }
             });
@@ -90,7 +90,7 @@ public class VectorAPI {
             set("worldToPart", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    LuaVector vec = LuaVector.check(arg);
+                    LuaVector vec = LuaVector.checkOrNew(arg);
                     return toModelSpace(vec);
                 }
             });
