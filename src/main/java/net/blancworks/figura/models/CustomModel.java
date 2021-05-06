@@ -110,36 +110,15 @@ public class CustomModel extends FiguraAsset {
 
         int prevCount = playerData.model.leftToRender;
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
-        
+
         for (CustomModelPart part : playerData.model.allParts) {
-            renderArmRecursive(part, playerData, matrices, vertexConsumers, light, player, arm, sleeve, model, alpha);
+            if (arm == model.rightArm)
+                playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.RightArm, playerData, matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+            else if (arm == model.leftArm)
+                playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.LeftArm, playerData, matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
         }
 
         playerData.model.leftToRender = prevCount;
-    }
-
-    public void renderArmRecursive(CustomModelPart part, PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vcp, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model, float alpha) {
-        
-        if (part.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm)
-            part.renderUsingAllTextures(playerData, matrices, vcp, light, OverlayTexture.DEFAULT_UV, alpha);
-        else if (part.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm)
-            part.renderUsingAllTextures(playerData, matrices, vcp, light, OverlayTexture.DEFAULT_UV, alpha);
-
-        for (CustomModelPart child : part.children) {
-            if (child.parentType == CustomModelPart.ParentType.RightArm && arm == model.rightArm) {
-                matrices.push();
-
-                child.renderUsingAllTextures(owner, matrices, vcp, light, OverlayTexture.DEFAULT_UV, alpha);
-
-                matrices.pop();
-            } else if (child.parentType == CustomModelPart.ParentType.LeftArm && arm == model.leftArm) {
-                matrices.push();
-
-                child.renderUsingAllTextures(owner, matrices, vcp, light, OverlayTexture.DEFAULT_UV, alpha);
-
-                matrices.pop();
-            }
-        }
     }
 
     public void writeNbt(CompoundTag nbt) {
