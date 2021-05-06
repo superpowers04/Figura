@@ -44,22 +44,27 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //The last socket we were using
     public static WebSocket currWebSocket;
 
+    public static Object authWaitObject = new Object();
+    public static ClientConnection authConnection;
+
     //The JWT token handed to us by the server.
     public static String jwtToken;
 
     //The time the JWT token was gotten at
     public static Date tokenReceivedTime;
-    
+
+    public static int tokenReauthCooldown = 0;
+
     //The time tokens last for. (default is 20 minutes)
     public static final int TOKEN_LIFETIME = 1000 * 60 * 20;
     //The time we wait to automatically re-auth once a token has expired. (default is 1 minute)
-    public static final int TOKEN_REAUTH_WAIT_TIME = 1000 * 60;
-    
+    public static final int TOKEN_REAUTH_WAIT_TIME = 200;
+
     //Timeout before a connection with a socket is considered dead.
     public static final int TIMEOUT_SECONDS = 10;
 
     private static boolean hasInited = false;
-    
+
     private static CompletableFuture doTask(Runnable toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = CompletableFuture.runAsync(toRun);
@@ -82,17 +87,31 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public void tickNetwork() {
+
+        if(authConnection != null) {
+            authConnection.handleDisconnection();
+        }
+        
         //If the old token we had is old enough, re-auth us.
         Date currTime = new Date();
-        if(tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME){
-            tokenReceivedTime = new Date(tokenReceivedTime.getTime() + TOKEN_REAUTH_WAIT_TIME);
-            authUser(true);
+
+        if (tokenReauthCooldown > 0) {
+            tokenReauthCooldown--;
+        } else {
+            if (tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME) {
+                tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
+
+                //Auth user ASAP
+                doTask(() -> {
+                    authUser(true);
+                });
+            }
         }
     }
 
     @Override
     public CompletableFuture getAvatarData(UUID id) {
-        return doTask(()->{
+        return doTask(() -> {
             try {
                 ensureConnection();
 
@@ -161,11 +180,11 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public CompletableFuture checkAvatarHash(UUID playerID, String lastHash) {
-        return doTask(()->{
+        return doTask(() -> {
             try {
                 ensureConnection();
                 new UserGetCurrentAvatarHashMessageSender(playerID).sendMessage(currWebSocket);
-            } catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
@@ -221,7 +240,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 socketFactory.setSSLContext(ctx);
                 socketFactory.setVerifyHostname(false);
             }
-            
+
             socketFactory.setServerName("figuranew.blancworks.org");
         }
 
@@ -238,9 +257,9 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         closeSocketConnection();
         String connectionString = String.format("%s/connect/", mainServerURL());
-        
+
         FiguraMod.LOGGER.error("Connecting to websocket server " + connectionString);
-        
+
         WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
         newSocket.addListener(new FiguraNetworkMessageHandler(this));
 
@@ -266,33 +285,66 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         currWebSocket = null;
     }
 
-    public void authUser(){
+    public void authUser() {
         authUser(false);
     }
-    
+
     public void authUser(boolean force) {
 
         if (!force && jwtToken != null)
             return;
 
+        if(authConnection != null) {
+            authConnection.handleDisconnection();
+            
+            if(authConnection != null)
+                return;
+        }
+        
         try {
             String address = authServerURL();
             InetAddress inetAddress = InetAddress.getByName(address);
+            
+            //Create new connection
             ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
-            connection.setPacketListener(new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
-                FiguraMod.LOGGER.log(Level.ERROR, text.toString());
-            }));
+            
+            //Set listener/handler
+            connection.setPacketListener(
+                    new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
+                        FiguraMod.LOGGER.log(Level.ERROR, text.toString());
+                    }) {
+                        
+                        //Handle disconnect message
+                        @Override
+                        public void onDisconnected(Text reason) {
+                            try {
+                                Text dcReason = connection.getDisconnectReason();
+
+                                if (dcReason != null) {
+                                    Text tc = dcReason;
+                                    parseKickAuthMessage(tc);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            
+                            //Once connection is closed, yeet this connection so we can make new ones.
+                            authConnection = null;
+                            
+                            synchronized (authWaitObject) {
+                                authWaitObject.notifyAll();
+                            }
+                        }
+                    });
+            
+            //Send packets.
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
-
-            while (connection.isOpen())
-                Thread.sleep(1);
-
-            Text dcReason = connection.getDisconnectReason();
-
-            if (dcReason != null) {
-                Text tc = dcReason;
-                parseKickAuthMessage(tc);
+            
+            synchronized (authWaitObject) {
+                //Wait for authentication to be done.
+                authConnection = connection;
+                authWaitObject.wait();
             }
         } catch (Exception e) {
             e.printStackTrace();
