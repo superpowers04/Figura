@@ -33,6 +33,11 @@ repositories {
 		name = "cloth config"
 		url = "https://maven.shedaniel.me/"
 	}*/
+
+	maven {
+		name = 'TerraformersMC'
+		url = 'https://maven.terraformersmc.com/releases/'
+	}
 }
 
 dependencies {
@@ -61,6 +66,9 @@ dependencies {
 	
 	//Origins
 	modImplementation "com.github.apace100:origins-fabric:${project.origins_version}"*/
+
+	//ModMenu
+	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
 	//WebSocket library
 	modImplementation 'com.neovisionaries:nv-websocket-client:2.14'

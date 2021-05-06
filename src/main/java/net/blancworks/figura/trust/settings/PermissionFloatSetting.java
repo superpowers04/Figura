@@ -71,9 +71,6 @@ public class PermissionFloatSetting extends PermissionSetting {
 
         this.value = (float) MathHelper.lerp((float) value, min, max);
 
-        if (allowInfinity && this.value >= max)
-            this.value = Float.MAX_VALUE;
-
         if (stepSize > 0)
             this.value = (float) (Math.floor(this.value / stepSize) * stepSize);
 
@@ -82,6 +79,9 @@ public class PermissionFloatSetting extends PermissionSetting {
 
         //Finally, clamp value.
         this.value = (float) MathHelper.clamp(this.value, min, max);
+
+        if (allowInfinity && this.value >= max)
+            this.value = Integer.MAX_VALUE - 100;
     }
     
     public float getSliderValue(){

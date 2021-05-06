@@ -67,15 +67,15 @@ public class InGameHudMixin {
 
                 if (currentData != null && currentData.model != null && (boolean) Config.entries.get("chatMark").value) {
                     if (PlayerDataManager.getDataForPlayer(senderUuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                        playerName.append(" ").append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                        playerName.append(new LiteralText(" △").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
                     }
                     else {
-                        playerName.append(" ").append(new LiteralText("▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                        playerName.append(new LiteralText(" ▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
                     }
                 }
 
                 if (FiguraMod.special.contains(senderUuid) && (boolean) Config.entries.get("chatMark").value)
-                    playerName.append(" ").append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                    playerName.append(new LiteralText(" ✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
             }
         }
     }

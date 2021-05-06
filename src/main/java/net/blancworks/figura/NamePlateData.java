@@ -15,17 +15,6 @@ public class NamePlateData {
     public byte chatTextProperties = 0b1000000;
     public byte listTextProperties = 0b1000000;
 
-    public NamePlateData(String text, Vector3f position, boolean enabled, int rgb) {
-        this.text = text;
-        this.chatText = text;
-        this.listText = text;
-        this.position = position;
-        this.enabled = enabled;
-        this.RGB = rgb;
-        this.chatRGB = rgb;
-        this.listRGB = rgb;
-    }
-
     public NamePlateData() {
         this.text = "%n";
         this.chatText = "%n";
