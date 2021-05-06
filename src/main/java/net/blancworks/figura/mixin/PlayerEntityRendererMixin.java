@@ -168,17 +168,24 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         else
             font = Style.DEFAULT_FONT_ID;
 
-        if (currentData != null && currentData.model != null && (boolean) Config.entries.get("nameTagMark").value) {
-            if (currentData.model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                ((LiteralText) text).append(new LiteralText(" △").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
-            }
-            else {
-                ((LiteralText) text).append(new LiteralText(" ▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
-            }
-        }
+        if ((boolean) Config.entries.get("nameTagMark").value) {
+            LiteralText badges = new LiteralText("");
 
-        if (FiguraMod.special.contains(entity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
-            ((LiteralText) text).append(new LiteralText(" ✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+            if (currentData != null && currentData.model != null) {
+                if (currentData.model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
+                    badges.append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                } else {
+                    badges.append(new LiteralText("▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                }
+            }
+
+            if (FiguraMod.special.contains(entity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
+                badges.append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+
+            //apply badges
+            if (!badges.getString().equals(""))
+                ((LiteralText) text).append(new LiteralText(" ").append(badges));
+        }
 
         matrices.push();
         matrices.translate(translateX, translateY, translateZ);

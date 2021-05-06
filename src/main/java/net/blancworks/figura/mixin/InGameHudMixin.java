@@ -65,17 +65,25 @@ public class InGameHudMixin {
                     playerName.setStyle(style);
                 }
 
-                if (currentData != null && currentData.model != null && (boolean) Config.entries.get("chatMark").value) {
-                    if (PlayerDataManager.getDataForPlayer(senderUuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                        playerName.append(new LiteralText(" △").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
-                    }
-                    else {
-                        playerName.append(new LiteralText(" ▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
-                    }
-                }
+                if ((boolean) Config.entries.get("chatMark").value) {
+                    LiteralText badges = new LiteralText("");
 
-                if (FiguraMod.special.contains(senderUuid) && (boolean) Config.entries.get("chatMark").value)
-                    playerName.append(new LiteralText(" ✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                    if (currentData != null && currentData.model != null) {
+                        if (PlayerDataManager.getDataForPlayer(senderUuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
+                            badges.append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                        }
+                        else {
+                            badges.append(new LiteralText("▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+                        }
+                    }
+
+                    if (FiguraMod.special.contains(senderUuid) && (boolean) Config.entries.get("chatMark").value)
+                        badges.append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
+
+                    //apply badges
+                    if (!badges.getString().equals(""))
+                        playerName.append(new LiteralText(" ").append(badges));
+                }
             }
         }
     }

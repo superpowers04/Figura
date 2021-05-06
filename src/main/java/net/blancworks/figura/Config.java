@@ -1,5 +1,7 @@
 package net.blancworks.figura;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.BufferedReader;
@@ -12,7 +14,7 @@ import java.util.Map;
 public class Config {
     public static final Map<String, ConfigEntry> entries = new HashMap<>();
 
-    private static final File file = new File(FabricLoader.getInstance().getConfigDir().resolve("figura.properties").toString());
+    private static final File file = new File(FabricLoader.getInstance().getConfigDir().resolve("figura.json").toString());
 
     public static void initialize() {
         setDefaults();
@@ -22,37 +24,33 @@ public class Config {
 
     public static void loadConfig() {
         try {
-            if(file.exists()) {
+            if (file.exists()) {
                 BufferedReader br = new BufferedReader(new FileReader(file));
-                String line = br.readLine();
+                JsonObject json = new JsonParser().parse(br).getAsJsonObject();
 
-                while (line != null) {
-                    String[] content = line.split("=");
+                for (Map.Entry<String, ConfigEntry> entryMap : entries.entrySet()) {
 
-                    if (content.length >= 2 && line.charAt(0) != '#') {
-                        if (entries.containsKey(content[0])) {
+                    String jsonValue = json.getAsJsonPrimitive(entryMap.getKey()).getAsString();
 
-                            ConfigEntry entry = entries.get(content[0]);
-                            try {
-                                if (entry.modValue != null) {
-                                    int value = Integer.parseInt(content[1]) % (int) entry.modValue;
-                                    if (value < 0) value += (int) entry.modValue;
+                    ConfigEntry entry = entryMap.getValue();
+                    entry.setValue(jsonValue);
 
-                                    entry.setValue(String.valueOf(value));
-                                } else {
-                                    entry.setValue(content[1]);
-                                }
-                            } catch (Exception e) {
-                                entry.value = entry.defaultValue;
-                            }
+                    try {
+                        if (entry.modValue != null) {
+                            int value = Integer.parseInt(jsonValue) % (int) entry.modValue;
+                            if (value < 0) value += (int) entry.modValue;
+                            entry.setValue(String.valueOf(value));
+                        } else {
+                            entry.setValue(jsonValue);
                         }
+                    } catch (Exception e) {
+                        entry.value = entry.defaultValue;
                     }
-                    line = br.readLine();
                 }
+
                 br.close();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             FiguraMod.LOGGER.warn("Failed to load config file! Generating a new one...");
             e.printStackTrace();
             setDefaults();
@@ -62,15 +60,23 @@ public class Config {
 
     public static void saveConfig() {
         try {
-            FileWriter writer = new FileWriter(file);
+            JsonObject config = new JsonObject();
 
             for (Map.Entry<String, ConfigEntry> entry : entries.entrySet()) {
-                writer.write(entry.getKey() + "=" + entry.getValue().value + "\n");
+                if (entry.getValue().value instanceof Number)
+                    config.addProperty(entry.getKey(), (Number) entry.getValue().value);
+                else if (entry.getValue().value instanceof Boolean)
+                    config.addProperty(entry.getKey(), (boolean) entry.getValue().value);
+                else
+                    config.addProperty(entry.getKey(), String.valueOf(entry.getValue().value));
             }
 
-            writer.close();
-        }
-        catch (Exception e) {
+            FileWriter fileWriter = new FileWriter(file);
+            String jsonString = config.toString().replaceAll(":",": ").replaceAll(",",",\n  ").replaceAll("\\{","{\n  ").replaceAll("}","\n}");
+
+            fileWriter.write(jsonString);
+            fileWriter.close();
+        } catch (Exception e) {
             FiguraMod.LOGGER.error("Failed to save config file!");
             e.printStackTrace();
         }
@@ -140,5 +146,31 @@ public class Config {
 
             configValue = value;
         }
+    }
+
+    //returns true if modmenu shifts other buttons on the game menu screen
+    public static boolean modmenuButton() {
+        if (FabricLoader.getInstance().isModLoaded("modmenu")) {
+            File file = new File(FabricLoader.getInstance().getConfigDir().resolve("modmenu.json").toString());
+
+            try {
+                if (file.exists()) {
+                    BufferedReader br = new BufferedReader(new FileReader(file));
+                    JsonObject json = new JsonParser().parse(br).getAsJsonObject();
+
+                    String config = json.getAsJsonPrimitive("mods_button_style").getAsString();
+
+                    br.close();
+
+                    if (!config.equals("shrink") && !config.equals("icon")) {
+                        return true;
+                    }
+                }
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
+        return false;
     }
 }

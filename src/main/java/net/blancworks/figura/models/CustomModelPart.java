@@ -89,7 +89,7 @@ public class CustomModelPart {
             //render shader groups
 
             //end portal
-            filterParts(this, ShaderType.EndPortal);
+            excludeFilterParts(this, ShaderType.EndPortal);
 
             for (int i = 0; i < 16; i++) {
                 VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i + 1));
@@ -108,6 +108,11 @@ public class CustomModelPart {
             return ret;
         }
         return 0;
+    }
+
+    public int renderUsingAllTexturesFiltered(Object filter, PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        filterParts(this, filter);
+        return renderUsingAllTextures(data, matrices, vcp, light, overlay, alpha);
     }
 
     public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float alpha) {
@@ -333,18 +338,54 @@ public class CustomModelPart {
         }
         else {
             //filter not found, then no elements should render
-            setRenderStatus(part, false);
+            unmatched = true;
         }
 
         if (unmatched) {
             //flag it to dont render
-            setRenderStatus(part, false);
+            part.shouldRender = false;
 
             //if is a group, enable the group rendering and iterate through its children
             if (!(part instanceof CustomModelPartCuboid) && !(part instanceof CustomModelPartMesh)) {
                 part.shouldRender = true;
                 for (CustomModelPart child : part.children) {
                     filterParts(child, filter);
+                }
+            }
+        }
+    }
+
+    public void excludeFilterParts(CustomModelPart part, Object filter) {
+        //error temp variable
+        boolean unmatched = false;
+
+        //check for filter type, then flag to render if the property matches the filter
+        if (filter instanceof ParentType) {
+            if (part.parentType != filter)
+                unmatched = true;
+        }
+        else if (filter instanceof ShaderType) {
+            if (part.shaderType != filter)
+                unmatched = true;
+        }
+        else if (filter instanceof RenderType) {
+            if (part.renderType != filter)
+                unmatched = true;
+        }
+        else {
+            //filter not found, then no elements should render
+            unmatched = true;
+        }
+
+        if (unmatched) {
+            //flag it to dont render
+            part.shouldRender = false;
+
+            //if is a group, enable the group rendering and iterate through its children
+            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof CustomModelPartMesh)) {
+                part.shouldRender = true;
+                for (CustomModelPart child : part.children) {
+                    excludeFilterParts(child, filter);
                 }
             }
         }

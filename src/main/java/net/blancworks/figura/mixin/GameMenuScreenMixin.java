@@ -2,7 +2,6 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.gui.screen.GameMenuScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -51,6 +50,12 @@ public class GameMenuScreenMixin extends Screen {
         }
 
         if (config != 4) {
+            try {
+                if (Config.modmenuButton()) {
+                    y -= 12;
+                }
+            } catch (Exception ignored) {}
+
             addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
                     btn -> this.client.openScreen(figura$screen)));
         }
