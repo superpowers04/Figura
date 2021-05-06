@@ -134,7 +134,7 @@ public class NamePlateAPI {
                         return NIL;
                     }
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg.checktable());
-                    data.RGB = ((Math.round(fas.getFloat(0)) & 0xFF) << 16) | ((Math.round(fas.getFloat(1)) & 0xFF) << 8) | (Math.round(fas.getFloat(2)) & 0xFF);
+                    data.RGB = ((Math.round(fas.getFloat(0) * 255) & 0xFF) << 16) | ((Math.round(fas.getFloat(1) * 255) & 0xFF) << 8) | (Math.round(fas.getFloat(2) * 255) & 0xFF);
                     return NIL;
                 }
             });
@@ -142,9 +142,9 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable val = new LuaTable();
-                    val.set("r", data.RGB >> 16 & 0xFF);
-                    val.set("g", data.RGB >> 8 & 0xFF);
-                    val.set("b", data.RGB & 0xFF);
+                    val.set("r", (data.RGB >> 16 & 0xFF) / 255);
+                    val.set("g", (data.RGB >> 8 & 0xFF) / 255);
+                    val.set("b", (data.RGB & 0xFF) / 255);
                     return val;
                 }
             });
@@ -157,7 +157,7 @@ public class NamePlateAPI {
                         return NIL;
                     }
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg.checktable());
-                    data.chatRGB = ((Math.round(fas.getFloat(0)) & 0xFF) << 16) | ((Math.round(fas.getFloat(1)) & 0xFF) << 8) | (Math.round(fas.getFloat(2)) & 0xFF);
+                    data.chatRGB = ((Math.round(fas.getFloat(0) * 255) & 0xFF) << 16) | ((Math.round(fas.getFloat(1) * 255) & 0xFF) << 8) | (Math.round(fas.getFloat(2) * 255) & 0xFF);
                     return NIL;
                 }
             });
@@ -165,9 +165,9 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable val = new LuaTable();
-                    val.set("r", data.chatRGB >> 16 & 0xFF);
-                    val.set("g", data.chatRGB >> 8 & 0xFF);
-                    val.set("b", data.chatRGB & 0xFF);
+                    val.set("r", (data.chatRGB >> 16 & 0xFF) / 255);
+                    val.set("g", (data.chatRGB >> 8 & 0xFF) / 255);
+                    val.set("b", (data.chatRGB & 0xFF) / 255);
                     return val;
                 }
             });
@@ -180,7 +180,7 @@ public class NamePlateAPI {
                         return NIL;
                     }
                     FloatArrayList fas = LuaUtils.getFloatsFromTable(arg.checktable());
-                    data.listRGB = ((Math.round(fas.getFloat(0)) & 0xFF) << 16) | ((Math.round(fas.getFloat(1)) & 0xFF) << 8) | (Math.round(fas.getFloat(2)) & 0xFF);
+                    data.listRGB = ((Math.round(fas.getFloat(0) * 255) & 0xFF) << 16) | ((Math.round(fas.getFloat(1) * 255) & 0xFF) << 8) | (Math.round(fas.getFloat(2) * 255) & 0xFF);
                     return NIL;
                 }
             });
@@ -188,9 +188,9 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable val = new LuaTable();
-                    val.set("r", data.listRGB >> 16 & 0xFF);
-                    val.set("g", data.listRGB >> 8 & 0xFF);
-                    val.set("b", data.listRGB & 0xFF);
+                    val.set("r", (data.listRGB >> 16 & 0xFF) / 255);
+                    val.set("g", (data.listRGB >> 8 & 0xFF) / 255);
+                    val.set("b", (data.listRGB & 0xFF) / 255);
                     return val;
                 }
             });
