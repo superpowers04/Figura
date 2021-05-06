@@ -62,6 +62,20 @@ public class MetaAPI {
                     return LuaValue.valueOf(script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID));
                 }
             });
+
+            set("getDoesRenderOffscreen", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_OFFSCREEN_RENDERING));
+                }
+            });
+
+            set("getCanModifyNameplate", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID));
+                }
+            });
         }});
     
         return producedTable;
