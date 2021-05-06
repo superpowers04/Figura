@@ -1,5 +1,6 @@
 package net.blancworks.figura.mixin;
 
+import com.terraformersmc.modmenu.config.ModMenuConfig;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.fabricmc.loader.api.FabricLoader;
@@ -51,6 +52,9 @@ public class GameMenuScreenMixin extends Screen {
         }
 
         if (config != 4) {
+            if (ModMenuConfig.MODS_BUTTON_STYLE.getValue() != ModMenuConfig.ModsButtonStyle.SHRINK && ModMenuConfig.MODS_BUTTON_STYLE.getValue() != ModMenuConfig.ModsButtonStyle.ICON)
+                y -= 12;
+
             addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
                     btn -> this.client.openScreen(figura$screen)));
         }

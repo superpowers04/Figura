@@ -142,9 +142,9 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable val = new LuaTable();
-                    val.set("r", (data.RGB >> 16 & 0xFF) / 255);
-                    val.set("g", (data.RGB >> 8 & 0xFF) / 255);
-                    val.set("b", (data.RGB & 0xFF) / 255);
+                    val.set("r", (data.RGB >> 16 & 0xFF) / 255.0f);
+                    val.set("g", (data.RGB >> 8 & 0xFF) / 255.0f);
+                    val.set("b", (data.RGB & 0xFF) / 255.0f);
                     return val;
                 }
             });
@@ -165,9 +165,9 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable val = new LuaTable();
-                    val.set("r", (data.chatRGB >> 16 & 0xFF) / 255);
-                    val.set("g", (data.chatRGB >> 8 & 0xFF) / 255);
-                    val.set("b", (data.chatRGB & 0xFF) / 255);
+                    val.set("r", (data.chatRGB >> 16 & 0xFF) / 255.0f);
+                    val.set("g", (data.chatRGB >> 8 & 0xFF) / 255.0f);
+                    val.set("b", (data.chatRGB & 0xFF) / 255.0f);
                     return val;
                 }
             });
@@ -188,9 +188,9 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable val = new LuaTable();
-                    val.set("r", (data.listRGB >> 16 & 0xFF) / 255);
-                    val.set("g", (data.listRGB >> 8 & 0xFF) / 255);
-                    val.set("b", (data.listRGB & 0xFF) / 255);
+                    val.set("r", (data.listRGB >> 16 & 0xFF) / 255.0f);
+                    val.set("g", (data.listRGB >> 8 & 0xFF) / 255.0f);
+                    val.set("b", (data.listRGB & 0xFF) / 255.0f);
                     return val;
                 }
             });
