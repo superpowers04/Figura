@@ -154,6 +154,7 @@ public final class PlayerDataManager {
     }
 
     public static void clearLocalPlayer() {
+        if (localPlayer == null) return;
         LOADED_PLAYER_DATA.remove(localPlayer.playerId);
         localPlayer = null;
         didInitLocalPlayer = false;
