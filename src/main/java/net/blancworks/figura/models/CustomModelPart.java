@@ -56,6 +56,8 @@ public class CustomModelPart {
 
     public RenderType renderType = RenderType.None;
 
+    public float alpha = 1.0f;
+
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
@@ -64,9 +66,8 @@ public class CustomModelPart {
     public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
 
-            //render only heads in spectator
-            if (data.lastEntity != null && data.lastEntity.isSpectator())
-                filterParts(this, ParentType.Head);
+            //apply part alpha value
+            alpha = this.alpha * alpha;
 
             //Store this value for extra textures
             int prevLeftToRender = data.model.leftToRender;
@@ -122,7 +123,7 @@ public class CustomModelPart {
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
     public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
-        //Don't render invisible parts.
+        //Don't render filtered parts.
         if (!this.visible || !this.shouldRender) {
             return leftToRender;
         }
@@ -277,11 +278,14 @@ public class CustomModelPart {
                 break;
 
             //Don't render special parts.
-            if (child.isParentSpecial() || !child.shouldRender)
+            if (child.isParentSpecial())
                 continue;
 
+            //set child alpha
+            float childAlpha = alpha + child.alpha - 1;
+
             //render part
-            leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor, alpha);
+            leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor, childAlpha);
         }
 
         matrices.pop();
@@ -289,14 +293,15 @@ public class CustomModelPart {
     }
 
     public int getComplexity() {
-        int complexity = 0;
+        //don't render filtered parts
+        if (!this.visible || !this.shouldRender || this.isParentSpecial()) {
+            return 0;
+        }
 
-        complexity += this.vertexCount;
+        int complexity = this.vertexCount;
 
+        //iterate over children
         for (CustomModelPart child : this.children) {
-            if (child.isParentSpecial() || !child.shouldRender)
-                continue;
-
             complexity += child.getComplexity();
         }
 
@@ -487,6 +492,10 @@ public class CustomModelPart {
             this.vOffset = uvOffsetNbt.getFloat(1);
         }
 
+        if (partNbt.contains("alp")) {
+            this.alpha = partNbt.getFloat("alp");
+        }
+
         if (partNbt.contains("stype")) {
             try {
                 this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
@@ -538,6 +547,10 @@ public class CustomModelPart {
 
         if (!this.visible) {
             partNbt.put("vsb", ByteTag.of(false));
+        }
+
+        if (this.alpha != 1.0f) {
+            partNbt.put("alp", FloatTag.of(this.alpha));
         }
 
         if (this.shaderType != ShaderType.None) {

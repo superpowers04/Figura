@@ -200,9 +200,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
             String address = getMinecraftAuthServerAddress();
             InetAddress inetAddress = InetAddress.getByName(address);
             ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
-            connection.setPacketListener(new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
-                FiguraMod.LOGGER.log(Level.ERROR, text.toString());
-            }));
+            connection.setPacketListener(new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> FiguraMod.LOGGER.info(text.toString())));
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
 
@@ -334,7 +332,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
 
                     outStream.close();
 
-                    FiguraMod.LOGGER.log(Level.DEBUG, httpURLConnection.getResponseMessage());
+                    FiguraMod.LOGGER.info(httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -377,7 +375,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
 
                     PlayerDataManager.clearLocalPlayer();
 
-                    FiguraMod.LOGGER.log(Level.DEBUG, httpURLConnection.getResponseMessage());
+                    FiguraMod.LOGGER.info(httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

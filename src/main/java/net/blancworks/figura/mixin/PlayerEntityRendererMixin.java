@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.*;
 import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.gui.SetText;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -34,6 +35,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 @Mixin(PlayerEntityRenderer.class)
 public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
@@ -124,71 +126,43 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
     private<T extends Entity> void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
 
+        if (!(boolean) Config.entries.get("nameTagMods").value)
+            return;
+
         float f = entity.getHeight() + 0.5F;
         float translateX = 0.0f;
         float translateY = f;
         float translateZ = 0.0f;
 
-        PlayerData currentData = FiguraMod.currentData;
+        float scaleX = 1.0f;
+        float scaleY = 1.0f;
+        float scaleZ = 1.0f;
+
+        //apply special nameplate settings
+        PlayerData currentData = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
         if (currentData != null && currentData.script != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
             NamePlateData data = currentData.script.nameplate;
-            if (!data.enabled) return;
-            String formattedText = data.text
-                    .replace("%n", text.getString())
-                    .replace("%h", String.valueOf(Math.round(entity.getHealth())))
-                    .replace("%u", entity.getName().getString());
-            Style style = text.getStyle();
-            if (style.getColor() == null) {
-                style = style.withColor(TextColor.fromRgb(data.RGB));
-            }
-            if ((data.textProperties & 0b10000000) != 0b10000000) {
-                style = style.withBold((data.textProperties & 0b00000001) == 0b0000001)
-                        .withItalic((data.textProperties & 0b00000010) == 0b0000010)
-                        .withUnderline((data.textProperties & 0b00000100) == 0b0000100);
-                if ((data.textProperties & 0b00001000) == 0b00001000) {
-                    style = style.withFormatting(Formatting.STRIKETHROUGH);
-                }
-                if ((data.textProperties & 0b00010000) == 0b0010000) {
-                    style = style.withFormatting(Formatting.OBFUSCATED);
-                }
+
+            if (!data.enabled) {
+                ci.cancel();
+                return;
             }
 
-            text = new LiteralText("");
-            ((LiteralText) text).append(new LiteralText(formattedText).setStyle(style));
+            translateX += data.position.getX();
+            translateY += data.position.getY();
+            translateZ += data.position.getZ();
 
-            translateX += currentData.script.nameplate.position.getX();
-            translateY += currentData.script.nameplate.position.getY();
-            translateZ += currentData.script.nameplate.position.getZ();
+            scaleX = data.scale.getX();
+            scaleY = data.scale.getY();
+            scaleZ = data.scale.getZ();
         }
 
-        //add badges
-        Identifier font;
-        if ((boolean) Config.entries.get("nameTagIcon").value)
-            font = FiguraMod.FIGURA_FONT;
-        else
-            font = Style.DEFAULT_FONT_ID;
-
-        if ((boolean) Config.entries.get("nameTagMark").value) {
-            LiteralText badges = new LiteralText("");
-
-            if (currentData != null && currentData.model != null) {
-                if (currentData.model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                    badges.append(new LiteralText("△").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
-                } else {
-                    badges.append(new LiteralText("▲").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
-                }
-            }
-
-            if (FiguraMod.special.contains(entity.getUuid()) && (boolean) Config.entries.get("nameTagMark").value)
-                badges.append(new LiteralText("✭").setStyle(Style.EMPTY.withFont(font).withColor(TextColor.parse("white"))));
-
-            //apply badges
-            if (!badges.getString().equals(""))
-                ((LiteralText) text).append(new LiteralText(" ").append(badges));
-        }
+        //apply nameplate changes
+        figura$applyFormattingRecursive((LiteralText) text, entity.getGameProfile().getId(), entity.getEntityName());
 
         matrices.push();
         matrices.translate(translateX, translateY, translateZ);
+        matrices.scale(scaleX, scaleY, scaleZ);
 
         //render scoreboard
         double d = this.dispatcher.getSquaredDistanceToCamera(entity);
@@ -225,6 +199,120 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         matrices.pop();
 
         ci.cancel();
+    }
+
+    public boolean figura$applyFormattingRecursive(LiteralText text, UUID uuid, String playerName) {
+        //save siblings
+        ArrayList<Text> siblings = new ArrayList<>(text.getSiblings());
+
+        //if contains playername
+        if (text.getRawString().contains(playerName)) {
+
+            //save style
+            Style style = text.getStyle();
+
+            //split the text
+            String[] textSplit = text.getRawString().split(playerName, 2);
+
+            Text playerNameSplitted = new LiteralText(playerName).setStyle(style);
+
+            //transform the text
+            Text transformed = figura$applyFiguraNameplateFormatting(playerNameSplitted, uuid);
+
+            //return the text
+            if (!textSplit[0].equals("")) {
+                ((SetText) text).figura$setText(textSplit[0]);
+                text.setStyle(style);
+                text.append(transformed);
+            }
+            else {
+                ((SetText) text).figura$setText(((LiteralText) transformed).getRawString());
+                text.setStyle(transformed.getStyle());
+                transformed.getSiblings().forEach(((LiteralText) text)::append);
+            }
+            if (!textSplit[1].equals("")) {
+                text.append(textSplit[1]).setStyle(style);
+            }
+
+            //append siblings back
+            siblings.forEach(((LiteralText) text)::append);
+
+            return true;
+        }
+        else {
+            //iterate over children
+            for (Text sibling : siblings) {
+                if (figura$applyFormattingRecursive((LiteralText) sibling, uuid, playerName))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    public Text figura$applyFiguraNameplateFormatting(Text text, UUID uuid) {
+        LiteralText formattedText = new LiteralText(text.getString());
+
+        PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
+        if (currentData != null && currentData.script != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
+            NamePlateData data = currentData.script.nameplate;
+            Style style = text.getStyle();
+
+            String formattedString = data.text
+                    .replace("%n", text.getString())
+                    .replace("%u", text.getString());
+            if (data.RGB != -1) {
+                style = style.withColor(TextColor.fromRgb(data.RGB));
+            }
+            if ((data.textProperties & 0b10000000) != 0b10000000) {
+                if ((data.textProperties & 0b0000001) == 0b0000001 && !style.isBold()) {
+                    style = style.withBold(true);
+                }
+                if ((data.textProperties & 0b0000010) == 0b0000010 && !style.isItalic()) {
+                    style = style.withItalic(true);
+                }
+                if ((data.textProperties & 0b00000100) == 0b00000100 && !style.isUnderlined()) {
+                    style = style.withUnderline(true);
+                }
+                if ((data.textProperties & 0b00001000) == 0b00001000 && !style.isStrikethrough()) {
+                    style = style.withFormatting(Formatting.STRIKETHROUGH);
+                }
+                if ((data.textProperties & 0b00010000) == 0b0010000 && !style.isObfuscated()) {
+                    style = style.withFormatting(Formatting.OBFUSCATED);
+                }
+            }
+            ((SetText) formattedText).figura$setText(formattedString);
+            formattedText.setStyle(style);
+        }
+
+        Identifier font;
+        if ((boolean) Config.entries.get("nameTagIcon").value)
+            font = FiguraMod.FIGURA_FONT;
+        else
+            font = Style.DEFAULT_FONT_ID;
+
+        LiteralText badges = new LiteralText(" ");
+        badges.setStyle(Style.EMPTY
+                .withExclusiveFormatting(Formatting.WHITE)
+                .withFont(font)
+        );
+
+        if (currentData != null && currentData.model != null) {
+            if (PlayerDataManager.getDataForPlayer(uuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
+                badges.append(new LiteralText("△"));
+            } else {
+                badges.append(new LiteralText("▲"));
+            }
+        }
+
+        if (FiguraMod.special.contains(uuid))
+            badges.append(new LiteralText("✭"));
+
+        //apply badges
+        if (!badges.getString().equals(" "))
+            formattedText.append(badges);
+
+        return formattedText;
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm")

@@ -49,17 +49,16 @@ public class CustomModel extends FiguraAsset {
 
     public int getRenderComplexity() {
         lastComplexity = 0;
-        for (CustomModelPart part : allParts) {
 
-            if (part.isParentSpecial())
-                continue;
-
-            try {
-                lastComplexity = part.getComplexity();
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            for (CustomModelPart part : allParts) {
+                lastComplexity += part.getComplexity();
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Integer.MAX_VALUE - 100;
         }
+
         return lastComplexity;
     }
 
@@ -79,7 +78,7 @@ public class CustomModel extends FiguraAsset {
 
         for (CustomModelPart part : allParts) {
 
-            if (part.isParentSpecial())
+            if (part.isParentSpecial() || !part.shouldRender || !part.visible)
                 continue;
 
             matrices.push();
@@ -90,7 +89,13 @@ public class CustomModel extends FiguraAsset {
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
 
-                leftToRender = part.renderUsingAllTextures(owner, matrices, vcp, light, overlay, alpha);
+                //render only heads in spectator
+                if (owner.lastEntity != null && owner.lastEntity.isSpectator()) {
+                    leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.Head, owner, matrices, vcp, light, overlay, alpha);
+                }
+                else {
+                    leftToRender = part.renderUsingAllTextures(owner, matrices, vcp, light, overlay, alpha);
+                }
 
                 lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
             } catch (Exception e) {

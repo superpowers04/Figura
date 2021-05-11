@@ -10,7 +10,7 @@ public class DebugMessageHandler extends MessageHandler {
         super.handleMessage(stream);
 
         try {
-            FiguraMod.LOGGER.warn(stream.readInt());
+            FiguraMod.LOGGER.info(stream.readInt());
         } catch (Exception e) {
             e.printStackTrace();
         }

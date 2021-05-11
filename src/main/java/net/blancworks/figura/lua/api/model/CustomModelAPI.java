@@ -4,15 +4,9 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.models.CustomModelPart;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec2f;
-import org.luaj.vm2.LuaBoolean;
-import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
@@ -204,6 +198,21 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     targetPart.shaderType = CustomModelPart.ShaderType.valueOf(arg1.checkjstring());
+                    return NIL;
+                }
+            });
+
+            ret.set("getOpacity", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(targetPart.alpha);
+                }
+            });
+
+            ret.set("setOpacity", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    targetPart.alpha = Math.max(0f, Math.min(arg1.checknumber().tofloat(), 1f));
                     return NIL;
                 }
             });

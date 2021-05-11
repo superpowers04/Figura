@@ -3,33 +3,62 @@ package net.blancworks.figura.mixin;
 import net.blancworks.figura.*;
 import net.blancworks.figura.gui.SetText;
 import net.blancworks.figura.trust.PlayerTrustManager;
-import net.minecraft.client.gui.hud.PlayerListHud;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.gui.hud.ChatHudListener;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.network.MessageType;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Util;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.UUID;
 
-@Mixin(PlayerListHud.class)
-public class PlayerListHudMixin {
+@Mixin(ChatHudListener.class)
+public class ChatHudListenerMixin {
 
-    @Inject(at = @At("RETURN"), method = "getPlayerName", cancellable = true)
-    private void getPlayerName(PlayerListEntry entry, CallbackInfoReturnable<Text> cir) {
-        Text text = cir.getReturnValue();
+    @Shadow @Final private MinecraftClient client;
 
-        if ((boolean) Config.entries.get("listMods").value)
-            figura$applyFormattingRecursive((LiteralText) text, entry.getProfile().getId(), entry.getProfile().getName());
+    @Inject(method = "onChatMessage", at = @At("HEAD"))
+    private void onChatMessage(MessageType type, Text message, UUID senderUuid, CallbackInfo ci) {
+        if (senderUuid != Util.NIL_UUID && type == MessageType.CHAT && (boolean) Config.entries.get("chatMods").value) {
 
-        cir.setReturnValue(text);
+            //get player name
+            String playerName = "";
+
+            for (PlayerListEntry player : this.client.player.networkHandler.getPlayerList()) {
+                UUID entryUUID = player.getProfile().getId();
+
+                if (senderUuid.getLeastSignificantBits() == entryUUID.getLeastSignificantBits() && senderUuid.getMostSignificantBits() == entryUUID.getMostSignificantBits()) {
+                    playerName = player.getProfile().getName();
+                    break;
+                }
+            }
+
+            //player not found
+            if (playerName.equals(""))
+                return;
+
+            //apply formatting
+            if (message instanceof TranslatableText) {
+                Object[] args = ((TranslatableText) message).getArgs();
+
+                for (Object arg : args) {
+                    if (figura$applyFormattingRecursive((LiteralText) arg, senderUuid, playerName))
+                        break;
+                }
+            }
+            else {
+                figura$applyFormattingRecursive((LiteralText) message, senderUuid, playerName);
+            }
+        }
     }
 
     public boolean figura$applyFormattingRecursive(LiteralText text, UUID uuid, String playerName) {
@@ -89,26 +118,26 @@ public class PlayerListHudMixin {
             NamePlateData data = currentData.script.nameplate;
             Style style = text.getStyle();
 
-            String formattedString = data.listText
+            String formattedString = data.chatText
                     .replace("%n", text.getString())
                     .replace("%u", text.getString());
-            if (data.listRGB != -1) {
-                style = style.withColor(TextColor.fromRgb(data.listRGB));
+            if (data.chatRGB != -1) {
+                style = style.withColor(TextColor.fromRgb(data.chatRGB));
             }
-            if ((data.listTextProperties & 0b10000000) != 0b10000000) {
-                if ((data.listTextProperties & 0b0000001) == 0b0000001 && !style.isBold()) {
+            if ((data.chatTextProperties & 0b10000000) != 0b10000000) {
+                if ((data.chatTextProperties & 0b0000001) == 0b0000001 && !style.isBold()) {
                     style = style.withBold(true);
                 }
-                if ((data.listTextProperties & 0b0000010) == 0b0000010 && !style.isItalic()) {
+                if ((data.chatTextProperties & 0b0000010) == 0b0000010 && !style.isItalic()) {
                     style = style.withItalic(true);
                 }
-                if ((data.listTextProperties & 0b00000100) == 0b00000100 && !style.isUnderlined()) {
+                if ((data.chatTextProperties & 0b00000100) == 0b00000100 && !style.isUnderlined()) {
                     style = style.withUnderline(true);
                 }
-                if ((data.listTextProperties & 0b00001000) == 0b00001000 && !style.isStrikethrough()) {
+                if ((data.chatTextProperties & 0b00001000) == 0b00001000 && !style.isStrikethrough()) {
                     style = style.withFormatting(Formatting.STRIKETHROUGH);
                 }
-                if ((data.listTextProperties & 0b00010000) == 0b0010000 && !style.isObfuscated()) {
+                if ((data.chatTextProperties & 0b00010000) == 0b0010000 && !style.isObfuscated()) {
                     style = style.withFormatting(Formatting.OBFUSCATED);
                 }
             }

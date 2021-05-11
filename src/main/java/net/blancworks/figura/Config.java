@@ -29,18 +29,18 @@ public class Config {
                 JsonObject json = new JsonParser().parse(br).getAsJsonObject();
 
                 for (Map.Entry<String, ConfigEntry> entryMap : entries.entrySet()) {
-
-                    String jsonValue = json.getAsJsonPrimitive(entryMap.getKey()).getAsString();
-
                     ConfigEntry entry = entryMap.getValue();
-                    entry.setValue(jsonValue);
 
                     try {
+                        String jsonValue = json.getAsJsonPrimitive(entryMap.getKey()).getAsString();
+                        entry.setValue(jsonValue);
+
                         if (entry.modValue != null) {
                             int value = Integer.parseInt(jsonValue) % (int) entry.modValue;
                             if (value < 0) value += (int) entry.modValue;
                             entry.setValue(String.valueOf(value));
-                        } else {
+                        }
+                        else {
                             entry.setValue(jsonValue);
                         }
                     } catch (Exception e) {
@@ -93,13 +93,13 @@ public class Config {
     public static void setDefaults() {
         entries.clear();
         entries.put("previewNameTag", new ConfigEntry<>(true));
-        entries.put("nameTagMark", new ConfigEntry<>(true));
         entries.put("buttonLocation", new ConfigEntry<>(4, 5));
         entries.put("useNewNetwork", new ConfigEntry<>(true));
         entries.put("useLocalServer", new ConfigEntry<>(false));
         entries.put("scriptLog", new ConfigEntry<>(0, 3));
-        entries.put("listMark", new ConfigEntry<>(true));
-        entries.put("chatMark", new ConfigEntry<>(true));
+        entries.put("listMods", new ConfigEntry<>(true));
+        entries.put("chatMods", new ConfigEntry<>(true));
+        entries.put("nameTagMods", new ConfigEntry<>(true));
         entries.put("nameTagIcon", new ConfigEntry<>(true));
         entries.put("ownNameTag", new ConfigEntry<>(false));
     }

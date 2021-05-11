@@ -146,14 +146,14 @@ public class LocalPlayerData extends PlayerData {
 
                 cantLoad = (!hasModel && !hasPlayerModel) || !hasTexture;
             } catch (Exception e) {
-                FiguraMod.LOGGER.debug(e.toString());
+                e.printStackTrace();
                 cantLoad = true;
             }
         }
 
         //log and clear player model
         if (cantLoad) {
-            FiguraMod.LOGGER.error("Failed to load model " + fileName);
+            FiguraMod.LOGGER.warn("Failed to load model " + fileName);
             PlayerDataManager.clearLocalPlayer();
             return;
         }
@@ -222,7 +222,7 @@ public class LocalPlayerData extends PlayerData {
                 this.model = FiguraMod.GSON.fromJson(finalModelJsonText, CustomModel.class);
                 this.model.owner = this;
                 this.model.isDone = true;
-                FiguraMod.LOGGER.warn("Model Loading Finished");
+                FiguraMod.LOGGER.info("Model Loading Finished");
             });
         } catch (Exception e) {
             e.printStackTrace();

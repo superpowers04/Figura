@@ -61,14 +61,14 @@
   "gui.figura.config.previewnametag": "Show Preview NameTag",
   "gui.figura.config.tooltip.previewnametag": "Displays your NameTag on the model preview screen",
 
-  "gui.figura.config.nametagmark": "NameTag Figura Mark",
-  "gui.figura.config.tooltip.nametagmark": "Adds The Mark △ to the NameTag of players using Figura",
+  "gui.figura.config.nametagmods": "Player NameTag customizations",
+  "gui.figura.config.tooltip.nametagmods": "Allows the names of players be customized",
 
-  "gui.figura.config.listmark": "Player List Figura Mark",
-  "gui.figura.config.tooltip.listmark": "Adds The Mark △ to the tab list of players using Figura",
+  "gui.figura.config.chatmods": "Chat customizations",
+  "gui.figura.config.tooltip.chatmods": "Allows the names of players in the chat be customized",
 
-  "gui.figura.config.chatmark": "Chat Figura Mark",
-  "gui.figura.config.tooltip.chatmark": "Adds The Mark △ to the chat names of players using Figura",
+  "gui.figura.config.listmods": "Player List customizations",
+  "gui.figura.config.tooltip.listmods": "Allows the names of players in the tab list be customized",
 
   "gui.figura.config.usenewnetwork": "Use New Network",
   "gui.figura.config.tooltip.usenewnetwork": "Toggles between using the new or old network for online models",
@@ -94,5 +94,12 @@
   "gui.figura.config.tooltip.scriptlog": "Script debug log output location",
   "gui.figura.config.scriptlog.console_chat": "Console/Chat",
   "gui.figura.config.scriptlog.console": "Console",
-  "gui.figura.config.scriptlog.chat": "Chat"
+  "gui.figura.config.scriptlog.chat": "Chat",
+
+  "gui.figura.toast.upload.success.title": "Avatar Uploaded!",
+
+  "gui.figura.toast.upload.error.title": "Avatar Upload Failed!",
+  "gui.figura.toast.upload.error.many": "You have too many avatars!!",
+  "gui.figura.toast.upload.error.empty": "The avatar is empty!!",
+  "gui.figura.toast.upload.error.space": "Not enough space on server!!"
 }

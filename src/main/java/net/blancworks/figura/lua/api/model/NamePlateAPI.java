@@ -36,7 +36,6 @@ public class NamePlateAPI {
                     return LuaUtils.getTableFromVector3f(data.position);
                 }
             });
-
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
@@ -69,7 +68,25 @@ public class NamePlateAPI {
                     return NIL;
                 }
             });
+            ret.set("getScale", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaUtils.getTableFromVector3f(data.scale);
+                }
+            });
+            ret.set("setScale", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
+                    data.scale = new Vector3f(
+                            fas.getFloat(0),
+                            fas.getFloat(1),
+                            fas.getFloat(2)
+                    );
 
+                    return NIL;
+                }
+            });
 
             ret.set("setText", new OneArgFunction() {
                 @Override
