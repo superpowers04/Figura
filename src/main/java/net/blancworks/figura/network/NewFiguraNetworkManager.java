@@ -1,6 +1,7 @@
 package net.blancworks.figura.network;
 
-import com.neovisionaries.ws.client.*;
+import com.neovisionaries.ws.client.WebSocket;
+import com.neovisionaries.ws.client.WebSocketFactory;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;

@@ -4,23 +4,15 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
 import net.minecraft.world.World;
-import org.luaj.vm2.LuaBoolean;
-import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
-import org.luaj.vm2.lib.TwoArgFunction;
-import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.awt.*;
-import java.util.ArrayList;
 
 public class VectorAPI {
     private static ReadOnlyLuaTable globalLuaTable;

@@ -4,11 +4,10 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
@@ -208,6 +207,32 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("partToWorldPos", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    LuaVector v = LuaVector.checkOrNew(arg1);
+                    
+                    Vector4f v4f = new Vector4f(v.x()/16.0f, -(v.y()/16.0f), v.z()/16.0f, 1.0f);
+                    
+                    v4f.transform(targetPart.lastModelMatrix);
+                    
+                    return LuaVector.of(new Vector3f(v4f.getX(), v4f.getY(), v4f.getZ()));
+                }
+            });
+
+            ret.set("partToWorldDir", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    LuaVector v = LuaVector.checkOrNew(arg1);
+
+                    Vector3f v3f = new Vector3f(v.x()/16.0f, -(v.y()/16.0f), v.z()/16.0f);
+
+                    v3f.transform(targetPart.lastNormalMatrix);
+
+                    return LuaVector.of(v3f);
+                }
+            });
+            
             return ret;
         }
     }

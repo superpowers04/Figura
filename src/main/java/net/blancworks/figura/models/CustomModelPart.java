@@ -59,9 +59,12 @@ public class CustomModelPart {
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
+    
+    public Matrix4f lastModelMatrix;
+    public Matrix3f lastNormalMatrix;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
-    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+    public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
 
             //render only heads in spectator
@@ -73,7 +76,7 @@ public class CustomModelPart {
 
             //Render with main texture.
             VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
-            int ret = render(prevLeftToRender, matrices, mainTextureConsumer, light, overlay, alpha);
+            int ret = render(prevLeftToRender, matrices,transformStack, mainTextureConsumer, light, overlay, alpha);
 
             //Render extra textures (emission, that sort)
             for (FiguraTexture extraTexture : data.extraTextures) {
@@ -82,7 +85,7 @@ public class CustomModelPart {
                 if (renderLayerGetter != null) {
                     VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
 
-                    render(prevLeftToRender, matrices, extraTextureVertexConsumer, light, overlay, alpha);
+                    render(prevLeftToRender, matrices,transformStack, extraTextureVertexConsumer, light, overlay, alpha);
                 }
             }
 
@@ -93,14 +96,14 @@ public class CustomModelPart {
 
             for (int i = 0; i < 16; i++) {
                 VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i + 1));
-                render(prevLeftToRender, matrices, portalExtraConsumer, light, overlay, alpha);
+                render(prevLeftToRender, matrices,transformStack, portalExtraConsumer, light, overlay, alpha);
             }
 
             //glint
             filterParts(this, ShaderType.Glint);
 
             VertexConsumer glintConsumer = vcp.getBuffer(RenderLayer.getGlint());
-            render(prevLeftToRender, matrices, glintConsumer, light, overlay, alpha);
+            render(prevLeftToRender, matrices,transformStack, glintConsumer, light, overlay, alpha);
 
             //reset rendering status
             setRenderStatus(this, true);
@@ -110,25 +113,26 @@ public class CustomModelPart {
         return 0;
     }
 
-    public int renderUsingAllTexturesFiltered(Object filter, PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+    public int renderUsingAllTexturesFiltered(Object filter, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         filterParts(this, filter);
-        return renderUsingAllTextures(data, matrices, vcp, light, overlay, alpha);
+        return renderUsingAllTextures(data, matrices, transformStack, vcp, light, overlay, alpha);
     }
 
-    public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float alpha) {
-        return render(leftToRender, matrices, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1), alpha);
+    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float alpha) {
+        return render(leftToRender, matrices, transformStack, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1), alpha);
     }
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
-    public int render(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
+    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
         //Don't render invisible parts.
         if (!this.visible || !this.shouldRender) {
             return leftToRender;
         }
 
         matrices.push();
-
+        transformStack.push();
+        
         try {
             if (this.isMimicMode) {
                 PlayerEntityModel model = FiguraMod.currentData.vanillaModel;
@@ -162,26 +166,33 @@ public class CustomModelPart {
                 switch (parentType) {
                     case Head:
                         playerModel.head.rotate(matrices);
+                        playerModel.head.rotate(transformStack);
                         break;
                     case Torso:
                         playerModel.torso.rotate(matrices);
+                        playerModel.torso.rotate(transformStack);
                         break;
                     case LeftArm:
                         playerModel.leftArm.rotate(matrices);
+                        playerModel.leftArm.rotate(transformStack);
                         break;
                     case LeftLeg:
                         playerModel.leftLeg.rotate(matrices);
+                        playerModel.leftLeg.rotate(transformStack);
                         break;
                     case RightArm:
                         playerModel.rightArm.rotate(matrices);
+                        playerModel.rightArm.rotate(transformStack);
                         break;
                     case RightLeg:
                         playerModel.rightLeg.rotate(matrices);
+                        playerModel.rightLeg.rotate(transformStack);
                         break;
                     case LeftItemOrigin:
                         FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
                             applyTransformsAsItem(matrices);
+                            applyTransformsAsItem(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
                             matrices.pop();
@@ -191,6 +202,7 @@ public class CustomModelPart {
                         FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
                             applyTransformsAsItem(matrices);
+                            applyTransformsAsItem(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
                             matrices.pop();
@@ -200,6 +212,7 @@ public class CustomModelPart {
                         FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
                             applyTransformsAsElytra(matrices);
+                            applyTransformsAsElytra(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
                             matrices.pop();
@@ -209,6 +222,7 @@ public class CustomModelPart {
                         FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
                             applyTransformsAsElytra(matrices);
+                            applyTransformsAsElytra(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
                             matrices.pop();
@@ -221,7 +235,11 @@ public class CustomModelPart {
         }
 
         applyTransforms(matrices);
-
+        applyTransforms(transformStack);
+        
+        lastModelMatrix = transformStack.peek().getModel().copy();
+        lastNormalMatrix = transformStack.peek().getNormal().copy();
+        
         Matrix4f modelMatrix = matrices.peek().getModel();
         Matrix3f normalMatrix = matrices.peek().getNormal();
 
@@ -281,9 +299,10 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.render(leftToRender, matrices, vertices, light, overlay, u, v, tempColor, alpha);
+            leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, alpha);
         }
 
+        transformStack.pop();
         matrices.pop();
         return leftToRender;
     }

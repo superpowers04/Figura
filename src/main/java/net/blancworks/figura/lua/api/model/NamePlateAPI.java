@@ -8,7 +8,10 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
-import org.luaj.vm2.*;
+import org.luaj.vm2.LuaBoolean;
+import org.luaj.vm2.LuaString;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 

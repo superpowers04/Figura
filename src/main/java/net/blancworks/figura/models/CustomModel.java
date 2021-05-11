@@ -69,7 +69,12 @@ public class CustomModel extends FiguraAsset {
         return tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID);
     }
 
+    
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
+        render(player_model, matrices, new MatrixStack(), vcp, light, overlay, red, green, blue, alpha);
+    }
+
+    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, MatrixStack transformStack,  VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
         leftToRender = getMaxRenderAmount();
         int maxRender = leftToRender;
 
@@ -90,7 +95,7 @@ public class CustomModel extends FiguraAsset {
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
 
-                leftToRender = part.renderUsingAllTextures(owner, matrices, vcp, light, overlay, alpha);
+                leftToRender = part.renderUsingAllTextures(owner, matrices, transformStack, vcp, light, overlay, alpha);
 
                 lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
             } catch (Exception e) {
@@ -113,9 +118,9 @@ public class CustomModel extends FiguraAsset {
 
         for (CustomModelPart part : playerData.model.allParts) {
             if (arm == model.rightArm)
-                playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.RightArm, playerData, matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+                playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.RightArm, playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
             else if (arm == model.leftArm)
-                playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.LeftArm, playerData, matrices, vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+                playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.LeftArm, playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
         }
 
         playerData.model.leftToRender = prevCount;

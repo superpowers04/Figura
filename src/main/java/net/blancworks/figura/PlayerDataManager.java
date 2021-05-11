@@ -120,7 +120,7 @@ public final class PlayerDataManager {
 
                 targetData.loadFromNbt(dis);
                 targetData.lastHash = hash;
-                targetData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
+                targetData.lastHashCheckTime = new Date();
 
                 FiguraMod.LOGGER.debug("Used cached model.");
             }
@@ -195,7 +195,7 @@ public final class PlayerDataManager {
             return;
 
         Date checkDate = new Date();
-        if (checkDate.getTime() - data.lastHashCheckTime.getTime() > 1000 * 10) {
+        if (checkDate.getTime() - data.lastHashCheckTime.getTime() > 1000 * 15) {
             if (!TO_REFRESH_SET.contains(data.playerId)) {
                 TO_REFRESH_SET.add(data.playerId);
                 TO_REFRESH.add(data.playerId);

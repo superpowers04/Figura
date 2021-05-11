@@ -5,7 +5,6 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.ItemModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;

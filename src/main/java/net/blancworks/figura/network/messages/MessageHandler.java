@@ -2,7 +2,6 @@ package net.blancworks.figura.network.messages;
 
 import com.google.common.io.LittleEndianDataInputStream;
 
-import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;

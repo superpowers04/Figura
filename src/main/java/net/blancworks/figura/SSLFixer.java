@@ -2,7 +2,9 @@ package net.blancworks.figura;
 
 import net.fabricmc.loader.api.FabricLoader;
 
-import java.io.BufferedInputStream;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLHandshakeException;
+import javax.net.ssl.TrustManagerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -11,15 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyStore;
-import java.security.cert.Certificate;
-import java.security.cert.CertificateFactory;
-import java.security.cert.PKIXParameters;
-import java.security.cert.TrustAnchor;
-import java.security.cert.X509Certificate;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLHandshakeException;
-import javax.net.ssl.TrustManagerFactory;
+import java.security.cert.*;
 
 //Okay, so. If anyone's curious what this is, in the future.
 //tl;dr is that the bundled Java version of Minecraft doesn't come with the local certificates for trusting Let's Encrypt.

@@ -23,6 +23,7 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
@@ -212,7 +213,7 @@ public class FiguraMod implements ClientModInitializer {
 
                             if (data != null && data.model != null) {
                                 for (CustomModelPart part : data.model.worldParts) {
-                                    part.renderUsingAllTextures(data, context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
+                                    part.renderUsingAllTextures(data, context.matrixStack(), new MatrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
                                 }
                             }
 

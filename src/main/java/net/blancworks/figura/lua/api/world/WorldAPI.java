@@ -1,7 +1,6 @@
 package net.blancworks.figura.lua.api.world;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.world.block.BlockStateAPI;

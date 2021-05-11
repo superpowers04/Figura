@@ -66,8 +66,14 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
                 LuaTable tbl = l.checktable();
                 LuaVector v = of(tbl);
                 
-                for(int j = 0; j < tbl.length(); j++){
+                for(int j = 0; j < v._size(); j++){
                     fal.add(v.values[j]);
+                }
+            } else if (l instanceof LuaVector){
+                LuaVector vect = (LuaVector) l;
+                for(int j = 0; j < vect._size(); j++){
+                    float f = vect.values[j];
+                    fal.add(f);
                 }
             }
         }

@@ -1,13 +1,10 @@
 package net.blancworks.figura.lua.api.model;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;

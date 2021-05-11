@@ -131,7 +131,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         getLeftWing().rotate(matrices);
 
         for (CustomModelPart modelPart : data.model.leftElytraParts) {
-            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, actualConsumer, light, overlay, alpha);
+            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, new MatrixStack(), actualConsumer, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;
@@ -144,7 +144,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         getRightWing().rotate(matrices);
 
         for (CustomModelPart modelPart : data.model.rightElytraParts) {
-            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, actualConsumer, light, overlay, alpha);
+            data.model.leftToRender = modelPart.render(data.model.leftToRender, new MatrixStack(), new MatrixStack(), actualConsumer, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;

@@ -1,7 +1,5 @@
 package net.blancworks.figura.network;
 
-import net.blancworks.figura.PlayerData;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.Text;
 
 import java.util.UUID;

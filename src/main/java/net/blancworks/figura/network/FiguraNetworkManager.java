@@ -22,7 +22,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Base64;
 import java.util.Date;

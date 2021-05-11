@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.*;
 import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.access.PlayerEntityRendererAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -36,7 +37,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 
 @Mixin(PlayerEntityRenderer.class)
-public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> {
+public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> implements PlayerEntityRendererAccess {
 
     @Shadow protected abstract void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i);
 
@@ -268,6 +269,10 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
             ((ModelPartAccess) part).figura$setPartCustomization(null);
         }
         figura$customizedParts.clear();
+    }
+    
+    public void figura$setupTransformsPublic(AbstractClientPlayerEntity abstractClientPlayerEntity, MatrixStack matrixStack, float f, float g, float h){
+        this.setupTransforms(abstractClientPlayerEntity, matrixStack, f, g, h);
     }
 
     @Shadow
