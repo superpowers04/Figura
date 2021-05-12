@@ -62,8 +62,8 @@ public class CustomModelPart {
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
 
-    public Matrix4f lastModelMatrix;
-    public Matrix3f lastNormalMatrix;
+    public Matrix4f lastModelMatrix = new Matrix4f();
+    public Matrix3f lastNormalMatrix = new Matrix3f();
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {

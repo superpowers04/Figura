@@ -32,10 +32,6 @@ public class WorldAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        
-        if(getWorld() != lastWorld)
-            updateGlobalTable();
-        
         return globalLuaTable;
     }
     

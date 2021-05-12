@@ -28,32 +28,32 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         this.values = values;
     }
 
-    public static LuaVector of(Vector4f vec) {
-        if (vec == null) return (LuaVector)NIL;
+    public static LuaValue of(Vector4f vec) {
+        if (vec == null) return NIL;
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ(), vec.getW());
     }
 
-    public static LuaVector of(Vector3f vec) {
-        if (vec == null) return (LuaVector)NIL;
+    public static LuaValue of(Vector3f vec) {
+        if (vec == null) return NIL;
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ());
     }
 
-    public static LuaVector of(Vec3d vec) {
-        if (vec == null) return (LuaVector)NIL;
+    public static LuaValue of(Vec3d vec) {
+        if (vec == null) return NIL;
         return new LuaVector((float) vec.x, (float) vec.y, (float) vec.z);
     }
 
-    public static LuaVector of(Vec3i vec) {
-        if (vec == null) return (LuaVector)NIL;
+    public static LuaValue of(Vec3i vec) {
+        if (vec == null) return NIL;
         return new LuaVector((float) vec.getX(), (float) vec.getY(), (float) vec.getZ());
     }
 
-    public static LuaVector of(Vec2f vec) {
-        if (vec == null) return (LuaVector)NIL;
+    public static LuaValue of(Vec2f vec) {
+        if (vec == null) return NIL;
         return new LuaVector(vec.x, vec.y);
     }
 
-    public static LuaVector of(LuaTable t) {
+    public static LuaValue of(LuaTable t) {
         int n = Math.min(6, t.length());
         FloatArrayList fal = new FloatArrayList();
         for (int i = 0; i < n; i++) {
@@ -64,7 +64,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
                 fal.add(l.tofloat());
             } else if(l.istable()){
                 LuaTable tbl = l.checktable();
-                LuaVector v = of(tbl);
+                LuaVector v = (LuaVector)of(tbl);
                 
                 for(int j = 0; j < v._size(); j++){
                     fal.add(v.values[j]);
@@ -94,7 +94,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         if (val instanceof LuaVector) {
             return (LuaVector) val;
         } else if (val.istable()) {
-            return of((LuaTable)val);
+            return (LuaVector)of((LuaTable)val);
         }
         throw new LuaError("Not a Vector table!");
     }
