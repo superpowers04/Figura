@@ -56,10 +56,12 @@ public class CustomModelPart {
 
     public RenderType renderType = RenderType.None;
 
+    public float alpha = 1.0f;
+
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
     public int vertexCount = 0;
-    
+
     public Matrix4f lastModelMatrix;
     public Matrix3f lastNormalMatrix;
 
@@ -67,9 +69,8 @@ public class CustomModelPart {
     public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
 
-            //render only heads in spectator
-            if (data.lastEntity != null && data.lastEntity.isSpectator())
-                filterParts(this, ParentType.Head);
+            //apply part alpha value
+            alpha = this.alpha * alpha;
 
             //Store this value for extra textures
             int prevLeftToRender = data.model.leftToRender;
@@ -132,7 +133,7 @@ public class CustomModelPart {
 
         matrices.push();
         transformStack.push();
-        
+
         try {
             if (this.isMimicMode) {
                 PlayerEntityModel model = FiguraMod.currentData.vanillaModel;
@@ -236,10 +237,10 @@ public class CustomModelPart {
 
         applyTransforms(matrices);
         applyTransforms(transformStack);
-        
+
         lastModelMatrix = transformStack.peek().getModel().copy();
         lastNormalMatrix = transformStack.peek().getNormal().copy();
-        
+
         Matrix4f modelMatrix = matrices.peek().getModel();
         Matrix3f normalMatrix = matrices.peek().getNormal();
 
@@ -295,8 +296,11 @@ public class CustomModelPart {
                 break;
 
             //Don't render special parts.
-            if (child.isParentSpecial() || !child.shouldRender)
+            if (child.isParentSpecial())
                 continue;
+
+            //set child alpha
+            float childAlpha = alpha + child.alpha - 1;
 
             //render part
             leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, alpha);
@@ -308,14 +312,15 @@ public class CustomModelPart {
     }
 
     public int getComplexity() {
-        int complexity = 0;
+        //don't render filtered parts
+        if (!this.visible || !this.shouldRender || this.isParentSpecial()) {
+            return 0;
+        }
 
-        complexity += this.vertexCount;
+        int complexity = this.vertexCount;
 
+        //iterate over children
         for (CustomModelPart child : this.children) {
-            if (child.isParentSpecial() || !child.shouldRender)
-                continue;
-
             complexity += child.getComplexity();
         }
 
@@ -412,7 +417,7 @@ public class CustomModelPart {
 
     public void applyTransforms(MatrixStack stack) {
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
-        
+
         stack.translate(-this.pivot.getX() / 16.0f, -this.pivot.getY() / 16.0f, -this.pivot.getZ() / 16.0f);
 
         if (this.isMimicMode || this.rotationType == RotationType.Vanilla) {
@@ -425,7 +430,7 @@ public class CustomModelPart {
             stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
         }
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
-        
+
         stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
     }
 
@@ -506,6 +511,10 @@ public class CustomModelPart {
             this.vOffset = uvOffsetNbt.getFloat(1);
         }
 
+        if (partNbt.contains("alp")) {
+            this.alpha = partNbt.getFloat("alp");
+        }
+
         if (partNbt.contains("stype")) {
             try {
                 this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
@@ -557,6 +566,10 @@ public class CustomModelPart {
 
         if (!this.visible) {
             partNbt.put("vsb", ByteTag.of(false));
+        }
+
+        if (this.alpha != 1.0f) {
+            partNbt.put("alp", FloatTag.of(this.alpha));
         }
 
         if (this.shaderType != ShaderType.None) {

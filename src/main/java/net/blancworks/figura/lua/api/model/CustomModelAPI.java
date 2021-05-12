@@ -5,15 +5,10 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModelPart;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.Identifier;
-import org.luaj.vm2.LuaBoolean;
-import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.ZeroArgFunction;
+import org.luaj.vm2.*;
+import org.luaj.vm2.lib.*;
+import net.minecraft.client.util.math.*;
 
 public class CustomModelAPI {
 
@@ -47,14 +42,14 @@ public class CustomModelAPI {
 
         public LuaTable getTable() {
             LuaTable ret = new LuaTable();
-            
+
             int index = 1;
             for (CustomModelPart child : targetPart.children) {
                 CustomModelPartTable tbl = new CustomModelPartTable(child);
                 ret.set(child.name, tbl);
                 ret.set(index++, tbl);
             }
-            
+
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -211,11 +206,11 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
-                    
+
                     Vector4f v4f = new Vector4f(v.x()/16.0f, -(v.y()/16.0f), v.z()/16.0f, 1.0f);
-                    
+
                     v4f.transform(targetPart.lastModelMatrix);
-                    
+
                     return LuaVector.of(new Vector3f(v4f.getX(), v4f.getY(), v4f.getZ()));
                 }
             });
@@ -232,7 +227,22 @@ public class CustomModelAPI {
                     return LuaVector.of(v3f);
                 }
             });
-            
+
+            ret.set("getOpacity", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(targetPart.alpha);
+                }
+            });
+
+            ret.set("setOpacity", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    targetPart.alpha = Math.max(0f, Math.min(arg1.checknumber().tofloat(), 1f));
+                    return NIL;
+                }
+            });
+
             return ret;
         }
     }

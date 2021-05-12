@@ -41,9 +41,9 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         //entries
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.previewnametag"), new TranslatableText("gui.figura.config.tooltip.previewnametag"), Config.entries.get("previewNameTag")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.listmark"), new TranslatableText("gui.figura.config.tooltip.listmark"), Config.entries.get("listMark")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.chatmark"), new TranslatableText("gui.figura.config.tooltip.chatmark"), Config.entries.get("chatMark")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.nametagmark"), new TranslatableText("gui.figura.config.tooltip.nametagmark"), Config.entries.get("nameTagMark")));
+        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.nametagmods"), new TranslatableText("gui.figura.config.tooltip.nametagmods"), Config.entries.get("nameTagMods")));
+        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.chatmods"), new TranslatableText("gui.figura.config.tooltip.chatmods"), Config.entries.get("chatMods")));
+        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.listmods"), new TranslatableText("gui.figura.config.tooltip.listmods"), Config.entries.get("listMods")));
         this.addEntry(new ConfigListWidget.BooleanEntry(
                 new TranslatableText("gui.figura.config.nametagicon"),
                 new TranslatableText("gui.figura.config.tooltip.nametagicon", new LiteralText("△").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT))),

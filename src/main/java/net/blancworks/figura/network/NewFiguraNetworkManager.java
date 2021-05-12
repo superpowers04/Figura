@@ -259,7 +259,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         closeSocketConnection();
         String connectionString = String.format("%s/connect/", mainServerURL());
 
-        FiguraMod.LOGGER.error("Connecting to websocket server " + connectionString);
+        FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
 
         WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
         newSocket.addListener(new FiguraNetworkMessageHandler(this));

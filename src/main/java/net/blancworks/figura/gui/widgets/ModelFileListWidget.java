@@ -59,8 +59,8 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
                         addEntry(new ModelFileListWidgetEntry(file.getName(), this));
 
                 } catch (Exception e) {
-                    FiguraMod.LOGGER.error("Failed to load model " + file.getName());
-                    FiguraMod.LOGGER.debug(e.toString());
+                    FiguraMod.LOGGER.warn("Failed to load model " + file.getName());
+                    e.printStackTrace();
                 }
             }
             //old system compatibility

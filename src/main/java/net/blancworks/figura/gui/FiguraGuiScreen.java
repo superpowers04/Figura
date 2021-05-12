@@ -301,9 +301,6 @@ public class FiguraGuiScreen extends Screen {
             if (scriptText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, scriptText, this.width - this.textRenderer.getWidth(scriptText) - 8, currY + 12, 16777215);
 
-            if (this.getFocused() != null)
-                FiguraMod.LOGGER.debug(this.getFocused().toString());
-
             //deprecated warning
             if (rawNameText != null && rawNameText.getString().endsWith("*"))
                 drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
@@ -637,18 +634,18 @@ public class FiguraGuiScreen extends Screen {
                                     Util.relativeCopy(path2.getParent(), destPath, path3);
                                 } catch (IOException e) {
                                     FiguraMod.LOGGER.error("Failed to copy model file from {} to {}", path3, destPath);
-                                    FiguraMod.LOGGER.debug(e.toString());
+                                    e.printStackTrace();
                                 }
 
                             });
                         } catch (Exception e) {
-                            FiguraMod.LOGGER.debug(e.toString());
+                            e.printStackTrace();
                         }
 
                         stream.close();
                     } catch (Exception e) {
                         FiguraMod.LOGGER.error("Failed to copy model file from {} to {}", path2, destPath);
-                        FiguraMod.LOGGER.debug(e.toString());
+                        e.printStackTrace();
                     }
 
                 });

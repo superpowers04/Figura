@@ -10,7 +10,7 @@
     "ElytraFeatureRendererMixin",
     "GameMenuScreenMixin",
     "HeldItemModelMixin",
-    "InGameHudMixin",
+    "ChatHudListenerMixin",
     "LivingEntityRendererMixin",
     "MatrixStackMixin",
     "MixinDebugHud",

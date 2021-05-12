@@ -5,6 +5,10 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.network.messages.MessageHandler;
 import net.blancworks.figura.network.messages.user.UserSetAvatarMessageSender;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.toast.SystemToast;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.TranslatableText;
 
 import java.util.UUID;
 
@@ -40,20 +44,36 @@ public class AvatarUploadResponseHandler extends MessageHandler {
     public void handleSuccess(LittleEndianDataInputStream stream) throws Exception {
         UUID id = readUUID(stream);
 
-        FiguraMod.LOGGER.error("Uploaded avatar sucessfully, UUID is " + id);
+        FiguraMod.LOGGER.info("Uploaded avatar sucessfully, UUID is " + id);
+        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                new TranslatableText("gui.figura.toast.upload.success.title"),
+                new LiteralText(""))
+        );
         
         new UserSetAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
     }
 
     public void handleTooManyAvatars() {
         FiguraMod.LOGGER.error("Failed to upload avatar : User Has Too Many Avatars");
+        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                new TranslatableText("gui.figura.toast.upload.error.title"),
+                new TranslatableText("gui.figura.toast.upload.error.many"))
+        );
     }
 
     public void handleEmptyAvatar() {
         FiguraMod.LOGGER.error("Failed to upload avatar : Attempted Empty Avatar Upload");
+        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                new TranslatableText("gui.figura.toast.upload.error.title"),
+                new TranslatableText("gui.figura.toast.upload.error.empty"))
+        );
     }
 
     public void handleNotEnoughSpace() {
         FiguraMod.LOGGER.error("Failed to upload avatar : Not Enough Space On Server");
+        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                new TranslatableText("gui.figura.toast.upload.error.title"),
+                new TranslatableText("gui.figura.toast.upload.error.space"))
+        );
     }
 }

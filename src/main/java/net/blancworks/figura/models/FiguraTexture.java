@@ -132,7 +132,7 @@ public class FiguraTexture extends ResourceTexture {
                     //Note that we don't need to revert this at any point.
                     //If the texture is reloaded, this entire class is nuked anyway.
                     isDone = true;
-                    FiguraMod.LOGGER.warn("Texture Loading Finished");
+                    FiguraMod.LOGGER.info("Texture Loading Finished");
                 });
             } catch (Exception e) {
                 e.printStackTrace();

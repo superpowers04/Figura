@@ -136,7 +136,7 @@ public class CustomScript extends FiguraAsset {
 
                         isDone = true;
                         currTask = null;
-                        FiguraMod.LOGGER.warn("Script Loading Finished");
+                        FiguraMod.LOGGER.info("Script Loading Finished");
                     }
             );
         }catch (LuaError e){
@@ -179,7 +179,7 @@ public class CustomScript extends FiguraAsset {
                 if (playerData == PlayerDataManager.localPlayer) {
                     int config = (int) Config.entries.get("scriptLog").value;
                     if (config != 2) {
-                        FiguraMod.LOGGER.warn(arg.toString());
+                        FiguraMod.LOGGER.info(arg.toString());
                     }
                     if (config != 1) {
                         sendChatMessage(new LiteralText(arg.toString()));
@@ -426,7 +426,7 @@ public class CustomScript extends FiguraAsset {
 
         int config = (int) Config.entries.get("scriptLog").value;
         if (config != 2) {
-            FiguraMod.LOGGER.warn(depthString + "{");
+            FiguraMod.LOGGER.info(depthString + "{");
         }
         if (config != 1) {
             sendChatMessage(new LiteralText(depthString + "{"));
@@ -439,7 +439,7 @@ public class CustomScript extends FiguraAsset {
 
             if (value.istable()) {
                 if (config != 2) {
-                    FiguraMod.LOGGER.warn(valString);
+                    FiguraMod.LOGGER.info(valString);
                 }
                 if (config != 1) {
                     sendChatMessage(new LiteralText(valString));
@@ -448,7 +448,7 @@ public class CustomScript extends FiguraAsset {
                 logTableContents(value.checktable(), depth + 1, nextDepthString);
             } else {
                 if (config != 2) {
-                    FiguraMod.LOGGER.warn(valString + ",");
+                    FiguraMod.LOGGER.info(valString + ",");
                 }
                 if (config != 1) {
                     sendChatMessage(new LiteralText(valString + ","));
@@ -456,7 +456,7 @@ public class CustomScript extends FiguraAsset {
             }
         }
         if (config != 2) {
-            FiguraMod.LOGGER.warn(depthString + "},");
+            FiguraMod.LOGGER.info(depthString + "},");
         }
         if (config != 1) {
             sendChatMessage(new LiteralText(depthString + "},"));
