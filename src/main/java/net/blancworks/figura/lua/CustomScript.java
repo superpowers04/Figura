@@ -110,7 +110,6 @@ public class CustomScript extends FiguraAsset {
         try {
             //Load the script source.
             LuaValue chunk = FiguraLuaManager.modGlobals.load(source, "main", scriptGlobals);
-            LuaThread scriptThread = new LuaThread(scriptGlobals, chunk);
 
             instructionCapFunction = new ZeroArgFunction() {
                 public LuaValue call() {
@@ -129,10 +128,13 @@ public class CustomScript extends FiguraAsset {
                     () -> {
                         try {
                             setInstructionLimitPermission(PlayerTrustManager.MAX_INIT_ID);
-                            scriptThread.resume(LuaValue.NIL);
+                            chunk.call();
                         } catch (Exception error) {
                             loadError = true;
-                            error.printStackTrace();
+                            if (error instanceof LuaError)
+                                logLuaError((LuaError) error);
+                            else
+                                error.printStackTrace();
                         }
 
                         isDone = true;

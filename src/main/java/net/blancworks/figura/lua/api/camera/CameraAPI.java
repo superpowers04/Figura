@@ -43,7 +43,7 @@ public class CameraAPI {
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    data.position = LuaVector.check(arg1).asV3f();
+                    data.position = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -57,7 +57,7 @@ public class CameraAPI {
             ret.set("setfpPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    data.fpPosition = LuaVector.check(arg1).asV3f();
+                    data.fpPosition = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -71,7 +71,7 @@ public class CameraAPI {
             ret.set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    data.rotation = LuaVector.check(arg1).asV2f();
+                    data.rotation = LuaVector.checkOrNew(arg1).asV2f();
                     return NIL;
                 }
             });
