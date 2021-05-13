@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.RendererAPI;
+import net.blancworks.figura.lua.api.camera.CameraAPI;
 import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
@@ -63,6 +64,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(NamePlateAPI.getID(), NamePlateAPI::getForScript);
         apiSuppliers.put(MetaAPI.getID(), MetaAPI::getForScript);
         apiSuppliers.put(RendererAPI.getID(), RendererAPI::getForScript);
+        apiSuppliers.put(CameraAPI.getID(), CameraAPI::getForScript);
     }
 
     public static void registerEvents(){

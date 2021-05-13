@@ -19,7 +19,8 @@
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
     "SetTextImplMixin",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "CameraMixin"
   ],
   "injectors": {
     "defaultRequire": 1
