@@ -15,11 +15,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class ClientLoginNetworkHandlerMixin {
     @Inject(at = @At("HEAD"), method = "onDisconnected(Lnet/minecraft/text/Text;)V")
     public void onDisconnected(Text reason, CallbackInfo ci) {
-        FiguraMod.networkManager.parseKickAuthMessage(reason);
+        try {
+            FiguraMod.networkManager.parseKickAuthMessage(reason);
 
-        LiteralText garbleText = new LiteralText("-------------------------\n\n\n");
-        garbleText.setStyle(Style.EMPTY.withFormatting(Formatting.OBFUSCATED));
+            LiteralText garbleText = new LiteralText("-------------------------\n\n\n");
+            garbleText.setStyle(Style.EMPTY.withFormatting(Formatting.OBFUSCATED));
 
-        reason.getSiblings().set(1, garbleText);
+            reason.getSiblings().set(1, garbleText);
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

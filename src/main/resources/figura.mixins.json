@@ -19,7 +19,8 @@
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
     "SetTextImplMixin",
-    "WorldRendererMixin"
+    "WorldRendererMixin",
+    "MinecraftClientMixin"
   ],
   "injectors": {
     "defaultRequire": 1
