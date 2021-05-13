@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.math;
 
+import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
@@ -9,10 +10,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.*;
+import org.luaj.vm2.ast.Str;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 public class LuaVector extends LuaValue implements Iterable<Float> {
     public static final int TYPE = LuaValue.TVALUE;
@@ -21,7 +25,46 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     private final float[] values;
     private Double cachedLength = null;
 
-    public LuaVector(float ... values) {
+    private Map<String, LuaValue> luaValues = new ImmutableMap.Builder<String, LuaValue>()
+            .put("distanceTo", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    return LuaNumber.valueOf(_distanceTo(arg1));
+                }
+            })
+            .put("getLength", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(_length());
+                }
+            })
+            .put("normalized", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return _normalized();
+                }
+            })
+            .put("dot", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return LuaValue.valueOf(_dot(arg));
+                }
+            })
+            .put("cross", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return _cross(arg);
+                }
+            })
+            .put("angleTo", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return LuaValue.valueOf(_angleTo(arg));
+                }
+            })
+            .build();
+
+    public LuaVector(float... values) {
         if (values.length > 6) {
             throw new IllegalArgumentException("LuaVector cannot have more than 6 fields!");
         }
@@ -57,27 +100,27 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         int n = Math.min(6, t.length());
         FloatArrayList fal = new FloatArrayList();
         for (int i = 0; i < n; i++) {
-            LuaValue l =  t.get(i + 1);
-            
-            if(l.isnumber()){
+            LuaValue l = t.get(i + 1);
+
+            if (l.isnumber()) {
                 l.checknumber();
                 fal.add(l.tofloat());
-            } else if(l.istable()){
+            } else if (l.istable()) {
                 LuaTable tbl = l.checktable();
-                LuaVector v = (LuaVector)of(tbl);
-                
-                for(int j = 0; j < v._size(); j++){
+                LuaVector v = (LuaVector) of(tbl);
+
+                for (int j = 0; j < v._size(); j++) {
                     fal.add(v.values[j]);
                 }
-            } else if (l instanceof LuaVector){
+            } else if (l instanceof LuaVector) {
                 LuaVector vect = (LuaVector) l;
-                for(int j = 0; j < vect._size(); j++){
+                for (int j = 0; j < vect._size(); j++) {
                     float f = vect.values[j];
                     fal.add(f);
                 }
             }
         }
-        
+
         //Ensure size.
         fal.size(6);
         return new LuaVector(fal.toFloatArray());
@@ -94,7 +137,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         if (val instanceof LuaVector) {
             return (LuaVector) val;
         } else if (val.istable()) {
-            return (LuaVector)of((LuaTable)val);
+            return (LuaVector) of((LuaTable) val);
         }
         throw new LuaError("Not a Vector table!");
     }
@@ -175,7 +218,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     @Override
     public LuaValue rawget(LuaValue key) {
-        if(key.isnumber())
+        if (key.isnumber())
             return get(key.checkint());
         return get(key.tojstring());
     }
@@ -192,12 +235,29 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return LuaString.valueOf(this.toString());
     }
 
-    public float x() { return _get(1); }
-    public float y() { return _get(2); }
-    public float z() { return _get(3); }
-    public float w() { return _get(4); }
-    public float t() { return _get(5); }
-    public float h() { return _get(6); }
+    public float x() {
+        return _get(1);
+    }
+
+    public float y() {
+        return _get(2);
+    }
+
+    public float z() {
+        return _get(3);
+    }
+
+    public float w() {
+        return _get(4);
+    }
+
+    public float t() {
+        return _get(5);
+    }
+
+    public float h() {
+        return _get(6);
+    }
 
     public LuaVector _add(LuaVector vec) {
         int n = Math.max(_size(), vec._size());
@@ -272,31 +332,11 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public LuaValue _functions(String name) {
-        switch (name) {
-            case "distanceTo":
-                return new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg1) {
-                        return LuaNumber.valueOf(_distanceTo(arg1));
-                    }
-                };
-            case "getLength":
-                return new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaNumber.valueOf(_length());
-                    }
-                };
-            case "normalized":
-                return new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return _normalized();
-                    }
-                };
-            default:
-                return NIL;
-        }
+        LuaValue v = luaValues.get(name);
+
+        if (v == null)
+            return NIL;
+        else return v;
     }
 
     public double _distanceTo(LuaValue vector) {
@@ -306,12 +346,12 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         for (int i = 1; i <= n; i++) {
             float a = this._get(i); // This vector's value at current index
             float b = vec._get(i); // The passed vector's value at current index
-            if(a == 0 && b == 0) continue; // Do not operate on values that are zero for both
-            if(a == 0) {
+            if (a == 0 && b == 0) continue; // Do not operate on values that are zero for both
+            if (a == 0) {
                 s += (b * b); // Only square the non zero value
                 continue;
             }
-            if(b == 0) {
+            if (b == 0) {
                 s += (a * a); // Only square the non zero value
                 continue;
             }
@@ -319,19 +359,50 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         }
         return Math.sqrt(s); // Square root of the sum of all values
     }
+    
+    public double _dot(LuaValue vector) {
+        LuaVector other = check(vector);
+        return values[0] * other.values[0] +
+                        values[1] * other.values[1] +
+                        values[2] * other.values[2] +
+                        values[3] * other.values[3] +
+                        values[4] * other.values[4] +
+                        values[5] * other.values[5];
+    }
+    
+    public LuaVector _cross(LuaValue vector){
+        LuaVector other = check(vector);
+        return new LuaVector(
+                values[1] * other.values[2] - values[2] * other.values[1],     //y * o.z - z * o.y
+                values[2] * other.values[0] - values[0] * other.values[2],            //z * o.x - x * o.z
+                values[0] * other.values[1] - values[1] * other.values[0]             //x * o.y - y * o.x
+        );
+    }
 
-    public double _length() {
-        // Caches the vector's length upon first request, to conserve performance on repeated length tests on the same vector
-        if (cachedLength == null) {
-            int n = _size();
-            float s = 0;
-            for (int i = 1; i <= n; i++) {
-                float v = this._get(i);
-                if(v != 0) s += v * v;
-            }
-            cachedLength = Math.sqrt(s);
+    public double _angleTo(LuaValue vector){
+        LuaVector other = check(vector);
+        return Math.acos(_dot(other) / (_length() * other.length()));
+    }
+
+    public double _lengthSqr(){
+        int n = _size();
+        float s = 0;
+        for (int i = 1; i <= n; i++) {
+            float v = this._get(i);
+            if (v != 0) s += v * v;
         }
-        return cachedLength;
+        return s;
+    }
+    
+    public double _length() {
+        // We can't cache the length, what if someone edits the vector????
+        // Leave it up to users to cache it.
+        // -Zandra
+        
+        // Caches the vector's length upon first request, to conserve performance on repeated length tests on the same vector
+        // -Foundation
+        
+        return Math.sqrt(_lengthSqr());
     }
 
     public LuaVector _normalized() {
@@ -340,12 +411,12 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         float[] vals = new float[n];
         for (int i = 1; i <= n; i++) {
             float v = this._get(i);
-            if(v != 0) s += v * v;
+            if (v != 0) s += v * v;
         }
         float r = MathHelper.fastInverseSqrt(s);
         for (int j = 0; j < n; j++) {
-            float v = this._get(j+1);
-            if(v != 0) vals[j] = v * r;
+            float v = this._get(j + 1);
+            if (v != 0) vals[j] = v * r;
         }
         return new LuaVector(vals);
     }
