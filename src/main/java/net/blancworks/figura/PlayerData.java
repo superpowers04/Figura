@@ -6,6 +6,7 @@ import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
@@ -233,19 +234,8 @@ public class PlayerData {
         
         
         vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
-        PlayerEntity newEnt = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
-        if (lastEntity != newEnt && script != null) {
-            if(newEnt == null){
-                CustomScript reloadedScript = new CustomScript();
-                reloadedScript.source = script.source;
-                script = reloadedScript;
-            } else {
-                CustomScript reloadedScript = new CustomScript();
-                reloadedScript.load(this, script.source);
-                script = reloadedScript;
-            }
-        }
-        lastEntity = newEnt;
+        lastEntity = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
+        FiguraMod.currentPlayer = (AbstractClientPlayerEntity) lastEntity;
 
         if (lastEntity != null) {
             if (script != null) {

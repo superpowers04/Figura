@@ -65,6 +65,9 @@ public class CustomModelPart {
     public Matrix4f lastModelMatrix = new Matrix4f();
     public Matrix3f lastNormalMatrix = new Matrix3f();
 
+    public Matrix4f lastModelMatrixInverse = new Matrix4f();
+    public Matrix3f lastNormalMatrixInverse = new Matrix3f();
+
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
@@ -240,6 +243,11 @@ public class CustomModelPart {
 
         lastModelMatrix = transformStack.peek().getModel().copy();
         lastNormalMatrix = transformStack.peek().getNormal().copy();
+        
+        lastModelMatrixInverse = lastModelMatrix.copy();
+        lastModelMatrixInverse.invert();
+        lastNormalMatrixInverse = lastNormalMatrix.copy();
+        lastNormalMatrixInverse.invert();
 
         Matrix4f modelMatrix = matrices.peek().getModel();
         Matrix3f normalMatrix = matrices.peek().getNormal();

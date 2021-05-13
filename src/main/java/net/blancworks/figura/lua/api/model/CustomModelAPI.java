@@ -207,7 +207,7 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vector4f v4f = new Vector4f(v.x()/16.0f, -(v.y()/16.0f), v.z()/16.0f, 1.0f);
+                    Vector4f v4f = new Vector4f(v.x() / 16.0f, -(v.y() / 16.0f), v.z() / 16.0f, 1.0f);
 
                     v4f.transform(targetPart.lastModelMatrix);
 
@@ -220,7 +220,33 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vector3f v3f = new Vector3f(v.x()/16.0f, -(v.y()/16.0f), v.z()/16.0f);
+                    Vector3f v3f = new Vector3f(v.x(), -(v.y()), v.z());
+
+                    v3f.transform(targetPart.lastNormalMatrix);
+
+                    return LuaVector.of(v3f);
+                }
+            });
+
+            ret.set("worldToPartPos", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    LuaVector v = LuaVector.checkOrNew(arg1);
+
+                    Vector3f v3f = new Vector3f(v.x() / 16.0f, -(v.y()) / 16.0f, v.z() / 16.0f);
+
+                    v3f.transform(targetPart.lastNormalMatrix);
+
+                    return LuaVector.of(v3f);
+                }
+            });
+
+            ret.set("worldToPartDir", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    LuaVector v = LuaVector.checkOrNew(arg1);
+
+                    Vector3f v3f = new Vector3f(v.x(), -(v.y()), v.z());
 
                     v3f.transform(targetPart.lastNormalMatrix);
 

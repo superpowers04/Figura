@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.world.entity;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
@@ -14,6 +15,8 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
+import java.util.function.Supplier;
+
 public class PlayerEntityAPI {
 
     public static Identifier getID() {
@@ -21,48 +24,45 @@ public class PlayerEntityAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        World w = MinecraftClient.getInstance().world;
-        PlayerEntity ent = w.getPlayerByUuid(script.playerData.playerId);
-        if(ent == null)
-            return null;
-        
-        return get(ent);
+
+        //Global table will get the local player.
+        return new PlayerEntityLuaAPITable(() -> script.playerData.lastEntity);
     }
-    
-    public static ReadOnlyLuaTable get(PlayerEntity entity){
-        PlayerEntityLuaAPITable pentTable = new PlayerEntityLuaAPITable(entity);
-        
+
+    public static ReadOnlyLuaTable get(PlayerEntity entity) {
+        PlayerEntityLuaAPITable pentTable = new PlayerEntityLuaAPITable(() -> entity);
+
         return pentTable;
     }
 
     public static class PlayerEntityLuaAPITable extends LivingEntityAPI.LivingEntityAPITable<PlayerEntity> {
-        
-        public PlayerEntityLuaAPITable(PlayerEntity targetEntity) {
-            super(targetEntity);
+
+        public PlayerEntityLuaAPITable(Supplier<PlayerEntity> entitySupplier) {
+            super(entitySupplier);
             super.setTable(getTable());
         }
-        
-        public LuaTable getTable(){
+
+        public LuaTable getTable() {
             LuaTable superTable = super.getTable();
 
             superTable.set("getHeldItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    
+
                     int hand = arg.checkint();
 
                     ItemStack targetStack = null;
 
                     if (hand == 1)
-                        targetStack = targetEntity.getMainHandStack();
+                        targetStack = targetEntity.get().getMainHandStack();
                     else if (hand == 2)
-                        targetStack = targetEntity.getOffHandStack();
+                        targetStack = targetEntity.get().getOffHandStack();
                     else
                         return NIL;
 
-                    if(targetStack.equals(ItemStack.EMPTY))
+                    if (targetStack.equals(ItemStack.EMPTY))
                         return NIL;
-                    
+
                     LuaTable getItemRepresentation = ItemStackAPI.getTable(targetStack);
                     return getItemRepresentation;
                 }
@@ -71,31 +71,31 @@ public class PlayerEntityAPI {
             superTable.set("getFood", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaNumber.valueOf(targetEntity.getHungerManager().getFoodLevel());
+                    return LuaNumber.valueOf(targetEntity.get().getHungerManager().getFoodLevel());
                 }
             });
 
             superTable.set("getSaturation", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaNumber.valueOf(targetEntity.getHungerManager().getSaturationLevel());
+                    return LuaNumber.valueOf(targetEntity.get().getHungerManager().getSaturationLevel());
                 }
             });
 
             superTable.set("getExperienceProgress", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaNumber.valueOf(targetEntity.experienceProgress);
+                    return LuaNumber.valueOf(targetEntity.get().experienceProgress);
                 }
             });
 
             superTable.set("getExperienceLevel", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaNumber.valueOf(targetEntity.experienceLevel);
+                    return LuaNumber.valueOf(targetEntity.get().experienceLevel);
                 }
             });
-            
+
             return superTable;
         }
     }

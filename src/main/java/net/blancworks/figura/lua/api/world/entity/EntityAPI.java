@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
@@ -17,93 +18,93 @@ import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.Iterator;
+import java.util.function.Supplier;
 
 public class EntityAPI {
 
     public static class EntityLuaAPITable<T extends Entity> extends ReadOnlyLuaTable {
 
-        public T targetEntity;
+        public Supplier<T> targetEntity;
 
         public LuaString typeString;
 
-        public EntityLuaAPITable(T targetEntity) {
+        public EntityLuaAPITable(Supplier<T> targetEntity) {
             this.targetEntity = targetEntity;
         }
 
 
         public LuaTable getTable() {
-
-            typeString = LuaString.valueOf(Registry.ENTITY_TYPE.getId(targetEntity.getType()).toString());
-
+            
             return new LuaTable() {{
 
                 set("getPos", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaVector.of(targetEntity.getPos());
+                        Entity e = targetEntity.get();
+                        return LuaVector.of(e.getPos());
                     }
                 });
 
                 set("getRot", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return new LuaVector(targetEntity.pitch, targetEntity.yaw);
+                        return new LuaVector(targetEntity.get().pitch, targetEntity.get().yaw);
                     }
                 });
 
                 set("getType", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return typeString;
+                        return LuaString.valueOf(Registry.ENTITY_TYPE.getId(targetEntity.get().getType()).toString());
                     }
                 });
 
                 set("getVelocity", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaVector.of(targetEntity.getVelocity());
+                        return LuaVector.of(targetEntity.get().getVelocity());
                     }
                 });
 
                 set("getLookDir", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaVector.of(targetEntity.getRotationVector());
+                        return LuaVector.of(targetEntity.get().getRotationVector());
                     }
                 });
 
                 set("getUUID", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaString.valueOf(targetEntity.getEntityName());
+                        return LuaString.valueOf(targetEntity.get().getEntityName());
                     }
                 });
 
                 set("getFireTicks", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaNumber.valueOf(targetEntity.getFireTicks());
+                        return LuaNumber.valueOf(targetEntity.get().getFireTicks());
                     }
                 });
 
                 set("getAir", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaNumber.valueOf(targetEntity.getAir());
+                        return LuaNumber.valueOf(targetEntity.get().getAir());
                     }
                 });
 
                 set("getMaxAir", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaNumber.valueOf(targetEntity.getMaxAir());
+                        return LuaNumber.valueOf(targetEntity.get().getMaxAir());
                     }
                 });
 
                 set("getAirPercentage", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaNumber.valueOf(((float)targetEntity.getAir()) / targetEntity.getMaxAir());
+                        return LuaNumber.valueOf(((float)targetEntity.get().getAir()) / targetEntity.get().getMaxAir());
                     }
                 });
 
@@ -111,7 +112,7 @@ public class EntityAPI {
                     @Override
                     public LuaValue call() {
                         if (targetEntity == null) return NIL;
-                        World w = targetEntity.world;
+                        World w = targetEntity.get().world;
 
                         return LuaString.valueOf(w.getRegistryKey().getValue().toString());
                     }
@@ -121,7 +122,7 @@ public class EntityAPI {
                     @Override
                     public LuaValue call(LuaValue arg) {
                         int index = arg.checkint() - 1;
-                        ItemStack stack = retrieveItemByIndex(targetEntity.getItemsEquipped(), index);
+                        ItemStack stack = retrieveItemByIndex(targetEntity.get().getItemsEquipped(), index);
                         return ItemStackAPI.getTable(stack);
                     }
                 });
@@ -131,7 +132,7 @@ public class EntityAPI {
                     public LuaValue call() {
                         if (targetEntity == null) return NIL;
 
-                        EntityPose p = targetEntity.getPose();
+                        EntityPose p = targetEntity.get().getPose();
 
                         if (p == null)
                             return NIL;
@@ -143,36 +144,38 @@ public class EntityAPI {
                 set("getVehicle", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        if (targetEntity.getVehicle() == null) return NIL;
+                        if (targetEntity.get().getVehicle() == null) return NIL;
 
-                        Entity vehicle = targetEntity.getVehicle();
+                        Entity vehicle = targetEntity.get().getVehicle();
 
-                        if (vehicle instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable<>((LivingEntity) vehicle).getTable();
+                        if (vehicle instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable(()->(LivingEntity) vehicle).getTable();
 
-                        return new EntityLuaAPITable<>(vehicle).getTable();
+                        return new EntityLuaAPITable(()->vehicle).getTable();
                     }
                 });
 
                 set("isGrounded", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaBoolean.valueOf(targetEntity.isOnGround());
+                        return LuaBoolean.valueOf(targetEntity.get().isOnGround());
                     }
                 });
 
                 set("getEyeHeight", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaNumber.valueOf(targetEntity.getEyeHeight(targetEntity.getPose()));
+                        return LuaNumber.valueOf(targetEntity.get().getEyeHeight(targetEntity.get().getPose()));
                     }
                 });
 
                 set("getBoundingBox", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        float x = targetEntity.getDimensions(targetEntity.getPose()).width;
-                        float y = targetEntity.getDimensions(targetEntity.getPose()).height;
-                        float z = targetEntity.getDimensions(targetEntity.getPose()).width;
+                        Entity ent = targetEntity.get();
+                        EntityDimensions dims = ent.getDimensions(ent.getPose());
+                        float x = dims.width;
+                        float y = dims.height;
+                        float z = dims.width;
 
                         return new LuaVector(x, y, z);
                     }
@@ -186,7 +189,7 @@ public class EntityAPI {
                         String[] path = pathArg.split("\\.");
 
                         CompoundTag tag = new CompoundTag();
-                        targetEntity.toTag(tag);
+                        targetEntity.get().toTag(tag);
 
                         Tag current = tag;
                         for (String key : path) {

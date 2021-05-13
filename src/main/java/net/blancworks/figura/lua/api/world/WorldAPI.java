@@ -23,8 +23,6 @@ public class WorldAPI {
     }
 
     private static ReadOnlyLuaTable globalLuaTable;
-    
-    private static World lastWorld;
 
 
     public static Identifier getID() {
@@ -32,6 +30,8 @@ public class WorldAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
+        if(globalLuaTable == null)
+            updateGlobalTable();
         return globalLuaTable;
     }
     

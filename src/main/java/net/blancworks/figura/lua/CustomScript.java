@@ -129,7 +129,7 @@ public class CustomScript extends FiguraAsset {
                         try {
                             setInstructionLimitPermission(PlayerTrustManager.MAX_INIT_ID);
                             scriptThread.resume(LuaValue.NIL);
-                        } catch (LuaError error) {
+                        } catch (Exception error) {
                             loadError = true;
                             error.printStackTrace();
                         }
@@ -189,6 +189,9 @@ public class CustomScript extends FiguraAsset {
             }
         });
 
+        //Re-map print to log.
+        scriptGlobals.set("print", scriptGlobals.get("log"));
+
         scriptGlobals.set("logTableContent", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue arg) {
@@ -210,7 +213,7 @@ public class CustomScript extends FiguraAsset {
                     loadError = true;
                     error("Can't use global table metatable on other tables!");
                 }
-
+                
                 if (value.isfunction() && key.isstring()) {
                     String funcName = key.checkjstring();
                     LuaFunction func = value.checkfunction();
