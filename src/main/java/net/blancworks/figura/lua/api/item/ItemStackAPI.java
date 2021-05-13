@@ -4,6 +4,7 @@ import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.Tag;
+import net.minecraft.tag.ItemTags;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.ZeroArgFunction;
@@ -61,6 +62,20 @@ public class ItemStackAPI {
                 @Override
                 public LuaValue call() {
                     return ItemAPI.getTable(stack.getItem());
+                }
+            });
+
+            set("getItemTags", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    Object[] tags = ItemTags.getTagGroup().getTagsFor(stack.getItem()).toArray();
+
+                    LuaTable table = new LuaTable();
+                    for (int i = 0; i < tags.length; i++) {
+                        table.set(i, String.valueOf(tags[i]));
+                    }
+
+                    return new ReadOnlyLuaTable(table);
                 }
             });
 

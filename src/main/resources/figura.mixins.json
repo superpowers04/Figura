@@ -20,7 +20,8 @@
     "PlayerModelRendererMixin",
     "SetTextImplMixin",
     "WorldRendererMixin",
-    "MinecraftClientMixin"
+    "MinecraftClientMixin",
+    "CameraMixin"
   ],
   "injectors": {
     "defaultRequire": 1

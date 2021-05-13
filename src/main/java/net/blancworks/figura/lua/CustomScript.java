@@ -29,6 +29,7 @@ public class CustomScript extends FiguraAsset {
 
     public PlayerData playerData;
     public NamePlateData nameplate = new NamePlateData();
+    public CameraData camera = new CameraData();
     public String source;
     public boolean loadError = false;
 
@@ -197,7 +198,9 @@ public class CustomScript extends FiguraAsset {
             public LuaValue call(LuaValue arg) {
                 LuaTable table = arg.checktable();
 
-                logTableContents(table, 0, "");
+                if (playerData == PlayerDataManager.localPlayer) {
+                    logTableContents(table, 0, "");
+                }
 
                 return NIL;
             }
@@ -425,7 +428,6 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
-        String nextDepthString = depthString;
 
         int config = (int) Config.entries.get("scriptLog").value;
         if (config != 2) {
@@ -448,7 +450,7 @@ public class CustomScript extends FiguraAsset {
                     sendChatMessage(new LiteralText(valString));
                 }
 
-                logTableContents(value.checktable(), depth + 1, nextDepthString);
+                logTableContents(value.checktable(), depth + 1, depthString);
             } else {
                 if (config != 2) {
                     FiguraMod.LOGGER.info(valString + ",");
