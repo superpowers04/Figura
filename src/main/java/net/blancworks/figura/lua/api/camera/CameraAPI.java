@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
@@ -36,19 +37,13 @@ public class CameraAPI {
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVector3f(data.position);
+                    return LuaVector.of(data.position);
                 }
             });
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    data.position = new Vector3f(
-                            fas.getFloat(0),
-                            fas.getFloat(1),
-                            fas.getFloat(2)
-                    );
-
+                    data.position = LuaVector.check(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -56,19 +51,13 @@ public class CameraAPI {
             ret.set("getfpPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVector3f(data.fpPosition);
+                    return LuaVector.of(data.fpPosition);
                 }
             });
             ret.set("setfpPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    data.fpPosition = new Vector3f(
-                            fas.getFloat(0),
-                            fas.getFloat(1),
-                            fas.getFloat(2)
-                    );
-
+                    data.fpPosition = LuaVector.check(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -76,18 +65,13 @@ public class CameraAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaUtils.getTableFromVec2f(data.rotation);
+                    return LuaVector.of(data.rotation);
                 }
             });
             ret.set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    FloatArrayList fas = LuaUtils.getFloatsFromTable(arg1.checktable());
-                    data.rotation = new Vec2f(
-                            fas.getFloat(0),
-                            fas.getFloat(1)
-                    );
-
+                    data.rotation = LuaVector.check(arg1).asV2f();
                     return NIL;
                 }
             });
