@@ -268,11 +268,6 @@ public class CustomScript extends FiguraAsset {
 
     //Called whenever the global tick event happens
     public void tick() {
-
-        if (MinecraftClient.getInstance().isPaused()) {
-            return;
-        };
-
         if (particleSpawnCount > 0)
             particleSpawnCount = MathHelper.clamp(particleSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID)), 0, 999);
         if (soundSpawnCount > 0)
@@ -288,11 +283,6 @@ public class CustomScript extends FiguraAsset {
 
     //Called whenever the game renders a new frame with this avatar in view
     public void render(float deltaTime) {
-
-        if (MinecraftClient.getInstance().isPaused()) {
-            return;
-        };
-
         //Don't render if the script is doing something else still
         //Prevents threading memory errors and also ensures that "long" ticks and events and such are penalized.
         if (tickLuaEvent == null || currTask == null || !currTask.isDone())
