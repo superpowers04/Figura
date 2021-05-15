@@ -381,7 +381,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public double _angleTo(LuaValue vector){
         LuaVector other = check(vector);
-        return Math.acos(_dot(other) / (_length() * other.length()));
+        return Math.acos(_dot(other) / (_length() * other._length()));
     }
 
     public double _lengthSqr(){
