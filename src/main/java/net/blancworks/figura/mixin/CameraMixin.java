@@ -5,12 +5,13 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.injection.*;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Camera.class)
@@ -38,6 +39,10 @@ public abstract class CameraMixin {
                 );
 
                 this.moveBy(-data.fpPosition.getZ(), 0.0d, -data.fpPosition.getX());
+
+                if (focusedEntity instanceof LivingEntity && ((LivingEntity) focusedEntity).isSleeping()) {
+                    this.moveBy(0.0d, 0.3d, 0.0d);
+                }
             }
             else {
                 //y

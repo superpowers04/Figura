@@ -1,7 +1,7 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.*;
-import net.blancworks.figura.gui.SetText;
+import net.blancworks.figura.access.FiguraTextAccess;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHudListener;
@@ -9,7 +9,6 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.network.MessageType;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -66,7 +65,7 @@ public class ChatHudListenerMixin {
         ArrayList<Text> siblings = new ArrayList<>(text.getSiblings());
 
         //if contains playername
-        if (text.getRawString().contains(playerName)) {
+        if (text.getRawString().contains(playerName) && !playerName.equals("")) {
 
             //save style
             Style style = text.getStyle();
@@ -79,14 +78,17 @@ public class ChatHudListenerMixin {
             //transform the text
             Text transformed = figura$applyFiguraNameplateFormatting(playerNameSplitted, uuid);
 
+            //add badges
+            ((LiteralText) transformed).append(FiguraMod.getBadges(uuid));
+
             //return the text
             if (!textSplit[0].equals("")) {
-                ((SetText) text).figura$setText(textSplit[0]);
+                ((FiguraTextAccess) text).figura$setText(textSplit[0]);
                 text.setStyle(style);
                 text.append(transformed);
             }
             else {
-                ((SetText) text).figura$setText(((LiteralText) transformed).getRawString());
+                ((FiguraTextAccess) text).figura$setText(((LiteralText) transformed).getRawString());
                 text.setStyle(transformed.getStyle());
                 transformed.getSiblings().forEach(((LiteralText) text)::append);
             }
@@ -95,7 +97,10 @@ public class ChatHudListenerMixin {
             }
 
             //append siblings back
-            siblings.forEach(((LiteralText) text)::append);
+            for (Text sibling : siblings) {
+                if (!((FiguraTextAccess) sibling).figura$getFigura())
+                    text.append(sibling);
+            }
 
             return true;
         }
@@ -141,36 +146,9 @@ public class ChatHudListenerMixin {
                     style = style.withFormatting(Formatting.OBFUSCATED);
                 }
             }
-            ((SetText) formattedText).figura$setText(formattedString);
+            ((FiguraTextAccess) formattedText).figura$setText(formattedString);
             formattedText.setStyle(style);
         }
-
-        Identifier font;
-        if ((boolean) Config.entries.get("nameTagIcon").value)
-            font = FiguraMod.FIGURA_FONT;
-        else
-            font = Style.DEFAULT_FONT_ID;
-
-        LiteralText badges = new LiteralText(" ");
-        badges.setStyle(Style.EMPTY
-                .withExclusiveFormatting(Formatting.WHITE)
-                .withFont(font)
-        );
-
-        if (currentData != null && currentData.model != null) {
-            if (PlayerDataManager.getDataForPlayer(uuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                badges.append(new LiteralText("△"));
-            } else {
-                badges.append(new LiteralText("▲"));
-            }
-        }
-
-        if (FiguraMod.special.contains(uuid))
-            badges.append(new LiteralText("✭"));
-
-        //apply badges
-        if (!badges.getString().equals(" "))
-            formattedText.append(badges);
 
         return formattedText;
     }
