@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -80,7 +81,7 @@ public class CustomModelPart {
 
             //Render with main texture.
             VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
-            int ret = render(prevLeftToRender, matrices,transformStack, mainTextureConsumer, light, overlay, alpha);
+            int ret = render(prevLeftToRender, matrices, transformStack, mainTextureConsumer, light, overlay, alpha);
 
             //Render extra textures (emission, that sort)
             for (FiguraTexture extraTexture : data.extraTextures) {
@@ -89,7 +90,7 @@ public class CustomModelPart {
                 if (renderLayerGetter != null) {
                     VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
 
-                    render(prevLeftToRender, matrices,transformStack, extraTextureVertexConsumer, light, overlay, alpha);
+                    render(prevLeftToRender, matrices, transformStack, extraTextureVertexConsumer, light, overlay, alpha);
                 }
             }
 
@@ -98,16 +99,32 @@ public class CustomModelPart {
             //end portal
             excludeFilterParts(this, ShaderType.EndPortal);
 
-            for (int i = 0; i < 16; i++) {
-                VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i + 1));
-                render(prevLeftToRender, matrices,transformStack, portalExtraConsumer, light, overlay, alpha);
+            final Random RANDOM = new Random(31100L);
+
+            //render first layer
+            float r = (RANDOM.nextFloat() * 0.5F + 0.1F) * 0.15F;
+            float g = (RANDOM.nextFloat() * 0.5F + 0.4F) * 0.15F;
+            float b = (RANDOM.nextFloat() * 0.5F + 0.5F) * 0.15F;
+
+            VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(0));
+            render(prevLeftToRender, matrices, transformStack, portalExtraConsumer, light, overlay, 0, 0, new Vector3f(r, g, b), alpha);
+
+            //render other layers
+            for (int i = 2; i < 17; ++i) {
+                float color = 2.0F / (float) (18 - i);
+                r = (RANDOM.nextFloat() * 0.5F + 0.1F) * color;
+                g = (RANDOM.nextFloat() * 0.5F + 0.4F) * color;
+                b = (RANDOM.nextFloat() * 0.5F + 0.5F) * color;
+
+                portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i));
+                render(prevLeftToRender, matrices, transformStack, portalExtraConsumer, light, overlay, 0, 0, new Vector3f(r, g, b), alpha);
             }
 
             //glint
             filterParts(this, ShaderType.Glint);
 
-            VertexConsumer glintConsumer = vcp.getBuffer(RenderLayer.getGlint());
-            render(prevLeftToRender, matrices,transformStack, glintConsumer, light, overlay, alpha);
+            VertexConsumer glintConsumer = vcp.getBuffer(RenderLayer.getDirectEntityGlint());
+            render(prevLeftToRender, matrices, transformStack, glintConsumer, light, overlay, alpha);
 
             //reset rendering status
             setRenderStatus(this, true);

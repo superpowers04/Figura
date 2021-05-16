@@ -312,7 +312,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             //Set listener/handler
             connection.setPacketListener(
                     new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
-                        FiguraMod.LOGGER.log(Level.ERROR, text.toString());
+                        FiguraMod.LOGGER.info(text.getString());
                     }) {
                         
                         //Handle disconnect message
