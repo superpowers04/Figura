@@ -23,4 +23,9 @@ public class UserAvatarHashProvideResponseHandler extends MessageHandler {
             pDat.isInvalidated = true;   
         }
     }
+
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:user_avatar_hash_provide";
+    }
 }

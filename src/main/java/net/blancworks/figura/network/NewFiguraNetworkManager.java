@@ -6,6 +6,7 @@ import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.network.messages.MessageRegistry;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
 import net.blancworks.figura.network.messages.user.UserDeleteCurrentAvatarMessageSender;
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarHashMessageSender;
@@ -44,6 +45,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     public static WebSocketFactory socketFactory;
     //The last socket we were using
     public static WebSocket currWebSocket;
+    public static MessageRegistry msgRegistry;
 
     public static Object authWaitObject = new Object();
     public static ClientConnection authConnection;
@@ -262,13 +264,21 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
 
         WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
-        newSocket.addListener(new FiguraNetworkMessageHandler(this));
+        msgRegistry = new MessageRegistry();
+        FiguraNetworkMessageHandler messageHandler = new FiguraNetworkMessageHandler(this);
+        newSocket.addListener(messageHandler);
 
         newSocket.connect();
 
         newSocket.sendText(jwtToken);
 
-        newSocket.sendText(String.format("{\"protocol\":%d}", PROTOCOL_VERSION));
+        messageHandler.sendClientRegistry(newSocket);
+
+        // This wait needs to be here, because otherwise the first message to be sent
+        // over the network will be sent with an empty registry, causing an exception to be thrown.
+        synchronized (messageHandler.initWaitObject) {
+            messageHandler.initWaitObject.wait(1000 * 10);
+        }
 
         return newSocket;
     }

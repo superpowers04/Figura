@@ -2,17 +2,20 @@ package net.blancworks.figura.network;
 
 import com.google.common.io.ByteSource;
 import com.google.common.io.LittleEndianDataInputStream;
+import com.google.common.io.LittleEndianDataOutputStream;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketAdapter;
 import com.neovisionaries.ws.client.WebSocketFrame;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.network.messages.MessageHandler;
-import net.blancworks.figura.network.messages.MessageIDs;
 import net.blancworks.figura.network.messages.avatar.AvatarProvideResponseHandler;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadResponseHandler;
 import net.blancworks.figura.network.messages.user.UserAvatarHashProvideResponseHandler;
 import net.blancworks.figura.network.messages.user.UserAvatarProvideResponseHandler;
 
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,30 +25,47 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
 
     private final NewFiguraNetworkManager manager;
 
-    private final HashMap<Byte, Supplier<MessageHandler>> allMessageHandlers = new HashMap<Byte, Supplier<MessageHandler>>() {{
+    private final List<Supplier<MessageHandler>> allMessageHandlers = new ArrayList<Supplier<MessageHandler>>() {{
 
-        put(
-                MessageIDs.AVATAR_PROVIDE_RESPONSE_HANDLER_ID,
+        add(
                 AvatarProvideResponseHandler::new
         );
-        put(
-                MessageIDs.AVATAR_UPLOAD_MESSAGE_ID,
+        add(
                 AvatarUploadResponseHandler::new
         );
-        put(
-                MessageIDs.USER_GET_AVATAR_UUID_RESPONSE_HANDLER_ID,
+        add(
                 UserAvatarProvideResponseHandler::new
         );
-        put(
-                MessageIDs.USER_AVATAR_HASH_RESPONSE_HANDLER_ID,
+        add(
                 UserAvatarHashProvideResponseHandler::new
         );
     }};
 
     private boolean skipNext = false;
 
+    public final Object initWaitObject = new Object();
+
     public FiguraNetworkMessageHandler(NewFiguraNetworkManager manager) {
         this.manager = manager;
+    }
+
+    public void sendClientRegistry(WebSocket socket) {
+        try {
+            try (ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+                 LittleEndianDataOutputStream outWriter = new LittleEndianDataOutputStream(outStream)) {
+                outWriter.writeInt(allMessageHandlers.size());
+                for (Supplier<MessageHandler> handler : allMessageHandlers) {
+                    byte[] data = handler.get().getProtocolName().getBytes(StandardCharsets.UTF_8);
+
+                    outWriter.writeInt(data.length);
+                    outWriter.write(data);
+                }
+
+                socket.sendBinary(outStream.toByteArray());
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -62,31 +82,39 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
             return;
         }
 
-        //Get a stream for the bytes
-        LittleEndianDataInputStream dis = new LittleEndianDataInputStream(ByteSource.wrap(binary).openStream());
-
         try {
-            //Read the first byte, use that as the ID of the handler.
-            byte handlerID = dis.readByte();
+            //Get a stream for the bytes
+            try (LittleEndianDataInputStream dis = new LittleEndianDataInputStream(ByteSource.wrap(binary).openStream())) {
+                if (NewFiguraNetworkManager.msgRegistry.isEmpty()) {
+                    NewFiguraNetworkManager.msgRegistry.readRegistryMessage(dis);
 
-            //Get the handler.
-            Supplier<MessageHandler> supplier = allMessageHandlers.get(handlerID);
+                    // Notifies the thread that created the connection that the server registry was received.
+                    synchronized (initWaitObject) {
+                        FiguraMod.LOGGER.info("Connection fully initialized.");
+                        initWaitObject.notifyAll();
+                    }
 
-            //If there is a supplier for this ID
-            if (supplier != null) {
-                //Get it
-                MessageHandler handler = supplier.get();
+                    return;
+                }
 
-                handler.handleMessage(dis);
+                //Read the first byte, use that as the ID of the handler.
+                int handlerID = dis.readByte() - Byte.MIN_VALUE - 1;
 
-            } else {
-                FiguraMod.LOGGER.error("INVALID MESSAGE HANDLER ID " + handlerID);
-                return;
+                //If there is a supplier for this ID
+                if (allMessageHandlers.size() > handlerID) {
+                    //Get the handler.
+                    MessageHandler handler = allMessageHandlers.get(handlerID).get();
+
+                    handler.handleMessage(dis);
+
+                } else {
+                    FiguraMod.LOGGER.error("INVALID MESSAGE HANDLER ID " + handlerID);
+                    return;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        dis.close();
     }
 
     @Override
@@ -98,6 +126,10 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
     public void onDisconnected(WebSocket websocket, WebSocketFrame serverCloseFrame, WebSocketFrame clientCloseFrame, boolean closedByServer) throws Exception {
         super.onDisconnected(websocket, serverCloseFrame, clientCloseFrame, closedByServer);
         NewFiguraNetworkManager.currWebSocket = null;
+
+        synchronized (initWaitObject) {
+            initWaitObject.notifyAll();
+        }
 
         if (closedByServer) {
             FiguraMod.LOGGER.warn("Disconnected from Figura Server with reason '" + serverCloseFrame.getCloseReason() + "'");
