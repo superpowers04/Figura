@@ -318,8 +318,6 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     }
 
     public CompletableFuture<Void> authUser(boolean force) {
-        FiguraMod.LOGGER.info("Authenticating with Figura server");
-
         if (!force && jwtToken != null)
             return CompletableFuture.completedFuture(null);
 
@@ -331,6 +329,8 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         }
         
         try {
+            FiguraMod.LOGGER.info("Authenticating with Figura server");
+
             String address = authServerURL();
             InetAddress inetAddress = InetAddress.getByName(address);
             
