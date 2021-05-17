@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 public class FiguraNetworkMessageHandler extends WebSocketAdapter {
@@ -43,7 +44,7 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
 
     private boolean skipNext = false;
 
-    public final Object initWaitObject = new Object();
+    public final CompletableFuture<Void> initializedFuture = new CompletableFuture<>();
 
     public FiguraNetworkMessageHandler(NewFiguraNetworkManager manager) {
         this.manager = manager;
@@ -88,11 +89,8 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
                 if (NewFiguraNetworkManager.msgRegistry.isEmpty()) {
                     NewFiguraNetworkManager.msgRegistry.readRegistryMessage(dis);
 
-                    // Notifies the thread that created the connection that the server registry was received.
-                    synchronized (initWaitObject) {
-                        FiguraMod.LOGGER.info("Connection fully initialized.");
-                        initWaitObject.notifyAll();
-                    }
+                    FiguraMod.LOGGER.info("Connection fully initialized.");
+                    initializedFuture.complete(null);
 
                     return;
                 }
@@ -127,9 +125,7 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
         super.onDisconnected(websocket, serverCloseFrame, clientCloseFrame, closedByServer);
         NewFiguraNetworkManager.currWebSocket = null;
 
-        synchronized (initWaitObject) {
-            initWaitObject.notifyAll();
-        }
+        initializedFuture.complete(null);
 
         if (closedByServer) {
             FiguraMod.LOGGER.warn("Disconnected from Figura Server with reason '" + serverCloseFrame.getCloseReason() + "'");
