@@ -280,6 +280,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
 
                 WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
+                currWebSocket = newSocket;
                 msgRegistry = new MessageRegistry();
                 FiguraNetworkMessageHandler messageHandler = new FiguraNetworkMessageHandler(this);
                 newSocket.addListener(messageHandler);
@@ -289,8 +290,6 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 newSocket.sendText(jwtToken);
 
                 messageHandler.sendClientRegistry(newSocket);
-
-                currWebSocket = newSocket;
 
                 return messageHandler.initializedFuture;
             } catch (Exception e) {
