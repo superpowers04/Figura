@@ -328,7 +328,7 @@ public class CustomModelPart {
             float childAlpha = alpha + child.alpha - 1;
 
             //render part
-            leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, alpha);
+            leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, childAlpha);
         }
 
         transformStack.pop();
