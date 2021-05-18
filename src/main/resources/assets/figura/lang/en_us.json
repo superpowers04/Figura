@@ -82,6 +82,9 @@
   "gui.figura.config.ownnametag": "Render Own NameTag",
   "gui.figura.config.tooltip.ownnametag": "Renders your own NameTag ingame",
 
+  "gui.figura.config.logothers": "Log Others Players Script",
+  "gui.figura.config.tooltip.logothers": "Allow script debug logs from others players",
+
   "gui.figura.config.buttonlocation": "Figura Button Location",
   "gui.figura.config.tooltip.buttonlocation": "Location where the Figura settings button should be",
   "gui.figura.config.buttonlocation.topleft": "Top Left",
