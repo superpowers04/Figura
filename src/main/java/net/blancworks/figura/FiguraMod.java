@@ -265,6 +265,9 @@ public class FiguraMod implements ClientModInitializer {
         if (FiguraMod.special.contains(uuid))
             badges.append(new LiteralText("✭"));
 
+        if (badges.getString().equals(" "))
+            ((FiguraTextAccess) badges).figura$setText("");
+
         ((FiguraTextAccess) badges).figura$setFigura(true);
 
         return badges;
