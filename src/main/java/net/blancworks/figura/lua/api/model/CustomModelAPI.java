@@ -182,8 +182,15 @@ public class CustomModelAPI {
             ret.set("setEnabled", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    targetPart.visible = arg.checkboolean();
+                    CustomModelPart.setProperty(targetPart, arg.checkboolean(), CustomModelPart.Operation.VISIBLE);
                     return null;
+                }
+            });
+
+            ret.set("getHidden", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(targetPart.isHidden);
                 }
             });
 

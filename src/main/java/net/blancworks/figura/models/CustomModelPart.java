@@ -43,6 +43,7 @@ public class CustomModelPart {
     public float vOffset = 0;
 
     public boolean visible = true;
+    public boolean isHidden = false;
 
     public ParentType parentType = ParentType.None;
     public boolean isMimicMode = false;
@@ -127,7 +128,7 @@ public class CustomModelPart {
             render(prevLeftToRender, matrices, transformStack, glintConsumer, light, overlay, alpha);
 
             //reset rendering status
-            setRenderStatus(this, true);
+            setProperty(this, true, Operation.RENDER);
 
             return ret;
         }
@@ -147,7 +148,7 @@ public class CustomModelPart {
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
     public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
         //Don't render invisible parts.
-        if (!this.visible || !this.shouldRender) {
+        if (!this.visible || !this.shouldRender || this.isHidden) {
             return leftToRender;
         }
 
@@ -325,7 +326,7 @@ public class CustomModelPart {
                 continue;
 
             //set child alpha
-            float childAlpha = alpha + child.alpha - 1;
+            float childAlpha = child.alpha * alpha;
 
             //render part
             leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, childAlpha);
@@ -338,7 +339,7 @@ public class CustomModelPart {
 
     public int getComplexity() {
         //don't render filtered parts
-        if (!this.visible || !this.shouldRender || this.isParentSpecial()) {
+        if (!this.visible || !this.shouldRender || this.isParentSpecial() || this.isHidden) {
             return 0;
         }
 
@@ -352,36 +353,44 @@ public class CustomModelPart {
         return complexity;
     }
 
-    public void setRenderStatus(CustomModelPart part, boolean status) {
-        //set for parent
-        part.shouldRender = status;
+    public static void setProperty(CustomModelPart part, Object value, Operation op) {
+        switch (op) {
+            //set for parent
+            case RENDER: part.shouldRender = (boolean) value; break;
+            case VISIBLE: part.visible = (boolean) value; break;
+        }
 
         //iterate over the children
         for (CustomModelPart child : part.children) {
-            setRenderStatus(child, status);
+            setProperty(child, value, op);
         }
     }
 
-    public void filterParts(CustomModelPart part, Object filter) {
+    public enum Operation {
+        RENDER,
+        VISIBLE
+    }
+
+    public static void filterParts(CustomModelPart part, Object filter) {
         //error temp variable
         boolean unmatched = false;
 
         //check for filter type, then flag to render if the property matches the filter
         if (filter instanceof ParentType) {
             if (part.parentType == filter)
-                setRenderStatus(part, true);
+                setProperty(part, true, Operation.RENDER);
             else
                 unmatched = true;
         }
         else if (filter instanceof ShaderType) {
             if (part.shaderType == filter)
-                setRenderStatus(part, true);
+                setProperty(part, true, Operation.RENDER);
             else
                 unmatched = true;
         }
         else if (filter instanceof RenderType) {
             if (part.renderType == filter)
-                setRenderStatus(part, true);
+                setProperty(part, true, Operation.RENDER);
             else
                 unmatched = true;
         }
@@ -527,7 +536,7 @@ public class CustomModelPart {
         }
 
         if (partNbt.contains("vsb")) {
-            this.visible = partNbt.getBoolean("vsb");
+            this.isHidden = partNbt.getBoolean("vsb");
         }
 
         if (partNbt.contains("uv")) {
@@ -589,8 +598,8 @@ public class CustomModelPart {
         }
         partNbt.put("mmc", ByteTag.of(this.isMimicMode));
 
-        if (!this.visible) {
-            partNbt.put("vsb", ByteTag.of(false));
+        if (this.isHidden) {
+            partNbt.put("vsb", ByteTag.of(true));
         }
 
         if (this.alpha != 1.0f) {

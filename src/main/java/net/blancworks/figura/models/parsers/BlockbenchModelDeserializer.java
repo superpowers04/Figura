@@ -166,7 +166,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 }
             }
         }
-        if (group.has("visibility")) groupPart.visible = group.get("visibility").getAsBoolean();
+        if (group.has("visibility")) groupPart.isHidden = !group.get("visibility").getAsBoolean();
         if (group.has("origin")) {
             Vector3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
@@ -210,7 +210,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         if (elementObject.has("name")) {
             elementPart.name = elementObject.get("name").getAsString();
         }
-        if (elementObject.has("visibility")) elementPart.visible = elementObject.get("visibility").getAsBoolean();
+        if (elementObject.has("visibility")) elementPart.isHidden = !elementObject.get("visibility").getAsBoolean();
 
         Vector3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
         Vector3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
