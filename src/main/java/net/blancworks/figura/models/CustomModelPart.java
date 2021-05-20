@@ -156,7 +156,7 @@ public class CustomModelPart {
         transformStack.push();
 
         try {
-            if (this.isMimicMode) {
+            if (this.isMimicMode && parentType != ParentType.None && parentType != ParentType.Model) {
                 PlayerEntityModel model = FiguraMod.currentData.vanillaModel;
 
                 switch (this.parentType) {
@@ -182,7 +182,7 @@ public class CustomModelPart {
 
                 float multiply = 57.2958f;
                 this.rot.multiplyComponentwise(multiply, multiply, multiply);
-            } else if (parentType != CustomModelPart.ParentType.Model) {
+            } else if (parentType != ParentType.Model) {
                 PlayerEntityModel playerModel = FiguraMod.currentData.vanillaModel;
 
                 switch (parentType) {
