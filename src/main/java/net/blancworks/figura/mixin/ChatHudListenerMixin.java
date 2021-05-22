@@ -19,6 +19,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Mixin(ChatHudListener.class)
 public class ChatHudListenerMixin {
@@ -71,7 +72,7 @@ public class ChatHudListenerMixin {
             Style style = text.getStyle();
 
             //split the text
-            String[] textSplit = text.getRawString().split(playerName, 2);
+            String[] textSplit = text.getRawString().split(Pattern.quote(playerName), 2);
 
             Text playerNameSplitted = new LiteralText(playerName).setStyle(style);
 

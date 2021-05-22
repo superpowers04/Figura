@@ -17,6 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Mixin(PlayerListHud.class)
 public class PlayerListHudMixin {
@@ -42,7 +43,7 @@ public class PlayerListHudMixin {
             Style style = text.getStyle();
 
             //split the text
-            String[] textSplit = text.getRawString().split(playerName, 2);
+            String[] textSplit = text.getRawString().split(Pattern.quote(playerName), 2);
 
             Text playerNameSplitted = new LiteralText(playerName).setStyle(style);
 
