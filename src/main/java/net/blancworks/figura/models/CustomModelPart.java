@@ -539,12 +539,6 @@ public class CustomModelPart {
             this.isHidden = partNbt.getBoolean("vsb");
         }
 
-        if (partNbt.contains("uv")) {
-            ListTag uvOffsetNbt = (ListTag) partNbt.get("uv");
-            this.uOffset = uvOffsetNbt.getFloat(0);
-            this.vOffset = uvOffsetNbt.getFloat(1);
-        }
-
         if (partNbt.contains("alp")) {
             this.alpha = partNbt.getFloat("alp");
         }
@@ -583,14 +577,6 @@ public class CustomModelPart {
         }
         if (!this.pivot.equals(new Vector3f(0, 0, 0))) {
             partNbt.put("piv", vec3fToNbt(this.pivot));
-        }
-
-        if (Math.abs(this.uOffset) > 0.0001f && Math.abs(this.vOffset) > 0.0001f) {
-            ListTag uvOffsetNbt = new ListTag() {{
-                add(FloatTag.of(uOffset));
-                add(FloatTag.of(vOffset));
-            }};
-            partNbt.put("uv", uvOffsetNbt);
         }
 
         if (this.parentType != ParentType.None) {

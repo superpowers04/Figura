@@ -128,7 +128,8 @@ public class CustomModelAPI {
             ret.set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(targetPart.rot);
+                    Vector3f uv = new Vector3f(targetPart.uOffset, targetPart.vOffset, 0);
+                    return LuaVector.of(uv);
                 }
             });
 
@@ -136,8 +137,11 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
-                    targetPart.uOffset = v.x();
-                    targetPart.vOffset = v.y();
+                    targetPart.uOffset = v.x() % 1;
+                    targetPart.vOffset = v.y() % 1;
+                    if (targetPart.uOffset < 0) targetPart.uOffset++;
+                    if (targetPart.vOffset < 0) targetPart.vOffset++;
+
                     return NIL;
                 }
             });

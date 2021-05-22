@@ -230,11 +230,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         Vector3f size = to.copy();
         size.subtract(from);
 
-        if (elementObject.has("uv_offset")) {
-            elementPart.uOffset = elementObject.get("uv_offset").getAsJsonArray().get(0).getAsInt();
-            elementPart.vOffset = elementObject.get("uv_offset").getAsJsonArray().get(1).getAsInt();
-        }
-
         JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
 
         CompoundTag cuboidPropertiesTag = new CompoundTag();
