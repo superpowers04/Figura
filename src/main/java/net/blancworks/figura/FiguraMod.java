@@ -218,7 +218,7 @@ public class FiguraMod implements ClientModInitializer {
 
                             if (data != null && data.model != null) {
                                 for (CustomModelPart part : data.model.worldParts) {
-                                    part.renderUsingAllTextures(data, context.matrixStack(), new MatrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
+                                    part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.WORLD, data, context.matrixStack(), new MatrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
                                 }
                             }
 

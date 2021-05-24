@@ -107,7 +107,7 @@ public class FiguraGuiScreen extends Screen {
     public FiguraConfigScreen configScreen = new FiguraConfigScreen(this);
 
     public CustomListWidgetState modelFileListState = new CustomListWidgetState();
-    public static ModelFileListWidget modelFileList;
+    public ModelFileListWidget modelFileList;
 
     public FiguraGuiScreen(Screen parentScreen) {
         super(new TranslatableText("gui.figura.menutitle"));
@@ -140,10 +140,10 @@ public class FiguraGuiScreen extends Screen {
         searchBoxX = 7;
         this.searchBox = new TextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("gui.figura.button.search"));
         this.searchBox.setChangedListener((string_1) -> modelFileList.filter(string_1, false));
-        modelFileList = new ModelFileListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, modelFileList, this, modelFileListState);
-        modelFileList.setLeftPos(5);
-        this.addChild(modelFileList);
-        this.addChild(searchBox);
+        this.modelFileList = new ModelFileListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, this.modelFileList, this, modelFileListState);
+        this.modelFileList.setLeftPos(5);
+        this.addChild(this.modelFileList);
+        this.addChild(this.searchBox);
 
         int width = Math.min((this.width / 2) - 10 - 128, 128);
 
@@ -230,7 +230,7 @@ public class FiguraGuiScreen extends Screen {
             if (PlayerDataManager.lastLoadedFileName != null)
                 nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
             modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
-            fileSizeText = getFileSizeText();
+            FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
             scriptText = getScriptText();
         }
 
@@ -261,7 +261,7 @@ public class FiguraGuiScreen extends Screen {
                 if (PlayerDataManager.lastLoadedFileName == null)
                     nameText = null;
                 modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
-                fileSizeText = getFileSizeText();
+                FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
                 scriptText = getScriptText();
             }
         }
@@ -378,7 +378,7 @@ public class FiguraGuiScreen extends Screen {
             nameText = new TranslatableText("gui.figura.name", fileName.substring(0, Math.min(20, fileName.length())));
             rawNameText = new LiteralText(fileName);
             modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
-            fileSizeText = getFileSizeText();
+            FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
             scriptText = getScriptText();
 
         }, Util.getMainWorkerExecutor());
@@ -448,6 +448,7 @@ public class FiguraGuiScreen extends Screen {
 
             searchBox.visible = true;
             modelFileList.updateSize(paneWidth, this.height, paneY + 19, this.height - 36);
+            modelFileList.setLeftPos(5);
 
             scaledValue  = 0.0F;
         }

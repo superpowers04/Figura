@@ -30,8 +30,6 @@ public class CustomModel extends FiguraAsset {
     public HashMap<Identifier, CustomModelPart> customParents = new HashMap<>();
 
     //TODO - probably improve this?
-    public ArrayList<CustomModelPart> leftElytraParts = new ArrayList<>();
-    public ArrayList<CustomModelPart> rightElytraParts = new ArrayList<>();
     public ArrayList<CustomModelPart> worldParts = new ArrayList<>();
 
     public float texWidth = 64, texHeight = 64;
@@ -99,6 +97,9 @@ public class CustomModel extends FiguraAsset {
                     leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.Head, owner, matrices, transformStack, vcp, light, overlay, alpha);
                 }
                 else {
+                    part.ignoredParents.add(CustomModelPart.ParentType.WORLD);
+                    part.ignoredParents.add(CustomModelPart.ParentType.LeftElytra);
+                    part.ignoredParents.add(CustomModelPart.ParentType.RightElytra);
                     leftToRender = part.renderUsingAllTextures(owner, matrices, transformStack, vcp, light, overlay, alpha);
                 }
 
@@ -169,14 +170,9 @@ public class CustomModel extends FiguraAsset {
         }
     }
 
-    public void sortPart(CustomModelPart part){
-        if (part.parentType == CustomModelPart.ParentType.LeftElytra) {
-            leftElytraParts.add(part);
-        } else if (part.parentType == CustomModelPart.ParentType.RightElytra) {
-            rightElytraParts.add(part);
-        } else if (part.parentType == CustomModelPart.ParentType.WORLD) {
+    public void sortPart(CustomModelPart part) {
+        if (part.parentType == CustomModelPart.ParentType.WORLD)
             worldParts.add(part);
-        }
 
         for (CustomModelPart child : part.children) {
             sortPart(child);

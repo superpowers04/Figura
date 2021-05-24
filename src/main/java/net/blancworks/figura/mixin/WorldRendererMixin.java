@@ -12,6 +12,7 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.WorldRenderer;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -51,7 +52,7 @@ public class WorldRendererMixin {
 
                 if (data != null && data.model != null && data.lastEntity != null) {
                     for (CustomModelPart part : data.model.worldParts) {
-                        data.model.leftToRender = part.renderUsingAllTextures(data, matrices, new MatrixStack(), vertexConsumers, entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1.0f);
+                        data.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.WORLD, data, matrices, new MatrixStack(), vertexConsumers, entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1.0f);
                     }
                 }
 

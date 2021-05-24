@@ -41,26 +41,32 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
     private void onRenderItem(LivingEntity entity, ItemStack stack, ModelTransformation.Mode transformationMode, Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         PlayerData data = FiguraMod.currentData;
         
-        if(data == null)
+        if (data == null)
             return;
 
         TrustContainer tc = data.getTrustContainer();
 
         if (tc == null || !tc.getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
             return;
-        
+
         try {
             if (data.model != null) {
                 VanillaModelPartCustomization originModification = arm == Arm.LEFT ? data.model.originModifications.get(ItemModelAPI.VANILLA_LEFT_HAND_ID) : data.model.originModifications.get(ItemModelAPI.VANILLA_RIGHT_HAND_ID);
 
                 if (originModification != null) {
-                    if (originModification.part == null || !originModification.part.visible || originModification.part.isHidden || data.model.lastComplexity >= data.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
+                    if (originModification.part == null || originModification.visible == null || data.model.lastComplexity >= data.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
                         ci.cancel();
                         return;
                     }
 
                     if (originModification.stackReference != null) {
+                        //render
                         figura$CustomOriginPointRender(entity, stack, transformationMode, arm, originModification.stackReference, vertexConsumers, light);
+
+                        //flag to not render anymore
+                        originModification.visible = null;
+
+                        //return
                         ci.cancel();
                         return;
                     }

@@ -18,7 +18,7 @@ public class ArmorModelAPI {
     public static final String VANILLA_CHESTPLATE = "CHESTPLATE";
     public static final String VANILLA_LEGGINGS = "LEGGINGS";
     public static final String VANILLA_BOOTS = "BOOTS";
-
+    public static final String VANILLA_HEAD_ITEM = "HEAD_ITEM";
     
     public static Identifier getID() {
         return new Identifier("default", "armor_model");
@@ -34,6 +34,8 @@ public class ArmorModelAPI {
             set(VANILLA_LEGGINGS, getTableForPart(VANILLA_LEGGINGS, script));
 
             set(VANILLA_BOOTS, getTableForPart(VANILLA_BOOTS, script));
+
+            set(VANILLA_HEAD_ITEM, getTableForPart(VANILLA_HEAD_ITEM, script));
         }});
 
         return producedTable;

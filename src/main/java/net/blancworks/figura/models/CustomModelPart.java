@@ -70,6 +70,8 @@ public class CustomModelPart {
     public Matrix4f lastModelMatrixInverse = new Matrix4f();
     public Matrix3f lastNormalMatrixInverse = new Matrix3f();
 
+    public ArrayList<ParentType> ignoredParents = new ArrayList<>();
+
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
@@ -128,14 +130,15 @@ public class CustomModelPart {
             render(prevLeftToRender, matrices, transformStack, glintConsumer, light, overlay, alpha);
 
             //reset rendering status
-            setProperty(this, true, Operation.RENDER);
+            setRenderStatus(this, true);
 
             return ret;
         }
         return 0;
     }
 
-    public int renderUsingAllTexturesFiltered(Object filter, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+    public int renderUsingAllTexturesFiltered(ParentType filter, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        ignoredParents.clear();
         filterParts(this, filter);
         return renderUsingAllTextures(data, matrices, transformStack, vcp, light, overlay, alpha);
     }
@@ -217,6 +220,7 @@ public class CustomModelPart {
                             applyTransformsAsItem(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
+                            visible = true;
                             matrices.pop();
                         }});
                         break;
@@ -227,6 +231,7 @@ public class CustomModelPart {
                             applyTransformsAsItem(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
+                            visible = true;
                             matrices.pop();
                         }});
                         break;
@@ -237,6 +242,7 @@ public class CustomModelPart {
                             applyTransformsAsElytra(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
+                            visible = true;
                             matrices.pop();
                         }});
                         break;
@@ -247,6 +253,7 @@ public class CustomModelPart {
                             applyTransformsAsElytra(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
+                            visible = true;
                             matrices.pop();
                         }});
                         break;
@@ -321,9 +328,12 @@ public class CustomModelPart {
             if (leftToRender == 0)
                 break;
 
-            //Don't render special parts.
-            if (child.isParentSpecial())
+            //dont render ignored parts
+            if (ignoredParents.contains(child.parentType))
                 continue;
+
+            //copy ignored parts to child
+            child.ignoredParents = ignoredParents;
 
             //set child alpha
             float childAlpha = child.alpha * alpha;
@@ -353,22 +363,14 @@ public class CustomModelPart {
         return complexity;
     }
 
-    public static void setProperty(CustomModelPart part, Object value, Operation op) {
-        switch (op) {
-            //set for parent
-            case RENDER: part.shouldRender = (boolean) value; break;
-            case VISIBLE: part.visible = (boolean) value; break;
-        }
+    public static void setRenderStatus(CustomModelPart part, boolean status) {
+        //set for parent
+        part.shouldRender = status;
 
         //iterate over the children
         for (CustomModelPart child : part.children) {
-            setProperty(child, value, op);
+            setRenderStatus(child, status);
         }
-    }
-
-    public enum Operation {
-        RENDER,
-        VISIBLE
     }
 
     public static void filterParts(CustomModelPart part, Object filter) {
@@ -378,19 +380,19 @@ public class CustomModelPart {
         //check for filter type, then flag to render if the property matches the filter
         if (filter instanceof ParentType) {
             if (part.parentType == filter)
-                setProperty(part, true, Operation.RENDER);
+                setRenderStatus(part, true);
             else
                 unmatched = true;
         }
         else if (filter instanceof ShaderType) {
             if (part.shaderType == filter)
-                setProperty(part, true, Operation.RENDER);
+                setRenderStatus(part, true);
             else
                 unmatched = true;
         }
         else if (filter instanceof RenderType) {
             if (part.renderType == filter)
-                setProperty(part, true, Operation.RENDER);
+                setRenderStatus(part, true);
             else
                 unmatched = true;
         }
