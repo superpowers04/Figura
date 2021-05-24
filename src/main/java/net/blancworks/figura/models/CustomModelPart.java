@@ -70,8 +70,6 @@ public class CustomModelPart {
     public Matrix4f lastModelMatrixInverse = new Matrix4f();
     public Matrix3f lastNormalMatrixInverse = new Matrix3f();
 
-    public ArrayList<ParentType> ignoredParents = new ArrayList<>();
-
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
@@ -138,7 +136,6 @@ public class CustomModelPart {
     }
 
     public int renderUsingAllTexturesFiltered(ParentType filter, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        ignoredParents.clear();
         filterParts(this, filter);
         return renderUsingAllTextures(data, matrices, transformStack, vcp, light, overlay, alpha);
     }
@@ -328,12 +325,9 @@ public class CustomModelPart {
             if (leftToRender == 0)
                 break;
 
-            //dont render ignored parts
-            if (ignoredParents.contains(child.parentType))
+            //Don't render special parts.
+            if (child.isParentSpecial())
                 continue;
-
-            //copy ignored parts to child
-            child.ignoredParents = ignoredParents;
 
             //set child alpha
             float childAlpha = child.alpha * alpha;

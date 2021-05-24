@@ -121,8 +121,8 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         matrices.push();
         getLeftWing().rotate(matrices);
 
-        for (CustomModelPart modelPart : data.model.allParts) {
-            data.model.leftToRender = modelPart.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.LeftElytra, data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+        for (CustomModelPart modelPart : data.model.leftElytraParts) {
+            data.model.leftToRender = modelPart.renderUsingAllTextures(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;
@@ -134,8 +134,8 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         matrices.push();
         getRightWing().rotate(matrices);
 
-        for (CustomModelPart modelPart : data.model.allParts) {
-            data.model.leftToRender = modelPart.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.RightElytra, data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+        for (CustomModelPart modelPart : data.model.rightElytraParts) {
+            data.model.leftToRender = modelPart.renderUsingAllTextures(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;
