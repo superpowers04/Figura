@@ -169,9 +169,9 @@ public class NamePlateAPI {
                     if (arg.isnil()) {
                         customization.bold = null;
                         customization.italic = null;
+                        customization.underline = null;
                         customization.obfuscated = null;
                         customization.strikethrough = null;
-                        customization.underline = null;
                         return NIL;
                     }
 
@@ -179,20 +179,15 @@ public class NamePlateAPI {
 
                     ArrayList<String> arguments = new ArrayList<>();
 
-                    for (int i = 1; i <= formatting.length(); i++) {
+                    for (int i = 1; i <= formatting.length() && i < 6; i++) {
                         arguments.add(formatting.get(i).checkjstring());
                     }
 
-                    if (arguments.contains("BOLD"))
-                        customization.bold = true;
-                    if (arguments.contains("ITALIC"))
-                        customization.italic = true;
-                    if (arguments.contains("OBFUSCATED"))
-                        customization.obfuscated = true;
-                    if (arguments.contains("STRIKETHROUGH"))
-                        customization.strikethrough = true;
-                    if (arguments.contains("UNDERLINE"))
-                        customization.underline = true;
+                    customization.bold = (arguments.contains("BOLD")) ? true : null;
+                    customization.italic = (arguments.contains("ITALIC")) ? true : null;
+                    customization.underline = (arguments.contains("UNDERLINE")) ? true : null;
+                    customization.obfuscated = (arguments.contains("OBFUSCATED")) ? true : null;
+                    customization.strikethrough = (arguments.contains("STRIKETHROUGH")) ? true : null;
 
                     return NIL;
                 }
@@ -209,12 +204,12 @@ public class NamePlateAPI {
                         formatting.insert(0, LuaValue.valueOf("BOLD"));
                     if (customization.italic != null)
                         formatting.insert(0, LuaValue.valueOf("ITALIC"));
+                    if (customization.underline != null)
+                        formatting.insert(0, LuaValue.valueOf("UNDERLINE"));
                     if (customization.obfuscated != null)
                         formatting.insert(0, LuaValue.valueOf("OBFUSCATED"));
                     if (customization.strikethrough != null)
                         formatting.insert(0, LuaValue.valueOf("STRIKETHROUGH"));
-                    if (customization.underline != null)
-                        formatting.insert(0, LuaValue.valueOf("UNDERLINE"));
 
                     return formatting;
                 }
@@ -312,7 +307,10 @@ public class NamePlateAPI {
     public static Text applyNameplateFormatting(Text text, UUID uuid, NamePlateCustomization nameplateData, PlayerData currentData) {
         //dummy playername text
         LiteralText formattedText = new LiteralText(((LiteralText) text).getRawString());
-        formattedText.setStyle(text.getStyle());
+
+        //original style
+        Style originalStyle = text.getStyle();
+        formattedText.setStyle(originalStyle);
 
         //mark text as figura text
         ((FiguraTextAccess) formattedText).figura$setFigura(true);
@@ -320,41 +318,31 @@ public class NamePlateAPI {
         if (currentData != null) {
             //apply nameplate formatting
             if (nameplateData != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
-                //dummy style
-                Style style = Style.EMPTY;
-
                 //set color and properties
                 if (nameplateData.color != null)
-                    style = style.withColor(TextColor.fromRgb(nameplateData.color));
+                    originalStyle = originalStyle.withColor(TextColor.fromRgb(nameplateData.color));
 
                 if (nameplateData.bold != null)
-                    style = style.withBold(nameplateData.bold);
+                    originalStyle = originalStyle.withBold(nameplateData.bold);
 
                 if (nameplateData.italic != null)
-                    style = style.withItalic(nameplateData.italic);
+                    originalStyle = originalStyle.withItalic(nameplateData.italic);
 
                 if (nameplateData.underline != null)
-                    style = style.withUnderline(nameplateData.underline);
+                    originalStyle = originalStyle.withUnderline(nameplateData.underline);
 
                 if (nameplateData.strikethrough != null && nameplateData.strikethrough)
-                    style = style.withFormatting(Formatting.STRIKETHROUGH);
+                    originalStyle = originalStyle.withFormatting(Formatting.STRIKETHROUGH);
 
                 if (nameplateData.obfuscated != null && nameplateData.obfuscated)
-                    style = style.withFormatting(Formatting.OBFUSCATED);
-
-                //set extra styles
-                Style originalStyle = text.getStyle();
-                style = style.withClickEvent(originalStyle.getClickEvent());
-                style = style.withHoverEvent(originalStyle.getHoverEvent());
-                style = style.withInsertion(originalStyle.getInsertion());
-                style = style.withFont(originalStyle.getFont());
+                    originalStyle = originalStyle.withFormatting(Formatting.OBFUSCATED);
 
                 //set text, if not null
                 if (nameplateData.text != null)
                     ((FiguraTextAccess) formattedText).figura$setText(nameplateData.text);
 
                 //apply new style
-                formattedText.setStyle(style);
+                formattedText.setStyle(originalStyle);
             }
         }
 

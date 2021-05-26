@@ -34,27 +34,34 @@ public abstract class CameraMixin {
             if (customization == null)
                 return;
 
-            this.setRotation(this.yaw + customization.rotation.y, this.pitch + customization.rotation.x);
+            if (customization.rotation != null)
+                this.setRotation(this.yaw + customization.rotation.y, this.pitch + customization.rotation.x);
 
-            this.setPos(
-                    MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
-                    MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY) + customization.position.getY(),
-                    MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ())
-            );
+            if (customization.position != null) {
+                this.setPos(
+                        MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
+                        MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY) + customization.position.getY(),
+                        MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ())
+                );
+            }
 
             if (!thirdPerson) {
+                if (customization.position != null)
                 this.moveBy(-customization.position.getZ(), 0.0d, -customization.position.getX());
 
+                //bed fix
                 if (focusedEntity instanceof LivingEntity && ((LivingEntity) focusedEntity).isSleeping()) {
                     this.moveBy(0.0d, 0.3d, 0.0d);
                 }
             }
             else {
-                this.setRotation(this.yaw - 90, this.pitch);
-                double x = -this.clipToSpace(customization.position.getX());
-                this.setRotation(this.yaw + 90, this.pitch);
+                if (customization.position != null) {
+                    this.setRotation(this.yaw - 90, this.pitch);
+                    double x = -this.clipToSpace(customization.position.getX());
+                    this.setRotation(this.yaw + 90, this.pitch);
 
-                this.moveBy(-this.clipToSpace(4.0d + customization.position.getZ()), 0.0d, x);
+                    this.moveBy(-this.clipToSpace(4.0d + customization.position.getZ()), 0.0d, x);
+                }
             }
         }
     }

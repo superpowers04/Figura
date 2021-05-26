@@ -149,14 +149,16 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 if (nameplateData == null)
                     return;
 
-                if (!nameplateData.enabled) {
+                if (nameplateData.enabled != null && !nameplateData.enabled) {
                     ci.cancel();
                     return;
                 }
 
                 //apply special nameplate settings
-                translation.add(nameplateData.position);
-                scale = nameplateData.scale;
+                if (nameplateData.position != null)
+                    translation.add(nameplateData.position);
+                if (nameplateData.scale != null)
+                    scale = nameplateData.scale;
             }
         }
         else return;
