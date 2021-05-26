@@ -1,8 +1,9 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.CameraData;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.lua.api.camera.CameraAPI;
+import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -27,38 +28,33 @@ public abstract class CameraMixin {
 
         PlayerData currentData = PlayerDataManager.getDataForPlayer(focusedEntity.getUuid());
         if (currentData != null && currentData.script != null) {
-            CameraData data = currentData.script.camera;
 
-            this.setRotation(this.yaw + data.rotation.y, this.pitch + data.rotation.x);
+            CameraCustomization customization = thirdPerson ? currentData.script.cameraCustomizations.get(CameraAPI.THIRD_PERSON) : currentData.script.cameraCustomizations.get(CameraAPI.FIRST_PERSON);
+
+            if (customization == null)
+                return;
+
+            this.setRotation(this.yaw + customization.rotation.y, this.pitch + customization.rotation.x);
+
+            this.setPos(
+                    MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
+                    MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY) + customization.position.getY(),
+                    MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ())
+            );
 
             if (!thirdPerson) {
-                this.setPos(
-                        MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
-                        MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY) + data.fpPosition.getY(),
-                        MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ())
-                );
-
-                this.moveBy(-data.fpPosition.getZ(), 0.0d, -data.fpPosition.getX());
+                this.moveBy(-customization.position.getZ(), 0.0d, -customization.position.getX());
 
                 if (focusedEntity instanceof LivingEntity && ((LivingEntity) focusedEntity).isSleeping()) {
                     this.moveBy(0.0d, 0.3d, 0.0d);
                 }
             }
             else {
-                //y
-                this.setPos(
-                        MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
-                        MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY) + data.position.getY(),
-                        MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ())
-                );
-
-                //x
                 this.setRotation(this.yaw - 90, this.pitch);
-                double x = -this.clipToSpace(data.position.getX());
+                double x = -this.clipToSpace(customization.position.getX());
                 this.setRotation(this.yaw + 90, this.pitch);
 
-                //z
-                this.moveBy(-this.clipToSpace(4.0d + data.position.getZ()), 0.0d, x);
+                this.moveBy(-this.clipToSpace(4.0d + customization.position.getZ()), 0.0d, x);
             }
         }
     }

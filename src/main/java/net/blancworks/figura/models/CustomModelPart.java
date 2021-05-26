@@ -7,6 +7,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
 import net.blancworks.figura.lua.api.model.ItemModelAPI;
+import net.blancworks.figura.lua.api.model.ParrotModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.render.RenderLayer;
@@ -235,8 +236,8 @@ public class CustomModelPart {
                     case LeftElytraOrigin:
                         FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
-                            applyTransformsAsElytra(matrices);
-                            applyTransformsAsElytra(transformStack);
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
                             visible = true;
@@ -246,8 +247,30 @@ public class CustomModelPart {
                     case RightElytraOrigin:
                         FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
-                            applyTransformsAsElytra(matrices);
-                            applyTransformsAsElytra(transformStack);
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        break;
+                    case LeftParrotOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        break;
+                    case RightParrotOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
                             visible = true;
@@ -477,7 +500,7 @@ public class CustomModelPart {
     }
 
     //TODO move these to the mixins, probably.
-    public void applyTransformsAsElytra(MatrixStack stack) {
+    public void applyTransformsAsElytraOrParrot(MatrixStack stack) {
         stack.translate(pivot.getX() / 16.0f, pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
         stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
         stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
@@ -632,9 +655,10 @@ public class CustomModelPart {
         RightItemOrigin, //Origin position of the held item
         LeftElytraOrigin, //Left origin position of the elytra
         RightElytraOrigin, //Right origin position of the elytra
-        LeftElytra, //Left origin position of the elytra
-        RightElytra, //Right origin position of the elytra
-        NameTag, //Parented to the nametag.
+        LeftParrotOrigin, //Left origin position of the shoulder parrot
+        RightParrotOrigin, //Right origin position of the shoulder parrot
+        LeftElytra, //Left position of the elytra model
+        RightElytra //Right position of the elytra model
     }
 
     public enum RotationType {

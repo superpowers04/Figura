@@ -1,11 +1,15 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.*;
-import net.blancworks.figura.access.FiguraTextAccess;
+import net.blancworks.figura.Config;
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.access.PlayerEntityRendererAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
+import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -18,15 +22,13 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -131,39 +133,37 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
             return;
 
         float f = entity.getHeight() + 0.5F;
-        float translateX = 0.0f;
-        float translateY = f;
-        float translateZ = 0.0f;
-
-        float scaleX = 1.0f;
-        float scaleY = 1.0f;
-        float scaleZ = 1.0f;
-
-        //apply special nameplate settings
-        PlayerData currentData = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
-        if (currentData != null && currentData.script != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
-            NamePlateData data = currentData.script.nameplate;
-
-            if (!data.enabled) {
-                ci.cancel();
-                return;
-            }
-
-            translateX += data.position.getX();
-            translateY += data.position.getY();
-            translateZ += data.position.getZ();
-
-            scaleX = data.scale.getX();
-            scaleY = data.scale.getY();
-            scaleZ = data.scale.getZ();
-        }
+        Vector3f translation = new Vector3f(0.0f, f, 0.0f);
+        Vector3f scale = new Vector3f(1.0f, 1.0f, 1.0f);
 
         //apply nameplate changes
-        figura$applyFormattingRecursive((LiteralText) text, entity.getGameProfile().getId(), entity.getEntityName());
+        UUID uuid = entity.getGameProfile().getId();
+        String playerName = entity.getEntityName();
+
+        PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
+        if (currentData != null && !playerName.equals("")) {
+            NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
+            NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
+
+            if (currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
+                if (nameplateData == null)
+                    return;
+
+                if (!nameplateData.enabled) {
+                    ci.cancel();
+                    return;
+                }
+
+                //apply special nameplate settings
+                translation.add(nameplateData.position);
+                scale = nameplateData.scale;
+            }
+        }
+        else return;
 
         matrices.push();
-        matrices.translate(translateX, translateY, translateZ);
-        matrices.scale(scaleX, scaleY, scaleZ);
+        matrices.translate(translation.getX(), translation.getY(), translation.getZ());
+        matrices.scale(scale.getX(), scale.getY(), scale.getZ());
 
         //render scoreboard
         double d = this.dispatcher.getSquaredDistanceToCamera(entity);
@@ -200,99 +200,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         matrices.pop();
 
         ci.cancel();
-    }
-
-    public boolean figura$applyFormattingRecursive(LiteralText text, UUID uuid, String playerName) {
-        //save siblings
-        ArrayList<Text> siblings = new ArrayList<>(text.getSiblings());
-
-        //if contains playername
-        if (text.getRawString().contains(playerName) && !playerName.equals("")) {
-
-            //save style
-            Style style = text.getStyle();
-
-            //split the text
-            String[] textSplit = text.getRawString().split(playerName, 2);
-
-            Text playerNameSplitted = new LiteralText(playerName).setStyle(style);
-
-            //transform the text
-            Text transformed = figura$applyFiguraNameplateFormatting(playerNameSplitted, uuid);
-
-            //add badges
-            ((LiteralText) transformed).append(FiguraMod.getBadges(uuid));
-
-            //return the text
-            if (!textSplit[0].equals("")) {
-                ((FiguraTextAccess) text).figura$setText(textSplit[0]);
-                text.setStyle(style);
-                text.append(transformed);
-            }
-            else {
-                ((FiguraTextAccess) text).figura$setText(((LiteralText) transformed).getRawString());
-                text.setStyle(transformed.getStyle());
-                transformed.getSiblings().forEach(((LiteralText) text)::append);
-            }
-            if (!textSplit[1].equals("")) {
-                text.append(textSplit[1]).setStyle(style);
-            }
-
-            //append siblings back
-            for (Text sibling : siblings) {
-                if (!((FiguraTextAccess) sibling).figura$getFigura())
-                    text.append(sibling);
-            }
-
-            return true;
-        }
-        else {
-            //iterate over children
-            for (Text sibling : siblings) {
-                if (figura$applyFormattingRecursive((LiteralText) sibling, uuid, playerName))
-                    return true;
-            }
-        }
-
-        return false;
-    }
-
-    public Text figura$applyFiguraNameplateFormatting(Text text, UUID uuid) {
-        LiteralText formattedText = new LiteralText(text.getString());
-
-        PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
-        if (currentData != null && currentData.script != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
-            NamePlateData data = currentData.script.nameplate;
-            Style style = text.getStyle();
-
-            String formattedString = data.text
-                    .replace("%n", text.getString())
-                    .replace("%u", text.getString());
-            if (data.RGB != -1) {
-                style = style.withColor(TextColor.fromRgb(data.RGB));
-            }
-            if ((data.textProperties & 0b10000000) != 0b10000000) {
-                if ((data.textProperties & 0b0000001) == 0b0000001 && !style.isBold()) {
-                    style = style.withBold(true);
-                }
-                if ((data.textProperties & 0b0000010) == 0b0000010 && !style.isItalic()) {
-                    style = style.withItalic(true);
-                }
-                if ((data.textProperties & 0b00000100) == 0b00000100 && !style.isUnderlined()) {
-                    style = style.withUnderline(true);
-                }
-                if ((data.textProperties & 0b00001000) == 0b00001000 && !style.isStrikethrough()) {
-                    style = style.withFormatting(Formatting.STRIKETHROUGH);
-                }
-                if ((data.textProperties & 0b00010000) == 0b0010000 && !style.isObfuscated()) {
-                    style = style.withFormatting(Formatting.OBFUSCATED);
-                }
-            }
-            ((FiguraTextAccess) formattedText).figura$setText(formattedString);
-            formattedText.setStyle(style);
-        }
-
-        return formattedText;
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm")

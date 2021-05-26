@@ -8,6 +8,7 @@
     "CameraMixin",
     "ChatHudListenerMixin",
     "ClientLoginNetworkHandlerMixin",
+    "DebugHudMixin",
     "ElytraEntityModelMixin",
     "ElytraFeatureRendererMixin",
     "FiguraTextImplMixin",
@@ -17,11 +18,11 @@
     "LivingEntityRendererMixin",
     "MatrixStackMixin",
     "MinecraftClientMixin",
-    "MixinDebugHud",
     "ModelPartMixin",
     "PlayerEntityRendererMixin",
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
+    "ShoulderParrotFeatureRendererMixin",
     "WorldRendererMixin"
   ],
   "injectors": {

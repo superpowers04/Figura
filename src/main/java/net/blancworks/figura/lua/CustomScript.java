@@ -3,6 +3,8 @@ package net.blancworks.figura.lua;
 import net.blancworks.figura.*;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
+import net.blancworks.figura.lua.api.camera.CameraCustomization;
+import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -28,8 +30,6 @@ import java.util.function.Function;
 public class CustomScript extends FiguraAsset {
 
     public PlayerData playerData;
-    public NamePlateData nameplate = new NamePlateData();
-    public CameraData camera = new CameraData();
     public String source;
     public boolean loadError = false;
 
@@ -60,6 +60,12 @@ public class CustomScript extends FiguraAsset {
 
     //Vanilla model part customizations made via this script
     public Map<String, VanillaModelPartCustomization> allCustomizations = new HashMap<>();
+
+    //Nameplate customizations
+    public Map<String, NamePlateCustomization> nameplateCustomizations = new HashMap<>();
+
+    //Camera customizations
+    public Map<String, CameraCustomization> cameraCustomizations = new HashMap<>();
 
     //Keep track of these because we want to apply data to them later.
     public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();
@@ -403,7 +409,6 @@ public class CustomScript extends FiguraAsset {
     public void logLuaError(LuaError error) {
         //Never even log errors for other players, only the local player.
         if (playerData != PlayerDataManager.localPlayer) {
-            error.printStackTrace();
             return;
         }
 
@@ -478,5 +483,37 @@ public class CustomScript extends FiguraAsset {
 
     public VanillaModelPartCustomization getPartCustomization(String accessor) {
         return allCustomizations.get(accessor);
+    }
+
+    //--Nameplate Modifications--
+
+    public NamePlateCustomization getOrMakeNameplateCustomization(String accessor) {
+        NamePlateCustomization currCustomization = getNameplateCustomization(accessor);
+
+        if (currCustomization == null) {
+            currCustomization = new NamePlateCustomization();
+            nameplateCustomizations.put(accessor, currCustomization);
+        }
+        return currCustomization;
+    }
+
+    public NamePlateCustomization getNameplateCustomization(String accessor) {
+        return nameplateCustomizations.get(accessor);
+    }
+
+    //--Camera Modifications--
+
+    public CameraCustomization getOrMakeCameraCustomization(String accessor) {
+        CameraCustomization currCustomization = getCameraCustomization(accessor);
+
+        if (currCustomization == null) {
+            currCustomization = new CameraCustomization();
+            cameraCustomizations.put(accessor, currCustomization);
+        }
+        return currCustomization;
+    }
+
+    public CameraCustomization getCameraCustomization(String accessor) {
+        return cameraCustomizations.get(accessor);
     }
 }

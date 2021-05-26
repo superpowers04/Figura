@@ -35,9 +35,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("RIGHT_HELD_ITEM", CustomModelPart.ParentType.RightItemOrigin)
                     .put("LEFT_ELYTRA_ORIGIN", CustomModelPart.ParentType.LeftElytraOrigin)
                     .put("RIGHT_ELYTRA_ORIGIN", CustomModelPart.ParentType.RightElytraOrigin)
+                    .put("LEFT_PARROT", CustomModelPart.ParentType.LeftParrotOrigin)
+                    .put("RIGHT_PARROT", CustomModelPart.ParentType.RightParrotOrigin)
                     .put("LEFT_ELYTRA", CustomModelPart.ParentType.LeftElytra)
                     .put("RIGHT_ELYTRA", CustomModelPart.ParentType.RightElytra)
-                    .put("NAMETAG", CustomModelPart.ParentType.NameTag)
                     .build();
 
     private static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =
