@@ -37,7 +37,7 @@ public class ChatHudListenerMixin {
             for (PlayerListEntry player : this.client.player.networkHandler.getPlayerList()) {
                 UUID entryUUID = player.getProfile().getId();
 
-                if (senderUuid.getLeastSignificantBits() == entryUUID.getLeastSignificantBits() && senderUuid.getMostSignificantBits() == entryUUID.getMostSignificantBits()) {
+                if (senderUuid.compareTo(entryUUID) == 0) {
                     playerName = player.getProfile().getName();
                     break;
                 }
