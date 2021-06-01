@@ -56,7 +56,6 @@
   "gui.figura.config.nametag": "NameTag",
   "gui.figura.config.misc": "Misc",
   "gui.figura.config.dev": "Developer Settings",
-
   
   "gui.figura.config.previewnametag": "Show Preview NameTag",
   "gui.figura.config.tooltip.previewnametag": "Displays your NameTag on the model preview screen",
@@ -81,6 +80,9 @@
 
   "gui.figura.config.ownnametag": "Render Own NameTag",
   "gui.figura.config.tooltip.ownnametag": "Renders your own NameTag ingame",
+
+  "gui.figura.config.logothers": "Log Other Player's Scripts",
+  "gui.figura.config.tooltip.logothers": "Display script debug logs from others players",
 
   "gui.figura.config.buttonlocation": "Figura Button Location",
   "gui.figura.config.tooltip.buttonlocation": "Location where the Figura settings button should be",
