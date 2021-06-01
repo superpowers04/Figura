@@ -166,28 +166,28 @@ public class NamePlateAPI {
                 public LuaValue call(LuaValue arg) {
                     NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
 
-                    if (arg.isnil()) {
-                        customization.bold = null;
-                        customization.italic = null;
-                        customization.underline = null;
-                        customization.obfuscated = null;
-                        customization.strikethrough = null;
+                    customization.bold = null;
+                    customization.italic = null;
+                    customization.underline = null;
+                    customization.obfuscated = null;
+                    customization.strikethrough = null;
+
+                    if (arg.isnil())
                         return NIL;
-                    }
 
                     LuaTable formatting = arg.checktable();
 
-                    ArrayList<String> arguments = new ArrayList<>();
-
                     for (int i = 1; i <= formatting.length() && i < 6; i++) {
-                        arguments.add(formatting.get(i).checkjstring());
-                    }
+                        String argument = formatting.get(i).checkjstring();
 
-                    customization.bold = (arguments.contains("BOLD")) ? true : null;
-                    customization.italic = (arguments.contains("ITALIC")) ? true : null;
-                    customization.underline = (arguments.contains("UNDERLINE")) ? true : null;
-                    customization.obfuscated = (arguments.contains("OBFUSCATED")) ? true : null;
-                    customization.strikethrough = (arguments.contains("STRIKETHROUGH")) ? true : null;
+                        switch (argument) {
+                            case "BOLD": customization.bold = true; break;
+                            case "ITALIC": customization.italic = true; break;
+                            case "UNDERLINE": customization.underline = true; break;
+                            case "OBFUSCATED": customization.obfuscated = true; break;
+                            case "STRIKETHROUGH": customization.strikethrough = true; break;
+                        }
+                    }
 
                     return NIL;
                 }

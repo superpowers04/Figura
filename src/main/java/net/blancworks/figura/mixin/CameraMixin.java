@@ -5,9 +5,11 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.api.camera.CameraAPI;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -34,7 +36,7 @@ public abstract class CameraMixin {
             if (customization == null)
                 return;
 
-            if (customization.rotation != null)
+            if (customization.rotation != null && !customization.rotation.equals(Vec2f.ZERO))
                 this.setRotation(this.yaw + customization.rotation.y, this.pitch + customization.rotation.x);
 
             if (customization.position != null) {
@@ -46,7 +48,7 @@ public abstract class CameraMixin {
             }
 
             if (!thirdPerson) {
-                if (customization.position != null)
+                if (customization.position != null && !customization.position.equals(new Vector3f(0.0f, 0.0f, 0.0f)))
                 this.moveBy(-customization.position.getZ(), 0.0d, -customization.position.getX());
 
                 //bed fix
