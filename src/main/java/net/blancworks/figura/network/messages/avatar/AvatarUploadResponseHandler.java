@@ -40,6 +40,11 @@ public class AvatarUploadResponseHandler extends MessageHandler {
         }
     }
 
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:avatar_upload";
+    }
+
     //If the avatar was correctly uploaded, read the UUID of the avatar from the stream, then grabs it.
     public void handleSuccess(LittleEndianDataInputStream stream) throws Exception {
         UUID id = readUUID(stream);

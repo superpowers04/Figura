@@ -15,4 +15,9 @@ public class DebugMessageHandler extends MessageHandler {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:debug";
+    }
 }

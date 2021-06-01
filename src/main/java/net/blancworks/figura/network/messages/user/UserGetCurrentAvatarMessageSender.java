@@ -1,7 +1,6 @@
 package net.blancworks.figura.network.messages.user;
 
 import com.google.common.io.LittleEndianDataOutputStream;
-import net.blancworks.figura.network.messages.MessageIDs;
 import net.blancworks.figura.network.messages.MessageSender;
 
 import java.io.IOException;
@@ -11,8 +10,12 @@ public class UserGetCurrentAvatarMessageSender extends MessageSender {
     public UUID id;
     
     public UserGetCurrentAvatarMessageSender(UUID id) {
-        super(MessageIDs.USER_GET_CURRENT_AVATAR_MESSAGE_ID);
         this.id = id;
+    }
+
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:user_get_current_avatar";
     }
 
     @Override

@@ -14,6 +14,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextColor;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import org.luaj.vm2.*;
@@ -72,7 +73,7 @@ public class CustomScript extends FiguraAsset {
 
     public float particleSpawnCount = 0;
     public float soundSpawnCount = 0;
-    
+
     public Float customShadowSize = null;
 
     public CustomScript() {
@@ -114,8 +115,11 @@ public class CustomScript extends FiguraAsset {
         setupGlobals();
 
         try {
-            //Load the script source.
-            LuaValue chunk = FiguraLuaManager.modGlobals.load(source, "main", scriptGlobals);
+            //Load the script source, name defaults to "main" for scripts for other players.
+            String scriptName = data == PlayerDataManager.localPlayer
+                ? PlayerDataManager.localPlayer.loadedName
+                : "main";
+            LuaValue chunk = FiguraLuaManager.modGlobals.load(source, scriptName, scriptGlobals);
 
             instructionCapFunction = new ZeroArgFunction() {
                 public LuaValue call() {
@@ -123,9 +127,14 @@ public class CustomScript extends FiguraAsset {
                     // Java Error will pass through to top and stop the script.
                     loadError = true;
 
-                    if (data == PlayerDataManager.localPlayer)
-                        sendChatMessage(new LiteralText("Script overran resource limits.").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
-                    throw new RuntimeException("Script overran resource limits.");
+                    if (data == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
+                        sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
+                                .append(((LiteralText) data.lastEntity.getDisplayName()).setStyle(Style.EMPTY).formatted(Formatting.DARK_RED,Formatting.BOLD)
+                                        .append(new LiteralText(" > Script overran resource limits"))
+                                )
+                        );
+                    }
+                    throw new RuntimeException("Script overran resource limits");
                 }
             };
 
@@ -185,13 +194,17 @@ public class CustomScript extends FiguraAsset {
         scriptGlobals.set("log", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue arg) {
-                if (playerData == PlayerDataManager.localPlayer) {
+                if (playerData == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
                     int config = (int) Config.entries.get("scriptLog").value;
                     if (config != 2) {
-                        FiguraMod.LOGGER.info(arg.toString());
+                        FiguraMod.LOGGER.info("[lua] " + playerData.lastEntity.getDisplayName().getString() + " > " + arg.toString());
                     }
                     if (config != 1) {
-                        sendChatMessage(new LiteralText(arg.toString()));
+                        sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
+                                .append(((LiteralText) playerData.lastEntity.getDisplayName()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
+                                        .append(new LiteralText(" > " + arg.toString()))
+                                )
+                        );
                     }
                 }
                 return NIL;
@@ -206,8 +219,20 @@ public class CustomScript extends FiguraAsset {
             public LuaValue call(LuaValue arg) {
                 LuaTable table = arg.checktable();
 
-                if (playerData == PlayerDataManager.localPlayer) {
-                    logTableContents(table, 0, "");
+                if (playerData == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
+                    int config = (int) Config.entries.get("scriptLog").value;
+                    if (config != 2) {
+                        FiguraMod.LOGGER.info("[lua] " + playerData.lastEntity.getDisplayName().getString() + " >");
+                    }
+                    if (config != 1) {
+                        sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
+                                .append(((LiteralText) playerData.lastEntity.getDisplayName()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
+                                        .append(new LiteralText(" >"))
+                                )
+                        );
+                    }
+
+                    logTableContents(table, 1, "");
                 }
 
                 return NIL;
@@ -224,7 +249,7 @@ public class CustomScript extends FiguraAsset {
                     loadError = true;
                     error("Can't use global table metatable on other tables!");
                 }
-                
+
                 if (value.isfunction() && key.isstring()) {
                     String funcName = key.checkjstring();
                     LuaFunction func = value.checkfunction();
@@ -425,35 +450,37 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
+        String spacing = "  ";
+        depthString = spacing.substring(2) + depthString;
 
         int config = (int) Config.entries.get("scriptLog").value;
         if (config != 2) {
             FiguraMod.LOGGER.info(depthString + "{");
         }
         if (config != 1) {
-            sendChatMessage(new LiteralText(depthString + "{"));
+            sendChatMessage(new LiteralText(depthString + "{").formatted(Formatting.ITALIC));
         }
 
         for (LuaValue key : table.keys()) {
             LuaValue value = table.get(key);
 
-            String valString = depthString + '"' + key.toString() + '"' + " : " + value.toString();
+            String valString = spacing + depthString + '"' + key.toString() + '"' + " : " + value.toString();
 
             if (value.istable()) {
                 if (config != 2) {
                     FiguraMod.LOGGER.info(valString);
                 }
                 if (config != 1) {
-                    sendChatMessage(new LiteralText(valString));
+                    sendChatMessage(new LiteralText(valString).formatted(Formatting.ITALIC));
                 }
 
-                logTableContents(value.checktable(), depth + 1, depthString);
+                logTableContents(value.checktable(), depth + 1, spacing + depthString);
             } else {
                 if (config != 2) {
                     FiguraMod.LOGGER.info(valString + ",");
                 }
                 if (config != 1) {
-                    sendChatMessage(new LiteralText(valString + ","));
+                    sendChatMessage(new LiteralText(valString + ",").formatted(Formatting.ITALIC));
                 }
             }
         }
@@ -461,7 +488,7 @@ public class CustomScript extends FiguraAsset {
             FiguraMod.LOGGER.info(depthString + "},");
         }
         if (config != 1) {
-            sendChatMessage(new LiteralText(depthString + "},"));
+            sendChatMessage(new LiteralText(depthString + "},").formatted(Formatting.ITALIC));
         }
     }
 

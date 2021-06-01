@@ -132,11 +132,11 @@ public class PlayerData {
      */
     public void readNbt(CompoundTag nbt) {
         playerId = nbt.getUuid("id");
-        
+
         model = null;
         texture = null;
         script = null;
-        
+
         extraTextures.clear();
 
         try {
@@ -229,8 +229,6 @@ public class PlayerData {
     public void tick() {
         if (this.isInvalidated)
             PlayerDataManager.clearPlayer(playerId);
-        
-        
         vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
         lastEntity = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
         FiguraMod.currentPlayer = (AbstractClientPlayerEntity) lastEntity;
@@ -252,9 +250,6 @@ public class PlayerData {
     }
 
     public void loadFromNbt(CompoundTag tag) {
-        
-        
-        
         this.readNbt(tag);
         getFileSize();
     }
@@ -265,7 +260,6 @@ public class PlayerData {
 
     //Saves this playerdata to the cache.
     public void saveToCache(UUID id) {
-        
         //We run this as a task to make sure all the previous load operations are done (since those are all also tasks)
         FiguraMod.doTask(() -> {
             Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");

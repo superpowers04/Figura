@@ -6,6 +6,7 @@ import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.network.messages.MessageRegistry;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
 import net.blancworks.figura.network.messages.user.UserDeleteCurrentAvatarMessageSender;
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarHashMessageSender;
@@ -25,6 +26,7 @@ import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.net.InetAddress;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -44,6 +46,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     public static WebSocketFactory socketFactory;
     //The last socket we were using
     public static WebSocket currWebSocket;
+    public static MessageRegistry msgRegistry;
 
     public static Object authWaitObject = new Object();
     public static ClientConnection authConnection;
@@ -76,6 +79,16 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         return networkTasks;
     }
 
+    private static CompletableFuture doTask(Supplier<CompletableFuture> toRun) {
+        if (networkTasks == null || networkTasks.isDone()) {
+            networkTasks = toRun.get();
+        } else {
+            networkTasks.thenCompose(x -> toRun.get());
+        }
+
+        return networkTasks;
+    }
+
     private static <T> CompletableFuture doTaskSupply(Supplier<T> toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = CompletableFuture.supplyAsync(toRun);
@@ -89,7 +102,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     @Override
     public void tickNetwork() {
 
-        if(authConnection != null) {
+        if(authConnection != null && !authConnection.isOpen()) {
             authConnection.handleDisconnection();
         }
         
@@ -103,20 +116,18 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
 
                 //Auth user ASAP
-                doTask(() -> {
-                    authUser(true);
-                });
+                doTask(() -> authUser(true));
             }
         }
     }
 
     @Override
     public CompletableFuture getAvatarData(UUID id) {
+        doTask(this::ensureConnection);
         return doTask(() -> {
             try {
-                ensureConnection();
-
-                new UserGetCurrentAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
+                if (currWebSocket != null && currWebSocket.isOpen())
+                    new UserGetCurrentAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -126,34 +137,30 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public CompletableFuture postAvatar() {
+        doTask(this::ensureConnection);
         return doTask(() -> {
-            try {
-                ensureConnection();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
+            if (currWebSocket != null && currWebSocket.isOpen()) {
+                //Get NBT tag for local player avatar
+                PlayerData data = PlayerDataManager.localPlayer;
+                CompoundTag infoNbt = new CompoundTag();
+                data.writeNbt(infoNbt);
 
-            //Get NBT tag for local player avatar
-            PlayerData data = PlayerDataManager.localPlayer;
-            CompoundTag infoNbt = new CompoundTag();
-            data.writeNbt(infoNbt);
+                try {
+                    //Set up streams.
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    DataOutputStream nbtDataStream = new DataOutputStream(baos);
 
-            try {
-                //Set up streams.
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                DataOutputStream nbtDataStream = new DataOutputStream(baos);
+                    NbtIo.writeCompressed(infoNbt, nbtDataStream);
 
-                NbtIo.writeCompressed(infoNbt, nbtDataStream);
+                    byte[] result = baos.toByteArray();
 
-                byte[] result = baos.toByteArray();
+                    new AvatarUploadMessageSender(result).sendMessage(currWebSocket);
 
-                new AvatarUploadMessageSender(result).sendMessage(currWebSocket);
-
-                nbtDataStream.close();
-                baos.close();
-            } catch (Exception e) {
-                e.printStackTrace();
+                    nbtDataStream.close();
+                    baos.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
@@ -165,13 +172,14 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public CompletableFuture deleteAvatar() {
+        doTask(this::ensureConnection);
         return doTask(() -> {
             try {
-                ensureConnection();
+                if (currWebSocket != null && currWebSocket.isOpen()) {
+                    new UserDeleteCurrentAvatarMessageSender().sendMessage(currWebSocket);
 
-                new UserDeleteCurrentAvatarMessageSender().sendMessage(currWebSocket);
-
-                PlayerDataManager.clearLocalPlayer();
+                    PlayerDataManager.clearLocalPlayer();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -181,10 +189,11 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public CompletableFuture checkAvatarHash(UUID playerID, String lastHash) {
+        doTask(this::ensureConnection);
         return doTask(() -> {
             try {
-                ensureConnection();
-                new UserGetCurrentAvatarHashMessageSender(playerID).sendMessage(currWebSocket);
+                if (currWebSocket != null && currWebSocket.isOpen())
+                    new UserGetCurrentAvatarHashMessageSender(playerID).sendMessage(currWebSocket);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -227,7 +236,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     private static boolean localLastCheck = false;
 
     //Ensures there is a connection open with the server, if there was not before.
-    public void ensureConnection() throws Exception {
+    public CompletableFuture<Void> ensureConnection() {
 
         if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value || socketFactory == null) {
             localLastCheck = (boolean) Config.entries.get("useLocalServer").value;
@@ -236,7 +245,12 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
             //Don't verify hostname for local servers.
             if (localLastCheck) {
-                SSLContext ctx = NaiveSSLContext.getInstance("TLS");
+                SSLContext ctx;
+                try {
+                    ctx = NaiveSSLContext.getInstance("TLS");
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                }
 
                 socketFactory.setSSLContext(ctx);
                 socketFactory.setVerifyHostname(false);
@@ -246,31 +260,43 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         }
 
         if (currWebSocket == null || currWebSocket.isOpen() == false) {
-            currWebSocket = openNewConnection();
+            try {
+                return openNewConnection();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     //Opens a connection
-    public WebSocket openNewConnection() throws Exception {
-
+    public CompletableFuture<Void> openNewConnection() {
         //Ensure user is authed, we need the JWT to verify this user.
-        authUser();
+        return authUser().thenCompose(unused -> {
+            try {
+                closeSocketConnection();
+                String connectionString = String.format("%s/connect/", mainServerURL());
 
-        closeSocketConnection();
-        String connectionString = String.format("%s/connect/", mainServerURL());
+                FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
 
-        FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
+                WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
+                currWebSocket = newSocket;
+                msgRegistry = new MessageRegistry();
+                FiguraNetworkMessageHandler messageHandler = new FiguraNetworkMessageHandler(this);
+                newSocket.addListener(messageHandler);
 
-        WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
-        newSocket.addListener(new FiguraNetworkMessageHandler(this));
+                newSocket.connect();
 
-        newSocket.connect();
+                newSocket.sendText(jwtToken);
 
-        newSocket.sendText(jwtToken);
+                messageHandler.sendClientRegistry(newSocket);
 
-        newSocket.sendText(String.format("{\"protocol\":%d}", PROTOCOL_VERSION));
-
-        return newSocket;
+                return messageHandler.initializedFuture;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return CompletableFuture.completedFuture(null);
+            }
+        });
     }
 
     private void closeSocketConnection() {
@@ -286,29 +312,32 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         currWebSocket = null;
     }
 
-    public void authUser() {
-        authUser(false);
+    public CompletableFuture<Void> authUser() {
+        return authUser(false);
     }
 
-    public void authUser(boolean force) {
-
+    public CompletableFuture<Void> authUser(boolean force) {
         if (!force && jwtToken != null)
-            return;
+            return CompletableFuture.completedFuture(null);
 
-        if(authConnection != null) {
+        if(authConnection != null && !authConnection.isOpen()) {
             authConnection.handleDisconnection();
             
             if(authConnection != null)
-                return;
+                return CompletableFuture.completedFuture(null);
         }
         
         try {
+            FiguraMod.LOGGER.info("Authenticating with Figura server");
+
             String address = authServerURL();
             InetAddress inetAddress = InetAddress.getByName(address);
             
             //Create new connection
             ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
-            
+
+            CompletableFuture<Void> disconnectedFuture = new CompletableFuture<>();
+
             //Set listener/handler
             connection.setPacketListener(
                     new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
@@ -331,24 +360,22 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                             
                             //Once connection is closed, yeet this connection so we can make new ones.
                             authConnection = null;
-                            
-                            synchronized (authWaitObject) {
-                                authWaitObject.notifyAll();
-                            }
+
+                            disconnectedFuture.complete(null);
                         }
                     });
             
             //Send packets.
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
-            
-            synchronized (authWaitObject) {
-                //Wait for authentication to be done.
-                authConnection = connection;
-                authWaitObject.wait();
-            }
+
+            authConnection = connection;
+
+            return disconnectedFuture;
+
         } catch (Exception e) {
             e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
         }
     }
 }

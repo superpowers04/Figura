@@ -48,7 +48,7 @@ public class NBTAPI {
         return LuaInteger.valueOf(((IntTag)tag).getInt());
     }
     public static LuaValue fromByteTag(Tag tag){
-        return LuaBoolean.valueOf(((ByteTag)tag).getByte() == 1);
+        return LuaNumber.valueOf(((ByteTag)tag).getByte());
     }
     public static LuaValue fromShortTag(Tag tag){
         return LuaNumber.valueOf(((ShortTag)tag).getShort());

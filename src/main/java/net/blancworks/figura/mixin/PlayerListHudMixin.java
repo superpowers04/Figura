@@ -15,6 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Mixin(PlayerListHud.class)
 public class PlayerListHudMixin {

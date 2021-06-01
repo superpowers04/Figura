@@ -51,4 +51,9 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:user_avatar_provide";
+    }
 }

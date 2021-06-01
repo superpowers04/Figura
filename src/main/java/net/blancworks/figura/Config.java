@@ -102,6 +102,7 @@ public class Config {
         entries.put("nameTagMods", new ConfigEntry<>(true));
         entries.put("nameTagIcon", new ConfigEntry<>(true));
         entries.put("ownNameTag", new ConfigEntry<>(false));
+        entries.put("logOthers", new ConfigEntry<>(false));
     }
 
     public static class ConfigEntry<T> {
