@@ -66,7 +66,7 @@ public class CustomScript extends FiguraAsset {
 
     public float particleSpawnCount = 0;
     public float soundSpawnCount = 0;
-    
+
     public Float customShadowSize = null;
 
     public CustomScript() {
@@ -108,8 +108,11 @@ public class CustomScript extends FiguraAsset {
         setupGlobals();
 
         try {
-            //Load the script source.
-            LuaValue chunk = FiguraLuaManager.modGlobals.load(source, "main", scriptGlobals);
+            //Load the script source, name defaults to "main" for scripts for other players.
+            String scriptName = data == PlayerDataManager.localPlayer
+                ? PlayerDataManager.localPlayer.
+                : "main";
+            LuaValue chunk = FiguraLuaManager.modGlobals.load(source, scriptName, scriptGlobals);
 
             instructionCapFunction = new ZeroArgFunction() {
                 public LuaValue call() {
@@ -218,7 +221,7 @@ public class CustomScript extends FiguraAsset {
                     loadError = true;
                     error("Can't use global table metatable on other tables!");
                 }
-                
+
                 if (value.isfunction() && key.isstring()) {
                     String funcName = key.checkjstring();
                     LuaFunction func = value.checkfunction();
