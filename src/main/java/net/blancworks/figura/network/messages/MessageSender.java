@@ -2,21 +2,16 @@ package net.blancworks.figura.network.messages;
 
 import com.google.common.io.LittleEndianDataOutputStream;
 import com.neovisionaries.ws.client.WebSocket;
+import net.blancworks.figura.network.NewFiguraNetworkManager;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-public class MessageSender {
-
-    public byte messageID;
+public abstract class MessageSender {
 
     public byte[] message;
-
-    public MessageSender(byte messageID) {
-        this.messageID = messageID;
-    }
 
     public void sendMessage(WebSocket socket) {
         try {
@@ -26,7 +21,7 @@ public class MessageSender {
                 LittleEndianDataOutputStream outWriter = new LittleEndianDataOutputStream(outStream);
 
                 //Write message ID
-                outWriter.write(messageID);
+                outWriter.write(NewFiguraNetworkManager.msgRegistry.getMessageId(getProtocolName()));
 
                 //Append extra header data provided up higher in the inheritence tree.
                 write(outWriter);
@@ -43,6 +38,8 @@ public class MessageSender {
 
         message = null;
     }
+
+    public abstract String getProtocolName();
 
     protected void write(LittleEndianDataOutputStream stream) throws IOException {
     }

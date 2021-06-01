@@ -1,7 +1,6 @@
 package net.blancworks.figura.network.messages.user;
 
 import com.google.common.io.LittleEndianDataOutputStream;
-import net.blancworks.figura.network.messages.MessageIDs;
 import net.blancworks.figura.network.messages.MessageSender;
 
 import java.io.IOException;
@@ -14,15 +13,18 @@ public class UserSetAvatarMessageSender extends MessageSender {
     public boolean deletePreviousAvatar;
     
     public UserSetAvatarMessageSender(UUID id) {
-        super(MessageIDs.USER_SET_CURRENT_AVATAR_MESSAGE_ID);
         this.id = id;
         deletePreviousAvatar = true;
     }
 
     public UserSetAvatarMessageSender(UUID id, boolean deletePreviousAvatar) {
-        super(MessageIDs.USER_SET_CURRENT_AVATAR_MESSAGE_ID);
         this.id = id;
         this.deletePreviousAvatar = deletePreviousAvatar;
+    }
+
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:user_set_avatar";
     }
 
     @Override

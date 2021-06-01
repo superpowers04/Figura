@@ -9,4 +9,9 @@ public class AvatarProvideResponseHandler extends MessageHandler {
     public void handleMessage(LittleEndianDataInputStream stream) throws Exception {
         super.handleMessage(stream);
     }
+
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:avatar_provide";
+    }
 }
