@@ -87,12 +87,15 @@ public class LocalPlayerData extends PlayerData {
         if (isDirectory) {
             file = new File(contentDirectory.resolve(fileName).toString());
 
+            //set root directory
+            contentDirectory = file.toPath();
+
             //set paths
-            jsonPath = file.toPath().resolve("model.bbmodel");
-            jsonPlayerPath = file.toPath().resolve("player_model.bbmodel");
-            texturePath = file.toPath().resolve("texture.png");
-            scriptPath = file.toPath().resolve("script.lua");
-            metadataPath = file.toPath().resolve("metadata.nbt");
+            jsonPath = contentDirectory.resolve("model.bbmodel");
+            jsonPlayerPath = contentDirectory.resolve("player_model.bbmodel");
+            texturePath = contentDirectory.resolve("texture.png");
+            scriptPath = contentDirectory.resolve("script.lua");
+            metadataPath = contentDirectory.resolve("metadata.nbt");
 
             //add watchedfiles
             watchedFiles.add(jsonPath.toString());
@@ -100,9 +103,6 @@ public class LocalPlayerData extends PlayerData {
             watchedFiles.add(texturePath.toString());
             watchedFiles.add(scriptPath.toString());
             watchedFiles.add(metadataPath.toString());
-
-            //set root directory
-            contentDirectory = file.toPath();
         }
         //zip data
         else if (isZip) {
@@ -333,7 +333,7 @@ public class LocalPlayerData extends PlayerData {
                     //If there is an entry that matches this texture
                     if (fileEntry != null)
                         inputStream = modelZip.getInputStream(fileEntry);
-                } else { //If this is not a zip file 
+                } else { //If this is not a zip file
 
                     //Check for directory first
                     if (isDirectory) {
