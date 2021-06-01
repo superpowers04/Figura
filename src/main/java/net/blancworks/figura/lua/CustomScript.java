@@ -110,7 +110,7 @@ public class CustomScript extends FiguraAsset {
 
         try {
             //Load the script source, name defaults to "main" for scripts for other players.
-            String scriptName = data == PlayerDataManager.localPlayer
+            String scriptName = (data == PlayerDataManager.localPlayer && (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.loadedName != null))
                 ? PlayerDataManager.localPlayer.loadedName
                 : "main";
             LuaValue chunk = FiguraLuaManager.modGlobals.load(source, scriptName, scriptGlobals);
