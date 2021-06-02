@@ -11,19 +11,13 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.predicate.entity.EntityPredicates;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.Iterator;
-import java.util.List;
-import java.util.UUID;
 import java.util.function.Supplier;
 
 public class EntityAPI {
@@ -31,8 +25,6 @@ public class EntityAPI {
     public static class EntityLuaAPITable<T extends Entity> extends ReadOnlyLuaTable {
 
         public Supplier<T> targetEntity;
-
-        public LuaString typeString;
 
         public EntityLuaAPITable(Supplier<T> targetEntity) {
             this.targetEntity = targetEntity;
@@ -154,9 +146,9 @@ public class EntityAPI {
 
                         Entity vehicle = targetEntity.get().getVehicle();
 
-                        if (vehicle instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable(()->(LivingEntity) vehicle).getTable();
+                        if (vehicle instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable(() -> vehicle).getTable();
 
-                        return new EntityLuaAPITable(()->vehicle).getTable();
+                        return new EntityLuaAPITable(() -> vehicle).getTable();
                     }
                 });
 
@@ -195,35 +187,6 @@ public class EntityAPI {
                             return LuaValue.valueOf(ent.getCustomName().getString());
                         else
                             return LuaValue.valueOf(ent.getName().getString());
-                    }
-                });
-
-                set("getNearbyEntity", new TwoArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg1, LuaValue arg2) {
-
-                        Entity ent = targetEntity.get();
-                        Vec3d pos = ent.getPos();
-
-                        int distance = arg2.checkint();
-                        Vec3d min = pos.subtract(distance, distance, distance);
-                        Vec3d max = pos.add(distance, distance, distance);
-
-                        Box box = new Box(min, max);
-                        List<Entity> entityList = ent.getEntityWorld().getOtherEntities(null, box, EntityPredicates.EXCEPT_SPECTATOR);
-
-                        try {
-                            UUID uuid = UUID.fromString(arg1.checkjstring());
-                            for (Entity entity : entityList) {
-                                if (entity.getUuid().compareTo(uuid) == 0 && !entity.isInvisible())
-                                    return new EntityLuaAPITable(() -> entity).getTable();
-                            }
-                        }
-                        catch (Exception ignored) {
-                            return LuaValue.error("malformed UUID");
-                        }
-
-                        return NIL;
                     }
                 });
 

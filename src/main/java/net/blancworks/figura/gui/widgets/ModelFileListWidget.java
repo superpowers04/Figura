@@ -40,7 +40,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
             String fileName = FilenameUtils.removeExtension(file.getName());
 
             //skip files
-            if (!fileName.contains(searchTerm))
+            if (!fileName.toLowerCase().contains(searchTerm.toLowerCase()))
                 continue;
 
             //if directory
