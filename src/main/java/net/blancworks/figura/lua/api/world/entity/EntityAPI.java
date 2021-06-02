@@ -74,7 +74,7 @@ public class EntityAPI {
                 set("getUUID", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaString.valueOf(targetEntity.get().getEntityName());
+                        return LuaString.valueOf(targetEntity.get().getUuid().toString());
                     }
                 });
 
