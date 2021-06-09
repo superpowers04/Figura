@@ -17,12 +17,15 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
@@ -30,6 +33,7 @@ import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,6 +54,8 @@ public class FiguraMod implements ClientModInitializer {
     public static final Identifier FIGURA_FONT = new Identifier("figura", "default");
 
     public static final String modVersion = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
+
+    public static KeyBinding emoteWheel;
 
     //Loading
 
@@ -104,6 +110,23 @@ public class FiguraMod implements ClientModInitializer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        //emote wheel keybind
+        emoteWheel = new KeyBinding(
+                "key.figura.emotewheel",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_LEFT_ALT,
+                "key.categories.misc"
+        ){
+            @Override
+            public void setBoundKey(InputUtil.Key boundKey) {
+                super.setBoundKey(boundKey);
+                Config.entries.get("emoteWheel").value = boundKey.getCode();
+                Config.saveConfig();
+        }};
+
+        emoteWheel.setBoundKey(InputUtil.Type.KEYSYM.createFromCode(((int) Config.entries.get("emoteWheel").value)));
+        KeyBindingRegistryImpl.registerKeyBinding(emoteWheel);
 
         //Set up network
         oldNetworkManager = new FiguraNetworkManager();
