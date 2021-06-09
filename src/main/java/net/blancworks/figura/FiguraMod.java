@@ -115,7 +115,7 @@ public class FiguraMod implements ClientModInitializer {
         emoteWheel = new KeyBinding(
                 "key.figura.emotewheel",
                 InputUtil.Type.KEYSYM,
-                GLFW.GLFW_KEY_LEFT_ALT,
+                GLFW.GLFW_KEY_B,
                 "key.categories.misc"
         ){
             @Override
