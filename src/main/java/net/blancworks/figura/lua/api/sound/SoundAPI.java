@@ -55,11 +55,13 @@ public class SoundAPI {
 
                     World w = MinecraftClient.getInstance().world;
 
-                    w.playSound(
-                            floats.getFloat(0), floats.getFloat(1), floats.getFloat(2),
-                            targetEvent, SoundCategory.PLAYERS,
-                            floats.getFloat(3), floats.getFloat(4), true
-                    );
+                    if (!MinecraftClient.getInstance().isPaused()) {
+                        w.playSound(
+                                floats.getFloat(0), floats.getFloat(1), floats.getFloat(2),
+                                targetEvent, SoundCategory.PLAYERS,
+                                floats.getFloat(3), floats.getFloat(4), true
+                        );
+                    }
 
                     return NIL;
                 }
@@ -79,11 +81,13 @@ public class SoundAPI {
 
                     World w = MinecraftClient.getInstance().world;
 
-                    w.playSound(
-                            pos.x(), pos.y(), pos.z(),
-                            targetEvent, SoundCategory.PLAYERS,
-                            pitchVol.y(), pitchVol.x(), true
-                    );
+                    if (!MinecraftClient.getInstance().isPaused()) {
+                        w.playSound(
+                                pos.x(), pos.y(), pos.z(),
+                                targetEvent, SoundCategory.PLAYERS,
+                                pitchVol.y(), pitchVol.x(), true
+                        );
+                    }
 
                     return NIL;
                 }

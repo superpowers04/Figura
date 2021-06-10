@@ -12,44 +12,36 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
-public class ArmorModelAPI {
+public class ParrotModelAPI {
 
-    public static final String VANILLA_HELMET = "HELMET";
-    public static final String VANILLA_CHESTPLATE = "CHESTPLATE";
-    public static final String VANILLA_LEGGINGS = "LEGGINGS";
-    public static final String VANILLA_BOOTS = "BOOTS";
-    public static final String VANILLA_HEAD_ITEM = "HEAD_ITEM";
-    
+    public static final String VANILLA_LEFT_PARROT = "LEFT_PARROT";
+    public static final String VANILLA_RIGHT_PARROT = "RIGHT_PARROT";
+
+    public static final Identifier VANILLA_LEFT_PARROT_ID = new Identifier("figura", "left_parrot");
+    public static final Identifier VANILLA_RIGHT_PARROT_ID = new Identifier("figura", "right_parrot");
+
     public static Identifier getID() {
-        return new Identifier("default", "armor_model");
+        return new Identifier("default", "parrot_model");
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
-            PlayerEntityModel mdl = script.playerData.vanillaModel;
-
-            set(VANILLA_HELMET, getTableForPart(VANILLA_HELMET, script));
-
-            set(VANILLA_CHESTPLATE, getTableForPart(VANILLA_CHESTPLATE, script));
-            set(VANILLA_LEGGINGS, getTableForPart(VANILLA_LEGGINGS, script));
-
-            set(VANILLA_BOOTS, getTableForPart(VANILLA_BOOTS, script));
-
-            set(VANILLA_HEAD_ITEM, getTableForPart(VANILLA_HEAD_ITEM, script));
+            set(VANILLA_LEFT_PARROT, getTableForPart(VANILLA_LEFT_PARROT, script));
+            set(VANILLA_RIGHT_PARROT, getTableForPart(VANILLA_RIGHT_PARROT, script));
         }});
 
         return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        ArmorPartTable producedTable = new ArmorPartTable(accessor, script);
+        ParrotShoulderTable producedTable = new ParrotShoulderTable(accessor, script);
         return producedTable;
     }
 
-    private static class ArmorPartTable extends ScriptLocalAPITable {
+    private static class ParrotShoulderTable extends ScriptLocalAPITable {
         String accessor;
 
-        public ArmorPartTable(String accessor, CustomScript script) {
+        public ParrotShoulderTable(String accessor, CustomScript script) {
             super(script);
             this.accessor = accessor;
             super.setTable(getTable());
@@ -64,7 +56,7 @@ public class ArmorModelAPI {
                     return LuaVector.of(targetScript.getOrMakePartCustomization(accessor).pos);
                 }
             });
-            
+
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
@@ -87,6 +79,7 @@ public class ArmorModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
                     customization.rot = LuaVector.checkOrNew(arg1).asV3f();
+
                     return NIL;
                 }
             });

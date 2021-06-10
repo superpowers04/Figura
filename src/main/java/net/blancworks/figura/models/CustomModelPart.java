@@ -7,6 +7,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
 import net.blancworks.figura.lua.api.model.ItemModelAPI;
+import net.blancworks.figura.lua.api.model.ParrotModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.render.RenderLayer;
@@ -43,6 +44,7 @@ public class CustomModelPart {
     public float vOffset = 0;
 
     public boolean visible = true;
+    public boolean isHidden = false;
 
     public ParentType parentType = ParentType.None;
     public boolean isMimicMode = false;
@@ -134,7 +136,7 @@ public class CustomModelPart {
         return 0;
     }
 
-    public int renderUsingAllTexturesFiltered(Object filter, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+    public int renderUsingAllTexturesFiltered(ParentType filter, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         filterParts(this, filter);
         return renderUsingAllTextures(data, matrices, transformStack, vcp, light, overlay, alpha);
     }
@@ -147,7 +149,7 @@ public class CustomModelPart {
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
     public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
         //Don't render invisible parts.
-        if (!this.visible || !this.shouldRender) {
+        if (!this.visible || !this.shouldRender || this.isHidden) {
             return leftToRender;
         }
 
@@ -155,7 +157,7 @@ public class CustomModelPart {
         transformStack.push();
 
         try {
-            if (this.isMimicMode) {
+            if (this.isMimicMode && parentType != ParentType.None && parentType != ParentType.Model) {
                 PlayerEntityModel model = FiguraMod.currentData.vanillaModel;
 
                 switch (this.parentType) {
@@ -181,7 +183,7 @@ public class CustomModelPart {
 
                 float multiply = 57.2958f;
                 this.rot.multiplyComponentwise(multiply, multiply, multiply);
-            } else if (parentType != CustomModelPart.ParentType.Model) {
+            } else if (parentType != ParentType.Model) {
                 PlayerEntityModel playerModel = FiguraMod.currentData.vanillaModel;
 
                 switch (parentType) {
@@ -216,6 +218,7 @@ public class CustomModelPart {
                             applyTransformsAsItem(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
+                            visible = true;
                             matrices.pop();
                         }});
                         break;
@@ -226,26 +229,51 @@ public class CustomModelPart {
                             applyTransformsAsItem(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
+                            visible = true;
                             matrices.pop();
                         }});
                         break;
                     case LeftElytraOrigin:
                         FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
-                            applyTransformsAsElytra(matrices);
-                            applyTransformsAsElytra(transformStack);
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
+                            visible = true;
                             matrices.pop();
                         }});
                         break;
                     case RightElytraOrigin:
                         FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
-                            applyTransformsAsElytra(matrices);
-                            applyTransformsAsElytra(transformStack);
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        break;
+                    case LeftParrotOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        break;
+                    case RightParrotOrigin:
+                        FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
                             matrices.pop();
                         }});
                         break;
@@ -325,7 +353,7 @@ public class CustomModelPart {
                 continue;
 
             //set child alpha
-            float childAlpha = alpha + child.alpha - 1;
+            float childAlpha = child.alpha * alpha;
 
             //render part
             leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, childAlpha);
@@ -338,7 +366,7 @@ public class CustomModelPart {
 
     public int getComplexity() {
         //don't render filtered parts
-        if (!this.visible || !this.shouldRender || this.isParentSpecial()) {
+        if (!this.visible || !this.shouldRender || this.isParentSpecial() || this.isHidden) {
             return 0;
         }
 
@@ -352,7 +380,7 @@ public class CustomModelPart {
         return complexity;
     }
 
-    public void setRenderStatus(CustomModelPart part, boolean status) {
+    public static void setRenderStatus(CustomModelPart part, boolean status) {
         //set for parent
         part.shouldRender = status;
 
@@ -362,7 +390,7 @@ public class CustomModelPart {
         }
     }
 
-    public void filterParts(CustomModelPart part, Object filter) {
+    public static void filterParts(CustomModelPart part, Object filter) {
         //error temp variable
         boolean unmatched = false;
 
@@ -472,7 +500,7 @@ public class CustomModelPart {
     }
 
     //TODO move these to the mixins, probably.
-    public void applyTransformsAsElytra(MatrixStack stack) {
+    public void applyTransformsAsElytraOrParrot(MatrixStack stack) {
         stack.translate(pivot.getX() / 16.0f, pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
         stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
         stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
@@ -527,13 +555,7 @@ public class CustomModelPart {
         }
 
         if (partNbt.contains("vsb")) {
-            this.visible = partNbt.getBoolean("vsb");
-        }
-
-        if (partNbt.contains("uv")) {
-            ListTag uvOffsetNbt = (ListTag) partNbt.get("uv");
-            this.uOffset = uvOffsetNbt.getFloat(0);
-            this.vOffset = uvOffsetNbt.getFloat(1);
+            this.isHidden = partNbt.getBoolean("vsb");
         }
 
         if (partNbt.contains("alp")) {
@@ -576,21 +598,13 @@ public class CustomModelPart {
             partNbt.put("piv", vec3fToNbt(this.pivot));
         }
 
-        if (Math.abs(this.uOffset) > 0.0001f && Math.abs(this.vOffset) > 0.0001f) {
-            ListTag uvOffsetNbt = new ListTag() {{
-                add(FloatTag.of(uOffset));
-                add(FloatTag.of(vOffset));
-            }};
-            partNbt.put("uv", uvOffsetNbt);
-        }
-
         if (this.parentType != ParentType.None) {
             partNbt.put("ptype", StringTag.of(this.parentType.toString()));
         }
         partNbt.put("mmc", ByteTag.of(this.isMimicMode));
 
-        if (!this.visible) {
-            partNbt.put("vsb", ByteTag.of(false));
+        if (this.isHidden) {
+            partNbt.put("vsb", ByteTag.of(true));
         }
 
         if (this.alpha != 1.0f) {
@@ -641,9 +655,10 @@ public class CustomModelPart {
         RightItemOrigin, //Origin position of the held item
         LeftElytraOrigin, //Left origin position of the elytra
         RightElytraOrigin, //Right origin position of the elytra
-        LeftElytra, //Left origin position of the elytra
-        RightElytra, //Right origin position of the elytra
-        NameTag, //Parented to the nametag.
+        LeftParrotOrigin, //Left origin position of the shoulder parrot
+        RightParrotOrigin, //Right origin position of the shoulder parrot
+        LeftElytra, //Left position of the elytra model
+        RightElytra //Right position of the elytra model
     }
 
     public enum RotationType {

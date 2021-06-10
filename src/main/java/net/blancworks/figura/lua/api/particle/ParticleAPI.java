@@ -53,9 +53,11 @@ public class ParticleAPI {
 
                     World w = MinecraftClient.getInstance().world;
 
-                    w.addParticle(targetType,
-                            vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
-                    );
+                    if (!MinecraftClient.getInstance().isPaused()) {
+                        w.addParticle(targetType,
+                                vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
+                        );
+                    }
 
                     return NIL;
                 }

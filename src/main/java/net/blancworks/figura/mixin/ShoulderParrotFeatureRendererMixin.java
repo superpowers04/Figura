@@ -3,44 +3,47 @@ package net.blancworks.figura.mixin;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.MatrixStackAccess;
-import net.blancworks.figura.lua.api.model.ItemModelAPI;
+import net.blancworks.figura.lua.api.model.ParrotModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.ParrotEntityRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRendererContext;
-import net.minecraft.client.render.entity.feature.HeldItemFeatureRenderer;
-import net.minecraft.client.render.entity.model.EntityModel;
-import net.minecraft.client.render.entity.model.ModelWithArms;
-import net.minecraft.client.render.model.json.ModelTransformation;
+import net.minecraft.client.render.entity.feature.ShoulderParrotFeatureRenderer;
+import net.minecraft.client.render.entity.model.ParrotEntityModel;
+import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.Arm;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.nbt.CompoundTag;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(HeldItemFeatureRenderer.class)
-public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T> & ModelWithArms> extends FeatureRenderer<T, M> {
-
-    public HeldItemModelMixin(FeatureRendererContext<T, M> context) {
+@Mixin(ShoulderParrotFeatureRenderer.class)
+public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends FeatureRenderer<T, PlayerEntityModel<T>> {
+    public ShoulderParrotFeatureRendererMixin(FeatureRendererContext<T, PlayerEntityModel<T>> context) {
         super(context);
     }
 
+    @Shadow @Final private ParrotEntityModel model;
+
     public VanillaModelPartCustomization figura$customization;
-    
+
     private int figura$pushedMatrixCount = 0;
 
-    @Inject(at = @At("HEAD"), cancellable = true, method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformation$Mode;Lnet/minecraft/util/Arm;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
-    private void onRenderItem(LivingEntity entity, ItemStack stack, ModelTransformation.Mode transformationMode, Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "renderShoulderParrot", cancellable = true)
+    public void onRenderShoulder(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T player, float limbAngle, float limbDistance, float headYaw, float headPitch, boolean leftShoulder, CallbackInfo ci) {
         PlayerData data = FiguraMod.currentData;
-        
+
         if (data == null)
             return;
 
@@ -51,7 +54,7 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
 
         try {
             if (data.model != null) {
-                VanillaModelPartCustomization originModification = arm == Arm.LEFT ? data.model.originModifications.get(ItemModelAPI.VANILLA_LEFT_HAND_ID) : data.model.originModifications.get(ItemModelAPI.VANILLA_RIGHT_HAND_ID);
+                VanillaModelPartCustomization originModification = leftShoulder ? data.model.originModifications.get(ParrotModelAPI.VANILLA_LEFT_PARROT_ID) : data.model.originModifications.get(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID);
 
                 if (originModification != null) {
                     if (originModification.part == null || originModification.visible == null || data.model.lastComplexity >= data.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
@@ -60,13 +63,24 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
                     }
 
                     if (originModification.stackReference != null) {
-                        //render
-                        figura$CustomOriginPointRender(entity, stack, transformationMode, arm, originModification.stackReference, vertexConsumers, light);
+                        //apply modifications
+                        MatrixStack freshStack = new MatrixStack();
+                        MatrixStackAccess access = (MatrixStackAccess) (Object) freshStack;
+                        access.pushEntry(originModification.stackReference);
 
                         //flag to not render anymore
                         originModification.visible = null;
 
-                        //return
+                        //render
+                        CompoundTag compoundTag = leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
+                        EntityType.get(compoundTag.getString("id")).filter((entityType) -> entityType == EntityType.PARROT).ifPresent((entityType) -> {
+                            freshStack.push();
+                            freshStack.translate(leftShoulder ? 0.4000000059604645D : -0.4000000059604645D, player.isInSneakingPose() ? -1.2999999523162842D : -1.5D, 0.0D);
+                            VertexConsumer vertexConsumer = vertexConsumers.getBuffer(this.model.getLayer(ParrotEntityRenderer.TEXTURES[compoundTag.getInt("Variant")]));
+                            this.model.poseOnShoulder(freshStack, vertexConsumer, light, OverlayTexture.DEFAULT_UV, limbAngle, limbDistance, headYaw, headPitch, player.age);
+                            freshStack.pop();
+                        });
+
                         ci.cancel();
                         return;
                     }
@@ -78,7 +92,7 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
 
         try {
             if (data.script != null && data.script.allCustomizations != null) {
-                figura$customization = data.script.allCustomizations.get(arm == Arm.LEFT ? ItemModelAPI.VANILLA_LEFT_HAND : ItemModelAPI.VANILLA_RIGHT_HAND);
+                figura$customization = data.script.allCustomizations.get(leftShoulder ? ParrotModelAPI.VANILLA_LEFT_PARROT : ParrotModelAPI.VANILLA_RIGHT_PARROT);
                 if (figura$customization != null) {
                     if (figura$customization.visible != null && !figura$customization.visible) {
                         ci.cancel();
@@ -103,12 +117,11 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformation$Mode;Lnet/minecraft/util/Arm;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
-    private void postRenderItem(LivingEntity entity, ItemStack stack, ModelTransformation.Mode transformationMode, Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-        
-        for(int i = 0; i < figura$pushedMatrixCount; i++)
+    @Inject(at = @At("RETURN"), method = "renderShoulderParrot")
+    public void postRenderShoulder(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T player, float limbAngle, float limbDistance, float headYaw, float headPitch, boolean leftShoulder, CallbackInfo ci) {
+        for (int i = 0; i < figura$pushedMatrixCount; i++)
             matrices.pop();
-        
+
         figura$pushedMatrixCount = 0;
     }
 
@@ -117,15 +130,4 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
     public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
 
     }
-
-    private void figura$CustomOriginPointRender(LivingEntity entity, ItemStack stack, ModelTransformation.Mode transformationMode, Arm arm, MatrixStack.Entry modified, VertexConsumerProvider vertexConsumers, int light) {
-        if (!stack.isEmpty()) {
-            MatrixStack freshStack = new MatrixStack();
-            MatrixStackAccess access = (MatrixStackAccess) (Object) freshStack;
-            access.pushEntry(modified);
-            boolean bl = arm == Arm.LEFT;
-            MinecraftClient.getInstance().getHeldItemRenderer().renderItem(entity, stack, transformationMode, bl, freshStack, vertexConsumers, light);
-        }
-    }
-
 }

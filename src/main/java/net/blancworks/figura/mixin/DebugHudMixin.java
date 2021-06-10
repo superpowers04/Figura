@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.List;
 
 @Mixin(DebugHud.class)
-public class MixinDebugHud {
+public class DebugHudMixin {
 
     @Inject(at = @At("RETURN"), method = "getRightText()Ljava/util/List;")
     protected void getRightText(CallbackInfoReturnable<List<String>> cir) {

@@ -57,34 +57,34 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         
         try {
             if (data != null && data.model != null) {
+                VanillaModelPartCustomization originModification;
 
                 //Left wing
-                {
-                    VanillaModelPartCustomization originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_LEFT_WING_ID);
+                originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_LEFT_WING_ID);
 
-                    if (originModification != null && originModification.stackReference != null) {
-                        if (originModification.visible == null || originModification.visible == true) {
-                            MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
-                            msa.pushEntry(originModification.stackReference);
-                            getLeftWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
-                        }
-
-                        getLeftWing().visible = false;
+                if (originModification != null && originModification.stackReference != null) {
+                    if (originModification.visible != null && originModification.visible) {
+                        originModification.visible = null;
+                        MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
+                        msa.pushEntry(originModification.stackReference);
+                        getLeftWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
                     }
+
+                    getLeftWing().visible = false;
                 }
 
-                {
-                    VanillaModelPartCustomization originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_RIGHT_WING_ID);
+                //Right wing
+                originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_RIGHT_WING_ID);
 
-                    if (originModification != null && originModification.stackReference != null) {
-                        if (originModification.visible == null || originModification.visible == true) {
-                            MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
-                            msa.pushEntry(originModification.stackReference);
-                            getRightWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
-                        }
-
-                        getRightWing().visible = false;
+                if (originModification != null && originModification.stackReference != null) {
+                    if (originModification.visible != null && originModification.visible) {
+                        originModification.visible = null;
+                        MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
+                        msa.pushEntry(originModification.stackReference);
+                        getRightWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
                     }
+
+                    getRightWing().visible = false;
                 }
             }
 
@@ -100,15 +100,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
             getRightWing().visible = true;
 
             if (data != null && data.model != null) {
-                figura$renderExtraElytraPartsWithTexture(data, RenderLayer.getEntityTranslucent(data.texture.id), matrices, light, overlay, alpha);
-
-                for (FiguraTexture extraTexture : data.extraTextures) {
-                    Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
-
-                    if (renderLayerGetter != null) {
-                        figura$renderExtraElytraPartsWithTexture(data, renderLayerGetter.apply(extraTexture.id), matrices, light, overlay, alpha);
-                    }
-                }
+                figura$renderExtraElytraPartsWithTexture(data, matrices, light, overlay, alpha);
             }
         } catch (Exception e){
             //e.printStackTrace();
@@ -123,15 +115,14 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         return field_3364;
     }
 
-    public void figura$renderExtraElytraPartsWithTexture(PlayerData data, RenderLayer layer, MatrixStack matrices, int light, int overlay, float alpha) {
-        VertexConsumer actualConsumer = FiguraMod.vertexConsumerProvider.getBuffer(layer);
+    public void figura$renderExtraElytraPartsWithTexture(PlayerData data, MatrixStack matrices, int light, int overlay, float alpha) {
 
         //Render left parts.
         matrices.push();
         getLeftWing().rotate(matrices);
 
         for (CustomModelPart modelPart : data.model.leftElytraParts) {
-            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, new MatrixStack(), actualConsumer, light, overlay, alpha);
+            data.model.leftToRender = modelPart.renderUsingAllTextures(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;
@@ -144,7 +135,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         getRightWing().rotate(matrices);
 
         for (CustomModelPart modelPart : data.model.rightElytraParts) {
-            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, new MatrixStack(), actualConsumer, light, overlay, alpha);
+            data.model.leftToRender = modelPart.renderUsingAllTextures(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;

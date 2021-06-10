@@ -3,6 +3,7 @@ package net.blancworks.figura;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -103,6 +104,7 @@ public class Config {
         entries.put("nameTagIcon", new ConfigEntry<>(true));
         entries.put("ownNameTag", new ConfigEntry<>(false));
         entries.put("logOthers", new ConfigEntry<>(false));
+        entries.put("emoteWheel", new ConfigEntry<>(GLFW.GLFW_KEY_B));
     }
 
     public static class ConfigEntry<T> {

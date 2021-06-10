@@ -68,12 +68,9 @@ public class ItemStackAPI {
             set("getItemTags", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Object[] tags = ItemTags.getTagGroup().getTagsFor(stack.getItem()).toArray();
-
                     LuaTable table = new LuaTable();
-                    for (int i = 0; i < tags.length; i++) {
-                        table.set(i, String.valueOf(tags[i]));
-                    }
+
+                    ItemTags.getTagGroup().getTagsFor(stack.getItem()).forEach(identifier -> table.insert(0, LuaValue.valueOf(String.valueOf(identifier))));
 
                     return new ReadOnlyLuaTable(table);
                 }

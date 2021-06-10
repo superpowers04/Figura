@@ -103,5 +103,11 @@
   "gui.figura.toast.upload.error.title": "Avatar Upload Failed!",
   "gui.figura.toast.upload.error.many": "You have too many avatars!!",
   "gui.figura.toast.upload.error.empty": "The avatar is empty!!",
-  "gui.figura.toast.upload.error.space": "Not enough space on server!!"
+  "gui.figura.toast.upload.error.space": "Not enough space on server!!",
+
+  "gui.figura.emotewheel.warning": "No script found",
+  "gui.figura.emotewheel.warninginfo": "The emote wheel contents are set by your avatar script",
+
+  "key.figura.emotewheel": "Figura Emote Wheel",
+  "key.figura.tooltip.emotewheel": "Figura Emote Wheel"
 }

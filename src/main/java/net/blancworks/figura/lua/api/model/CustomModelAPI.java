@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.model;
 
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
@@ -128,7 +129,8 @@ public class CustomModelAPI {
             ret.set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(targetPart.rot);
+                    Vector3f uv = new Vector3f(targetPart.uOffset, targetPart.vOffset, 0);
+                    return LuaVector.of(uv);
                 }
             });
 
@@ -136,8 +138,11 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
-                    targetPart.uOffset = v.x();
-                    targetPart.vOffset = v.y();
+                    targetPart.uOffset = v.x() % 1;
+                    targetPart.vOffset = v.y() % 1;
+                    if (targetPart.uOffset < 0) targetPart.uOffset++;
+                    if (targetPart.vOffset < 0) targetPart.vOffset++;
+
                     return NIL;
                 }
             });
@@ -152,7 +157,12 @@ public class CustomModelAPI {
             ret.set("setParentType", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
+                    CustomModelPart.ParentType oldParent = targetPart.parentType;
                     targetPart.parentType = CustomModelPart.ParentType.valueOf(arg1.checkjstring());
+
+                    if (targetPart.parentType != oldParent)
+                        PlayerDataManager.localPlayer.model.sortAllParts();
+
                     return NIL;
                 }
             });
@@ -184,6 +194,13 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg) {
                     targetPart.visible = arg.checkboolean();
                     return null;
+                }
+            });
+
+            ret.set("getHidden", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(targetPart.isHidden);
                 }
             });
 

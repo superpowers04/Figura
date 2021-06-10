@@ -55,6 +55,14 @@ public class VectorAPI {
                 }
             });
 
+            set("rgbToINT", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector rgb = LuaVector.checkOrNew(arg);
+                    return LuaValue.valueOf(intFromRGB(rgb));
+                }
+            });
+
             set("intToRGB", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -123,6 +131,13 @@ public class VectorAPI {
         int[] c = new int[3];
         ColorUtils.split(rgb, c);
         return new LuaVector(((float)c[0]) / 255, ((float)c[1]) / 255, ((float)c[2]) / 255);
+    }
+
+    public static int intFromRGB(LuaVector rgb) {
+        int c = (int) (rgb.x() * 255);
+        c = (c << 8) + (int) (rgb.y() * 255);
+        c = (c << 8) + (int) (rgb.z() * 255);
+        return c;
     }
 
     private static final LuaVector[] MODEL_SPACE_FACTORS = new LuaVector[7];

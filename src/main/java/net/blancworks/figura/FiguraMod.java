@@ -2,7 +2,6 @@ package net.blancworks.figura;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.blancworks.figura.access.FiguraTextAccess;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
@@ -18,23 +17,23 @@ import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
+import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -53,6 +52,10 @@ public class FiguraMod implements ClientModInitializer {
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static final Identifier FIGURA_FONT = new Identifier("figura", "default");
+
+    public static final String modVersion = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
+
+    public static KeyBinding emoteWheel;
 
     //Loading
 
@@ -107,6 +110,23 @@ public class FiguraMod implements ClientModInitializer {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        //emote wheel keybind
+        emoteWheel = new KeyBinding(
+                "key.figura.emotewheel",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_B,
+                "key.categories.misc"
+        ){
+            @Override
+            public void setBoundKey(InputUtil.Key boundKey) {
+                super.setBoundKey(boundKey);
+                Config.entries.get("emoteWheel").value = boundKey.getCode();
+                Config.saveConfig();
+        }};
+
+        emoteWheel.setBoundKey(InputUtil.Type.KEYSYM.createFromCode(((int) Config.entries.get("emoteWheel").value)));
+        KeyBindingRegistryImpl.registerKeyBinding(emoteWheel);
 
         //Set up network
         oldNetworkManager = new FiguraNetworkManager();
@@ -236,41 +256,6 @@ public class FiguraMod implements ClientModInitializer {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    //get nameplate badges
-    public static Text getBadges(UUID uuid) {
-        PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
-
-        Identifier font;
-        if ((boolean) Config.entries.get("nameTagIcon").value)
-            font = FiguraMod.FIGURA_FONT;
-        else
-            font = Style.DEFAULT_FONT_ID;
-
-        LiteralText badges = new LiteralText(" ");
-        badges.setStyle(Style.EMPTY
-                .withExclusiveFormatting(Formatting.WHITE)
-                .withFont(font)
-        );
-
-        if (currentData != null && currentData.model != null) {
-            if (PlayerDataManager.getDataForPlayer(uuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                badges.append(new LiteralText("△"));
-            } else {
-                badges.append(new LiteralText("▲"));
-            }
-        }
-
-        if (FiguraMod.special.contains(uuid))
-            badges.append(new LiteralText("✭"));
-
-        if (badges.getString().equals(" "))
-            ((FiguraTextAccess) badges).figura$setText("");
-
-        ((FiguraTextAccess) badges).figura$setFigura(true);
-
-        return badges;
     }
 
     public final static List<UUID> special = Arrays.asList(

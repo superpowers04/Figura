@@ -1,9 +1,12 @@
 package net.blancworks.figura.lua.api.world;
 
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
+import net.blancworks.figura.lua.api.world.entity.EntityAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.tag.BlockTags;
@@ -46,7 +49,7 @@ public class WorldAPI {
 
                     World w = getWorld();
 
-                    if (!w.isChunkLoaded(pos)) return NIL;
+                    if (w.getChunk(pos) == null) return NIL;
 
                     BlockState state = w.getBlockState(pos);
 
@@ -62,16 +65,12 @@ public class WorldAPI {
 
                     World w = getWorld();
 
-                    if (!w.isChunkLoaded(pos)) return NIL;
+                    if (w.getChunk(pos) == null) return NIL;
 
                     BlockState state = w.getBlockState(pos);
 
-                    Object[] tags = BlockTags.getTagGroup().getTagsFor(state.getBlock()).toArray();
-
                     LuaTable table = new LuaTable();
-                    for (int i = 0; i < tags.length; i++) {
-                        table.set(i, String.valueOf(tags[i]));
-                    }
+                    BlockTags.getTagGroup().getTagsFor(state.getBlock()).forEach(identifier -> table.insert(0, LuaValue.valueOf(String.valueOf(identifier))));
 
                     return new ReadOnlyLuaTable(table);
                 }
@@ -85,7 +84,7 @@ public class WorldAPI {
 
                     World w = getWorld();
 
-                    if (!w.isChunkLoaded(pos)) return NIL;
+                    if (w.getChunk(pos) == null) return NIL;
 
                     return LuaNumber.valueOf(w.getReceivedRedstonePower(pos));
                 }
@@ -99,7 +98,7 @@ public class WorldAPI {
 
                     World w = getWorld();
 
-                    if (!w.isChunkLoaded(pos)) return NIL;
+                    if (w.getChunk(pos) == null) return NIL;
 
                     return LuaNumber.valueOf(w.getReceivedStrongRedstonePower(pos));
                 }
@@ -154,7 +153,7 @@ public class WorldAPI {
                     LuaVector vec = LuaVector.checkOrNew(a);
                     BlockPos pos = new BlockPos(vec.asV3iFloored());
 
-                    if(!getWorld().isChunkLoaded(pos)) return NIL;
+                    if (getWorld().getChunk(pos) == null) return NIL;
 
                     getWorld().calculateAmbientDarkness();
                     int dark = getWorld().getAmbientDarkness();
@@ -170,7 +169,7 @@ public class WorldAPI {
                     LuaVector vec = LuaVector.checkOrNew(a);
                     BlockPos pos = new BlockPos(vec.asV3iFloored());
 
-                    if(!getWorld().isChunkLoaded(pos)) return NIL;
+                    if (getWorld().getChunk(pos) == null) return NIL;
 
                     return LuaInteger.valueOf(getWorld().getLightLevel(LightType.SKY, pos));
                 }
@@ -182,7 +181,7 @@ public class WorldAPI {
                     LuaVector vec = LuaVector.checkOrNew(a);
                     BlockPos pos = new BlockPos(vec.asV3iFloored());
 
-                    if(!getWorld().isChunkLoaded(pos)) return NIL;
+                    if (getWorld().getChunk(pos) == null) return NIL;
 
                     return LuaInteger.valueOf(getWorld().getLightLevel(LightType.BLOCK, pos));
                 }
@@ -195,7 +194,7 @@ public class WorldAPI {
                     LuaVector vec = LuaVector.checkOrNew(a);
                     BlockPos pos = new BlockPos(vec.asV3iFloored());
 
-                    if(!getWorld().isChunkLoaded(pos)) return NIL;
+                    if (getWorld().getChunk(pos) == null) return NIL;
 
                     Biome b = getWorld().getBiome(pos);
 
@@ -208,6 +207,21 @@ public class WorldAPI {
                 }
             });
 
+            set("getFiguraPlayers", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    LuaTable playerList = new LuaTable();
+
+                    getWorld().getPlayers().forEach(entity -> {
+                        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
+
+                        if (data != null && data.model != null)
+                            playerList.insert(0, new EntityAPI.EntityLuaAPITable(() -> entity).getTable());
+                    });
+
+                    return playerList;
+                }
+            });
         }});
     }
 

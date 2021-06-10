@@ -35,9 +35,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("RIGHT_HELD_ITEM", CustomModelPart.ParentType.RightItemOrigin)
                     .put("LEFT_ELYTRA_ORIGIN", CustomModelPart.ParentType.LeftElytraOrigin)
                     .put("RIGHT_ELYTRA_ORIGIN", CustomModelPart.ParentType.RightElytraOrigin)
+                    .put("LEFT_PARROT", CustomModelPart.ParentType.LeftParrotOrigin)
+                    .put("RIGHT_PARROT", CustomModelPart.ParentType.RightParrotOrigin)
                     .put("LEFT_ELYTRA", CustomModelPart.ParentType.LeftElytra)
                     .put("RIGHT_ELYTRA", CustomModelPart.ParentType.RightElytra)
-                    .put("NAMETAG", CustomModelPart.ParentType.NameTag)
                     .build();
 
     private static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =
@@ -166,7 +167,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 }
             }
         }
-        if (group.has("visibility")) groupPart.visible = group.get("visibility").getAsBoolean();
+        if (group.has("visibility")) groupPart.isHidden = !group.get("visibility").getAsBoolean();
         if (group.has("origin")) {
             Vector3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
@@ -210,7 +211,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         if (elementObject.has("name")) {
             elementPart.name = elementObject.get("name").getAsString();
         }
-        if (elementObject.has("visibility")) elementPart.visible = elementObject.get("visibility").getAsBoolean();
+        if (elementObject.has("visibility")) elementPart.isHidden = !elementObject.get("visibility").getAsBoolean();
 
         Vector3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
         Vector3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
@@ -229,11 +230,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         Vector3f size = to.copy();
         size.subtract(from);
-
-        if (elementObject.has("uv_offset")) {
-            elementPart.uOffset = elementObject.get("uv_offset").getAsJsonArray().get(0).getAsInt();
-            elementPart.vOffset = elementObject.get("uv_offset").getAsJsonArray().get(1).getAsInt();
-        }
 
         JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
 

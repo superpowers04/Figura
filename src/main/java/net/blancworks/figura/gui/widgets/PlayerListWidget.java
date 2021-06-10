@@ -39,7 +39,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
         //Foreach player
         for (PlayerListEntry listEntry : client.getNetworkHandler().getPlayerList()) {
-            if (listEntry.getProfile().getName().contains(searchTerm) && listEntry.getProfile().getId() != realScreen.draggedId) {
+            if (listEntry.getProfile().getName().toLowerCase().contains(searchTerm.toLowerCase()) && listEntry.getProfile().getId() != realScreen.draggedId) {
 
                 //Get trust container for that player
                 TrustContainer container = PlayerTrustManager.getContainer(new Identifier("players", listEntry.getProfile().getId().toString()));

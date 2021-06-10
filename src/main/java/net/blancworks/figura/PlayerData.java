@@ -220,9 +220,7 @@ public class PlayerData {
 
             this.model.totalSize = w.size();
             return w.size();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) {}
 
         return -1;
     }
