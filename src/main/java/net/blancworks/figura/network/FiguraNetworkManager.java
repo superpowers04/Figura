@@ -125,7 +125,6 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                         
                         data.loadFromNbt(nbt);
                         data.lastHash = getAvatarHashSync(id);
-                        data.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
                         data.saveToCache(id);
                     }
                 }

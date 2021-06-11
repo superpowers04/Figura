@@ -1,5 +1,7 @@
 package net.blancworks.figura.lua;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import net.blancworks.figura.*;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
@@ -8,6 +10,7 @@ import net.blancworks.figura.lua.api.emoteWheel.EmoteWheelCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.nbt.CompoundTag;
@@ -23,9 +26,7 @@ import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
 import org.luaj.vm2.lib.jse.JseMathLib;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
@@ -79,6 +80,18 @@ public class CustomScript extends FiguraAsset {
     public float soundSpawnCount = 0;
 
     public Float customShadowSize = null;
+    
+    
+    //----PINGS!----
+    
+    //Maps functions from lua to shorts for data saving.
+    public BiMap<Short, String> functionIDMap = HashBiMap.create();
+    
+    private short lastPingID = Short.MIN_VALUE;
+    
+    public Queue<LuaPing> incomingPingQueue = new LinkedList<>();
+
+    public Queue<LuaPing> outgoingPingQueue = new LinkedList<>();
 
     public CustomScript() {
         source = "";
@@ -332,16 +345,31 @@ public class CustomScript extends FiguraAsset {
         if (tickLuaEvent == null)
             return;
 
-        setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
-        try {
-            tickLuaEvent.call();
-        } catch (Exception error) {
-            loadError = true;
-            tickLuaEvent = null;
-            if (error instanceof LuaError)
-                logLuaError((LuaError) error);
-        }
-        tickInstructionCount = scriptGlobals.running.state.bytecodes;
+        
+        //Queue up a task for running a tick.
+        queueTask(()-> {
+            setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+            try {
+                tickLuaEvent.call();
+                
+                //Process all pings.
+                while(incomingPingQueue.size() > 0) {
+                    LuaPing p = incomingPingQueue.poll();
+                    
+                    p.function.call(p.args);
+                }
+                
+                //Batch-send pings.
+                if(outgoingPingQueue.size() > 0)
+                    ((NewFiguraNetworkManager)FiguraMod.networkManager).sendPing(outgoingPingQueue);
+            } catch (Exception error) {
+                loadError = true;
+                tickLuaEvent = null;
+                if (error instanceof LuaError)
+                    logLuaError((LuaError) error);
+            }
+            tickInstructionCount = scriptGlobals.running.state.bytecodes;
+        });
     }
 
     public void onRender(float deltaTime) {
@@ -349,30 +377,34 @@ public class CustomScript extends FiguraAsset {
             return;
         if (renderLuaEvent == null)
             return;
-
-        setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
-        try {
-            renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
-        } catch (Exception error) {
-            loadError = true;
-            renderLuaEvent = null;
-            if (error instanceof LuaError)
-                logLuaError((LuaError) error);
-        }
-        renderInstructionCount = scriptGlobals.running.state.bytecodes;
+        
+        //Queue up a task for running the render code.
+        queueTask(()->{
+            setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
+            try {
+                renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
+            } catch (Exception error) {
+                loadError = true;
+                renderLuaEvent = null;
+                if (error instanceof LuaError)
+                    logLuaError((LuaError) error);
+            }
+            renderInstructionCount = scriptGlobals.running.state.bytecodes; 
+        });
     }
 
     //--Tasks--
 
     public CompletableFuture queueTask(Runnable task) {
+        synchronized (this) {
+            if (currTask == null || currTask.isDone()) {
+                currTask = CompletableFuture.runAsync(task);
+            } else {
+                currTask = currTask.thenRun(task);
+            }
 
-        if (currTask == null || currTask.isDone()) {
-            currTask = CompletableFuture.runAsync(task);
-        } else {
-            currTask = currTask.thenRun(task);
+            return currTask;
         }
-
-        return currTask;
     }
 
     public String cleanScriptSource(String s) {
@@ -515,7 +547,7 @@ public class CustomScript extends FiguraAsset {
     public VanillaModelPartCustomization getPartCustomization(String accessor) {
         return allCustomizations.get(accessor);
     }
-
+    
     //--Nameplate Modifications--
 
     public NamePlateCustomization getOrMakeNameplateCustomization(String accessor) {
@@ -562,5 +594,33 @@ public class CustomScript extends FiguraAsset {
 
     public EmoteWheelCustomization getEmoteWheelCustomization(String accessor) {
         return emoteWheelCustomizations.get(accessor);
+    }
+        
+    //--Pings--
+    public void registerPingName(String s){
+        functionIDMap.put(lastPingID++, s);
+    }
+    
+    public void handlePing(short id, LuaValue args){
+        try {
+            String functionName = functionIDMap.get(id);
+            
+            LuaPing p = new LuaPing();
+            p.function = scriptGlobals.get(functionName).checkfunction();
+            p.args = args;
+            p.functionID = id;
+            
+            incomingPingQueue.add(p);
+        } catch (Exception error) {
+            loadError = true;
+            if (error instanceof LuaError)
+                logLuaError((LuaError) error);
+        }
+    }
+    
+    public static class LuaPing{
+        public short functionID;
+        public LuaFunction function;
+        public LuaValue args;
     }
 }

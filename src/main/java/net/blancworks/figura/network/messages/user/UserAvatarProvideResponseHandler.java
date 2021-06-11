@@ -45,7 +45,6 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
 
             pData.loadFromNbt(tag);
             pData.lastHash = hashString;
-            pData.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
             pData.saveToCache(targetUser);
         } catch (Exception e) {
             e.printStackTrace();

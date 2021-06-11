@@ -40,7 +40,6 @@ public class LocalPlayerData extends PlayerData {
     @Override
     public void tick() {
 
-        this.lastHashCheckTime = new Date(Long.MAX_VALUE);
         if (this.loadedName != null)
             this.lastHash = "";
         super.tick();

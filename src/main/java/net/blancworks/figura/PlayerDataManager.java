@@ -120,7 +120,6 @@ public final class PlayerDataManager {
 
                 targetData.loadFromNbt(dis);
                 targetData.lastHash = hash;
-                targetData.lastHashCheckTime = new Date();
 
                 FiguraMod.LOGGER.debug("Used cached model.");
             }
@@ -176,50 +175,6 @@ public final class PlayerDataManager {
         for (Map.Entry<UUID, PlayerData> entry : LOADED_PLAYER_DATA.entrySet()) {
             entry.getValue().tick();
         }
-
-        if (hashCheckCooldown > 0)
-            hashCheckCooldown--;
-
-        if (hashCheckCooldown == 0 && TO_REFRESH.size() > 0) {
-            UUID nextID = TO_REFRESH.remove();
-            TO_REFRESH_SET.remove(nextID);
-
-            checkPlayerDataHash(nextID);
-            hashCheckCooldown += 4;
-        }
-    }
-
-    public static void checkForPlayerDataRefresh(PlayerData data) {
-        //Never check local player data for this.
-        if (data == localPlayer)
-            return;
-
-        Date checkDate = new Date();
-        if (checkDate.getTime() - data.lastHashCheckTime.getTime() > 1000 * 15) {
-            if (!TO_REFRESH_SET.contains(data.playerId)) {
-                TO_REFRESH_SET.add(data.playerId);
-                TO_REFRESH.add(data.playerId);
-            }
-        }
-    }
-
-    public static void checkPlayerDataHash(UUID id) {
-        PlayerData dat = getDataForPlayer(id);
-        dat.lastHashCheckTime = new Date();
-
-        if (dat instanceof LocalPlayerData) {
-            if (((LocalPlayerData) dat).loadedName != null) {
-                return;
-            }
-        }
-
-        FiguraMod.doTask(() -> {
-            try {
-                FiguraMod.networkManager.checkAvatarHash(id, dat.lastHash).get();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
     }
 
     //Reloads all textures, used for asset reloads in vanilla.

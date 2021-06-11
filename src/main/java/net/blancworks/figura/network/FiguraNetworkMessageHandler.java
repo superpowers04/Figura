@@ -10,8 +10,11 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.network.messages.MessageHandler;
 import net.blancworks.figura.network.messages.avatar.AvatarProvideResponseHandler;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadResponseHandler;
+import net.blancworks.figura.network.messages.pings.PingMessageHandler;
+import net.blancworks.figura.network.messages.pubsub.ChannelAvatarUpdateHandler;
 import net.blancworks.figura.network.messages.user.UserAvatarHashProvideResponseHandler;
 import net.blancworks.figura.network.messages.user.UserAvatarProvideResponseHandler;
+import net.blancworks.figura.network.messages.utility.ErrorMessageHandler;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +42,15 @@ public class FiguraNetworkMessageHandler extends WebSocketAdapter {
         );
         add(
                 UserAvatarHashProvideResponseHandler::new
+        );
+        add(
+                ChannelAvatarUpdateHandler::new      
+        );
+        add(
+                PingMessageHandler::new
+        );
+        add(
+                ErrorMessageHandler::new
         );
     }};
 

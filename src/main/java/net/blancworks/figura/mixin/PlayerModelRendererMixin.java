@@ -30,8 +30,6 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
         PlayerData playerData = FiguraMod.currentData;
 
         if (playerData != null) {
-            PlayerDataManager.checkForPlayerDataRefresh(playerData);
-
             if (playerData.model != null) {
                 if (playerData.texture == null || !playerData.texture.isDone)
                     return;

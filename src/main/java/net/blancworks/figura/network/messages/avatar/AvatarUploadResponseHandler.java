@@ -4,6 +4,7 @@ import com.google.common.io.LittleEndianDataInputStream;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.network.messages.MessageHandler;
+import net.blancworks.figura.network.messages.pubsub.ChannelAvatarUpdateMessageSender;
 import net.blancworks.figura.network.messages.user.UserSetAvatarMessageSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.toast.SystemToast;
@@ -56,6 +57,7 @@ public class AvatarUploadResponseHandler extends MessageHandler {
         );
         
         new UserSetAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
+        new ChannelAvatarUpdateMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
     }
 
     public void handleTooManyAvatars() {

@@ -10,6 +10,7 @@ import net.blancworks.figura.lua.api.RendererAPI;
 import net.blancworks.figura.lua.api.camera.CameraAPI;
 import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.lua.api.model.*;
+import net.blancworks.figura.lua.api.network.NetworkAPI;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
 import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.lua.api.world.WorldAPI;
@@ -69,6 +70,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(CameraAPI.getID(), CameraAPI::getForScript);
         apiSuppliers.put(ParrotModelAPI.getID(), ParrotModelAPI::getForScript);
         apiSuppliers.put(EmoteWheelAPI.getID(), EmoteWheelAPI::getForScript);
+        apiSuppliers.put(NetworkAPI.getID(), NetworkAPI::getForScript);
     }
 
     public static void registerEvents(){

@@ -6,8 +6,11 @@ import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.messages.MessageRegistry;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
+import net.blancworks.figura.network.messages.pings.PingMessageSender;
+import net.blancworks.figura.network.messages.pubsub.SubscribeToUsersMessageSender;
 import net.blancworks.figura.network.messages.user.UserDeleteCurrentAvatarMessageSender;
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarHashMessageSender;
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarMessageSender;
@@ -20,14 +23,16 @@ import net.minecraft.network.NetworkState;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
 import net.minecraft.text.Text;
-import org.apache.logging.log4j.Level;
+import org.luaj.vm2.LuaValue;
 
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -69,6 +74,9 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     private static boolean hasInited = false;
 
+    private static ArrayList<UUID> allSubscriptions = new ArrayList<UUID>();
+    private static ArrayList<UUID> newSubscriptions = new ArrayList<UUID>();
+
     private static CompletableFuture doTask(Runnable toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = CompletableFuture.runAsync(toRun);
@@ -99,13 +107,32 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         return networkTasks;
     }
 
+    public static void subscribe(UUID playerID) {
+        if (!allSubscriptions.contains(playerID) && !newSubscriptions.contains(playerID))
+            newSubscriptions.add(playerID);
+    }
+
     @Override
     public void tickNetwork() {
 
-        if(authConnection != null && !authConnection.isOpen()) {
+        if (authConnection != null && !authConnection.isOpen()) {
             authConnection.handleDisconnection();
         }
-        
+
+        if (currWebSocket != null) {
+            if (newSubscriptions.size() > 0) {
+                allSubscriptions.addAll(newSubscriptions);
+
+                UUID[] ids = new UUID[newSubscriptions.size()];
+                newSubscriptions.toArray(ids);
+                newSubscriptions.clear();
+
+                doTask(() -> {
+                    new SubscribeToUsersMessageSender(ids).sendMessage(currWebSocket);
+                });
+            }
+        }
+
         //If the old token we had is old enough, re-auth us.
         Date currTime = new Date();
 
@@ -219,6 +246,18 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         }
     }
 
+    public void sendPing(Queue<CustomScript.LuaPing> pings){
+        PingMessageSender pms = new PingMessageSender(pings);
+        doTask(()->{
+            try {
+                if (currWebSocket != null && currWebSocket.isOpen())
+                    pms.sendMessage(currWebSocket);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    
     //Minecraft authentication server URL
     public String authServerURL() {
         if ((boolean) Config.entries.get("useLocalServer").value)
@@ -291,6 +330,13 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
                 messageHandler.sendClientRegistry(newSocket);
 
+                UUID[] ids = new UUID[allSubscriptions.size()];
+                allSubscriptions.toArray(ids);
+
+                doTask(() -> {
+                    new SubscribeToUsersMessageSender(ids).sendMessage(currWebSocket);
+                });
+
                 return messageHandler.initializedFuture;
             } catch (Exception e) {
                 e.printStackTrace();
@@ -320,19 +366,19 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         if (!force && jwtToken != null)
             return CompletableFuture.completedFuture(null);
 
-        if(authConnection != null && !authConnection.isOpen()) {
+        if (authConnection != null && !authConnection.isOpen()) {
             authConnection.handleDisconnection();
-            
-            if(authConnection != null)
+
+            if (authConnection != null)
                 return CompletableFuture.completedFuture(null);
         }
-        
+
         try {
             FiguraMod.LOGGER.info("Authenticating with Figura server");
 
             String address = authServerURL();
             InetAddress inetAddress = InetAddress.getByName(address);
-            
+
             //Create new connection
             ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
 
@@ -343,7 +389,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                     new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
                         FiguraMod.LOGGER.info(text.getString());
                     }) {
-                        
+
                         //Handle disconnect message
                         @Override
                         public void onDisconnected(Text reason) {
@@ -357,14 +403,14 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            
+
                             //Once connection is closed, yeet this connection so we can make new ones.
                             authConnection = null;
 
                             disconnectedFuture.complete(null);
                         }
                     });
-            
+
             //Send packets.
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));

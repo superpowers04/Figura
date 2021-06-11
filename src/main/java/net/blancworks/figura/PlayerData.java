@@ -3,6 +3,7 @@ package net.blancworks.figura;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
+import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
@@ -52,9 +53,7 @@ public class PlayerData {
     public final List<FiguraTexture> extraTextures = new ArrayList<>();
 
     public PlayerEntity lastEntity;
-
-    //The last time we checked for a hash
-    public Date lastHashCheckTime = new Date();
+    
     //The last hash code of the avatar.
     public String lastHash = "";
     //True if the model needs to be re-loaded due to a hash mismatch.
@@ -232,6 +231,8 @@ public class PlayerData {
         vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
         lastEntity = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
         FiguraMod.currentPlayer = (AbstractClientPlayerEntity) lastEntity;
+        
+        NewFiguraNetworkManager.subscribe(playerId);
 
         if (lastEntity != null) {
             if (script != null) {
