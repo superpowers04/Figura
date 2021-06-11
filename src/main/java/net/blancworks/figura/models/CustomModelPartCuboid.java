@@ -223,6 +223,8 @@ public class CustomModelPartCuboid extends CustomModelPart {
             add(FloatTag.of(to.getZ()));
         }});
         
+        //pivot.add(offset);
+        
         rebuild();
     }
 
@@ -233,11 +235,6 @@ public class CustomModelPartCuboid extends CustomModelPart {
         nB.subtract(a);
         nA.cross(nB);
         nA.normalize();
-
-        a.scale(1);
-        b.scale(1);
-        c.scale(1);
-        d.scale(1);
 
         addVertex(b, uv.get(0).x / texWidth, uv.get(0).y / texHeight, nA);
         addVertex(a, uv.get(1).x / texWidth, uv.get(1).y / texHeight, nA);
