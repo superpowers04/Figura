@@ -223,7 +223,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
             add(FloatTag.of(to.getZ()));
         }});
         
-        //pivot.add(offset);
+        pivot.add(offset);
         
         rebuild();
     }
