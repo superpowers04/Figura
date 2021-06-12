@@ -414,7 +414,10 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> focusedBinding = binding);
 
             //reset button
-            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> binding.setBoundKey(binding.getDefaultKey()));
+            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {
+                binding.setBoundKey(binding.getDefaultKey());
+                KeyBinding.updateKeysByCode();
+            });
         }
 
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
@@ -438,9 +441,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
                 this.toggle.setMessage((new LiteralText("> ")).append(this.toggle.getMessage().shallowCopy().formatted(Formatting.AQUA)).append(" <").formatted(Formatting.AQUA));
             }
             else if (!this.binding.isUnbound()) {
-                KeyBinding[] allBindings = MinecraftClient.getInstance().options.keysAll;
-
-                for (KeyBinding key : allBindings) {
+                for (KeyBinding key : MinecraftClient.getInstance().options.keysAll) {
                     if (key != this.binding && this.binding.equals(key)) {
                         this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(Formatting.RED));
                         break;

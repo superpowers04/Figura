@@ -5,6 +5,7 @@
   "gui.figura.trustmenutitle": "Figura Trust Menu",
   "gui.figura.configtitle": "Figura Config Menu",
   "gui.figura.menutitle": "Figura Menu",
+  "gui.figura.keybindstitle": "Figura Script Keybinds Menu",
 
   "gui.figura.blocked": "Blocked",
   "gui.figura.untrusted": "Untrusted",
@@ -47,6 +48,7 @@
   "gui.figura.button.tooltip.cantreset": "Cannot reset a Preset",
   "gui.figura.button.tooltip.resetallperm": "Hold LEFT SHIFT and click to reset the permissions for this user",
   "gui.figura.button.tooltip.clearcache": "Hold LEFT SHIFT and click to clear all loaded avatar data",
+  "gui.figura.button.tooltip.keybinds": "Current Script Keybinds",
 
   "gui.figura.deprecatedwarning" : "*The use of models in the root folder is deprecated, see the wiki for more info",
   "gui.figura.complexity": "Complexity: %d",
@@ -104,6 +106,8 @@
   "gui.figura.toast.upload.error.many": "You have too many avatars!!",
   "gui.figura.toast.upload.error.empty": "The avatar is empty!!",
   "gui.figura.toast.upload.error.space": "Not enough space on server!!",
+
+  "gui.figura.keybinds.warning": "Figura cannot use keys already in use by Minecraft or other mods",
 
   "gui.figura.emotewheel.warning": "No script found",
   "gui.figura.emotewheel.warninginfo": "The emote wheel contents are set by your avatar script",

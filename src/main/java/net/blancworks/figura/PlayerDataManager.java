@@ -3,6 +3,7 @@ package net.blancworks.figura;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.models.FiguraTexture;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.text.LiteralText;
 
@@ -161,6 +162,7 @@ public final class PlayerDataManager {
         localPlayer = null;
         didInitLocalPlayer = false;
         lastLoadedFileName = null;
+        KeyBinding.updateKeysByCode();
     }
 
     private static int hashCheckCooldown = 0;

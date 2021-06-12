@@ -7,6 +7,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
@@ -57,6 +58,7 @@ public class LocalPlayerData extends PlayerData {
      * @param fileName
      */
     public void loadModelFile(String fileName) {
+        KeyBinding.updateKeysByCode();
         watchedFiles.clear();
 
         //create root directory

@@ -1,10 +1,8 @@
 package net.blancworks.figura.lua.api.network;
 
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;

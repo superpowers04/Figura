@@ -13,6 +13,7 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.LiteralText;
@@ -73,6 +74,9 @@ public class CustomScript extends FiguraAsset {
 
     //Emote Wheel customizations
     public Map<String, EmoteWheelCustomization> emoteWheelCustomizations = new HashMap<>();
+
+    //scripting custom keybinds
+    public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
 
     //Keep track of these because we want to apply data to them later.
     public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();

@@ -51,6 +51,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier reloadTexture = new Identifier("figura", "textures/gui/reload.png");
     public Identifier deleteTexture = new Identifier("figura", "textures/gui/delete.png");
     public Identifier expandTexture = new Identifier("figura", "textures/gui/expand.png");
+    public Identifier keybindsTexture = new Identifier("figura", "textures/gui/keybinds.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
 
@@ -61,11 +62,13 @@ public class FiguraGuiScreen extends Screen {
 
     public static final TranslatableText uploadTooltip = new TranslatableText("gui.figura.button.tooltip.upload");
     public static final TranslatableText reloadTooltip = new TranslatableText("gui.figura.button.tooltip.reloadavatar");
+    public static final TranslatableText keybindTooltip = new TranslatableText("gui.figura.button.tooltip.keybinds");
 
     public TexturedButtonWidget uploadButton;
     public TexturedButtonWidget reloadButton;
     public TexturedButtonWidget deleteButton;
     public TexturedButtonWidget expandButton;
+    public TexturedButtonWidget keybindsButton;
 
     public MutableText nameText;
     public MutableText rawNameText;
@@ -105,6 +108,7 @@ public class FiguraGuiScreen extends Screen {
 
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
     public FiguraConfigScreen configScreen = new FiguraConfigScreen(this);
+    public FiguraKeyBindsScreen keyBindsScreen = new FiguraKeyBindsScreen(this);
 
     public CustomListWidgetState modelFileListState = new CustomListWidgetState();
     public ModelFileListWidget modelFileList;
@@ -176,6 +180,17 @@ public class FiguraGuiScreen extends Screen {
             this.client.openScreen(this);
         }, "https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel", true))));
 
+        //keybinds button
+        keybindsButton = new TexturedButtonWidget(
+                this.width - 140 - 5 - 25, 15,
+                20, 20,
+                0, 0, 20,
+                keybindsTexture, 40, 40,
+                (bx) -> this.client.openScreen(keyBindsScreen)
+        );
+        this.addButton(keybindsButton);
+        keybindsButton.active = false;
+
         //delete button
         deleteButton = new TexturedButtonWidget(
                 this.width / 2 + modelBgSize / 2 + 4, this.height / 2 - modelBgSize / 2,
@@ -183,7 +198,7 @@ public class FiguraGuiScreen extends Screen {
                 0, 0, 25,
                 deleteTexture, 50, 50,
                 (bx) -> {
-                    if(isHoldingShift)
+                    if (isHoldingShift)
                         FiguraMod.networkManager.deleteAvatar();
                 }
         );
@@ -312,26 +327,38 @@ public class FiguraGuiScreen extends Screen {
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
 
-        if(uploadButton.isMouseOver(mouseX, mouseY)){
+        if (uploadButton.isMouseOver(mouseX, mouseY)){
             matrices.push();
             matrices.translate(0, 0, 599);
             renderTooltip(matrices, uploadTooltip, mouseX, mouseY);
             matrices.pop();
         }
 
-        if(reloadButton.isMouseOver(mouseX, mouseY)){
+        if (reloadButton.isMouseOver(mouseX, mouseY)){
             matrices.push();
             matrices.translate(0, 0, 599);
             renderTooltip(matrices, reloadTooltip, mouseX, mouseY);
             matrices.pop();
         }
 
+        keybindsButton.active = PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.script != null;
+
+        boolean wasKeybindsActive = keybindsButton.active;
+        keybindsButton.active = true;
+        if (keybindsButton.isMouseOver(mouseX, mouseY)) {
+            matrices.push();
+            matrices.translate(0, 0, 599);
+            renderTooltip(matrices, keybindTooltip, mouseX, mouseY);
+            matrices.pop();
+        }
+        keybindsButton.active = wasKeybindsActive;
+
         if (!deleteButton.active) {
             deleteButton.active = true;
             boolean mouseOver = deleteButton.isMouseOver(mouseX, mouseY);
             deleteButton.active = false;
 
-            if(mouseOver) {
+            if (mouseOver) {
                 matrices.push();
                 matrices.translate(0, 0, 599);
                 renderTooltip(matrices, deleteTooltip, mouseX, mouseY);

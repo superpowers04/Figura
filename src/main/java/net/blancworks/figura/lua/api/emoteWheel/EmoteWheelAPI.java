@@ -103,6 +103,16 @@ public class EmoteWheelAPI {
                 }
             });
 
+            ret.set("clear", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    targetScript.getOrMakeEmoteWheelCustomization(accessor).function = null;
+                    targetScript.getOrMakeEmoteWheelCustomization(accessor).item = null;
+                    targetScript.getOrMakeEmoteWheelCustomization(accessor).title = null;
+                    return NIL;
+                }
+            });
+
             return ret;
         }
     }
