@@ -59,7 +59,8 @@ public class NetworkAPI {
                     lp.args = arg2;
                     lp.functionID = id;
                     
-                    targetScript.outgoingPingQueue.add(lp);
+                    if(!targetScript.playerData.isLocalAvatar)
+                        targetScript.outgoingPingQueue.add(lp);
                     
                     return NIL;
                 }

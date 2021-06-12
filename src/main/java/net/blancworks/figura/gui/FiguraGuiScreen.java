@@ -364,6 +364,7 @@ public class FiguraGuiScreen extends Screen {
 
     public void clickButton(String fileName) {
         PlayerDataManager.lastLoadedFileName = fileName;
+        PlayerDataManager.localPlayer.isLocalAvatar = true;
         PlayerDataManager.localPlayer.loadModelFile(fileName);
 
         CompletableFuture.runAsync(() -> {

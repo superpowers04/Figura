@@ -169,6 +169,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             if (currWebSocket != null && currWebSocket.isOpen()) {
                 //Get NBT tag for local player avatar
                 PlayerData data = PlayerDataManager.localPlayer;
+                data.isLocalAvatar = true;
                 CompoundTag infoNbt = new CompoundTag();
                 data.writeNbt(infoNbt);
 

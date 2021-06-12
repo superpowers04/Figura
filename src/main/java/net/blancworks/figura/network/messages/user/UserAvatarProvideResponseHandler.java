@@ -43,6 +43,7 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
 
             String hashString = new String(hashBytes, StandardCharsets.UTF_8);
 
+            pData.isLocalAvatar = false;
             pData.loadFromNbt(tag);
             pData.lastHash = hashString;
             pData.saveToCache(targetUser);

@@ -63,6 +63,8 @@ public class PlayerData {
     private Identifier trustIdentifier;
     
     public Text playerName;
+    
+    public boolean isLocalAvatar = true;
 
     public Identifier getTrustIdentifier() {
         if (trustIdentifier == null)
