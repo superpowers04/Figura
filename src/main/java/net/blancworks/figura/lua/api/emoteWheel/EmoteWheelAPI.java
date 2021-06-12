@@ -6,7 +6,7 @@ import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -79,7 +79,11 @@ public class EmoteWheelAPI {
             ret.set("setItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeEmoteWheelCustomization(accessor).item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
+                    ItemStack item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
+                    if (item == null)
+                        throw new LuaError("Not a ItemStack table!");
+
+                    targetScript.getOrMakeEmoteWheelCustomization(accessor).item = item;
                     return NIL;
                 }
             });
