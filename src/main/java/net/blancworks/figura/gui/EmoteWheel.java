@@ -67,7 +67,9 @@ public class EmoteWheel extends DrawableHelper {
         renderIcons(radius, itemXOffset, itemYOffset, currentData);
 
         //render line
-        renderLine(matrices, x, y, angle, distance, scale);
+        if (currentData != null && currentData.script != null) {
+            renderLine(matrices, x, y, angle, distance, scale);
+        }
     }
 
     public void renderWheel(MatrixStack matrices, int x, int y, int wheelSize, PlayerData data) {

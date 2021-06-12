@@ -437,6 +437,16 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             if (focusedBinding == this.binding) {
                 this.toggle.setMessage((new LiteralText("> ")).append(this.toggle.getMessage().shallowCopy().formatted(Formatting.AQUA)).append(" <").formatted(Formatting.AQUA));
             }
+            else if (!this.binding.isUnbound()) {
+                KeyBinding[] allBindings = MinecraftClient.getInstance().options.keysAll;
+
+                for (KeyBinding key : allBindings) {
+                    if (key != this.binding && this.binding.equals(key)) {
+                        this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(Formatting.RED));
+                        break;
+                    }
+                }
+            }
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
 
