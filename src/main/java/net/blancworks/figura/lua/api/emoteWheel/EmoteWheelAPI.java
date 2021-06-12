@@ -4,6 +4,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.LuaTable;
@@ -78,7 +79,7 @@ public class EmoteWheelAPI {
             ret.set("setItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeEmoteWheelCustomization(accessor).item = Registry.ITEM.get(Identifier.tryParse(arg1.checkjstring())).getDefaultStack();
+                    targetScript.getOrMakeEmoteWheelCustomization(accessor).item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
                     return NIL;
                 }
             });
