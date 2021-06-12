@@ -76,6 +76,7 @@ public class FiguraLuaManager {
     public static void registerEvents(){
         registerEvent("tick");
         registerEvent("render");
+        registerEvent("player_init");
 
         registerEvent("onDamage");
     }

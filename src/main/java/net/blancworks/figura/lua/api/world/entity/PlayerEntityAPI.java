@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -48,6 +49,7 @@ public class PlayerEntityAPI {
             superTable.set("getHeldItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
+
 
                     int hand = arg.checkint();
 
@@ -97,6 +99,13 @@ public class PlayerEntityAPI {
             });
 
             return superTable;
+        }
+
+        @Override
+        public LuaValue rawget(LuaValue key) {
+            if (targetEntity.get() == null)
+                throw new LuaError("Player Entity does not exist yet! Do NOT try to access the player in init! Do it in player_init instead!");
+            return super.rawget(key);
         }
     }
 

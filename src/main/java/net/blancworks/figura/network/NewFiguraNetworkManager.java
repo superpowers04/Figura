@@ -70,7 +70,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     public static final int TOKEN_REAUTH_WAIT_TIME = 200;
 
     //Timeout before a connection with a socket is considered dead.
-    public static final int TIMEOUT_SECONDS = 10;
+    public static final int TIMEOUT_SECONDS = 1;
 
     private static boolean hasInited = false;
 

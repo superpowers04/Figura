@@ -25,7 +25,7 @@ public class EntityAPI {
     public static class EntityLuaAPITable<T extends Entity> extends ReadOnlyLuaTable {
 
         public Supplier<T> targetEntity;
-
+        
         public EntityLuaAPITable(Supplier<T> targetEntity) {
             this.targetEntity = targetEntity;
         }
@@ -182,6 +182,8 @@ public class EntityAPI {
                 set("getName", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
+                        verifyEntityExists();
+                        
                         Entity ent = targetEntity.get();
                         if (ent.hasCustomName() && ent.getCustomName() != null)
                             return LuaValue.valueOf(ent.getCustomName().getString());
@@ -218,6 +220,12 @@ public class EntityAPI {
             }};
         }
 
+        @Override
+        public LuaValue rawget(LuaValue key) {
+            verifyEntityExists();
+            return super.rawget(key);
+        }
+        
 
         private static <T> T retrieveItemByIndex(Iterable<T> iterable, int index) {
 
@@ -239,5 +247,10 @@ public class EntityAPI {
             return cursor == index && iterator.hasNext() ? iterator.next() : null;
         }
 
+        protected void verifyEntityExists(){
+            if(targetEntity.get() == null)
+                throw new LuaError("Entity does not exist!");
+        }
+        
     }
 }

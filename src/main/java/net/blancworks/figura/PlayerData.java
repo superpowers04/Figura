@@ -16,6 +16,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.Tag;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.io.ByteArrayOutputStream;
@@ -60,6 +61,8 @@ public class PlayerData {
     public boolean isInvalidated = false;
 
     private Identifier trustIdentifier;
+    
+    public Text playerName;
 
     public Identifier getTrustIdentifier() {
         if (trustIdentifier == null)
@@ -230,13 +233,17 @@ public class PlayerData {
             PlayerDataManager.clearPlayer(playerId);
         vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
         lastEntity = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
+        
         FiguraMod.currentPlayer = (AbstractClientPlayerEntity) lastEntity;
         
         NewFiguraNetworkManager.subscribe(playerId);
 
         if (lastEntity != null) {
+            playerName = lastEntity.getDisplayName();
+
             if (script != null) {
                 try {
+                    script.setPlayerEntity(lastEntity);
                     script.tick();
                 } catch (Exception e) {
                     e.printStackTrace();

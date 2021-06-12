@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.models.FiguraTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.text.LiteralText;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -72,6 +73,8 @@ public final class PlayerDataManager {
             getData = LOADED_PLAYER_DATA.get(id);
         }
 
+        getData.playerName = new LiteralText(MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id).getProfile().getName());
+        
         return getData;
     }
 
