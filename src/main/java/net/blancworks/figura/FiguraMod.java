@@ -70,7 +70,8 @@ public class FiguraMod implements ClientModInitializer {
 
     public static IFiguraNetwork networkManager;
 
-    private static FiguraNetworkManager oldNetworkManager;
+    
+    //private static FiguraNetworkManager oldNetworkManager;
     private static NewFiguraNetworkManager newNetworkManager;
 
     //Used during rendering.
@@ -132,14 +133,14 @@ public class FiguraMod implements ClientModInitializer {
         KeyBindingRegistryImpl.registerKeyBinding(emoteWheel);
 
         //Set up network
-        oldNetworkManager = new FiguraNetworkManager();
+        //oldNetworkManager = new FiguraNetworkManager();
         newNetworkManager = new NewFiguraNetworkManager();
 
-        if ((boolean) Config.entries.get("useNewNetwork").value) {
+        //if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
-        } else {
-            networkManager = oldNetworkManager;
-        }
+        //} else {
+            //networkManager = oldNetworkManager;
+        //}
 
         //Register fabric events
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
@@ -168,11 +169,11 @@ public class FiguraMod implements ClientModInitializer {
     public static void ClientEndTick(MinecraftClient client) {
         PlayerDataManager.tick();
 
-        if ((boolean) Config.entries.get("useNewNetwork").value) {
+        //if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
-        } else {
-            networkManager = oldNetworkManager;
-        }
+        //} else {
+        //    //networkManager = oldNetworkManager;
+        //}
 
         if (networkManager != null)
             networkManager.tickNetwork();

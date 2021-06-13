@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 
+@Deprecated
 /**
  * Used to manage the network operations for Figura.
  * Used for sending/receiving data, managing custom packets/networking, that sort.

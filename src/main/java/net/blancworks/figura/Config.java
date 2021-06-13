@@ -95,7 +95,7 @@ public class Config {
         entries.clear();
         entries.put("previewNameTag", new ConfigEntry<>(true));
         entries.put("buttonLocation", new ConfigEntry<>(4, 5));
-        entries.put("useNewNetwork", new ConfigEntry<>(true));
+        //entries.put("useNewNetwork", new ConfigEntry<>(true));
         entries.put("useLocalServer", new ConfigEntry<>(false));
         entries.put("scriptLog", new ConfigEntry<>(0, 3));
         entries.put("listMods", new ConfigEntry<>(true));
