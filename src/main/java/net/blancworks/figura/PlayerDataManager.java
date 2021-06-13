@@ -3,6 +3,7 @@ package net.blancworks.figura;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.models.FiguraTexture;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.text.LiteralText;
@@ -74,8 +75,9 @@ public final class PlayerDataManager {
             getData = LOADED_PLAYER_DATA.get(id);
         }
 
-        getData.playerName = new LiteralText(MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id).getProfile().getName());
-        
+        PlayerListEntry playerEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
+        getData.playerName = playerEntry != null && playerEntry.getProfile() != null ? new LiteralText(playerEntry.getProfile().getName()) : new LiteralText("");
+
         return getData;
     }
 
