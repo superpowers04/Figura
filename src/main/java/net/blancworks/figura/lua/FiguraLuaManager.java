@@ -3,7 +3,7 @@ package net.blancworks.figura.lua;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
-import net.blancworks.figura.lua.api.emoteWheel.EmoteWheelAPI;
+import net.blancworks.figura.lua.api.actionWheel.ActionWheelAPI;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.keybind.KeyBindAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
@@ -71,7 +71,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(RendererAPI.getID(), RendererAPI::getForScript);
         apiSuppliers.put(CameraAPI.getID(), CameraAPI::getForScript);
         apiSuppliers.put(ParrotModelAPI.getID(), ParrotModelAPI::getForScript);
-        apiSuppliers.put(EmoteWheelAPI.getID(), EmoteWheelAPI::getForScript);
+        apiSuppliers.put(ActionWheelAPI.getID(), ActionWheelAPI::getForScript);
         apiSuppliers.put(NetworkAPI.getID(), NetworkAPI::getForScript);
         apiSuppliers.put(ItemStackAPI.getID(), ItemStackAPI::getForScript);
         apiSuppliers.put(KeyBindAPI.getID(), KeyBindAPI::getForScript);

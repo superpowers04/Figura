@@ -109,9 +109,10 @@
 
   "gui.figura.keybinds.warning": "Figura cannot use keys already in use by Minecraft or other mods",
 
-  "gui.figura.emotewheel.warning": "No script found",
-  "gui.figura.emotewheel.warninginfo": "The emote wheel contents are set by your avatar script",
+  "gui.figura.actionwheel.warning": "No script found",
+  "gui.figura.actionwheel.warninginfo": "The Action Wheel contents are set by your avatar script",
+  "gui.figura.actionwheel.nofunction": "unbound function!",
 
-  "key.figura.emotewheel": "Figura Emote Wheel",
-  "key.figura.tooltip.emotewheel": "Figura Emote Wheel"
+  "key.figura.actionwheel": "Figura Action Wheel",
+  "key.figura.tooltip.actionwheel": "Figura Action Wheel"
 }

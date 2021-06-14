@@ -75,7 +75,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         );
         this.addEntry(new EnumEntry(new TranslatableText("gui.figura.config.scriptlog"), new TranslatableText("gui.figura.config.tooltip.scriptlog"), Config.entries.get("scriptLog"), scriptLogEntries));
 
-        this.addEntry(new KeyBindEntry(new TranslatableText("key.figura.emotewheel"), new TranslatableText("key.figura.tooltip.emotewheel"), Config.entries.get("emoteWheel"), FiguraMod.emoteWheel));
+        this.addEntry(new KeyBindEntry(new TranslatableText("key.figura.actionwheel"), new TranslatableText("key.figura.tooltip.actionwheel"), Config.entries.get("actionWheel"), FiguraMod.actionWheel));
 
         //category title
         this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.dev").formatted(Formatting.RED)));

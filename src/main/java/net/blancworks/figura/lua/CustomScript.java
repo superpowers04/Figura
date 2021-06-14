@@ -6,7 +6,7 @@ import net.blancworks.figura.*;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
-import net.blancworks.figura.lua.api.emoteWheel.EmoteWheelCustomization;
+import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -72,8 +72,8 @@ public class CustomScript extends FiguraAsset {
     //Camera customizations
     public Map<String, CameraCustomization> cameraCustomizations = new HashMap<>();
 
-    //Emote Wheel customizations
-    public Map<String, EmoteWheelCustomization> emoteWheelCustomizations = new HashMap<>();
+    //Action Wheel customizations
+    public Map<String, ActionWheelCustomization> actionWheelCustomizations = new HashMap<>();
 
     //scripting custom keybinds
     public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
@@ -619,20 +619,20 @@ public class CustomScript extends FiguraAsset {
         return cameraCustomizations.get(accessor);
     }
 
-    //--EmoteWheel Modifications--
+    //--ActionWheel Modifications--
 
-    public EmoteWheelCustomization getOrMakeEmoteWheelCustomization(String accessor) {
-        EmoteWheelCustomization currCustomization = getEmoteWheelCustomization(accessor);
+    public ActionWheelCustomization getOrMakeActionWheelCustomization(String accessor) {
+        ActionWheelCustomization currCustomization = getActionWheelCustomization(accessor);
 
         if (currCustomization == null) {
-            currCustomization = new EmoteWheelCustomization();
-            emoteWheelCustomizations.put(accessor, currCustomization);
+            currCustomization = new ActionWheelCustomization();
+            actionWheelCustomizations.put(accessor, currCustomization);
         }
         return currCustomization;
     }
 
-    public EmoteWheelCustomization getEmoteWheelCustomization(String accessor) {
-        return emoteWheelCustomizations.get(accessor);
+    public ActionWheelCustomization getActionWheelCustomization(String accessor) {
+        return actionWheelCustomizations.get(accessor);
     }
 
     //--Pings--

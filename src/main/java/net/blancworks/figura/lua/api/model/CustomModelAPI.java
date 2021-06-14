@@ -1,6 +1,5 @@
 package net.blancworks.figura.lua.api.model;
 
-import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
@@ -157,12 +156,7 @@ public class CustomModelAPI {
             ret.set("setParentType", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    CustomModelPart.ParentType oldParent = targetPart.parentType;
                     targetPart.parentType = CustomModelPart.ParentType.valueOf(arg1.checkjstring());
-
-                    if (targetPart.parentType != oldParent)
-                        PlayerDataManager.localPlayer.model.sortAllParts();
-
                     return NIL;
                 }
             });

@@ -6,15 +6,12 @@ import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.blancworks.figura.network.FiguraNetworkManager;
 import net.blancworks.figura.network.IFiguraNetwork;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientLoginConnectionEvents;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
@@ -24,7 +21,6 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -58,7 +54,7 @@ public class FiguraMod implements ClientModInitializer {
 
     public static final String modVersion = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 
-    public static KeyBinding emoteWheel;
+    public static KeyBinding actionWheel;
 
     //Loading
 
@@ -115,9 +111,9 @@ public class FiguraMod implements ClientModInitializer {
             e.printStackTrace();
         }
 
-        //emote wheel keybind
-        emoteWheel = new KeyBinding(
-                "key.figura.emotewheel",
+        //action wheel keybind
+        actionWheel = new KeyBinding(
+                "key.figura.actionwheel",
                 InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_B,
                 "key.categories.misc"
@@ -125,12 +121,12 @@ public class FiguraMod implements ClientModInitializer {
             @Override
             public void setBoundKey(InputUtil.Key boundKey) {
                 super.setBoundKey(boundKey);
-                Config.entries.get("emoteWheel").value = boundKey.getCode();
+                Config.entries.get("actionWheel").value = boundKey.getCode();
                 Config.saveConfig();
         }};
 
-        emoteWheel.setBoundKey(InputUtil.Type.KEYSYM.createFromCode(((int) Config.entries.get("emoteWheel").value)));
-        KeyBindingRegistryImpl.registerKeyBinding(emoteWheel);
+        actionWheel.setBoundKey(InputUtil.Type.KEYSYM.createFromCode(((int) Config.entries.get("actionWheel").value)));
+        KeyBindingRegistryImpl.registerKeyBinding(actionWheel);
 
         //Set up network
         //oldNetworkManager = new FiguraNetworkManager();

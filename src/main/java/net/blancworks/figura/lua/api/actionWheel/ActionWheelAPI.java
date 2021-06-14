@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.emoteWheel;
+package net.blancworks.figura.lua.api.actionWheel;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -12,7 +12,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
-public class EmoteWheelAPI {
+public class ActionWheelAPI {
     public static final String SLOT_1 = "SLOT_1";
     public static final String SLOT_2 = "SLOT_2";
     public static final String SLOT_3 = "SLOT_3";
@@ -23,7 +23,7 @@ public class EmoteWheelAPI {
     public static final String SLOT_8 = "SLOT_8";
 
     public static Identifier getID() {
-        return new Identifier("default", "emote_wheel");
+        return new Identifier("default", "action_wheel");
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
@@ -40,13 +40,13 @@ public class EmoteWheelAPI {
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        return new EmoteWheelTable(accessor, script);
+        return new ActionWheelTable(accessor, script);
     }
 
-    private static class EmoteWheelTable extends ScriptLocalAPITable {
+    private static class ActionWheelTable extends ScriptLocalAPITable {
         String accessor;
 
-        public EmoteWheelTable(String accessor, CustomScript script) {
+        public ActionWheelTable(String accessor, CustomScript script) {
             super(script);
             this.accessor = accessor;
             super.setTable(getTable());
@@ -57,14 +57,14 @@ public class EmoteWheelAPI {
             ret.set("getFunction", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return targetScript.getOrMakeEmoteWheelCustomization(accessor).function;
+                    return targetScript.getOrMakeActionWheelCustomization(accessor).function;
                 }
             });
 
             ret.set("setFunction", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeEmoteWheelCustomization(accessor).function = arg1.checkfunction();
+                    targetScript.getOrMakeActionWheelCustomization(accessor).function = arg1.checkfunction();
                     return NIL;
                 }
             });
@@ -72,7 +72,7 @@ public class EmoteWheelAPI {
             ret.set("getItem", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return ItemStackAPI.getTable(targetScript.getOrMakeEmoteWheelCustomization(accessor).item);
+                    return ItemStackAPI.getTable(targetScript.getOrMakeActionWheelCustomization(accessor).item);
                 }
             });
 
@@ -83,7 +83,7 @@ public class EmoteWheelAPI {
                     if (item == null)
                         throw new LuaError("Not a ItemStack table!");
 
-                    targetScript.getOrMakeEmoteWheelCustomization(accessor).item = item;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).item = item;
                     return NIL;
                 }
             });
@@ -91,14 +91,14 @@ public class EmoteWheelAPI {
             ret.set("getTitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(targetScript.getOrMakeEmoteWheelCustomization(accessor).title);
+                    return LuaValue.valueOf(targetScript.getOrMakeActionWheelCustomization(accessor).title);
                 }
             });
 
             ret.set("setTitle", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeEmoteWheelCustomization(accessor).title = arg1.checkjstring();
+                    targetScript.getOrMakeActionWheelCustomization(accessor).title = arg1.checkjstring();
                     return NIL;
                 }
             });
@@ -106,9 +106,9 @@ public class EmoteWheelAPI {
             ret.set("clear", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    targetScript.getOrMakeEmoteWheelCustomization(accessor).function = null;
-                    targetScript.getOrMakeEmoteWheelCustomization(accessor).item = null;
-                    targetScript.getOrMakeEmoteWheelCustomization(accessor).title = null;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).function = null;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).item = null;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).title = null;
                     return NIL;
                 }
             });

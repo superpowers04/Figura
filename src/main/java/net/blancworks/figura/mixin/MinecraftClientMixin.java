@@ -2,7 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.gui.EmoteWheel;
+import net.blancworks.figura.gui.ActionWheel;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.screen.Screen;
@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MinecraftClientMixin {
 
     @Shadow @Final public Mouse mouse;
-    public boolean emoteWheelActive = false;
+    public boolean actionWheelActive = false;
 
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {
@@ -28,22 +28,22 @@ public class MinecraftClientMixin {
 
     @Inject(at = @At("RETURN"), method = "handleInputEvents")
     public void handleInputEvents(CallbackInfo ci) {
-        if (FiguraMod.emoteWheel.isPressed()) {
-            if (EmoteWheel.enabled) {
+        if (FiguraMod.actionWheel.isPressed()) {
+            if (ActionWheel.enabled) {
                 this.mouse.unlockCursor();
-                emoteWheelActive = true;
+                actionWheelActive = true;
             }
         }
-        else if (emoteWheelActive) {
-            EmoteWheel.play();
+        else if (actionWheelActive) {
+            ActionWheel.play();
             this.mouse.lockCursor();
-            emoteWheelActive = false;
+            actionWheelActive = false;
         }
     }
 
     @Inject(at = @At("HEAD"), method = "openScreen")
     public void openScreen(Screen screen, CallbackInfo ci) {
-        EmoteWheel.play();
-        emoteWheelActive = false;
+        ActionWheel.play();
+        actionWheelActive = false;
     }
 }
