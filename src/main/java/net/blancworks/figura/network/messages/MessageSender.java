@@ -20,8 +20,15 @@ public abstract class MessageSender {
                 ByteArrayOutputStream outStream = new ByteArrayOutputStream();
                 LittleEndianDataOutputStream outWriter = new LittleEndianDataOutputStream(outStream);
 
-                //Write message ID
-                outWriter.write(NewFiguraNetworkManager.msgRegistry.getMessageId(getProtocolName()));
+                String pcName = getProtocolName(); 
+                
+                try {
+                    //Write message ID
+                    outWriter.write(NewFiguraNetworkManager.msgRegistry.getMessageId(pcName));
+                } catch (Exception e){
+                    e.printStackTrace();
+                    return;
+                }
 
                 //Append extra header data provided up higher in the inheritence tree.
                 write(outWriter);

@@ -45,6 +45,8 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //The protocol version for this version of the mod.
     public static final int PROTOCOL_VERSION = 0;
 
+    private static boolean lastNetworkState = false;
+
     //----- WEBSOCKETS -----
 
     //The factory that creates all sockets
@@ -115,11 +117,16 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     @Override
     public void tickNetwork() {
 
+        if ((boolean) Config.entries.get("useLocalServer").value != lastNetworkState && currWebSocket != null) {
+            currWebSocket.disconnect();
+            lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
+        }
+
         if (authConnection != null && !authConnection.isOpen()) {
             authConnection.handleDisconnection();
         }
 
-        if (currWebSocket != null) {
+        if (currWebSocket != null && currWebSocket.isOpen() && !msgRegistry.isEmpty()) {
             if (newSubscriptions.size() > 0) {
                 allSubscriptions.addAll(newSubscriptions);
 
@@ -131,6 +138,9 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                     new SubscribeToUsersMessageSender(ids).sendMessage(currWebSocket);
                 });
             }
+        } else if (allSubscriptions.size() > 0) {
+            newSubscriptions.addAll(allSubscriptions);
+            allSubscriptions.clear();
         }
 
         //If the old token we had is old enough, re-auth us.
@@ -169,7 +179,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             if (currWebSocket != null && currWebSocket.isOpen()) {
                 //Get NBT tag for local player avatar
                 PlayerData data = PlayerDataManager.localPlayer;
-                data.isLocalAvatar = true;
+                data.isLocalAvatar = false;
                 CompoundTag infoNbt = new CompoundTag();
                 data.writeNbt(infoNbt);
 
@@ -247,10 +257,12 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         }
     }
 
-    public void sendPing(Queue<CustomScript.LuaPing> pings){
+    public void sendPing(Queue<CustomScript.LuaPing> pings) {
         PingMessageSender pms = new PingMessageSender(pings);
-        doTask(()->{
+        doTask(() -> {
             try {
+                if (msgRegistry.isEmpty())
+                    return;
                 if (currWebSocket != null && currWebSocket.isOpen())
                     pms.sendMessage(currWebSocket);
             } catch (Exception e) {
@@ -258,7 +270,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             }
         });
     }
-    
+
     //Minecraft authentication server URL
     public String authServerURL() {
         if ((boolean) Config.entries.get("useLocalServer").value)
@@ -301,6 +313,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         if (currWebSocket == null || currWebSocket.isOpen() == false) {
             try {
+                lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
                 return openNewConnection();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -330,13 +343,6 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 newSocket.sendText(jwtToken);
 
                 messageHandler.sendClientRegistry(newSocket);
-
-                UUID[] ids = new UUID[allSubscriptions.size()];
-                allSubscriptions.toArray(ids);
-
-                doTask(() -> {
-                    new SubscribeToUsersMessageSender(ids).sendMessage(currWebSocket);
-                });
 
                 return messageHandler.initializedFuture;
             } catch (Exception e) {

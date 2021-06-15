@@ -426,6 +426,7 @@ public class LocalPlayerData extends PlayerData {
 
             PlayerDataManager.lastLoadedFileName = loadedName;
             loadModelFile(loadedName);
+            isLocalAvatar = true;
         }
     }
 }
