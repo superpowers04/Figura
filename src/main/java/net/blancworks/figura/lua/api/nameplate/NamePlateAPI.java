@@ -38,18 +38,15 @@ public class NamePlateAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
+        return new ScriptLocalAPITable(script, new LuaTable() {{
             set(ENTITY, getTableForPart(ENTITY, script));
             set(CHAT, getTableForPart(CHAT, script));
             set(TABLIST, getTableForPart(TABLIST, script));
         }});
-
-        return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        NamePlateAPI.NamePlateTable producedTable = new NamePlateAPI.NamePlateTable(accessor, script);
-        return producedTable;
+        return new NamePlateTable(accessor, script);
     }
 
     private static class NamePlateTable extends ScriptLocalAPITable {

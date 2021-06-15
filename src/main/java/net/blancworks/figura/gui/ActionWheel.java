@@ -79,7 +79,7 @@ public class ActionWheel extends DrawableHelper {
         if (data != null && data.script != null) {
             ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
 
-            if (selectedSlot != -1 && customization != null) {
+            if (selectedSlot != -1) {
                 //overlay
                 matrices.push();
 
@@ -89,17 +89,22 @@ public class ActionWheel extends DrawableHelper {
                 Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(90 * (MathHelper.floor(selectedSlot / 2.0f) + 3));
                 matrices.multiply(quaternion);
 
-                drawTexture(matrices, 0, 0, wheelSize / 2, wheelSize / 2, customization.function == null ? 16.0f : 0.0f, selectedSlot % 2 == 1 ? 16.0f : 0.0f, 16, 16, 32, 32);
+                boolean hasFunction = customization != null && customization.function != null;
+
+                drawTexture(matrices, 0, 0, wheelSize / 2, wheelSize / 2, hasFunction ? 0.0f : 16.0f, selectedSlot % 2 == 1 ? 16.0f : 0.0f, 16, 16, 32, 32);
 
                 matrices.pop();
 
                 //text
-                if (customization.title != null) {
-                    if (customization.function != null)
-                        drawTextWithShadow(matrices, this.client.textRenderer, new LiteralText(customization.title), (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16777215);
-                    else
-                        drawTextWithShadow(matrices, this.client.textRenderer, new TranslatableText("gui.figura.actionwheel.nofunction"), (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16733525);
+                matrices.push();
+                matrices.translate(0, 0, 599);
+                if (!hasFunction) {
+                    drawTextWithShadow(matrices, this.client.textRenderer, new TranslatableText("gui.figura.actionwheel.nofunction"), (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16733525);
                 }
+                else if (customization.title != null) {
+                    drawTextWithShadow(matrices, this.client.textRenderer, new LiteralText(customization.title), (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16777215);
+                }
+                matrices.pop();
             }
 
             //render icons

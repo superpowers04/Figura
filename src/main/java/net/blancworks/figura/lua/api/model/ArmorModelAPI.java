@@ -4,7 +4,6 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
@@ -25,9 +24,7 @@ public class ArmorModelAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
-            PlayerEntityModel mdl = script.playerData.vanillaModel;
-
+        return new ScriptLocalAPITable(script, new LuaTable() {{
             set(VANILLA_HELMET, getTableForPart(VANILLA_HELMET, script));
 
             set(VANILLA_CHESTPLATE, getTableForPart(VANILLA_CHESTPLATE, script));
@@ -37,13 +34,10 @@ public class ArmorModelAPI {
 
             set(VANILLA_HEAD_ITEM, getTableForPart(VANILLA_HEAD_ITEM, script));
         }});
-
-        return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        ArmorPartTable producedTable = new ArmorPartTable(accessor, script);
-        return producedTable;
+        return new ArmorPartTable(accessor, script);
     }
 
     private static class ArmorPartTable extends ScriptLocalAPITable {

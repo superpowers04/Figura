@@ -4,7 +4,6 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
@@ -25,17 +24,14 @@ public class ParrotModelAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
+        return new ScriptLocalAPITable(script, new LuaTable() {{
             set(VANILLA_LEFT_PARROT, getTableForPart(VANILLA_LEFT_PARROT, script));
             set(VANILLA_RIGHT_PARROT, getTableForPart(VANILLA_RIGHT_PARROT, script));
         }});
-
-        return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        ParrotShoulderTable producedTable = new ParrotShoulderTable(accessor, script);
-        return producedTable;
+        return new ParrotShoulderTable(accessor, script);
     }
 
     private static class ParrotShoulderTable extends ScriptLocalAPITable {

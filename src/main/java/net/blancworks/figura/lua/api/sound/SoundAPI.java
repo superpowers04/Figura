@@ -55,7 +55,7 @@ public class SoundAPI {
 
                     World w = MinecraftClient.getInstance().world;
 
-                    if (!MinecraftClient.getInstance().isPaused()) {
+                    if (!MinecraftClient.getInstance().isPaused() && w != null) {
                         w.playSound(
                                 floats.getFloat(0), floats.getFloat(1), floats.getFloat(2),
                                 targetEvent, SoundCategory.PLAYERS,
@@ -76,16 +76,16 @@ public class SoundAPI {
                     if (targetEvent == null)
                         return NIL;
 
-                    LuaVector pos = LuaVector.check(arg2);
-                    LuaVector pitchVol = LuaVector.check(arg3);
+                    LuaVector pos = LuaVector.checkOrNew(arg2);
+                    LuaVector pitchVol = LuaVector.checkOrNew(arg3);
 
                     World w = MinecraftClient.getInstance().world;
 
-                    if (!MinecraftClient.getInstance().isPaused()) {
+                    if (!MinecraftClient.getInstance().isPaused() && w != null) {
                         w.playSound(
                                 pos.x(), pos.y(), pos.z(),
                                 targetEvent, SoundCategory.PLAYERS,
-                                pitchVol.y(), pitchVol.x(), true
+                                pitchVol.x(), pitchVol.y(), true
                         );
                     }
 

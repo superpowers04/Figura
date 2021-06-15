@@ -3,10 +3,8 @@ package net.blancworks.figura.lua.api.math;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -17,10 +15,6 @@ import java.awt.*;
 public class VectorAPI {
     private static ReadOnlyLuaTable globalLuaTable;
     private static boolean initialized;
-
-    private static World getWorld() {
-        return MinecraftClient.getInstance().world;
-    }
 
     public static Identifier getID() {
         return new Identifier("default", "vectors");

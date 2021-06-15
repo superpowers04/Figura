@@ -53,7 +53,7 @@ public class ParticleAPI {
 
                     World w = MinecraftClient.getInstance().world;
 
-                    if (!MinecraftClient.getInstance().isPaused()) {
+                    if (!MinecraftClient.getInstance().isPaused() && w != null) {
                         w.addParticle(targetType,
                                 vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
                         );

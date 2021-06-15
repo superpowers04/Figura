@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.model;
 
+import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
@@ -17,26 +18,21 @@ public class CustomModelAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
+        return new ScriptLocalAPITable(script, new LuaTable() {{
             for (CustomModelPart part : script.playerData.model.allParts) {
-                set(part.name, new CustomModelPartTable(part));
+                set(part.name, new CustomModelPartTable(part, script.playerData));
             }
         }});
-
-        return producedTable;
-    }
-
-    public static ReadOnlyLuaTable getTableForCustomPart(CustomModelPart part) {
-        CustomModelPartTable producedTable = new CustomModelPartTable(part);
-        return producedTable;
     }
 
     private static class CustomModelPartTable extends ReadOnlyLuaTable {
         CustomModelPart targetPart;
+        PlayerData partOwner;
 
-        public CustomModelPartTable(CustomModelPart part) {
+        public CustomModelPartTable(CustomModelPart part, PlayerData owner) {
             super();
             targetPart = part;
+            partOwner = owner;
             super.setTable(getTable());
         }
 
@@ -45,7 +41,7 @@ public class CustomModelAPI {
 
             int index = 1;
             for (CustomModelPart child : targetPart.children) {
-                CustomModelPartTable tbl = new CustomModelPartTable(child);
+                CustomModelPartTable tbl = new CustomModelPartTable(child, partOwner);
                 ret.set(child.name, tbl);
                 ret.set(index++, tbl);
             }
@@ -157,6 +153,10 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     targetPart.parentType = CustomModelPart.ParentType.valueOf(arg1.checkjstring());
+
+                    if (targetPart.isParentSpecial())
+                        partOwner.model.sortAllParts();
+
                     return NIL;
                 }
             });

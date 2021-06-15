@@ -64,7 +64,7 @@ public class ActionWheelAPI {
             ret.set("setFunction", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeActionWheelCustomization(accessor).function = arg1.checkfunction();
+                    targetScript.getOrMakeActionWheelCustomization(accessor).function = arg1.isnil() ? null : arg1.checkfunction();
                     return NIL;
                 }
             });
@@ -79,6 +79,11 @@ public class ActionWheelAPI {
             ret.set("setItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
+                    if (arg1.isnil()) {
+                        targetScript.getOrMakeActionWheelCustomization(accessor).item = null;
+                        return NIL;
+                    }
+
                     ItemStack item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
                     if (item == null)
                         throw new LuaError("Not a ItemStack table!");
@@ -98,7 +103,7 @@ public class ActionWheelAPI {
             ret.set("setTitle", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeActionWheelCustomization(accessor).title = arg1.checkjstring();
+                    targetScript.getOrMakeActionWheelCustomization(accessor).title = arg1.isnil() ? null : arg1.checkjstring();
                     return NIL;
                 }
             });

@@ -4,7 +4,6 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
@@ -25,19 +24,14 @@ public class ElytraModelAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
-            PlayerEntityModel mdl = script.playerData.vanillaModel;
-
+        return new ScriptLocalAPITable(script, new LuaTable() {{
             set(VANILLA_LEFT_WING, getTableForPart(VANILLA_LEFT_WING, script));
             set(VANILLA_RIGHT_WING, getTableForPart(VANILLA_RIGHT_WING, script));
         }});
-
-        return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        ElytraPartTable producedTable = new ElytraPartTable(accessor, script);
-        return producedTable;
+        return new ElytraPartTable(accessor, script);
     }
 
     private static class ElytraPartTable extends ScriptLocalAPITable {

@@ -4,7 +4,6 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
@@ -26,19 +25,14 @@ public class ItemModelAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
-            PlayerEntityModel mdl = script.playerData.vanillaModel;
-
+        return new ScriptLocalAPITable(script, new LuaTable() {{
             set(VANILLA_LEFT_HAND, getTableForPart(VANILLA_LEFT_HAND, script));
             set(VANILLA_RIGHT_HAND, getTableForPart(VANILLA_RIGHT_HAND, script));
         }});
-
-        return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        HeldItemModelTable producedTable = new HeldItemModelTable(accessor, script);
-        return producedTable;
+        return new HeldItemModelTable(accessor, script);
     }
 
     private static class HeldItemModelTable extends ScriptLocalAPITable {

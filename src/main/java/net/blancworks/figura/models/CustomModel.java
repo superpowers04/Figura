@@ -163,13 +163,17 @@ public class CustomModel extends FiguraAsset {
     }
 
     //Sorts parts into their respective places.
-    public void sortAllParts(){
+    public void sortAllParts() {
+        leftElytraParts.clear();
+        rightElytraParts.clear();
+        worldParts.clear();
+
         for (CustomModelPart part : allParts) {
             sortPart(part);
         }
     }
 
-    public void sortPart(CustomModelPart part){
+    public void sortPart(CustomModelPart part) {
         if (part.parentType == CustomModelPart.ParentType.LeftElytra) {
             leftElytraParts.add(part);
         } else if (part.parentType == CustomModelPart.ParentType.RightElytra) {

@@ -42,8 +42,7 @@ public class VanillaModelAPI {
     public static Supplier<PlayerEntityModel> getCurrModel = () -> FiguraMod.currentData.vanillaModel;
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
-
+        return new ScriptLocalAPITable(script, new LuaTable() {{
             set(VANILLA_HEAD, getTableForPart(() -> getCurrModel.get().head, VANILLA_HEAD, script));
             set(VANILLA_TORSO, getTableForPart(() -> getCurrModel.get().torso, VANILLA_TORSO, script));
 
@@ -62,13 +61,10 @@ public class VanillaModelAPI {
             set(VANILLA_LEFT_PANTS, getTableForPart(() -> getCurrModel.get().leftPantLeg, VANILLA_LEFT_PANTS, script));
             set(VANILLA_RIGHT_PANTS, getTableForPart(() -> getCurrModel.get().rightPantLeg, VANILLA_RIGHT_PANTS, script));
         }});
-
-        return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(Supplier<ModelPart> part, String accessor, CustomScript script) {
-        ModelPartTable producedTable = new ModelPartTable(part, accessor, script);
-        return producedTable;
+        return new ModelPartTable(part, accessor, script);
     }
 
     public static class ModelPartTable extends ScriptLocalAPITable {

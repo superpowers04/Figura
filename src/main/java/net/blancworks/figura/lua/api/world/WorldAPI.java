@@ -198,10 +198,13 @@ public class WorldAPI {
 
                     Biome b = getWorld().getBiome(pos);
 
-                    if(b == null)
+                    if (b == null)
                         return NIL;
 
                     Identifier id = getWorld().getRegistryManager().get(Registry.BIOME_KEY).getId(b);
+
+                    if (id == null)
+                        return NIL;
 
                     return LuaString.valueOf(id.toString());
                 }

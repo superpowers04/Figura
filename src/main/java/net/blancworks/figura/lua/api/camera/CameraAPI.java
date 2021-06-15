@@ -19,17 +19,14 @@ public class CameraAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        ScriptLocalAPITable producedTable = new ScriptLocalAPITable(script, new LuaTable() {{
+        return new ScriptLocalAPITable(script, new LuaTable() {{
             set(FIRST_PERSON, getTableForPart(FIRST_PERSON, script));
             set(THIRD_PERSON, getTableForPart(THIRD_PERSON, script));
         }});
-
-        return producedTable;
     }
 
     public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        CameraAPI.CameraTable producedTable = new CameraAPI.CameraTable(accessor, script);
-        return producedTable;
+        return new CameraTable(accessor, script);
     }
 
     private static class CameraTable extends ScriptLocalAPITable {

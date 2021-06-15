@@ -1,14 +1,11 @@
 package net.blancworks.figura.lua.api.world.entity;
 
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;
@@ -31,9 +28,7 @@ public class PlayerEntityAPI {
     }
 
     public static ReadOnlyLuaTable get(PlayerEntity entity) {
-        PlayerEntityLuaAPITable pentTable = new PlayerEntityLuaAPITable(() -> entity);
-
-        return pentTable;
+        return new PlayerEntityLuaAPITable(() -> entity);
     }
 
     public static class PlayerEntityLuaAPITable extends LivingEntityAPI.LivingEntityAPITable<PlayerEntity> {
@@ -50,10 +45,9 @@ public class PlayerEntityAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
 
-
                     int hand = arg.checkint();
 
-                    ItemStack targetStack = null;
+                    ItemStack targetStack;
 
                     if (hand == 1)
                         targetStack = targetEntity.get().getMainHandStack();
@@ -65,8 +59,7 @@ public class PlayerEntityAPI {
                     if (targetStack.equals(ItemStack.EMPTY))
                         return NIL;
 
-                    LuaTable getItemRepresentation = ItemStackAPI.getTable(targetStack);
-                    return getItemRepresentation;
+                    return ItemStackAPI.getTable(targetStack);
                 }
             });
 
