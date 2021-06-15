@@ -378,7 +378,7 @@ public class CustomScript extends FiguraAsset {
 
 
         //Queue up a task for running a tick.
-        queueTask(() -> {
+        //queueTask(() -> {
 
             if (!hasPlayer)
                 return;
@@ -404,7 +404,7 @@ public class CustomScript extends FiguraAsset {
                     logLuaError((LuaError) error);
             }
             tickInstructionCount = scriptGlobals.running.state.bytecodes;
-        });
+        //});
     }
 
     public void onRender(float deltaTime) {
@@ -414,7 +414,7 @@ public class CustomScript extends FiguraAsset {
             return;
 
         //Queue up a task for running the render code.
-        queueTask(() -> {
+        //queueTask(() -> {
 
             if (!hasPlayer)
                 return;
@@ -429,7 +429,7 @@ public class CustomScript extends FiguraAsset {
                     logLuaError((LuaError) error);
             }
             renderInstructionCount = scriptGlobals.running.state.bytecodes;
-        });
+        //});
     }
 
     //--Tasks--

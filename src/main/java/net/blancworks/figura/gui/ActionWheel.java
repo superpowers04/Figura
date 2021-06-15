@@ -133,6 +133,8 @@ public class ActionWheel extends DrawableHelper {
             drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.actionwheel.warning").formatted(Formatting.UNDERLINE), x, y - 4, 16733525);
             drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.actionwheel.warninginfo"), x, Math.max(y - wheelSize / 2 - 10, 4), 16733525);
         }
+
+        RenderSystem.disableBlend();
     }
 
     public static void play() {
