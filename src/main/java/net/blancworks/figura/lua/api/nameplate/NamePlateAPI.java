@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.nameplate;
 
+import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
@@ -12,10 +13,7 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
@@ -115,15 +113,7 @@ public class NamePlateAPI {
             ret.set("setText", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
-
-                    if (arg.isnil()) {
-                        customization.text = null;
-                        return NIL;
-                    }
-
-                    customization.text = arg.checkjstring().replaceAll("[\n\r]", "");
-
+                    targetScript.getOrMakeNameplateCustomization(accessor).text = arg.isnil() ? null : arg.checkjstring().replaceAll("[\n\r]", "");
                     return NIL;
                 }
             });
@@ -137,6 +127,7 @@ public class NamePlateAPI {
 
             ret.set("setColor", new OneArgFunction() {
                 @Override
+                @Deprecated
                 public LuaValue call(LuaValue arg) {
                     NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
 
@@ -153,6 +144,7 @@ public class NamePlateAPI {
 
             ret.set("getColor", new ZeroArgFunction() {
                 @Override
+                @Deprecated
                 public LuaValue call() {
                     return VectorAPI.RGBfromInt(targetScript.getOrMakeNameplateCustomization(accessor).color);
                 }
@@ -160,6 +152,7 @@ public class NamePlateAPI {
 
             ret.set("setFormatting", new OneArgFunction() {
                 @Override
+                @Deprecated
                 public LuaValue call(LuaValue arg) {
                     NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
 
@@ -192,6 +185,7 @@ public class NamePlateAPI {
 
             ret.set("getFormatting", new ZeroArgFunction() {
                 @Override
+                @Deprecated
                 public LuaValue call() {
                     NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
 
@@ -303,7 +297,7 @@ public class NamePlateAPI {
 
     public static Text applyNameplateFormatting(Text text, UUID uuid, NamePlateCustomization nameplateData, PlayerData currentData) {
         //dummy playername text
-        LiteralText formattedText = new LiteralText(((LiteralText) text).getRawString());
+        MutableText formattedText = new LiteralText(((LiteralText) text).getRawString());
 
         //original style
         Style originalStyle = text.getStyle();
@@ -315,31 +309,42 @@ public class NamePlateAPI {
         if (currentData != null) {
             //apply nameplate formatting
             if (nameplateData != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
-                //set color and properties
-                if (nameplateData.color != null)
-                    originalStyle = originalStyle.withColor(TextColor.fromRgb(nameplateData.color));
 
-                if (nameplateData.bold != null)
-                    originalStyle = originalStyle.withBold(nameplateData.bold);
+                //try to parse the string as json text
+                //otherwise use the deprecated customization method
+                try {
+                    if (nameplateData.text == null)
+                        throw new Exception("No text data found - using deprecated method");
 
-                if (nameplateData.italic != null)
-                    originalStyle = originalStyle.withItalic(nameplateData.italic);
+                    formattedText = Text.Serializer.fromJson(new StringReader(nameplateData.text));
+                }
+                catch (Exception ignored) { //deprecated
+                    //set color and properties
+                    if (nameplateData.color != null)
+                        originalStyle = originalStyle.withColor(TextColor.fromRgb(nameplateData.color));
 
-                if (nameplateData.underline != null)
-                    originalStyle = originalStyle.withUnderline(nameplateData.underline);
+                    if (nameplateData.bold != null)
+                        originalStyle = originalStyle.withBold(nameplateData.bold);
 
-                if (nameplateData.strikethrough != null && nameplateData.strikethrough)
-                    originalStyle = originalStyle.withFormatting(Formatting.STRIKETHROUGH);
+                    if (nameplateData.italic != null)
+                        originalStyle = originalStyle.withItalic(nameplateData.italic);
 
-                if (nameplateData.obfuscated != null && nameplateData.obfuscated)
-                    originalStyle = originalStyle.withFormatting(Formatting.OBFUSCATED);
+                    if (nameplateData.underline != null)
+                        originalStyle = originalStyle.withUnderline(nameplateData.underline);
 
-                //set text, if not null
-                if (nameplateData.text != null)
-                    ((FiguraTextAccess) formattedText).figura$setText(nameplateData.text);
+                    if (nameplateData.strikethrough != null && nameplateData.strikethrough)
+                        originalStyle = originalStyle.withFormatting(Formatting.STRIKETHROUGH);
 
-                //apply new style
-                formattedText.setStyle(originalStyle);
+                    if (nameplateData.obfuscated != null && nameplateData.obfuscated)
+                        originalStyle = originalStyle.withFormatting(Formatting.OBFUSCATED);
+
+                    //set text, if not null
+                    if (nameplateData.text != null)
+                        ((FiguraTextAccess) formattedText).figura$setText(nameplateData.text);
+
+                    //apply new style
+                    formattedText.setStyle(originalStyle);
+                }
             }
         }
 
