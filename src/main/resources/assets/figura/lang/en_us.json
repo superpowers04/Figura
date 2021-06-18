@@ -86,6 +86,9 @@
   "gui.figura.config.logothers": "Log Other Player's Scripts",
   "gui.figura.config.tooltip.logothers": "Display script debug logs from others players",
 
+  "gui.figura.config.formatscript": "Format Script",
+  "gui.figura.config.tooltip.formatscript": "Format script when uploading your avatar",
+
   "gui.figura.config.buttonlocation": "Figura Button Location",
   "gui.figura.config.tooltip.buttonlocation": "Location where the Figura settings button should be",
   "gui.figura.config.buttonlocation.topleft": "Top Left",

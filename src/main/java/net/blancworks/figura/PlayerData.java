@@ -241,7 +241,7 @@ public class PlayerData {
         NewFiguraNetworkManager.subscribe(playerId);
 
         if (lastEntity != null) {
-            playerName = lastEntity.getDisplayName();
+            playerName = lastEntity.getName();
 
             if (script != null) {
                 try {

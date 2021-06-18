@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import org.luaj.vm2.Lua;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -96,6 +97,14 @@ public class VectorAPI {
                     return new LuaVector(new float[n]);
                 }
             });
+
+            set("asTable", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    return toTable(vec);
+                }
+            });
         }});
     }
 
@@ -132,6 +141,14 @@ public class VectorAPI {
         c = (c << 8) + (int) (rgb.y() * 255);
         c = (c << 8) + (int) (rgb.z() * 255);
         return c;
+    }
+
+    public static LuaTable toTable(LuaVector vector) {
+        LuaTable tbl = new LuaTable();
+        for (int i = 1; i < 7; i++) {
+            tbl.insert(i, vector.get(i));
+        }
+        return tbl;
     }
 
     private static final LuaVector[] MODEL_SPACE_FACTORS = new LuaVector[7];

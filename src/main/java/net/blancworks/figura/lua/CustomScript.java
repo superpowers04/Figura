@@ -153,7 +153,7 @@ public class CustomScript extends FiguraAsset {
 
                     if (data == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
                         sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
-                                .append(( data.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.DARK_RED, Formatting.BOLD)
+                                .append((data.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.DARK_RED, Formatting.BOLD)
                                         .append(new LiteralText(" > Script overran resource limits"))
                                 )
                         );
@@ -242,7 +242,7 @@ public class CustomScript extends FiguraAsset {
                         }
                         if (config != 1) {
                             sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
-                                    .append(( playerData.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
+                                    .append((playerData.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
                                             .append(new LiteralText(" > " + arg.toString()))
                                     )
                             );
@@ -271,7 +271,7 @@ public class CustomScript extends FiguraAsset {
                         }
                         if (config != 1) {
                             sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
-                                    .append(( playerData.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
+                                    .append((playerData.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
                                             .append(new LiteralText(" >"))
                                     )
                             );
@@ -447,61 +447,102 @@ public class CustomScript extends FiguraAsset {
     }
 
     public String cleanScriptSource(String s) {
-        String ret = "";
+        if (!(boolean) Config.entries.get("formatScript").value)
+            return s;
 
-        boolean commentRemoveMode = false;
-        boolean blockCommentMode = false;
+        StringBuilder ret = new StringBuilder();
 
-        //Filter out comments
+        boolean inString = false;
+        boolean inChar = false;
+        boolean inBlockString = false;
+        boolean inComment = false;
+        boolean inBlock = false;
+
+        StringBuilder queue = new StringBuilder();
+
         for (int i = 0; i < s.length(); i++) {
             char curr = s.charAt(i);
 
-            if (!commentRemoveMode && !blockCommentMode) {
-                if (curr == '-') {
-                    if (i < s.length() - 1 && s.charAt(i + 1) == '-') {
-                        commentRemoveMode = true;
+            if (!inString && !inChar && !inBlockString && !inComment && !inBlock) {
+                //check for string
+                if (curr == '"') {
+                    inString = true;
+                    queue.append(curr);
+                }
+                //check for char (lua allows strings surrounded with '')
+                else if (curr == '\'') {
+                    inChar = true;
+                    queue.append(curr);
+                }
+                //check for block strings
+                else if (curr == '[' && i < s.length() - 1 && s.charAt(i + 1) == '[') {
+                    inBlockString = true;
+                    queue.append(curr);
+                }
+                //check single line comments
+                else if (curr == '-' && i < s.length() - 1 && s.charAt(i + 1) == '-') {
+                    inComment = true;
+                    i++;
 
-                        if (i < s.length() - 3 && s.charAt(i + 2) == '[' && s.charAt(i + 3) == '[') {
-                            blockCommentMode = true;
-
-                            i += 2; //Skip those 2 characters.
-                        }
-
-                        i++; //Skip the character we detected.
-                        continue;
+                    //check for comment block
+                    if (i < s.length() - 2 && s.charAt(i + 1) == '[' && s.charAt(i + 2) == '[') {
+                        inBlock = true;
+                        i += 2;
                     }
                 }
+                else {
+                    queue.append(curr);
+                }
+
+                //dont continue on the last iteration
+                if (i < s.length() - 1)
+                    continue;
             }
 
-            if (commentRemoveMode) {
-                if (blockCommentMode) {
-                    if (curr == ']') {
-                        if (i < s.length() - 1 && s.charAt(i + 1) == ']') {
-                            blockCommentMode = false;
-                            commentRemoveMode = false;
+            //format then append queue
+            queue = new StringBuilder(queue.toString().replaceAll("[\\t\\n\\r]+", " "));
+            queue = new StringBuilder(queue.toString().replaceAll("\\s+", " "));
 
-                            i += 1; //Skip those 2 characters.
-                        }
+            ret.append(queue);
+            queue = new StringBuilder();
 
-                        i++; //Skip the character we detected.
-                        continue;
-                    }
+            //add string contents
+            if (inString) {
+                //check for end of string and append
+                inString = !(curr == '"' && s.charAt(i - 1) != '\\');
+                ret.append(curr);
+            }
+            //add char contents
+            else if (inChar) {
+                //check for end of char and append
+                inChar = !(curr == '\'' && s.charAt(i - 1) != '\\');
+                ret.append(curr);
+            }
+            //add block string contents
+            else if (inBlockString) {
+                //check for end of block and append
+                inBlockString = !(curr == ']' && i < s.length() - 1 && s.charAt(i + 1) == ']');
+                ret.append(curr);
+            }
+            //skip block comments
+            else if (inBlock) {
+                //check for end of block
+                inBlock = !(curr == ']' && i < s.length() - 1 && s.charAt(i + 1) == ']');
+
+                //if block ended
+                if (!inBlock) {
+                    inComment = false;
+                    i++;
                 }
-
-                if (curr == '\n' && !blockCommentMode) {
-                    commentRemoveMode = false;
-                    continue;
-                }
-
-            } else {
-                ret += s.charAt(i);
+            }
+            //skip comments
+            else {
+                //check for comment end
+                inComment = !(curr == '\n');
             }
         }
 
-        ret = ret.replaceAll("[\\t\\n\\r]+", " ");
-        ret = ret.replaceAll("\\s+", " ");
-
-        return ret;
+        return ret.toString();
     }
 
     //--Debugging--

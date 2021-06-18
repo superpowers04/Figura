@@ -113,7 +113,7 @@ public class NamePlateAPI {
             ret.set("setText", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    targetScript.getOrMakeNameplateCustomization(accessor).text = arg.isnil() ? null : arg.checkjstring().replaceAll("[\n\r]", "");
+                    targetScript.getOrMakeNameplateCustomization(accessor).text = arg.isnil() ? null : arg.checkjstring().replaceAll("[\n\r]", "").replaceAll("figura:default", "minecraft:default");
                     return NIL;
                 }
             });
@@ -316,7 +316,13 @@ public class NamePlateAPI {
                     if (nameplateData.text == null)
                         throw new Exception("No text data found - using deprecated method");
 
-                    formattedText = Text.Serializer.fromJson(new StringReader(nameplateData.text));
+                    MutableText jsonText = Text.Serializer.fromJson(new StringReader(nameplateData.text));
+
+                    if (jsonText == null)
+                        throw new Exception("Error parsing JSON string - using deprecated method");
+
+                    ((FiguraTextAccess) formattedText).figura$setText("");
+                    formattedText.append(jsonText);
                 }
                 catch (Exception ignored) { //deprecated
                     //set color and properties

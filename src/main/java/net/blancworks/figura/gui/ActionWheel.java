@@ -1,6 +1,7 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
@@ -10,10 +11,7 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.TextColor;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -102,7 +100,15 @@ public class ActionWheel extends DrawableHelper {
                     drawTextWithShadow(matrices, this.client.textRenderer, new TranslatableText("gui.figura.actionwheel.nofunction"), (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16733525);
                 }
                 else if (customization.title != null) {
-                    drawTextWithShadow(matrices, this.client.textRenderer, new LiteralText(customization.title), (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16777215);
+                    Text title;
+
+                    try {
+                        title = Text.Serializer.fromJson(new StringReader(customization.title));
+                    } catch (Exception ignored) {
+                        title = new LiteralText(customization.title);
+                    }
+
+                    drawTextWithShadow(matrices, this.client.textRenderer, title, (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16777215);
                 }
                 matrices.pop();
             }
