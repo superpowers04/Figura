@@ -531,14 +531,15 @@ public class CustomScript extends FiguraAsset {
 
                 //if block ended
                 if (!inBlock) {
+                    queue.append(" ");
                     inComment = false;
                     i++;
                 }
             }
             //skip comments
-            else {
-                //check for comment end
-                inComment = !(curr == '\n');
+            else if (curr == '\n') {
+                queue.append(" ");
+                inComment = false;
             }
         }
 
