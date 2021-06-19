@@ -1,15 +1,15 @@
 package net.blancworks.figura.models;
 
 import com.google.common.collect.ImmutableMap;
+import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.ResourceTexture;
-import net.minecraft.client.texture.TextureUtil;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.util.Identifier;
 import org.apache.commons.io.IOUtils;
 import org.lwjgl.system.MemoryUtil;
@@ -65,25 +65,25 @@ public class FiguraTexture extends ResourceTexture {
     }
     
     private void uploadTexture(NativeImage image) {
-        TextureUtil.allocate(this.getGlId(), image.getWidth(), image.getHeight());
+        TextureUtil.prepareImage(this.getGlId(), image.getWidth(), image.getHeight());
         image.upload(0, 0, 0, true);
         this.isDone = true;
     }
 
-    public void writeNbt(CompoundTag nbt) {
+    public void writeNbt(NbtCompound nbt) {
         try {
             if (this.data == null) {
                 nbt.putString("note", "Texture has no data, cannot save : " + id);
                 return;
             }
             nbt.putByteArray("img2", this.data);
-            nbt.put("type", StringTag.of(this.type.toString()));
+            nbt.put("type", NbtString.of(this.type.toString()));
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public void readNbt(CompoundTag nbt) {
+    public void readNbt(NbtCompound nbt) {
         if (nbt.contains("img2")) {
             try {
                 //Pull data out of NBT tag.

@@ -24,8 +24,7 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
     public void render(MatrixStack matrices, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
         x += getXOffset();
         rowWidth -= getXOffset();
-        int iconSize = 32;
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         Text name = getDisplayText();
         StringVisitable trimmedName = name;
         int maxNameWidth = rowWidth - 3;
@@ -58,5 +57,10 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
         return entryValue;
     }
 
-    public void tick(double mouseX, double mouseY){}
+    public void tick(double mouseX, double mouseY) {}
+
+    @Override
+    public Text method_37006() {
+        return new LiteralText(String.valueOf(entryValue));
+    }
 }

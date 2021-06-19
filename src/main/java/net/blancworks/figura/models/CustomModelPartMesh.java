@@ -5,10 +5,10 @@ import de.javagl.obj.Obj;
 import de.javagl.obj.ObjFace;
 import de.javagl.obj.ObjReader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.FloatTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtFloat;
+import net.minecraft.nbt.NbtInt;
+import net.minecraft.nbt.NbtList;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -106,21 +106,21 @@ public class CustomModelPartMesh extends CustomModelPart {
     }
 
     @Override
-    public void writeNbt(CompoundTag partNbt) {
+    public void writeNbt(NbtCompound partNbt) {
         super.writeNbt(partNbt);
-        ListTag geometryData = new ListTag();
+        NbtList geometryData = new NbtList();
 
         for (int i = 0; i < this.vertexData.size(); i++) {
-            geometryData.add(FloatTag.of(this.vertexData.getFloat(i)));
+            geometryData.add(NbtFloat.of(this.vertexData.getFloat(i)));
         }
-        partNbt.put("vc", IntTag.of(this.vertexCount));
+        partNbt.put("vc", NbtInt.of(this.vertexCount));
         partNbt.put("geo", geometryData);
     }
 
     @Override
-    public void readNbt(CompoundTag partNbt) {
+    public void readNbt(NbtCompound partNbt) {
         super.readNbt(partNbt);
-        ListTag geometryData = (ListTag) partNbt.get("geo");
+        NbtList geometryData = (NbtList) partNbt.get("geo");
 
         for (int i = 0; i < geometryData.size(); i++) {
             this.vertexData.add(geometryData.getFloat(i));

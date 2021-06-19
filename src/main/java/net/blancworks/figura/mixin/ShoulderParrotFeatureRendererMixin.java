@@ -17,10 +17,10 @@ import net.minecraft.client.render.entity.feature.ShoulderParrotFeatureRenderer;
 import net.minecraft.client.render.entity.model.ParrotEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -72,7 +72,7 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
                         originModification.visible = null;
 
                         //render
-                        CompoundTag compoundTag = leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
+                        NbtCompound compoundTag = leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
                         EntityType.get(compoundTag.getString("id")).filter((entityType) -> entityType == EntityType.PARROT).ifPresent((entityType) -> {
                             freshStack.push();
                             freshStack.translate(leftShoulder ? 0.4000000059604645D : -0.4000000059604645D, player.isInSneakingPose() ? -1.2999999523162842D : -1.5D, 0.0D);
@@ -106,9 +106,9 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
                         matrices.translate(figura$customization.pos.getX() / 16.0f, figura$customization.pos.getY() / 16.0f, figura$customization.pos.getZ() / 16.0f);
 
                     if (figura$customization.rot != null) {
-                        matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(figura$customization.rot.getZ()));
-                        matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(figura$customization.rot.getY()));
-                        matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(figura$customization.rot.getX()));
+                        matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(figura$customization.rot.getZ()));
+                        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(figura$customization.rot.getY()));
+                        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(figura$customization.rot.getX()));
                     }
                 }
             }

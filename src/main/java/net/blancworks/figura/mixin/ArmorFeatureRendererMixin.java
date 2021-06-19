@@ -52,8 +52,8 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
             if(data != null) {
                 if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                     figura$applyPartCustomization(partID, bipedEntityModel.head);
-                    figura$applyPartCustomization(partID, bipedEntityModel.helmet);
-                    figura$applyPartCustomization(partID, bipedEntityModel.torso);
+                    figura$applyPartCustomization(partID, bipedEntityModel.hat);
+                    figura$applyPartCustomization(partID, bipedEntityModel.body);
                     figura$applyPartCustomization(partID, bipedEntityModel.leftArm);
                     figura$applyPartCustomization(partID, bipedEntityModel.leftLeg);
                     figura$applyPartCustomization(partID, bipedEntityModel.rightArm);
@@ -82,7 +82,7 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 
             if(customization != null) {
-                ((ModelPartAccess)part).figura$setPartCustomization(customization);
+                ((ModelPartAccess) (Object) part).figura$setPartCustomization(customization);
                 figura$customizedParts.add(part);
             }
         }
@@ -90,7 +90,7 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
 
     public void figura$clearAllPartCustomizations(){
         for (ModelPart part : figura$customizedParts) {
-            ((ModelPartAccess)part).figura$setPartCustomization(null);
+            ((ModelPartAccess) (Object) part).figura$setPartCustomization(null);
         }
         
         figura$customizedParts.clear();

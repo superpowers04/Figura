@@ -42,7 +42,7 @@ public class HeadFeatureRendererMixin<T extends LivingEntity, M extends EntityMo
             if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                 figura$applyPartCustomization(ArmorModelAPI.VANILLA_HEAD_ITEM, part);
 
-                VanillaModelPartCustomization customization = ((ModelPartAccess) part).figura$getPartCustomization();
+                VanillaModelPartCustomization customization = ((ModelPartAccess) (Object) part).figura$getPartCustomization();
 
                 if (customization != null) {
                     if (customization.visible != null && !customization.visible) {
@@ -74,7 +74,7 @@ public class HeadFeatureRendererMixin<T extends LivingEntity, M extends EntityMo
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 
             if(customization != null) {
-                ((ModelPartAccess) part).figura$setPartCustomization(customization);
+                ((ModelPartAccess) (Object) part).figura$setPartCustomization(customization);
                 figura$customizedParts.add(part);
             }
         }
@@ -82,7 +82,7 @@ public class HeadFeatureRendererMixin<T extends LivingEntity, M extends EntityMo
 
     public void figura$clearAllPartCustomizations() {
         for (ModelPart part : figura$customizedParts) {
-            ((ModelPartAccess) part).figura$setPartCustomization(null);
+            ((ModelPartAccess) (Object) part).figura$setPartCustomization(null);
         }
 
         figura$customizedParts.clear();

@@ -12,7 +12,7 @@ import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -136,7 +136,7 @@ public class NamePlateAPI {
                         return NIL;
                     }
 
-                    Vector3f color = LuaVector.checkOrNew(arg).asV3f();
+                    Vec3f color = LuaVector.checkOrNew(arg).asV3f();
                     customization.color = ((Math.round(color.getX() * 255) & 0xFF) << 16) | ((Math.round(color.getY() * 255) & 0xFF) << 8) | (Math.round(color.getZ() * 255) & 0xFF);
                     return NIL;
                 }

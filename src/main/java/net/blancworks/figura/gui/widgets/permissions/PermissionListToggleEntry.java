@@ -6,6 +6,7 @@ import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ToggleButtonWidget;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -28,9 +29,10 @@ public class PermissionListToggleEntry extends PermissionListEntry{
 
             @Override
             public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-                MinecraftClient minecraftClient = MinecraftClient.getInstance();
-                minecraftClient.getTextureManager().bindTexture(this.texture);
+                RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                RenderSystem.setShaderTexture(0, this.texture);
                 RenderSystem.disableDepthTest();
+
                 int i = this.u;
                 int j = this.v;
                 if (this.toggled) {

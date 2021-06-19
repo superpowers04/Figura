@@ -9,8 +9,8 @@ import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.*;
@@ -46,7 +46,7 @@ public class EntityAPI {
                 set("getRot", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return new LuaVector(targetEntity.get().pitch, targetEntity.get().yaw);
+                        return new LuaVector(targetEntity.get().getPitch(), targetEntity.get().getYaw());
                     }
                 });
 
@@ -199,15 +199,15 @@ public class EntityAPI {
 
                         String[] path = pathArg.split("\\.");
 
-                        CompoundTag tag = new CompoundTag();
-                        targetEntity.get().toTag(tag);
+                        NbtCompound tag = new NbtCompound();
+                        targetEntity.get().readNbt(tag);
 
-                        Tag current = tag;
+                        NbtElement current = tag;
                         for (String key : path) {
                             if (current == null)
                                 current = tag.get(key);
-                            else if (current instanceof CompoundTag)
-                                current = ((CompoundTag)current).get(key);
+                            else if (current instanceof NbtCompound)
+                                current = ((NbtCompound)current).get(key);
                             else current = null;
                         }
 

@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
@@ -145,9 +146,10 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
                 @Override
                 public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-                    MinecraftClient minecraftClient = MinecraftClient.getInstance();
-                    minecraftClient.getTextureManager().bindTexture(this.texture);
+                    RenderSystem.setShader(GameRenderer::getPositionTexShader);
+                    RenderSystem.setShaderTexture(0, this.texture);
                     RenderSystem.disableDepthTest();
+
                     int i = this.u;
                     int j = this.v;
                     if (this.toggled) {

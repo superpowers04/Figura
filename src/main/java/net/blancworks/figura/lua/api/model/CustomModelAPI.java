@@ -9,7 +9,7 @@ import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
-import net.minecraft.client.util.math.*;
+import net.minecraft.util.math.*;
 
 public class CustomModelAPI {
 
@@ -124,7 +124,7 @@ public class CustomModelAPI {
             ret.set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector3f uv = new Vector3f(targetPart.uOffset, targetPart.vOffset, 0);
+                    Vec3f uv = new Vec3f(targetPart.uOffset, targetPart.vOffset, 0);
                     return LuaVector.of(uv);
                 }
             });
@@ -222,7 +222,7 @@ public class CustomModelAPI {
 
                     v4f.transform(targetPart.lastModelMatrix);
 
-                    return LuaVector.of(new Vector3f(v4f.getX(), v4f.getY(), v4f.getZ()));
+                    return LuaVector.of(new Vec3f(v4f.getX(), v4f.getY(), v4f.getZ()));
                 }
             });
 
@@ -231,7 +231,7 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vector3f v3f = new Vector3f(v.x(), -(v.y()), v.z());
+                    Vec3f v3f = new Vec3f(v.x(), -(v.y()), v.z());
 
                     v3f.transform(targetPart.lastNormalMatrix);
 
@@ -244,7 +244,7 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vector3f v3f = new Vector3f(v.x() / 16.0f, -(v.y()) / 16.0f, v.z() / 16.0f);
+                    Vec3f v3f = new Vec3f(v.x() / 16.0f, -(v.y()) / 16.0f, v.z() / 16.0f);
 
                     v3f.transform(targetPart.lastNormalMatrix);
 
@@ -257,7 +257,7 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vector3f v3f = new Vector3f(v.x(), -(v.y()), v.z());
+                    Vec3f v3f = new Vec3f(v.x(), -(v.y()), v.z());
 
                     v3f.transform(targetPart.lastNormalMatrix);
 

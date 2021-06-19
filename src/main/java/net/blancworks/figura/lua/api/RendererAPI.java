@@ -1,7 +1,5 @@
 package net.blancworks.figura.lua.api;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.minecraft.client.MinecraftClient;

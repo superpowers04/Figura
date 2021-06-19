@@ -27,10 +27,10 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
 
     @Shadow
     @Final
-    private ModelPart field_3365;
+    private ModelPart leftWing;
     @Shadow
     @Final
-    private ModelPart field_3364;
+    private ModelPart rightWing;
 
     @Override
     @Shadow
@@ -108,11 +108,11 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
     }
 
     public ModelPart getLeftWing() {
-        return field_3365;
+        return leftWing;
     }
 
     public ModelPart getRightWing() {
-        return field_3364;
+        return rightWing;
     }
 
     public void figura$renderExtraElytraPartsWithTexture(PlayerData data, MatrixStack matrices, int light, int overlay, float alpha) {

@@ -4,14 +4,13 @@ import com.google.common.io.LittleEndianDataInputStream;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.network.messages.MessageHandler;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.Date;
 import java.util.UUID;
 
 public class UserAvatarProvideResponseHandler extends MessageHandler {
@@ -32,7 +31,7 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
             ByteArrayInputStream bis = new ByteArrayInputStream(allAvatarData);
             DataInputStream dis = new DataInputStream(bis);
 
-            CompoundTag tag = NbtIo.readCompressed(dis);
+            NbtCompound tag = NbtIo.readCompressed(dis);
 
             dis.close();
 

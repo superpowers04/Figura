@@ -5,9 +5,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.AlwaysSelectedEntryListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormats;
+import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Matrix4f;
@@ -80,7 +78,7 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
 
     @Override
     protected boolean isSelectedEntry(int index) {
-        CustomListEntry selected = getSelected();
+        CustomListEntry selected = this.getSelectedOrNull();
         return selected != null && selected.getIdentifier().equals(getEntry(index).getIdentifier());
     }
     
@@ -130,14 +128,14 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
         try {
             doFiltering(searchTerm);
 
-            if (state.selected != null && !children().isEmpty() || this.getSelected() != null && getSelected().getEntryObject()!= state.selected) {
+            if (state.selected != null && !children().isEmpty() || this.getSelectedOrNull() != null && this.getSelectedOrNull().getEntryObject()!= state.selected) {
                 for (CustomListEntry entry : children()) {
                     if (entry.getEntryObject().equals(state.selected)) {
                         setSelected(entry);
                     }
                 }
             } else {
-                if (getSelected() == null && !children().isEmpty() && getEntry(0) != null) {
+                if (this.getSelectedOrNull() == null && !children().isEmpty() && getEntry(0) != null) {
                     setSelected(getEntry(0));
                 }
             }
@@ -175,17 +173,18 @@ public class CustomListWidget<T extends Object, T2 extends CustomListEntry> exte
                     entryLeft = getRowLeft() - 2 + entry.getXOffset();
                     int selectionRight = x + rowWidth + 2;
                     RenderSystem.disableTexture();
+                    RenderSystem.setShader(GameRenderer::getPositionShader);
                     float float_2 = this.isFocused() ? 1.0F : 0.5F;
-                    RenderSystem.color4f(float_2, float_2, float_2, 1.0F);
+                    RenderSystem.setShaderColor(float_2, float_2, float_2, 1.0F);
                     Matrix4f matrix = matrices.peek().getModel();
-                    buffer.begin(7, VertexFormats.POSITION);
+                    buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
                     buffer.vertex(matrix, entryLeft, entryTop + entryHeight + 2, 0.0F).next();
                     buffer.vertex(matrix, selectionRight, entryTop + entryHeight + 2, 0.0F).next();
                     buffer.vertex(matrix, selectionRight, entryTop - 2, 0.0F).next();
                     buffer.vertex(matrix, entryLeft, entryTop - 2, 0.0F).next();
                     tessellator_1.draw();
-                    RenderSystem.color4f(0.0F, 0.0F, 0.0F, 1.0F);
-                    buffer.begin(7, VertexFormats.POSITION);
+                    RenderSystem.setShaderColor(0.0F, 0.0F, 0.0F, 1.0F);
+                    buffer.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION);
                     buffer.vertex(matrix, entryLeft + 1, entryTop + entryHeight + 1, 0.0F).next();
                     buffer.vertex(matrix, selectionRight - 1, entryTop + entryHeight + 1, 0.0F).next();
                     buffer.vertex(matrix, selectionRight - 1, entryTop - 1, 0.0F).next();

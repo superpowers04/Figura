@@ -6,9 +6,10 @@ import net.blancworks.figura.gui.FiguraKeyBindsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
@@ -127,7 +128,13 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
         }
 
+        @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> method_37025() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

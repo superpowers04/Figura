@@ -2,19 +2,17 @@ package net.blancworks.figura.lua.api.math;
 
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.*;
-import org.luaj.vm2.ast.Str;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -76,7 +74,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ(), vec.getW());
     }
 
-    public static LuaValue of(Vector3f vec) {
+    public static LuaValue of(Vec3f vec) {
         if (vec == null) return NIL;
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ());
     }
@@ -146,8 +144,8 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new Vector4f(x(), y(), z(), w());
     }
 
-    public Vector3f asV3f() {
-        return new Vector3f(x(), y(), z());
+    public Vec3f asV3f() {
+        return new Vec3f(x(), y(), z());
     }
 
     public Vec3d asV3d() {

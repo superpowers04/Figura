@@ -7,10 +7,11 @@ import net.blancworks.figura.gui.FiguraConfigScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
@@ -75,7 +76,21 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         );
         this.addEntry(new EnumEntry(new TranslatableText("gui.figura.config.scriptlog"), new TranslatableText("gui.figura.config.tooltip.scriptlog"), Config.entries.get("scriptLog"), scriptLogEntries));
 
+
+        //category title
+        this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.actionwheel")));
+
+        //entries
         this.addEntry(new KeyBindEntry(new TranslatableText("key.figura.actionwheel"), new TranslatableText("key.figura.tooltip.actionwheel"), Config.entries.get("actionWheel"), FiguraMod.actionWheel));
+
+        List<Text> actionWheelEntries = Arrays.asList(
+                new TranslatableText("gui.figura.config.actionwheelpos.mouse"),
+                new TranslatableText("gui.figura.config.actionwheelpos.top"),
+                new TranslatableText("gui.figura.config.actionwheelpos.bottom"),
+                new TranslatableText("gui.figura.config.actionwheelpos.center")
+        );
+        this.addEntry(new EnumEntry(new TranslatableText("gui.figura.config.actionwheelpos"), new TranslatableText("gui.figura.config.tooltip.actionwheelpos"), Config.entries.get("actionWheelPos"), actionWheelEntries));
+
 
         //category title
         this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.dev").formatted(Formatting.RED)));
@@ -149,6 +164,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         public List<? extends Element> children() {
             return Collections.emptyList();
         }
+
+        @Override
+        public List<? extends Selectable> method_37025() {
+            return Collections.emptyList();
+        }
     }
 
     public class BooleanEntry extends Entry {
@@ -209,7 +229,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         }
 
+        @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> method_37025() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -284,7 +310,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         }
 
+        @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> method_37025() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -369,7 +401,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         }
 
+        @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.field, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> method_37025() {
             return Arrays.asList(this.field, this.reset);
         }
 
@@ -461,7 +499,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         }
 
+        @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> method_37025() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

@@ -1,6 +1,5 @@
 package net.blancworks.figura.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
@@ -16,9 +15,6 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Identifier;
@@ -31,7 +27,6 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.UUID;
 
 public class FiguraTrustScreen extends Screen {
@@ -97,29 +92,30 @@ public class FiguraTrustScreen extends Screen {
         );
         permissionList.setLeftPos(rightPaneX);
 
-        this.addChild(this.playerList);
-        this.addChild(this.permissionList);
+        this.addSelectableChild(this.playerList);
+        this.addSelectableChild(this.permissionList);
+        this.addSelectableChild(this.searchBox);
         this.setInitialFocus(this.searchBox);
 
-        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> {
 
             PlayerTrustManager.saveToDisk();
 
             this.client.openScreen(parentScreen);
         }));
 
-        this.addButton(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
             //Open the trust menu from the Figura Wiki
             if (bl)
                 Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
             this.client.openScreen(this);
         }, "https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu", true))));
 
-        this.addButton(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> {
+        this.addDrawableChild(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> {
             PlayerDataManager.clearCache();
         }));
 
-        this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.reloadavatar"), (btx) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.reloadavatar"), (btx) -> {
 
             if (playerListState.selected instanceof PlayerListEntry) {
                 PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
@@ -163,8 +159,8 @@ public class FiguraTrustScreen extends Screen {
         });
         resetAllPermissionsButton.visible = false;
 
-        this.addButton(resetPermissionButton);
-        this.addButton(resetAllPermissionsButton);
+        this.addDrawableChild(resetPermissionButton);
+        this.addDrawableChild(resetAllPermissionsButton);
 
         playerList.reloadFilters();
         permissionList.rebuild();
@@ -172,7 +168,7 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
+        this.renderBackgroundTexture(0);
 
         this.playerList.render(matrices, mouseX, mouseY, delta);
         this.permissionList.render(matrices, mouseX, mouseY, delta);
@@ -277,24 +273,6 @@ public class FiguraTrustScreen extends Screen {
                     TextColor.parse("white").getRgb());
         }
 
-    }
-
-    @Override
-    public void renderBackground(MatrixStack matrices) {
-        overlayBackground(0, 0, this.width, this.height, 64, 64, 64, 255, 255);
-    }
-
-    static void overlayBackground(int x1, int y1, int x2, int y2, int red, int green, int blue, int startAlpha, int endAlpha) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        Objects.requireNonNull(MinecraftClient.getInstance()).getTextureManager().bindTexture(OPTIONS_BACKGROUND_TEXTURE);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        buffer.begin(7, VertexFormats.POSITION_TEXTURE_COLOR);
-        buffer.vertex(x1, y2, 0.0D).texture(x1 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
-        buffer.vertex(x2, y2, 0.0D).texture(x2 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
-        buffer.vertex(x2, y1, 0.0D).texture(x2 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
-        buffer.vertex(x1, y1, 0.0D).texture(x1 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
-        tessellator.draw();
     }
 
     @Override

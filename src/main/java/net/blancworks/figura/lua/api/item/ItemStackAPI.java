@@ -6,9 +6,9 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.StringNbtReader;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
@@ -51,7 +51,7 @@ public class ItemStackAPI {
             set("getTag", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Tag tag = stack.getTag();
+                    NbtElement tag = stack.getTag();
                     return NBTAPI.fromTag(tag);
                 }
             });
@@ -123,7 +123,7 @@ public class ItemStackAPI {
                     StringReader reader = new StringReader(arg.checkjstring());
 
                     try {
-                        stack.setTag((CompoundTag) new StringNbtReader(reader).parseTag());
+                        stack.setTag((NbtCompound) new StringNbtReader(reader).parseElement());
                     } catch (CommandSyntaxException e) {
                         throw new LuaError(e.getMessage());
                     } catch (Exception e) {

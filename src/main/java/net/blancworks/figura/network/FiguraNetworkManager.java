@@ -8,7 +8,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
@@ -16,11 +16,10 @@ import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
-import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Base64;
@@ -115,7 +114,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                         InputStream dataAsStream = new ByteArrayInputStream(dataAsBytes);
                         DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
                         receivedDataToStream.reset();
-                        CompoundTag nbt = NbtIo.readCompressed(receivedDataToStream);
+                        NbtCompound nbt = NbtIo.readCompressed(receivedDataToStream);
 
                         MessageDigest md = MessageDigest.getInstance("SHA-256");
                         byte[] hashBytes = md.digest(dataAsBytes);
@@ -197,8 +196,8 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     private void asyncAuthUser() {
         try {
             String address = getMinecraftAuthServerAddress();
-            InetAddress inetAddress = InetAddress.getByName(address);
-            ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
+            InetSocketAddress inetAddress = new InetSocketAddress(address, 25565);
+            ClientConnection connection = ClientConnection.connect(inetAddress, true);
             connection.setPacketListener(new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> FiguraMod.LOGGER.info(text.toString())));
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
@@ -312,7 +311,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", getServerURL(), uuidString, figuraSessionKey));
                     PlayerData data = PlayerDataManager.localPlayer;
 
-                    CompoundTag infoNbt = new CompoundTag();
+                    NbtCompound infoNbt = new NbtCompound();
                     data.writeNbt(infoNbt);
 
 
@@ -361,7 +360,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", getServerURL(), uuidString, figuraSessionKey));
                     PlayerData data = PlayerDataManager.localPlayer;
 
-                    CompoundTag infoNbt = new CompoundTag();
+                    NbtCompound infoNbt = new NbtCompound();
                     data.writeNbt(infoNbt);
 
 

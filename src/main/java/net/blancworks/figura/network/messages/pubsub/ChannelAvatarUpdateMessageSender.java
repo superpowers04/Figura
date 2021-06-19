@@ -1,9 +1,5 @@
 package net.blancworks.figura.network.messages.pubsub;
 
-import com.google.common.io.LittleEndianDataOutputStream;
-import net.blancworks.figura.network.messages.MessageSender;
-
-import java.io.IOException;
 import java.util.UUID;
 
 public class ChannelAvatarUpdateMessageSender extends ChannelMessageSender {

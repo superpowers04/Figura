@@ -16,6 +16,7 @@ import net.minecraft.client.render.entity.model.ElytraEntityModel;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -28,8 +29,8 @@ import java.util.ArrayList;
 public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends EntityModel<T>> extends FeatureRenderer<T, M> {
 
     private ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
-    @Shadow
-    private final ElytraEntityModel<T> elytra = new ElytraEntityModel();
+
+    @Shadow @Final private ElytraEntityModel<T> elytra;
 
     public ElytraFeatureRendererMixin(FeatureRendererContext<T, M> context) {
         super(context);
@@ -63,7 +64,7 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 
             if (customization != null) {
-                ((ModelPartAccess) part).figura$setPartCustomization(customization);
+                ((ModelPartAccess) (Object) part).figura$setPartCustomization(customization);
                 figura$customizedParts.add(part);
             }
         }
@@ -71,7 +72,7 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
 
     public void figura$clearAllPartCustomizations() {
         for (ModelPart part : figura$customizedParts) {
-            ((ModelPartAccess) part).figura$setPartCustomization(null);
+            ((ModelPartAccess) (Object) part).figura$setPartCustomization(null);
         }
 
         figura$customizedParts.clear();

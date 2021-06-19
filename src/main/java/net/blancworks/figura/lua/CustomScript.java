@@ -13,9 +13,9 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -189,11 +189,11 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
-    public void toNBT(CompoundTag tag) {
+    public void toNBT(NbtCompound tag) {
         tag.putString("src", cleanScriptSource(source));
     }
 
-    public void fromNBT(PlayerData data, CompoundTag tag) {
+    public void fromNBT(PlayerData data, NbtCompound tag) {
         source = tag.getString("src");
 
         load(data, source);

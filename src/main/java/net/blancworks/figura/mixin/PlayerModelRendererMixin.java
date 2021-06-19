@@ -2,9 +2,9 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.PlayerEntityRendererAccess;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -19,10 +19,11 @@ import org.spongepowered.asm.mixin.Mixin;
 
 @Mixin(PlayerEntityModel.class)
 public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntityModel<T> {
-    public PlayerModelRendererMixin(float scale) {
-        super(scale);
+
+    public PlayerModelRendererMixin(ModelPart root) {
+        super(root);
     }
-    
+
     @Override
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
         super.render(matrices, vertices, light, overlay, red, green, blue, alpha);

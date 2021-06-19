@@ -16,19 +16,18 @@ import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarHashMessa
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarMessageSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
 import net.minecraft.text.Text;
-import org.luaj.vm2.LuaValue;
 
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -180,7 +179,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 //Get NBT tag for local player avatar
                 PlayerData data = PlayerDataManager.localPlayer;
                 data.isLocalAvatar = false;
-                CompoundTag infoNbt = new CompoundTag();
+                NbtCompound infoNbt = new NbtCompound();
                 data.writeNbt(infoNbt);
 
                 try {
@@ -384,10 +383,10 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             FiguraMod.LOGGER.info("Authenticating with Figura server");
 
             String address = authServerURL();
-            InetAddress inetAddress = InetAddress.getByName(address);
+            InetSocketAddress inetAddress = new InetSocketAddress(address, 25565);
 
             //Create new connection
-            ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
+            ClientConnection connection = ClientConnection.connect(inetAddress, true);
 
             CompletableFuture<Void> disconnectedFuture = new CompletableFuture<>();
 

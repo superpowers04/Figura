@@ -15,8 +15,8 @@ import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import net.minecraft.nbt.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix3f;
@@ -25,7 +25,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -33,11 +32,11 @@ public class CustomModelPart {
     public String name = "NULL";
 
     //Transform data
-    public Vector3f pivot = new Vector3f();
-    public Vector3f pos = new Vector3f();
-    public Vector3f rot = new Vector3f();
-    public Vector3f scale = new Vector3f(1, 1, 1);
-    public Vector3f color = new Vector3f(1, 1, 1);
+    public Vec3f pivot = new Vec3f();
+    public Vec3f pos = new Vec3f();
+    public Vec3f rot = new Vec3f();
+    public Vec3f scale = new Vec3f(1, 1, 1);
+    public Vec3f color = new Vec3f(1, 1, 1);
 
     //Offsets
     public float uOffset = 0;
@@ -101,26 +100,8 @@ public class CustomModelPart {
             //end portal
             excludeFilterParts(this, ShaderType.EndPortal);
 
-            final Random RANDOM = new Random(31100L);
-
-            //render first layer
-            float r = (RANDOM.nextFloat() * 0.5F + 0.1F) * 0.15F;
-            float g = (RANDOM.nextFloat() * 0.5F + 0.4F) * 0.15F;
-            float b = (RANDOM.nextFloat() * 0.5F + 0.5F) * 0.15F;
-
-            VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(0));
-            render(prevLeftToRender, matrices, transformStack, portalExtraConsumer, light, overlay, 0, 0, new Vector3f(r, g, b), alpha);
-
-            //render other layers
-            for (int i = 2; i < 17; ++i) {
-                float color = 2.0F / (float) (18 - i);
-                r = (RANDOM.nextFloat() * 0.5F + 0.1F) * color;
-                g = (RANDOM.nextFloat() * 0.5F + 0.4F) * color;
-                b = (RANDOM.nextFloat() * 0.5F + 0.5F) * color;
-
-                portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i));
-                render(prevLeftToRender, matrices, transformStack, portalExtraConsumer, light, overlay, 0, 0, new Vector3f(r, g, b), alpha);
-            }
+            VertexConsumer portalConsumer = vcp.getBuffer(RenderLayer.getEndGateway());
+            render(prevLeftToRender, matrices, transformStack, portalConsumer, light, overlay, alpha);
 
             //glint
             filterParts(this, ShaderType.Glint);
@@ -142,12 +123,12 @@ public class CustomModelPart {
     }
 
     public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float alpha) {
-        return render(leftToRender, matrices, transformStack, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1), alpha);
+        return render(leftToRender, matrices, transformStack, vertices, light, overlay, 0, 0, new Vec3f(1, 1, 1), alpha);
     }
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
-    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
+    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f prevColor, float alpha) {
         //Don't render invisible parts.
         if (!this.visible || !this.shouldRender || this.isHidden) {
             return leftToRender;
@@ -162,22 +143,22 @@ public class CustomModelPart {
 
                 switch (this.parentType) {
                     case Head:
-                        this.rot = new Vector3f(model.head.pitch, model.head.yaw, model.head.roll);
+                        this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
                         break;
                     case Torso:
-                        this.rot = new Vector3f(model.torso.pitch, model.torso.yaw, model.torso.roll);
+                        this.rot = new Vec3f(model.body.pitch, model.body.yaw, model.body.roll);
                         break;
                     case LeftArm:
-                        this.rot = new Vector3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
+                        this.rot = new Vec3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
                         break;
                     case LeftLeg:
-                        this.rot = new Vector3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
+                        this.rot = new Vec3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
                         break;
                     case RightArm:
-                        this.rot = new Vector3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
+                        this.rot = new Vec3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
                         break;
                     case RightLeg:
-                        this.rot = new Vector3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
+                        this.rot = new Vec3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
                         break;
                 }
 
@@ -192,8 +173,8 @@ public class CustomModelPart {
                         playerModel.head.rotate(transformStack);
                         break;
                     case Torso:
-                        playerModel.torso.rotate(matrices);
-                        playerModel.torso.rotate(transformStack);
+                        playerModel.body.rotate(matrices);
+                        playerModel.body.rotate(transformStack);
                         break;
                     case LeftArm:
                         playerModel.leftArm.rotate(matrices);
@@ -300,7 +281,7 @@ public class CustomModelPart {
         u += this.uOffset;
         v += this.vOffset;
 
-        Vector3f tempColor = color.copy();
+        Vec3f tempColor = color.copy();
         tempColor.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
 
         for (int i = 0; i < this.vertexCount; i++) {
@@ -317,7 +298,7 @@ public class CustomModelPart {
             float vertU = this.vertexData.getFloat(startIndex++);
             float vertV = this.vertexData.getFloat(startIndex++);
 
-            Vector3f normal = new Vector3f(
+            Vec3f normal = new Vec3f(
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex++)
@@ -432,7 +413,7 @@ public class CustomModelPart {
         }
     }
 
-    public void excludeFilterParts(CustomModelPart part, Object filter) {
+    public static void excludeFilterParts(CustomModelPart part, Object filter) {
         //error temp variable
         boolean unmatched = false;
 
@@ -474,13 +455,13 @@ public class CustomModelPart {
         stack.translate(-this.pivot.getX() / 16.0f, -this.pivot.getY() / 16.0f, -this.pivot.getZ() / 16.0f);
 
         if (this.isMimicMode || this.rotationType == RotationType.Vanilla) {
-            stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-            stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(this.rot.getY()));
-            stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(this.rot.getX()));
+            stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+            stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(this.rot.getY()));
+            stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(this.rot.getX()));
         } else if (this.rotationType == RotationType.BlockBench) {
-            stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-            stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-            stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+            stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+            stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+            stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
         }
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
 
@@ -489,22 +470,22 @@ public class CustomModelPart {
 
     //TODO move these to the mixins, probably.
     public void applyTransformsAsItem(MatrixStack stack) {
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-90.0F));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0F));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-90.0F));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180.0F));
         //stack.translate(0, 0.125D, -0.625D);
         stack.translate(pivot.getX() / 16.0f, pivot.getZ() / 16.0f, pivot.getY() / 16.0f);
-        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
     //TODO move these to the mixins, probably.
     public void applyTransformsAsElytraOrParrot(MatrixStack stack) {
         stack.translate(pivot.getX() / 16.0f, pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
-        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
@@ -512,7 +493,7 @@ public class CustomModelPart {
     public void rebuild() {
     }
 
-    public void addVertex(Vector3f vert, float u, float v, Vector3f normal) {
+    public void addVertex(Vec3f vert, float u, float v, Vec3f normal) {
         this.vertexData.add(vert.getX() / 16.0f);
         this.vertexData.add(vert.getY() / 16.0f);
         this.vertexData.add(vert.getZ() / 16.0f);
@@ -524,24 +505,24 @@ public class CustomModelPart {
         this.vertexCount++;
     }
 
-    public void readNbt(CompoundTag partNbt) {
+    public void readNbt(NbtCompound partNbt) {
         //Name
         this.name = partNbt.get("nm").asString();
 
         if (partNbt.contains("pos")) {
-            ListTag list = (ListTag) partNbt.get("pos");
+            NbtList list = (NbtList) partNbt.get("pos");
             this.pos = vec3fFromNbt(list);
         }
         if (partNbt.contains("rot")) {
-            ListTag list = (ListTag) partNbt.get("rot");
+            NbtList list = (NbtList) partNbt.get("rot");
             this.rot = vec3fFromNbt(list);
         }
         if (partNbt.contains("scl")) {
-            ListTag list = (ListTag) partNbt.get("scl");
+            NbtList list = (NbtList) partNbt.get("scl");
             this.scale = vec3fFromNbt(list);
         }
         if (partNbt.contains("piv")) {
-            ListTag list = (ListTag) partNbt.get("piv");
+            NbtList list = (NbtList) partNbt.get("piv");
             this.pivot = vec3fFromNbt(list);
         }
 
@@ -551,7 +532,7 @@ public class CustomModelPart {
             } catch (Exception ignored) {}
         }
         if (partNbt.contains("mmc")) {
-            this.isMimicMode = ((ByteTag) partNbt.get("mmc")).getByte() == 1;
+            this.isMimicMode = ((NbtByte) partNbt.get("mmc")).byteValue() == 1;
         }
 
         if (partNbt.contains("vsb")) {
@@ -569,12 +550,12 @@ public class CustomModelPart {
         }
 
         if (partNbt.contains("chld")) {
-            ListTag childrenNbt = (ListTag) partNbt.get("chld");
-            if (childrenNbt == null || childrenNbt.getElementType() != NbtType.COMPOUND)
+            NbtList childrenNbt = (NbtList) partNbt.get("chld");
+            if (childrenNbt == null || childrenNbt.getType() != NbtType.COMPOUND)
                 return;
 
-            for (Tag child : childrenNbt) {
-                CompoundTag childNbt = (CompoundTag) child;
+            for (NbtElement child : childrenNbt) {
+                NbtCompound childNbt = (NbtCompound) child;
                 CustomModelPart part = fromNbt(childNbt);
                 part.rebuild();
                 this.children.add(part);
@@ -582,45 +563,45 @@ public class CustomModelPart {
         }
     }
 
-    public void writeNbt(CompoundTag partNbt) {
-        partNbt.put("nm", StringTag.of(name));
+    public void writeNbt(NbtCompound partNbt) {
+        partNbt.put("nm", NbtString.of(name));
 
-        if (!this.pos.equals(new Vector3f(0, 0, 0))) {
+        if (!this.pos.equals(new Vec3f(0, 0, 0))) {
             partNbt.put("pos", vec3fToNbt(this.pos));
         }
-        if (!this.rot.equals(new Vector3f(0, 0, 0))) {
+        if (!this.rot.equals(new Vec3f(0, 0, 0))) {
             partNbt.put("rot", vec3fToNbt(this.rot));
         }
-        if (!this.scale.equals(new Vector3f(1, 1, 1))) {
+        if (!this.scale.equals(new Vec3f(1, 1, 1))) {
             partNbt.put("scl", vec3fToNbt(this.scale));
         }
-        if (!this.pivot.equals(new Vector3f(0, 0, 0))) {
+        if (!this.pivot.equals(new Vec3f(0, 0, 0))) {
             partNbt.put("piv", vec3fToNbt(this.pivot));
         }
 
         if (this.parentType != ParentType.None) {
-            partNbt.put("ptype", StringTag.of(this.parentType.toString()));
+            partNbt.put("ptype", NbtString.of(this.parentType.toString()));
         }
-        partNbt.put("mmc", ByteTag.of(this.isMimicMode));
+        partNbt.put("mmc", NbtByte.of(this.isMimicMode));
 
         if (this.isHidden) {
-            partNbt.put("vsb", ByteTag.of(true));
+            partNbt.put("vsb", NbtByte.of(true));
         }
 
         if (this.alpha != 1.0f) {
-            partNbt.put("alp", FloatTag.of(this.alpha));
+            partNbt.put("alp", NbtFloat.of(this.alpha));
         }
 
         if (this.shaderType != ShaderType.None) {
-            partNbt.put("stype", StringTag.of(this.shaderType.toString()));
+            partNbt.put("stype", NbtString.of(this.shaderType.toString()));
         }
 
         //Parse children.
         if (this.children.size() > 0) {
-            ListTag childrenList = new ListTag();
+            NbtList childrenList = new NbtList();
 
             for (CustomModelPart child : this.children) {
-                CompoundTag childNbt = new CompoundTag();
+                NbtCompound childNbt = new NbtCompound();
                 writeToNbt(childNbt, child);
                 childrenList.add(childNbt);
             }
@@ -638,7 +619,7 @@ public class CustomModelPart {
         return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra;
     }
 
-    public void applyTrueOffset(Vector3f offset) {
+    public void applyTrueOffset(Vec3f offset) {
     }
 
     public enum ParentType {
@@ -693,7 +674,7 @@ public class CustomModelPart {
     /**
      * Gets a CustomModelPart from NBT, automatically reading the type from that NBT.
      */
-    public static CustomModelPart fromNbt(CompoundTag nbt) {
+    public static CustomModelPart fromNbt(NbtCompound nbt) {
         if (!nbt.contains("pt"))
             return null;
         String partType = nbt.get("pt").asString();
@@ -714,26 +695,26 @@ public class CustomModelPart {
      * @param nbt  the NBT compound
      * @param part the model part
      */
-    public static void writeToNbt(CompoundTag nbt, CustomModelPart part) {
+    public static void writeToNbt(NbtCompound nbt, CustomModelPart part) {
         String partType = part.getPartType();
         if (!MODEL_PART_TYPES.containsKey(partType))
             return;
 
-        nbt.put("pt", StringTag.of(partType));
+        nbt.put("pt", NbtString.of(partType));
         part.writeNbt(nbt);
     }
 
-    private static Vector3f vec3fFromNbt(@Nullable ListTag nbt) {
-        if (nbt == null || nbt.getElementType() != NbtType.FLOAT)
-            return new Vector3f(0.f, 0.f, 0.f);
-        return new Vector3f(nbt.getFloat(0), nbt.getFloat(1), nbt.getFloat(2));
+    private static Vec3f vec3fFromNbt(@Nullable NbtList nbt) {
+        if (nbt == null || nbt.getType() != NbtType.FLOAT)
+            return new Vec3f(0.f, 0.f, 0.f);
+        return new Vec3f(nbt.getFloat(0), nbt.getFloat(1), nbt.getFloat(2));
     }
 
-    private static ListTag vec3fToNbt(Vector3f vec) {
-        ListTag nbt = new ListTag();
-        nbt.add(FloatTag.of(vec.getX()));
-        nbt.add(FloatTag.of(vec.getY()));
-        nbt.add(FloatTag.of(vec.getZ()));
+    private static NbtList vec3fToNbt(Vec3f vec) {
+        NbtList nbt = new NbtList();
+        nbt.add(NbtFloat.of(vec.getX()));
+        nbt.add(NbtFloat.of(vec.getY()));
+        nbt.add(NbtFloat.of(vec.getZ()));
         return nbt;
     }
 }

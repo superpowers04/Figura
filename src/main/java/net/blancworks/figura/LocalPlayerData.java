@@ -7,12 +7,11 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
 import java.nio.file.*;
-import java.sql.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;

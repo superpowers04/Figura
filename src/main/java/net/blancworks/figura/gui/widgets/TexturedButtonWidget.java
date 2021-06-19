@@ -1,8 +1,8 @@
 package net.blancworks.figura.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -44,8 +44,10 @@ public class TexturedButtonWidget extends ButtonWidget {
     }
 
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        MinecraftClient minecraftClient = MinecraftClient.getInstance();
-        minecraftClient.getTextureManager().bindTexture(this.texture);
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
+        RenderSystem.setShaderTexture(0, this.texture);
+        RenderSystem.disableDepthTest();
+
         int i = this.u;
         int j = this.v;
         if (this.isHovered()) {
@@ -55,11 +57,11 @@ public class TexturedButtonWidget extends ButtonWidget {
             i += this.hoveredVOffset;
         }
 
-        RenderSystem.enableDepthTest();
         drawTexture(matrices, this.x, this.y, (float)i, (float)j, this.width, this.height, this.textureWidth, this.textureHeight);
         if (this.isHovered()) {
             this.renderToolTip(matrices, mouseX, mouseY);
         }
 
+        RenderSystem.enableDepthTest();
     }
 }

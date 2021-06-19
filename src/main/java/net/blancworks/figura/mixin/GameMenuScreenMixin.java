@@ -56,12 +56,12 @@ public class GameMenuScreenMixin extends Screen {
                 }
             } catch (Exception ignored) {}
 
-            addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
+            addDrawableChild(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
                     btn -> this.client.openScreen(figura$screen)));
         }
         else {
             Identifier iconTexture = new Identifier("figura", "textures/gui/config_icon.png");
-            addButton(new TexturedButtonWidget(x, y, 20, 20, 0, 0, 20, iconTexture, 20, 40, btn -> this.client.openScreen(figura$screen)));
+            addDrawableChild(new TexturedButtonWidget(x, y, 20, 20, 0, 0, 20, iconTexture, 20, 40, btn -> this.client.openScreen(figura$screen)));
         }
     }
 }

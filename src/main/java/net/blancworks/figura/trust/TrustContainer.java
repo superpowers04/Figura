@@ -4,9 +4,9 @@ import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
 import net.blancworks.figura.trust.settings.PermissionFloatSetting;
 import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.blancworks.figura.trust.settings.PermissionStringSetting;
-import net.minecraft.nbt.ByteTag;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.StringTag;
+import net.minecraft.nbt.NbtByte;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtString;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -103,7 +103,7 @@ public class TrustContainer {
             permissionSet.remove(id);
     }
 
-    public void fromNbt(CompoundTag tag) {
+    public void fromNbt(NbtCompound tag) {
 
         if (tag.contains("pid")) parentIdentifier = Identifier.tryParse(tag.getString("pid"));
 
@@ -120,7 +120,7 @@ public class TrustContainer {
         else
             isLocked = false;
 
-        CompoundTag permTag = (CompoundTag) tag.get("perms");
+        NbtCompound permTag = (NbtCompound) tag.get("perms");
 
         for (Map.Entry<Identifier, PermissionSetting> settingEntry : PlayerTrustManager.permissionSettings.entrySet()) {
             if (permTag.contains(settingEntry.getKey().getPath())) {
@@ -132,17 +132,17 @@ public class TrustContainer {
 
     }
 
-    public void toNbt(CompoundTag tag) {
+    public void toNbt(NbtCompound tag) {
 
-        tag.put("id", StringTag.of(identifier.toString()));
+        tag.put("id", NbtString.of(identifier.toString()));
         if (parentIdentifier != null)
-            tag.put("pid", StringTag.of(parentIdentifier.toString()));
+            tag.put("pid", NbtString.of(parentIdentifier.toString()));
 
-        if (isHidden) tag.put("hd", ByteTag.of((byte) 1));
-        if (!displayChildren) tag.put("dc", ByteTag.of((byte) 0));
-        if (isLocked) tag.put("lck", ByteTag.of((byte) 1));
+        if (isHidden) tag.put("hd", NbtByte.of((byte) 1));
+        if (!displayChildren) tag.put("dc", NbtByte.of((byte) 0));
+        if (isLocked) tag.put("lck", NbtByte.of((byte) 1));
 
-        CompoundTag permissions = new CompoundTag();
+        NbtCompound permissions = new NbtCompound();
 
         for (Map.Entry<Identifier, PermissionSetting> entry : permissionSet.entrySet()) {
             

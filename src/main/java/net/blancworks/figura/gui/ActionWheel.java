@@ -2,6 +2,7 @@ package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
+import net.blancworks.figura.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
@@ -9,7 +10,7 @@ import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
@@ -67,7 +68,7 @@ public class ActionWheel extends DrawableHelper {
 
         matrices.push();
 
-        this.client.getTextureManager().bindTexture(ACTION_WHEEL);
+        RenderSystem.setShaderTexture(0, ACTION_WHEEL);
         matrices.translate(x - wheelSize / 2.0d, y - wheelSize / 2.0d, 0.0d);
 
         drawTexture(matrices, 0, 0, wheelSize, wheelSize, 0.0f, 0.0f, 16, 16, 16, 16);
@@ -81,10 +82,10 @@ public class ActionWheel extends DrawableHelper {
                 //overlay
                 matrices.push();
 
-                this.client.getTextureManager().bindTexture(ACTION_WHEEL_SELECTED);
+                RenderSystem.setShaderTexture(0, ACTION_WHEEL_SELECTED);
 
                 matrices.translate(x, y, 0.0d);
-                Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(90 * (MathHelper.floor(selectedSlot / 2.0f) + 3));
+                Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(90 * (MathHelper.floor(selectedSlot / 2.0f) + 3));
                 matrices.multiply(quaternion);
 
                 boolean hasFunction = customization != null && customization.function != null;
@@ -96,20 +97,48 @@ public class ActionWheel extends DrawableHelper {
                 //text
                 matrices.push();
                 matrices.translate(0, 0, 599);
-                if (!hasFunction) {
-                    drawTextWithShadow(matrices, this.client.textRenderer, new TranslatableText("gui.figura.actionwheel.nofunction"), (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16733525);
-                }
-                else if (customization.title != null) {
-                    Text title;
 
+                Text title = new TranslatableText("gui.figura.actionwheel.nofunction");
+                int textColor = 16733525;
+
+                //customization
+                if (customization != null && customization.title != null) {
                     try {
                         title = Text.Serializer.fromJson(new StringReader(customization.title));
                     } catch (Exception ignored) {
                         title = new LiteralText(customization.title);
                     }
 
-                    drawTextWithShadow(matrices, this.client.textRenderer, title, (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16777215);
+                    textColor = 16777215;
                 }
+
+                //text pos
+                int titleX = 0;
+                int titleY = 0;
+                int titleLen = this.client.textRenderer.getWidth(title) / 2;
+
+                switch ((int) Config.entries.get("actionWheelPos").value) {
+                    case 0 -> { //mouse
+                        titleX = (int) (this.client.mouse.getX() / scale);
+                        titleY = (int) (this.client.mouse.getY() / scale) - 10;
+                    }
+                    case 1 -> { //top
+                        titleX = x - titleLen;
+                        titleY = Math.max(y - wheelSize / 2 - 10, 4);
+                    }
+                    case 2 -> { //bottom
+                        titleX = x - titleLen;
+                        titleY = Math.min(y + wheelSize / 2 + 10 - 8, this.client.getWindow().getHeight() - 12);
+                    }
+                    case 3 -> { //center
+                        titleX = x - titleLen;
+                        titleY = y - 4;
+                    }
+                }
+
+                //draw
+                drawTextWithShadow(matrices, this.client.textRenderer, title, titleX, titleY, textColor);
+
                 matrices.pop();
             }
 
@@ -126,12 +155,14 @@ public class ActionWheel extends DrawableHelper {
                 int itemX = (int) (radius * Math.cos(Math.toRadians(45 * (i - 1.5))) + itemXOffset);
                 int itemY = (int) (radius * Math.sin(Math.toRadians(45 * (i - 1.5))) + itemYOffset);
 
-                RenderSystem.pushMatrix();
-                RenderSystem.scalef(1.5f, 1.5f, 1.5f);
+                MatrixStack matrixStack = RenderSystem.getModelViewStack();
+
+                matrixStack.push();
+                matrixStack.scale(1.5f, 1.5f, 1.5f);
 
                 this.client.getItemRenderer().renderGuiItemIcon(item, itemX, itemY);
 
-                RenderSystem.popMatrix();
+                matrixStack.pop();
             }
         }
         else {
