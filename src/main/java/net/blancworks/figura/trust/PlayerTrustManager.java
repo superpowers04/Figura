@@ -243,7 +243,7 @@ public class PlayerTrustManager {
 
     public static void readNbt(NbtCompound nbt) {
         NbtList list = (NbtList) nbt.get("containers");
-        if (list == null || list.getType() != NbtType.COMPOUND)
+        if (list == null || list.getHeldType() != NbtType.COMPOUND)
             return;
 
         for (NbtElement element : list) {

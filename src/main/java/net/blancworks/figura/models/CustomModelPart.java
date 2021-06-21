@@ -551,7 +551,7 @@ public class CustomModelPart {
 
         if (partNbt.contains("chld")) {
             NbtList childrenNbt = (NbtList) partNbt.get("chld");
-            if (childrenNbt == null || childrenNbt.getType() != NbtType.COMPOUND)
+            if (childrenNbt == null || childrenNbt.getHeldType() != NbtType.COMPOUND)
                 return;
 
             for (NbtElement child : childrenNbt) {
@@ -705,7 +705,7 @@ public class CustomModelPart {
     }
 
     private static Vec3f vec3fFromNbt(@Nullable NbtList nbt) {
-        if (nbt == null || nbt.getType() != NbtType.FLOAT)
+        if (nbt == null || nbt.getHeldType() != NbtType.FLOAT)
             return new Vec3f(0.f, 0.f, 0.f);
         return new Vec3f(nbt.getFloat(0), nbt.getFloat(1), nbt.getFloat(2));
     }
