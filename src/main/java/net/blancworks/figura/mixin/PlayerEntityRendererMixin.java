@@ -22,6 +22,7 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.Scoreboard;
@@ -144,7 +145,21 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
         if (currentData != null && !playerName.equals("")) {
             NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
-            NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
+
+            try {
+                if (text instanceof TranslatableText) {
+                    Object[] args = ((TranslatableText) text).getArgs();
+
+                    for (Object arg : args) {
+                        if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
+                            break;
+                    }
+                } else if (text instanceof LiteralText) {
+                    NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
             if (currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
                 if (nameplateData == null)

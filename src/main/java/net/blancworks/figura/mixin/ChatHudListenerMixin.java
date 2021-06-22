@@ -53,16 +53,19 @@ public class ChatHudListenerMixin {
             //apply formatting
             NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.CHAT);
 
-            if (message instanceof TranslatableText) {
-                Object[] args = ((TranslatableText) message).getArgs();
+            try {
+                if (message instanceof TranslatableText) {
+                    Object[] args = ((TranslatableText) message).getArgs();
 
-                for (Object arg : args) {
-                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, senderUuid, playerName, nameplateData, currentData))
-                        break;
+                    for (Object arg : args) {
+                        if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, senderUuid, playerName, nameplateData, currentData))
+                            break;
+                    }
+                } else if (message instanceof LiteralText) {
+                    NamePlateAPI.applyFormattingRecursive((LiteralText) message, senderUuid, playerName, nameplateData, currentData);
                 }
-            }
-            else {
-                NamePlateAPI.applyFormattingRecursive((LiteralText) message, senderUuid, playerName, nameplateData, currentData);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

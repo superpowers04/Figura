@@ -287,8 +287,20 @@ public class NamePlateAPI {
         else {
             //then iterate through children
             for (Text sibling : siblings) {
-                if (applyFormattingRecursive((LiteralText) sibling, uuid, playerName, nameplateData, currentData))
+                //split args when translatable text
+                if (sibling instanceof TranslatableText) {
+                    Object[] args = ((TranslatableText) sibling).getArgs();
+
+                    for (Object arg : args) {
+                        if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData)) {
+                            return true;
+                        }
+                    }
+                }
+                //else check and format literal text
+                else if (sibling instanceof LiteralText && applyFormattingRecursive((LiteralText) sibling, uuid, playerName, nameplateData, currentData)) {
                     return true;
+                }
             }
         }
 
