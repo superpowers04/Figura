@@ -200,7 +200,7 @@ public class EntityAPI {
                         String[] path = pathArg.split("\\.");
 
                         NbtCompound tag = new NbtCompound();
-                        targetEntity.get().readNbt(tag);
+                        targetEntity.get().writeNbt(tag);
 
                         NbtElement current = tag;
                         for (String key : path) {
