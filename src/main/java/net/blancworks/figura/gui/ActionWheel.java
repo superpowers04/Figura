@@ -2,6 +2,7 @@ package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
+import net.blancworks.figura.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
@@ -12,6 +13,7 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.*;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -34,113 +36,225 @@ public class ActionWheel extends DrawableHelper {
     }
 
     public void render(MatrixStack matrices) {
-        //screen math
-        double width = this.client.getWindow().getWidth() / 2.0d;
-        double height = this.client.getWindow().getHeight() / 2.0d;
-        double scale = this.client.getWindow().getScaleFactor();
+        //screen
+        Vec2f screenSize = new Vec2f(this.client.getWindow().getWidth() / 2.0f, this.client.getWindow().getHeight() / 2.0f);
+        float screenScale = (float) this.client.getWindow().getScaleFactor();
 
-        int mouseX = (int) (this.client.mouse.getX() - width);
-        int mouseY = (int) (this.client.mouse.getY() - height);
+        //mouse
+        Vec2f mousePos = new Vec2f((float) this.client.mouse.getX() - screenSize.x, (float) this.client.mouse.getY() - screenSize.y);
+        float angle = getAngle(mousePos.x, mousePos.y);
+        float distance = MathHelper.sqrt(mousePos.x * mousePos.x + mousePos.y * mousePos.y);
 
-        int x = (int) (width / scale);
-        int y = (int) (height / scale);
+        //wheel
+        Vec2f wheelPos = new Vec2f(screenSize.x / screenScale, screenSize.y / screenScale);
         int wheelSize = 192;
 
-        int radius = (int) (68 * 2.0 / 3.0);
-        int itemXOffset = (int) ((x * 2.0 / 3.0) - 8);
-        int itemYOffset = (int) ((y * 2.0 / 3.0) - 8);
-        float angle = (float) Math.toDegrees(Math.atan2(mouseY, mouseX));
-        int distance = (int) MathHelper.sqrt(MathHelper.square(mouseX) + MathHelper.square(mouseY));
-
-        selectedSlot = distance > 38 * scale ? (MathHelper.floor((angle + 90) / 45) + 8) % 8 : -1;
+        //item
+        Vec2f itemOffset = new Vec2f((wheelPos.x * 2.0f / 3.0f) - 8, (wheelPos.y * 2.0f / 3.0f) - 8);
+        int itemRadius = 42;
 
         //script data
-        PlayerData currentData = PlayerDataManager.localPlayer;
+        PlayerData data = PlayerDataManager.localPlayer;
 
-        //render wheel
-        renderWheel(matrices, x, y, wheelSize, currentData, radius, itemXOffset, itemYOffset, scale);
-    }
-
-    public void renderWheel(MatrixStack matrices, int x, int y, int wheelSize, PlayerData data, int radius, int itemXOffset, int itemYOffset, double scale) {
-        //wheel
+        //render
         RenderSystem.enableBlend();
 
-        matrices.push();
-
-        this.client.getTextureManager().bindTexture(ACTION_WHEEL);
-        matrices.translate(x - wheelSize / 2.0d, y - wheelSize / 2.0d, 0.0d);
-
-        drawTexture(matrices, 0, 0, wheelSize, wheelSize, 0.0f, 0.0f, 16, 16, 16, 16);
-
-        matrices.pop();
-
         if (data != null && data.script != null) {
-            ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
+            int segments = data.script.actionWheelSize;
+            selectedSlot = distance > 30 * screenScale ? MathHelper.floor((segments / 360.0) * angle) : -1;
 
+            //render wheel
+            renderWheel(matrices, wheelPos, wheelSize, segments / 2);
+
+            //render overlay and text
             if (selectedSlot != -1) {
-                //overlay
-                matrices.push();
-
-                this.client.getTextureManager().bindTexture(ACTION_WHEEL_SELECTED);
-
-                matrices.translate(x, y, 0.0d);
-                Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(90 * (MathHelper.floor(selectedSlot / 2.0f) + 3));
-                matrices.multiply(quaternion);
-
-                boolean hasFunction = customization != null && customization.function != null;
-
-                drawTexture(matrices, 0, 0, wheelSize / 2, wheelSize / 2, hasFunction ? 0.0f : 16.0f, selectedSlot % 2 == 1 ? 16.0f : 0.0f, 16, 16, 32, 32);
-
-                matrices.pop();
-
-                //text
-                matrices.push();
-                matrices.translate(0, 0, 599);
-                if (!hasFunction) {
-                    drawTextWithShadow(matrices, this.client.textRenderer, new TranslatableText("gui.figura.actionwheel.nofunction"), (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16733525);
-                }
-                else if (customization.title != null) {
-                    Text title;
-
-                    try {
-                        title = Text.Serializer.fromJson(new StringReader(customization.title));
-                    } catch (Exception ignored) {
-                        title = new LiteralText(customization.title);
-                    }
-
-                    drawTextWithShadow(matrices, this.client.textRenderer, title, (int) (this.client.mouse.getX() / scale), (int) (this.client.mouse.getY() / scale) - 10, 16777215);
-                }
-                matrices.pop();
+                renderOverlay(matrices, wheelPos, wheelSize, segments / 2, data);
+                renderText(matrices, wheelPos, wheelSize, screenScale, data);
             }
 
-            //render icons
-            for (int i = 0; i < 8; i++) {
-                customization = data.script.getActionWheelCustomization("SLOT_" + (i + 1));
-
-                ItemStack item = Registry.ITEM.get(Identifier.tryParse("minecraft:air")).getDefaultStack();
-
-                if (customization != null && customization.item != null)
-                    item = customization.item;
-
-                //radius * cos/sin angle in rads + offset
-                int itemX = (int) (radius * Math.cos(Math.toRadians(45 * (i - 1.5))) + itemXOffset);
-                int itemY = (int) (radius * Math.sin(Math.toRadians(45 * (i - 1.5))) + itemYOffset);
-
-                RenderSystem.pushMatrix();
-                RenderSystem.scalef(1.5f, 1.5f, 1.5f);
-
-                this.client.getItemRenderer().renderGuiItemIcon(item, itemX, itemY);
-
-                RenderSystem.popMatrix();
-            }
+            //render items
+            renderItems(segments, itemOffset, itemRadius, data);
         }
         else {
+            //draw default wheel
+            renderWheel(matrices, wheelPos, wheelSize, 4);
+
             //draw warning texts
-            drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.actionwheel.warning").formatted(Formatting.UNDERLINE), x, y - 4, 16733525);
-            drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.actionwheel.warninginfo"), x, Math.max(y - wheelSize / 2 - 10, 4), 16733525);
+            drawCenteredText(
+                    matrices, MinecraftClient.getInstance().textRenderer,
+                    new TranslatableText("gui.figura.actionwheel.warning").formatted(Formatting.UNDERLINE),
+                    (int) wheelPos.x, (int) wheelPos.y - 4,
+                    16733525
+            );
+            drawCenteredText(
+                    matrices, MinecraftClient.getInstance().textRenderer,
+                    new TranslatableText("gui.figura.actionwheel.warninginfo"),
+                    (int) wheelPos.x, (int) Math.max(wheelPos.y - wheelSize / 2.0 - 10, 4),
+                    16733525
+            );
         }
 
         RenderSystem.disableBlend();
+    }
+
+    public float getAngle(float x, float y) {
+        float ang = (float) Math.toDegrees(MathHelper.atan2(x, -y));
+        return ang < 0 ? 360 + ang : ang;
+    }
+
+    public void renderWheel(MatrixStack matrices, Vec2f pos, int size, int segments) {
+        //texture
+        this.client.getTextureManager().bindTexture(ACTION_WHEEL);
+
+        //draw right side
+        matrices.push();
+        matrices.translate(pos.x, pos.y - size / 2.0d, 0.0d);
+        drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (segments - 1), 0.0f, 8, 16, 32, 16);
+        matrices.pop();
+
+        //draw left side
+        matrices.push();
+
+        matrices.translate(pos.x, pos.y + size / 2.0d, 0.0d);
+        Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180);
+        matrices.multiply(quaternion);
+
+        drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (segments - 1), 0.0f, 8, 16, 32, 16);
+
+        matrices.pop();
+    }
+
+    public void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int segments, PlayerData data) {
+        //modifiable variables
+        double y = pos.y;
+        float angle = 0.0f;
+        int height = size / 2;
+        float u = 0.0f;
+        float v = 0.0f;
+        int regionHeight = 8;
+
+        switch (segments) {
+            case 1: {
+                y = selectedSlot % 2 == 1 ? pos.y + size / 2.0d : pos.y - size / 2.0d;
+                angle = 180f * selectedSlot;
+                height = size;
+                regionHeight = 16;
+                break;
+            }
+            case 2: {
+                angle = 90f * (selectedSlot - 1f);
+                u = 8.0f;
+                break;
+            }
+            case 3: {
+                if (selectedSlot % 3 != 2) {
+                    y += (selectedSlot < 3 ? -1 : 1) * size / 2.0d;
+
+                    if (selectedSlot % 3 == 1) {
+                        y += (selectedSlot < 3 ? 1 : -1) * size / 4.0d;
+                        v = 8.0f;
+                    }
+
+                    u = 16.0f;
+                }
+                else {
+                    u = 8.0f;
+                    v = 8.0f;
+                }
+
+                angle = 180f * MathHelper.floor(selectedSlot / 3.0d);
+                break;
+            }
+            case 4: {
+                angle = 90f * (MathHelper.floor(selectedSlot / 2.0d) + 3f);
+                u = 24.0f;
+                v = selectedSlot % 2 == 1 ? 8.0f : 0.0f;
+                break;
+            }
+        }
+
+        //texture
+        this.client.getTextureManager().bindTexture(ACTION_WHEEL_SELECTED);
+
+        //draw
+        matrices.push();
+
+        matrices.translate(pos.x, y, 0.0d);
+        Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(angle);
+        matrices.multiply(quaternion);
+
+        ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
+        boolean hasFunction = customization != null && customization.function != null;
+
+        drawTexture(matrices, 0, 0, size / 2, height, u, hasFunction ? v : v + 16.0f, 8, regionHeight, 32, 32);
+
+        matrices.pop();
+    }
+
+    public void renderText(MatrixStack matrices, Vec2f pos, int size, float scale, PlayerData data) {
+        //customization
+        ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
+
+        Text text = new TranslatableText("gui.figura.actionwheel.nofunction");
+        int textColor = Formatting.RED.getColorValue();
+
+        if (customization != null && customization.function != null) {
+            if (customization.title == null)
+                return;
+
+            try {
+                text = Text.Serializer.fromJson(new StringReader(customization.title));
+            } catch (Exception ignored) {
+                text = new LiteralText(customization.title);
+            }
+
+            textColor = Formatting.WHITE.getColorValue();
+        }
+
+        //text pos
+        Vec2f textPos;
+        int titleLen = this.client.textRenderer.getWidth(text) / 2;
+
+        switch ((int) Config.entries.get("actionWheelPos").value) {
+            //top
+            case 1: textPos = new Vec2f(pos.x - titleLen, (float) Math.max(pos.y - size / 2.0 - 10, 4)); break;
+            //bottom
+            case 2: textPos = new Vec2f(pos.x - titleLen, (float) Math.min(pos.y + size / 2.0 + 4, this.client.getWindow().getHeight() - 12)); break;
+            //center
+            case 3: textPos = new Vec2f(pos.x - titleLen, pos.y - 4); break;
+            //default mouse
+            default: textPos = new Vec2f((float) this.client.mouse.getX() / scale, (float) this.client.mouse.getY() / scale - 10); break;
+        }
+
+        //draw
+        matrices.push();
+        matrices.translate(0, 0, 599);
+        drawTextWithShadow(matrices, this.client.textRenderer, text, (int) textPos.x, (int) textPos.y, textColor);
+        matrices.pop();
+    }
+
+    public void renderItems(int segments, Vec2f offset, int radius, PlayerData data) {
+        for (int i = 0; i < segments; i++) {
+            //get item
+            ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (i + 1));
+
+            ItemStack item = Registry.ITEM.get(Identifier.tryParse("minecraft:air")).getDefaultStack();
+
+            if (customization != null && customization.item != null)
+                item = customization.item;
+
+            //radius * cos/sin angle in rads + offset
+            float angle = (float) Math.toRadians(360.0 / segments * (i - (segments - 2) / 4.0));
+            Vec2f pos = new Vec2f(radius * MathHelper.cos(angle) + offset.x, radius * MathHelper.sin(angle) + offset.y);
+
+            //render
+            RenderSystem.pushMatrix();
+            RenderSystem.scalef(1.5f, 1.5f, 1.5f);
+
+            this.client.getItemRenderer().renderGuiItemIcon(item, (int) pos.x, (int) pos.y);
+
+            RenderSystem.popMatrix();
+        }
     }
 
     public static void play() {

@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -36,6 +37,22 @@ public class ActionWheelAPI {
             set(SLOT_6, getTableForPart(SLOT_6, script));
             set(SLOT_7, getTableForPart(SLOT_7, script));
             set(SLOT_8, getTableForPart(SLOT_8, script));
+
+            set("setSize", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    int size = arg.checkint();
+                    script.actionWheelSize = MathHelper.clamp(size % 2 == 1 ? size + 1 : size, 2, 8);
+                    return NIL;
+                }
+            });
+            set("getSize", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.actionWheelSize);
+                }
+            });
+
         }});
     }
 
