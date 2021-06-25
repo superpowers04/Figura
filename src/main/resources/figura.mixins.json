@@ -6,6 +6,7 @@
   "client": [
     "ArmorFeatureRendererMixin",
     "CameraMixin",
+    "ChatHudMixin",
     "ChatHudListenerMixin",
     "ClientLoginNetworkHandlerMixin",
     "DebugHudMixin",
