@@ -60,24 +60,35 @@ public class ActionWheel extends DrawableHelper {
         RenderSystem.enableBlend();
 
         if (data != null && data.script != null) {
-            int segments = data.script.actionWheelSize;
-            selectedSlot = distance > 30 * screenScale ? MathHelper.floor((segments / 360.0) * angle) : -1;
+            int leftSegments = data.script.actionWheelLeftSize;
+            int rightSegments = data.script.actionWheelRightSize;
+
+            //set selected slot
+            if (distance > 30 * screenScale) {
+                if (angle < 180) {
+                    selectedSlot = MathHelper.floor((rightSegments / 180.0) * angle);
+                } else {
+                    selectedSlot = MathHelper.floor((leftSegments / 180.0) * (angle - 180)) + 4;
+                }
+            } else {
+                selectedSlot = -1;
+            }
 
             //render wheel
-            renderWheel(matrices, wheelPos, wheelSize, segments / 2);
+            renderWheel(matrices, wheelPos, wheelSize, leftSegments, rightSegments);
 
             //render overlay and text
             if (selectedSlot != -1) {
-                renderOverlay(matrices, wheelPos, wheelSize, segments / 2, data);
+                renderOverlay(matrices, wheelPos, wheelSize, leftSegments, rightSegments, data);
                 renderText(matrices, wheelPos, wheelSize, screenScale, data);
             }
 
             //render items
-            renderItems(segments, itemOffset, itemRadius, data);
+            renderItems(leftSegments, rightSegments, itemOffset, itemRadius, data);
         }
         else {
             //draw default wheel
-            renderWheel(matrices, wheelPos, wheelSize, 4);
+            renderWheel(matrices, wheelPos, wheelSize, 4, 4);
 
             //draw warning texts
             drawCenteredText(
@@ -102,14 +113,14 @@ public class ActionWheel extends DrawableHelper {
         return ang < 0 ? 360 + ang : ang;
     }
 
-    public void renderWheel(MatrixStack matrices, Vec2f pos, int size, int segments) {
+    public void renderWheel(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments) {
         //texture
         this.client.getTextureManager().bindTexture(ACTION_WHEEL);
 
         //draw right side
         matrices.push();
         matrices.translate(pos.x, pos.y - size / 2.0d, 0.0d);
-        drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (segments - 1), 0.0f, 8, 16, 32, 16);
+        drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (rightSegments - 1), 0.0f, 8, 16, 32, 16);
         matrices.pop();
 
         //draw left side
@@ -119,13 +130,24 @@ public class ActionWheel extends DrawableHelper {
         Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180);
         matrices.multiply(quaternion);
 
-        drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (segments - 1), 0.0f, 8, 16, 32, 16);
+        drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (leftSegments - 1), 0.0f, 8, 16, 32, 16);
 
         matrices.pop();
     }
 
-    public void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int segments, PlayerData data) {
+    public void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments, PlayerData data) {
         //modifiable variables
+        int segments;
+        int selected;
+
+        if (selectedSlot < 4) {
+            segments = rightSegments;
+            selected = selectedSlot;
+        } else {
+            segments = leftSegments;
+            selected = selectedSlot - 4 + leftSegments;
+        }
+
         double y = pos.y;
         float angle = 0.0f;
         int height = size / 2;
@@ -135,23 +157,23 @@ public class ActionWheel extends DrawableHelper {
 
         switch (segments) {
             case 1: {
-                y = selectedSlot % 2 == 1 ? pos.y + size / 2.0d : pos.y - size / 2.0d;
-                angle = 180f * selectedSlot;
+                y = selected % 2 == 1 ? pos.y + size / 2.0d : pos.y - size / 2.0d;
+                angle = 180f * selected;
                 height = size;
                 regionHeight = 16;
                 break;
             }
             case 2: {
-                angle = 90f * (selectedSlot - 1f);
+                angle = 90f * (selected - 1f);
                 u = 8.0f;
                 break;
             }
             case 3: {
-                if (selectedSlot % 3 != 2) {
-                    y += (selectedSlot < 3 ? -1 : 1) * size / 2.0d;
+                if (selected % 3 != 2) {
+                    y += (selected < 3 ? -1 : 1) * size / 2.0d;
 
-                    if (selectedSlot % 3 == 1) {
-                        y += (selectedSlot < 3 ? 1 : -1) * size / 4.0d;
+                    if (selected % 3 == 1) {
+                        y += (selected < 3 ? 1 : -1) * size / 4.0d;
                         v = 8.0f;
                     }
 
@@ -162,13 +184,13 @@ public class ActionWheel extends DrawableHelper {
                     v = 8.0f;
                 }
 
-                angle = 180f * MathHelper.floor(selectedSlot / 3.0d);
+                angle = 180f * MathHelper.floor(selected / 3.0d);
                 break;
             }
             case 4: {
-                angle = 90f * (MathHelper.floor(selectedSlot / 2.0d) + 3f);
+                angle = 90f * (MathHelper.floor(selected / 2.0d) + 3f);
                 u = 24.0f;
-                v = selectedSlot % 2 == 1 ? 8.0f : 0.0f;
+                v = selected % 2 == 1 ? 8.0f : 0.0f;
                 break;
             }
         }
@@ -179,7 +201,7 @@ public class ActionWheel extends DrawableHelper {
         //draw
         matrices.push();
 
-        matrices.translate(pos.x, y, 0.0d);
+        matrices.translate(pos.x, Math.round(y), 0.0d);
         Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(angle);
         matrices.multiply(quaternion);
 
@@ -233,10 +255,21 @@ public class ActionWheel extends DrawableHelper {
         matrices.pop();
     }
 
-    public void renderItems(int segments, Vec2f offset, int radius, PlayerData data) {
-        for (int i = 0; i < segments; i++) {
+    public void renderItems(int leftSegments, int rightSegments, Vec2f offset, int radius, PlayerData data) {
+        for (int i = 0; i < leftSegments + rightSegments; i++) {
+
+            int index;
+            float angle;
+            if (i < rightSegments) {
+                index = i;
+                angle = (float) Math.toRadians(180.0 / rightSegments * (index - ((rightSegments - 1) * 0.5)));
+            } else {
+                index = i - rightSegments + 4;
+                angle = (float) Math.toRadians(180.0 / leftSegments * (index - 4 - ((leftSegments - 1) * 0.5) + leftSegments));
+            }
+
             //get item
-            ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (i + 1));
+            ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
 
             ItemStack item = Registry.ITEM.get(Identifier.tryParse("minecraft:air")).getDefaultStack();
 
@@ -244,7 +277,6 @@ public class ActionWheel extends DrawableHelper {
                 item = customization.item;
 
             //radius * cos/sin angle in rads + offset
-            float angle = (float) Math.toRadians(360.0 / segments * (i - (segments - 2) / 4.0));
             Vec2f pos = new Vec2f(radius * MathHelper.cos(angle) + offset.x, radius * MathHelper.sin(angle) + offset.y);
 
             //render
