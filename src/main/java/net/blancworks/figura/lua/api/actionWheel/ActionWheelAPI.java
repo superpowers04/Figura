@@ -38,18 +38,32 @@ public class ActionWheelAPI {
             set(SLOT_7, getTableForPart(SLOT_7, script));
             set(SLOT_8, getTableForPart(SLOT_8, script));
 
-            set("setSize", new OneArgFunction() {
+            set("setLeftSize", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     int size = arg.checkint();
-                    script.actionWheelSize = MathHelper.clamp(size % 2 == 1 ? size + 1 : size, 2, 8);
+                    script.actionWheelLeftSize = MathHelper.clamp(size, 1, 4);
                     return NIL;
                 }
             });
-            set("getSize", new ZeroArgFunction() {
+            set("setRightSize", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    int size = arg.checkint();
+                    script.actionWheelRightSize = MathHelper.clamp(size, 1, 4);
+                    return NIL;
+                }
+            });
+            set("getLeftSize", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.actionWheelSize);
+                    return LuaValue.valueOf(script.actionWheelLeftSize);
+                }
+            });
+            set("getRightSize", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.actionWheelRightSize);
                 }
             });
 

@@ -74,7 +74,8 @@ public class CustomScript extends FiguraAsset {
 
     //Action Wheel customizations
     public Map<String, ActionWheelCustomization> actionWheelCustomizations = new HashMap<>();
-    public int actionWheelSize = 8;
+    public int actionWheelLeftSize = 4;
+    public int actionWheelRightSize = 4;
 
     //scripting custom keybinds
     public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
