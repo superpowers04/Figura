@@ -119,14 +119,14 @@ public class ActionWheel extends DrawableHelper {
 
         //draw right side
         matrices.push();
-        matrices.translate(pos.x, pos.y - size / 2.0d, 0.0d);
+        matrices.translate(Math.round(pos.x), Math.round(pos.y - size / 2.0d), 0.0d);
         drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (rightSegments - 1), 0.0f, 8, 16, 32, 16);
         matrices.pop();
 
         //draw left side
         matrices.push();
 
-        matrices.translate(pos.x, pos.y + size / 2.0d, 0.0d);
+        matrices.translate(Math.round(pos.x), Math.round(pos.y + size / 2.0d), 0.0d);
         Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180);
         matrices.multiply(quaternion);
 
@@ -201,7 +201,7 @@ public class ActionWheel extends DrawableHelper {
         //draw
         matrices.push();
 
-        matrices.translate(pos.x, Math.round(y), 0.0d);
+        matrices.translate(Math.round(pos.x), Math.round(y), 0.0d);
         Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(angle);
         matrices.multiply(quaternion);
 
