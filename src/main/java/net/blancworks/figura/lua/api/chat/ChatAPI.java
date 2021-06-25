@@ -42,8 +42,8 @@ public class ChatAPI {
 
                     //access message
                     try {
-                        //index + 1 to keep it with lua syntax
-                        return LuaValue.valueOf(chat.get(arg.checkint() + 1).getText().getString());
+                        //index - 1 to keep it with lua syntax
+                        return LuaValue.valueOf(chat.get(arg.checkint() - 1).getText().getString());
                     } catch (Exception ignored) {
                         return NIL;
                     }
