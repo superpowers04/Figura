@@ -4,6 +4,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -124,6 +125,60 @@ public class ActionWheelAPI {
                 }
             });
 
+            ret.set("getHoverItem", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return ItemStackAPI.getTable(targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem);
+                }
+            });
+
+            ret.set("setHoverItem", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (arg.isnil()) {
+                        targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = null;
+                        return NIL;
+                    }
+
+                    ItemStack hoverItem = (ItemStack) arg.get("stack").touserdata(ItemStack.class);
+                    if (hoverItem == null)
+                        throw new LuaError("Not a ItemStack table!");
+
+                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = hoverItem;
+                    return NIL;
+                }
+            });
+
+            ret.set("getColor", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaVector.of(targetScript.getOrMakeActionWheelCustomization(accessor).color);
+                }
+            });
+
+            ret.set("setColor", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    targetScript.getOrMakeActionWheelCustomization(accessor).color = LuaVector.checkOrNew(arg).asV3f();
+                    return NIL;
+                }
+            });
+
+            ret.set("getHoverColor", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaVector.of(targetScript.getOrMakeActionWheelCustomization(accessor).hoverColor);
+                }
+            });
+
+            ret.set("setHoverColor", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverColor = LuaVector.checkOrNew(arg).asV3f();
+                    return NIL;
+                }
+            });
+
             ret.set("getTitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -144,6 +199,9 @@ public class ActionWheelAPI {
                 public LuaValue call() {
                     targetScript.getOrMakeActionWheelCustomization(accessor).function = null;
                     targetScript.getOrMakeActionWheelCustomization(accessor).item = null;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = null;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).color = null;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverColor = null;
                     targetScript.getOrMakeActionWheelCustomization(accessor).title = null;
                     return NIL;
                 }
