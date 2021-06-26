@@ -7,12 +7,10 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
-import net.fabricmc.loader.util.sat4j.core.Vec;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.*;
 import net.minecraft.util.math.Vec2f;
@@ -29,7 +27,7 @@ public class ActionWheel extends DrawableHelper {
 
     public static final Identifier ACTION_WHEEL = new Identifier("figura", "textures/gui/action_wheel.png");
     public static final Identifier ACTION_WHEEL_SELECTED = new Identifier("figura", "textures/gui/action_wheel_selected.png");
-    public static final Vector4f ERROR_COLOR = new Vector4f(1.0f, 0.28f, 0.28f, 1.0F);
+    public static final Vector3f ERROR_COLOR = new Vector3f(1.0f, 0.28f, 0.28f);
 
     public static int selectedSlot = -1;
     public static boolean enabled = true;
@@ -80,17 +78,13 @@ public class ActionWheel extends DrawableHelper {
             //render wheel
             renderWheel(matrices, wheelPos, wheelSize, leftSegments, rightSegments);
 
+            //render overlay
             for (int i = 0; i < leftSegments + rightSegments; i++) {
-                int index;
-                if (i < rightSegments) {
-                    index = i;
-                } else {
-                    index = i - rightSegments + 4;
-                }
+                int index = i < rightSegments ? i : i - rightSegments + 4;
                 renderOverlay(matrices, wheelPos, wheelSize, leftSegments, rightSegments, data, index);
             }
 
-            //render overlay and text
+            //render text
             if (selectedSlot != -1) {
                 renderText(matrices, wheelPos, wheelSize, screenScale, data);
             }
@@ -131,12 +125,15 @@ public class ActionWheel extends DrawableHelper {
 
         //draw right side
         matrices.push();
+
         matrices.translate(Math.round(pos.x), Math.round(pos.y - size / 2.0d), 0.0d);
         drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (rightSegments - 1), 0.0f, 8, 16, 32, 16);
+
         matrices.pop();
 
         //draw left side
         matrices.push();
+
         matrices.translate(Math.round(pos.x), Math.round(pos.y + size / 2.0d), 0.0d);
         Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180);
         matrices.multiply(quaternion);
@@ -149,24 +146,33 @@ public class ActionWheel extends DrawableHelper {
     public void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments, PlayerData data, int slot) {
         ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (slot + 1));
 
-        boolean hasFunction = customization != null && customization.function != null;
-        boolean hasColor = customization != null && customization.color != null;
-        boolean hasHoverColor = customization != null && customization.hoverColor != null;
+        //property variables
+        boolean hasFunction = false;
+        boolean hasColor = false;
+        boolean hasHoverColor = false;
         boolean isSelected = selectedSlot == slot;
+        Vector3f overlayColor = new Vector3f(1.0f, 1.0f, 1.0f);
 
-        // Don't render the overlay
-        if ((!hasFunction && selectedSlot != slot) || (!hasColor && !isSelected)) return;
+        if (customization != null) {
+            hasFunction = customization.function != null;
+            hasColor = customization.color != null;
+            hasHoverColor = customization.hoverColor != null;
+        }
 
-        Vector4f overlayColor = new Vector4f(1.0f,1.0f,1.0f, 1.0f);
-        if (hasFunction) {
-            if (hasColor) {
-                overlayColor = customization.color;
-            }
-            if (hasHoverColor && isSelected) {
+        //set default color
+        if (hasColor)
+            overlayColor = customization.color;
+
+        //if is selected, but has no function, set to error color
+        //if it has function and has an hover color, set to the hover color
+        if (isSelected) {
+            if (!hasFunction) {
+                overlayColor = ERROR_COLOR;
+            } else if (hasHoverColor) {
                 overlayColor = customization.hoverColor;
             }
-        } else if (isSelected) {
-            overlayColor = ERROR_COLOR;
+        } else if (!hasColor) {
+            return;
         }
 
         //modifiable variables
@@ -238,8 +244,8 @@ public class ActionWheel extends DrawableHelper {
         Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(angle);
         matrices.multiply(quaternion);
 
-        RenderSystem.color4f(overlayColor.getX(),overlayColor.getY(),overlayColor.getZ(),overlayColor.getW());
-        drawTexture(matrices, 0, 0, size / 2, height, u, v, 8, regionHeight, 32, 32);
+        RenderSystem.color3f(overlayColor.getX(), overlayColor.getY(), overlayColor.getZ());
+        drawTexture(matrices, 0, 0, size / 2, height, u, v, 8, regionHeight, 32, 16);
 
         matrices.pop();
     }
@@ -299,15 +305,15 @@ public class ActionWheel extends DrawableHelper {
                 angle = (float) Math.toRadians(180.0 / leftSegments * (index - 4 - ((leftSegments - 1) * 0.5) + leftSegments));
             }
 
-            //get item
-            ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
-
+            //get item - defaults to air
             ItemStack item = Registry.ITEM.get(Identifier.tryParse("minecraft:air")).getDefaultStack();
 
-            if (customization != null && customization.item != null) {
-                if (selectedSlot == i && customization.hoverItem != null) {
+            ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
+
+            if (customization != null) {
+                if (selectedSlot == index && customization.hoverItem != null) {
                     item = customization.hoverItem;
-                } else {
+                } else if (customization.item != null) {
                     item = customization.item;
                 }
             }
