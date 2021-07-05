@@ -6,6 +6,8 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.models.CustomModelPartCuboid;
+import net.minecraft.nbt.*;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
@@ -45,6 +47,62 @@ public class CustomModelAPI {
                 ret.set(child.name, tbl);
                 ret.set(index++, tbl);
             }
+
+            ret.set("addPart", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    LuaVector size = LuaVector.checkOrNew(arg1);
+                    LuaVector uv = LuaVector.checkOrNew(arg2);
+
+                    CustomModelPartCuboid part = new CustomModelPartCuboid();
+                    part.parentType = CustomModelPart.ParentType.Model;
+                    part.name = "aa";
+
+                    NbtCompound cuboidPropertiesTag = new NbtCompound();
+
+                    cuboidPropertiesTag.put("f", new NbtList() {{
+                        add(NbtFloat.of(0.0f));
+                        add(NbtFloat.of(0.0f));
+                        add(NbtFloat.of(0.0f));
+                    }});
+
+                    cuboidPropertiesTag.put("t", new NbtList() {{
+                        add(NbtFloat.of(size.x()));
+                        add(NbtFloat.of(size.y()));
+                        add(NbtFloat.of(size.z()));
+                    }});
+
+                    cuboidPropertiesTag.put("tw", NbtFloat.of(partOwner.model.texWidth));
+                    cuboidPropertiesTag.put("th", NbtFloat.of(partOwner.model.texHeight));
+
+                    NbtList uvNbt = new NbtList();
+                    uvNbt.add(NbtFloat.of(Math.min(uv.x(), 1) * partOwner.model.texWidth));
+                    uvNbt.add(NbtFloat.of(Math.min(uv.y(), 1) * partOwner.model.texHeight));
+                    uvNbt.add(NbtFloat.of(Math.min(uv.z(), 1) * partOwner.model.texWidth));
+                    uvNbt.add(NbtFloat.of(Math.min(uv.w(), 1) * partOwner.model.texHeight));
+
+                    NbtCompound faceComponent = new NbtCompound() {{
+                        put("uv", uvNbt);
+                        put("texture", NbtFloat.of(0));
+                    }};
+
+                    cuboidPropertiesTag.put("n", faceComponent);
+                    cuboidPropertiesTag.put("s", faceComponent);
+                    cuboidPropertiesTag.put("e", faceComponent);
+                    cuboidPropertiesTag.put("w", faceComponent);
+                    cuboidPropertiesTag.put("u", faceComponent);
+                    cuboidPropertiesTag.put("d", faceComponent);
+
+                    part.cuboidProperties = cuboidPropertiesTag;
+                    part.rebuild();
+
+                    targetPart.children.add(part);
+
+                    CustomModelPartTable partTable = new CustomModelPartTable(part, partOwner);
+
+                    return partTable;
+                }
+            });
 
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
