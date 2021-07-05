@@ -111,6 +111,20 @@ public class LivingEntityAPI {
                     return LuaNumber.valueOf(targetEntity.get().isSneaky());
                 }
             });
+
+            superTable.set("getStuckArrowCount", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(targetEntity.get().getStuckArrowCount());
+                }
+            });
+
+            superTable.set("getStingerCount", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaNumber.valueOf(targetEntity.get().getStingerCount());
+                }
+            });
             
             return superTable;
         }

@@ -3,6 +3,10 @@ package net.blancworks.figura.lua.api.world.entity;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -88,6 +92,29 @@ public class PlayerEntityAPI {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().experienceLevel);
+                }
+            });
+
+            superTable.set("getTargetedEntity", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    if (targetEntity.get() instanceof ClientPlayerEntity) {
+                        Entity lookingAt = MinecraftClient.getInstance().targetedEntity;
+
+                        if (lookingAt != null && !lookingAt.isInvisibleTo(targetEntity.get())) {
+                            if (lookingAt instanceof PlayerEntity) {
+                                return new PlayerEntityLuaAPITable(() -> (PlayerEntity) lookingAt).getTable();
+                            }
+                            else if (lookingAt instanceof LivingEntity) {
+                                return new LivingEntityAPI.LivingEntityAPITable<>(() -> (LivingEntity) lookingAt).getTable();
+                            }
+                            else {
+                                return new EntityAPI.EntityLuaAPITable<>(() -> lookingAt).getTable();
+                            }
+                        }
+                    }
+
+                    return NIL;
                 }
             });
 
