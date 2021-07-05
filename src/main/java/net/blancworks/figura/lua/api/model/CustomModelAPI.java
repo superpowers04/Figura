@@ -53,12 +53,17 @@ public class CustomModelAPI {
             ret.set("addPart", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
+
+                    if (partOwner.script.scriptCustomParts >= 64) {
+                        throw new LuaError("Exceeded limit of 64 script custom parts");
+                    }
+
                     LuaVector size = LuaVector.checkOrNew(arg1);
                     LuaVector uv = LuaVector.checkOrNew(arg2);
 
                     CustomModelPartCuboid part = new CustomModelPartCuboid();
                     part.parentType = CustomModelPart.ParentType.Model;
-                    part.name = "aa";
+                    part.name = "";
 
                     NbtCompound cuboidPropertiesTag = new NbtCompound();
 
@@ -100,6 +105,7 @@ public class CustomModelAPI {
 
                     targetPart.children.add(part);
 
+                    partOwner.script.scriptCustomParts += 1;
                     return new CustomModelPartTable(part, partOwner);
                 }
             });

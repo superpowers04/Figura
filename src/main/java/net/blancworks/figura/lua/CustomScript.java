@@ -90,6 +90,7 @@ public class CustomScript extends FiguraAsset {
 
     public boolean hasPlayer = false;
 
+    public int scriptCustomParts = 0;
 
     //----PINGS!----
 
