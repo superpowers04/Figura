@@ -7,7 +7,9 @@ import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtFloat;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
@@ -98,9 +100,7 @@ public class CustomModelAPI {
 
                     targetPart.children.add(part);
 
-                    CustomModelPartTable partTable = new CustomModelPartTable(part, partOwner);
-
-                    return partTable;
+                    return new CustomModelPartTable(part, partOwner);
                 }
             });
 

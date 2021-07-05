@@ -11,6 +11,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.*;
@@ -82,6 +84,13 @@ public class EntityAPI {
                     @Override
                     public LuaValue call() {
                         return LuaNumber.valueOf(targetEntity.get().getFireTicks());
+                    }
+                });
+
+                set("getFrozenTicks", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaNumber.valueOf(targetEntity.get().getFrozenTicks());
                     }
                 });
 
@@ -189,6 +198,18 @@ public class EntityAPI {
                             return LuaValue.valueOf(ent.getCustomName().getString());
                         else
                             return LuaValue.valueOf(ent.getName().getString());
+                    }
+                });
+
+                set("getTargetedBlockPos", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        HitResult result = targetEntity.get().raycast(20.0D, 0.0F, arg.checkboolean());
+                        if (result.getType() == HitResult.Type.BLOCK) {
+                            return LuaVector.of(((BlockHitResult) result).getBlockPos());
+                        } else {
+                            return NIL;
+                        }
                     }
                 });
 
