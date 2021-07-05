@@ -90,8 +90,6 @@ public class CustomScript extends FiguraAsset {
 
     public boolean hasPlayer = false;
 
-    public int scriptCustomParts = 0;
-
     //----PINGS!----
 
     //Maps functions from lua to shorts for data saving.
