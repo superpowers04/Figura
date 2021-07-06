@@ -82,12 +82,12 @@ public class VanillaModelAPI {
             super(script);
             targetPart = part;
             this.accessor = accessor;
-            super.setTable(getTable());
+            super.setTable(getTable(script));
 
             script.vanillaModelPartTables.add(this);
         }
 
-        public LuaTable getTable() {
+        public LuaTable getTable(CustomScript script) {
             LuaTable ret = new LuaTable();
 
             ret.set("getPos", new ZeroArgFunction() {
@@ -178,7 +178,7 @@ public class VanillaModelAPI {
                 @Override
                 public LuaValue call() {
                     try {
-                        return LuaBoolean.valueOf(MinecraftClient.getInstance().options.getEnabledPlayerModelParts().contains(PlayerModelPart.valueOf(accessor)));
+                        return LuaBoolean.valueOf(script.playerData.lastEntity.isPartVisible(PlayerModelPart.valueOf(accessor)));
                     }
                     catch (Exception ignored) {
                         return NIL;
