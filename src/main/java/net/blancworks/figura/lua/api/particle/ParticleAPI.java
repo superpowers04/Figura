@@ -106,16 +106,15 @@ public class ParticleAPI {
                                     particle = new DustParticleEffect(new Vec3f(extra.x(), extra.y(), extra.z()), extra.w());
                                 }
                                 case "minecraft:falling_dust" -> {
-                                    BlockState blockState = w.getRegistryManager().get(Registry.BLOCK_KEY).get(new Identifier(arg3.checkjstring())).getDefaultState();
+                                    BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
                                     particle = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, blockState);
-
                                 }
                                 case "minecraft:block" -> {
-                                    BlockState blockState = w.getRegistryManager().get(Registry.BLOCK_KEY).get(new Identifier(arg3.checkjstring())).getDefaultState();
+                                    BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
                                     particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, blockState);
                                 }
                                 case "minecraft:item" -> {
-                                    ItemStack itemStack = w.getRegistryManager().get(Registry.ITEM_KEY).get(new Identifier(arg3.checkjstring())).getDefaultStack();
+                                    ItemStack itemStack = Registry.ITEM.get(Identifier.tryParse(arg3.checkjstring())).getDefaultStack();
                                     particle = new ItemStackParticleEffect(ParticleTypes.ITEM, itemStack);
                                 }
                                 case "minecraft:dust_color_transition" -> {

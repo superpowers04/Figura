@@ -31,11 +31,8 @@ public class ItemStackAPI {
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     ItemStack item = Registry.ITEM.get(Identifier.tryParse(arg1.checkjstring())).getDefaultStack();
 
-                    String nbt = "{}";
                     if (!arg2.isnil())
-                        nbt = arg2.checkjstring();
-
-                    setItemNbt(item, nbt);
+                        setItemNbt(item, arg2.checkjstring());
 
                     return getTable(item);
                 }
