@@ -171,11 +171,11 @@ public class NamePlateAPI {
                         String argument = formatting.get(i).checkjstring();
 
                         switch (argument) {
-                            case "BOLD": customization.bold = true; break;
-                            case "ITALIC": customization.italic = true; break;
-                            case "UNDERLINE": customization.underline = true; break;
-                            case "OBFUSCATED": customization.obfuscated = true; break;
-                            case "STRIKETHROUGH": customization.strikethrough = true; break;
+                            case "BOLD" -> customization.bold = true;
+                            case "ITALIC" -> customization.italic = true;
+                            case "UNDERLINE" -> customization.underline = true;
+                            case "OBFUSCATED" -> customization.obfuscated = true;
+                            case "STRIKETHROUGH" -> customization.strikethrough = true;
                         }
                     }
 
@@ -372,8 +372,9 @@ public class NamePlateAPI {
         String badges = " ";
 
         //the mark
-        if (currentData != null && currentData.model != null)
-            badges += PlayerDataManager.getDataForPlayer(uuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) ? "△" : "▲";
+        if (currentData != null && currentData.model != null) {
+            badges += FiguraMod.IS_CHEESE ? "\uD83E\uDDC0" : PlayerDataManager.getDataForPlayer(uuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) ? "△" : "▲";
+        }
 
         //special badges
         if (FiguraMod.special.contains(uuid))

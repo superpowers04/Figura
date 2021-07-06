@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.world.entity;
 
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
@@ -7,6 +8,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
@@ -115,6 +117,14 @@ public class PlayerEntityAPI {
                     }
 
                     return NIL;
+                }
+            });
+
+            superTable.set("lastDamageSource", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    DamageSource ds = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid()).script.lastDamageSource;
+                    return ds == null ? NIL : LuaValue.valueOf(ds.name);
                 }
             });
 

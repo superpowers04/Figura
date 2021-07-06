@@ -8,6 +8,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -155,9 +156,15 @@ public class EntityAPI {
 
                         Entity vehicle = targetEntity.get().getVehicle();
 
-                        if (vehicle instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable(() -> vehicle).getTable();
-
-                        return new EntityLuaAPITable(() -> vehicle).getTable();
+                        if (vehicle instanceof PlayerEntity) {
+                            return new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> (PlayerEntity) vehicle).getTable();
+                        }
+                        else if (vehicle instanceof LivingEntity) {
+                            return new LivingEntityAPI.LivingEntityAPITable<>(() -> (LivingEntity) vehicle).getTable();
+                        }
+                        else {
+                            return new EntityLuaAPITable<>(() -> vehicle).getTable();
+                        }
                     }
                 });
 

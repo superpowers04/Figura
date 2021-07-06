@@ -20,14 +20,13 @@ import java.util.HashMap;
 
 public class SoundAPI {
 
-    public static HashMap<String, SoundEvent> soundEvents = new HashMap<String, SoundEvent>() {{
+    public static HashMap<String, SoundEvent> soundEvents = new HashMap<>() {{
         for (Identifier id : Registry.SOUND_EVENT.getIds()) {
             SoundEvent type = Registry.SOUND_EVENT.get(id);
             put(id.getPath(), type);
             put(id.toString(), type);
         }
     }};
-
 
     public static Identifier getID() {
         return new Identifier("default", "sound");
@@ -37,6 +36,7 @@ public class SoundAPI {
         return new ReadOnlyLuaTable(new LuaTable() {{
             set("playSound", new TwoArgFunction() {
                 // DEPRECATED
+                @Deprecated
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     // INCREDIBLY DEPRECATED

@@ -21,6 +21,7 @@
     "MatrixStackMixin",
     "MinecraftClientMixin",
     "ModelPartMixin",
+    "PlayerEntityMixin",
     "PlayerEntityRendererMixin",
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",

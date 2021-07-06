@@ -3,12 +3,10 @@ package net.blancworks.figura.lua.api.world.entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.util.Arm;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
-import org.luaj.vm2.LuaNumber;
-import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
@@ -125,7 +123,14 @@ public class LivingEntityAPI {
                     return LuaNumber.valueOf(targetEntity.get().getStingerCount());
                 }
             });
-            
+
+            superTable.set("isLeftHanded", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(targetEntity.get().getMainArm() == Arm.LEFT);
+                }
+            });
+
             return superTable;
         }
     }

@@ -113,7 +113,6 @@ public class ParticleAPI {
                                 case "minecraft:block" -> {
                                     BlockState blockState = w.getRegistryManager().get(Registry.BLOCK_KEY).get(new Identifier(arg3.checkjstring())).getDefaultState();
                                     particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, blockState);
-
                                 }
                                 case "minecraft:item" -> {
                                     ItemStack itemStack = w.getRegistryManager().get(Registry.ITEM_KEY).get(new Identifier(arg3.checkjstring())).getDefaultStack();

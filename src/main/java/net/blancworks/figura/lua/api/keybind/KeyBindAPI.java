@@ -124,7 +124,7 @@ public class KeyBindAPI {
         }});
     }
 
-    public static final Map<String, Integer> keys = new HashMap<String, Integer>() {{
+    public static final Map<String, Integer> keys = new HashMap<>() {{
         put("NONE", InputUtil.UNKNOWN_KEY.getCode());
 
         put("SPACE", GLFW.GLFW_KEY_SPACE);
