@@ -5,7 +5,6 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -82,12 +81,12 @@ public class VanillaModelAPI {
             super(script);
             targetPart = part;
             this.accessor = accessor;
-            super.setTable(getTable());
+            super.setTable(getTable(script));
 
             script.vanillaModelPartTables.add(this);
         }
 
-        public LuaTable getTable() {
+        public LuaTable getTable(CustomScript script) {
             LuaTable ret = new LuaTable();
 
             ret.set("getPos", new ZeroArgFunction() {
@@ -178,7 +177,7 @@ public class VanillaModelAPI {
                 @Override
                 public LuaValue call() {
                     try {
-                        return LuaBoolean.valueOf(MinecraftClient.getInstance().options.isPlayerModelPartEnabled(PlayerModelPart.valueOf(accessor)));
+                        return LuaBoolean.valueOf(script.playerData.lastEntity.isPartVisible(PlayerModelPart.valueOf(accessor)));
                     }
                     catch (Exception ignored) {
                         return NIL;
