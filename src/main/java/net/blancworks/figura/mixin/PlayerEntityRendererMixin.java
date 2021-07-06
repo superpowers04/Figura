@@ -75,7 +75,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
 
-                if (FiguraMod.currentData.script != null && FiguraMod.currentData.script.customShadowSize != null && FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+                if (FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID) && FiguraMod.currentData.script != null && FiguraMod.currentData.script.customShadowSize != null) {
                     shadowRadius = FiguraMod.currentData.script.customShadowSize;
                 }
             }

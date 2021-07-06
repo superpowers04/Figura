@@ -372,8 +372,9 @@ public class NamePlateAPI {
         String badges = " ";
 
         //the mark
-        if (currentData != null && currentData.model != null)
-            badges += PlayerDataManager.getDataForPlayer(uuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) ? "△" : "▲";
+        if (currentData != null && currentData.model != null) {
+            badges += FiguraMod.IS_CHEESE ? "\uD83E\uDDC0" : PlayerDataManager.getDataForPlayer(uuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) ? "△" : "▲";
+        }
 
         //special badges
         if (FiguraMod.special.contains(uuid))

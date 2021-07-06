@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.actionWheel;
 
+import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
@@ -47,6 +48,7 @@ public class ActionWheelAPI {
                     return NIL;
                 }
             });
+
             set("setRightSize", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -55,16 +57,26 @@ public class ActionWheelAPI {
                     return NIL;
                 }
             });
+
             set("getLeftSize", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(script.actionWheelLeftSize);
                 }
             });
+
             set("getRightSize", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(script.actionWheelRightSize);
+                }
+            });
+
+            set("getSelectedSlot", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    int selected = ActionWheel.selectedSlot;
+                    return selected == -1 ? NIL : LuaValue.valueOf(selected + 1);
                 }
             });
 
