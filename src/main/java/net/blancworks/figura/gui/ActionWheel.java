@@ -341,16 +341,10 @@ public class ActionWheel extends DrawableHelper {
                         customization.function.call();
                     } catch (Exception error) {
                         if (error instanceof LuaError) {
-                            String msg = error.getMessage();
-                            msg = msg.replace("\t", "   ");
-                            String[] messageParts = msg.split("\n");
-
-                            for (String part : messageParts) {
-                                CustomScript.sendChatMessage(new LiteralText(part).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
-                            }
+                            currentData.script.logLuaError((LuaError) error);
+                        } else {
+                            error.printStackTrace();
                         }
-
-                        error.printStackTrace();
                     }
                 }
             }

@@ -134,7 +134,7 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
         }
 
         @Override
-        public List<? extends Selectable> method_37025() {
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

@@ -536,7 +536,7 @@ public class CustomScript extends FiguraAsset {
 
     public void logLuaError(LuaError error) {
         //Never even log errors for other players, only the local player.
-        if (playerData != PlayerDataManager.localPlayer) {
+        if (playerData != PlayerDataManager.localPlayer && !(boolean) Config.entries.get("logOthers").value) {
             return;
         }
 
@@ -544,6 +544,12 @@ public class CustomScript extends FiguraAsset {
         String msg = error.getMessage();
         msg = msg.replace("\t", "   ");
         String[] messageParts = msg.split("\n");
+
+        sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
+                .append((playerData.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
+                        .append(new LiteralText(" >"))
+                )
+        );
 
         for (String part : messageParts) {
             sendChatMessage(new LiteralText(part).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));

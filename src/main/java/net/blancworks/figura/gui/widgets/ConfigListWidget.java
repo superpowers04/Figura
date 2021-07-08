@@ -166,7 +166,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
-        public List<? extends Selectable> method_37025() {
+        public List<? extends Selectable> selectableChildren() {
             return Collections.emptyList();
         }
     }
@@ -235,7 +235,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
-        public List<? extends Selectable> method_37025() {
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -316,7 +316,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
-        public List<? extends Selectable> method_37025() {
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -407,7 +407,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
-        public List<? extends Selectable> method_37025() {
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.field, this.reset);
         }
 
@@ -505,7 +505,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
-        public List<? extends Selectable> method_37025() {
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

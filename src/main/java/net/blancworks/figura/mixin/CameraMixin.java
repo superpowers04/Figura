@@ -36,9 +36,11 @@ public abstract class CameraMixin {
             if (customization == null)
                 return;
 
+            //rotation
             if (customization.rotation != null && !customization.rotation.equals(Vec2f.ZERO))
                 this.setRotation(this.yaw + customization.rotation.y, this.pitch + customization.rotation.x);
 
+            //move
             if (customization.position != null) {
                 this.setPos(
                         MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
@@ -47,16 +49,21 @@ public abstract class CameraMixin {
                 );
             }
 
+            //third person
             if (!thirdPerson) {
-                if (customization.position != null && !customization.position.equals(new Vec3f(0.0f, 0.0f, 0.0f)))
-                this.moveBy(-customization.position.getZ(), 0.0d, -customization.position.getX());
+                //move
+                if (customization.position != null && !customization.position.equals(new Vec3f(0.0f, 0.0f, 0.0f))) {
+                    this.moveBy(-customization.position.getZ(), 0.0d, -customization.position.getX());
+                }
 
                 //bed fix
                 if (focusedEntity instanceof LivingEntity && ((LivingEntity) focusedEntity).isSleeping()) {
                     this.moveBy(0.0d, 0.3d, 0.0d);
                 }
             }
+            //first person
             else {
+                //move
                 if (customization.position != null) {
                     this.setRotation(this.yaw - 90, this.pitch);
                     double x = -this.clipToSpace(customization.position.getX());

@@ -3,7 +3,6 @@ package net.blancworks.figura.mixin;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -24,12 +23,14 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
 
     @Inject(method = "hasLabel", at = @At("HEAD"), cancellable = true)
     public void hasLabel(T livingEntity, CallbackInfoReturnable<Boolean> cir) {
-        if (!MinecraftClient.isHudEnabled()) {
-            cir.setReturnValue(false);
-            return;
-        }
-
-        if (FiguraGuiScreen.showOwnNametag || ((Boolean) Config.entries.get("ownNameTag").value && livingEntity == MinecraftClient.getInstance().player))
+        if (FiguraGuiScreen.showOwnNametag) {
             cir.setReturnValue(true);
+        }
+        else if (!MinecraftClient.isHudEnabled()) {
+            cir.setReturnValue(false);
+        }
+        else if ((Boolean) Config.entries.get("ownNameTag").value && livingEntity == MinecraftClient.getInstance().player) {
+            cir.setReturnValue(true);
+        }
     }
 }

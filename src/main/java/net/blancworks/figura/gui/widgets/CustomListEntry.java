@@ -60,7 +60,7 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
     public void tick(double mouseX, double mouseY) {}
 
     @Override
-    public Text method_37006() {
+    public Text getNarration() {
         return new LiteralText(String.valueOf(entryValue));
     }
 }
