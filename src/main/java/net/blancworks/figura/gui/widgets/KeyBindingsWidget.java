@@ -86,6 +86,7 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
             });
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = KeyBindingsWidget.this.client.textRenderer;
@@ -127,6 +128,7 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
         }
 
+        @Override
         public List<? extends Element> children() {
             return Arrays.asList(this.toggle, this.reset);
         }

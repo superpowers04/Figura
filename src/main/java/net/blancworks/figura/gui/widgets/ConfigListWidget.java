@@ -143,6 +143,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.text = text;
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //render text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -158,6 +159,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return false;
         }
 
+        @Override
         public List<? extends Element> children() {
             return Collections.emptyList();
         }
@@ -189,6 +191,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -221,6 +224,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         }
 
+        @Override
         public List<? extends Element> children() {
             return Arrays.asList(this.toggle, this.reset);
         }
@@ -264,6 +268,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -296,6 +301,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         }
 
+        @Override
         public List<? extends Element> children() {
             return Arrays.asList(this.toggle, this.reset);
         }
@@ -343,6 +349,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             });
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -381,6 +388,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         }
 
+        @Override
         public List<? extends Element> children() {
             return Arrays.asList(this.field, this.reset);
         }
@@ -395,10 +403,12 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return this.field.mouseReleased(mouseX, mouseY, button) || this.reset.mouseReleased(mouseX, mouseY, button);
         }
 
+        @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
             return super.keyPressed(keyCode, scanCode, modifiers) || this.field.keyPressed(keyCode, scanCode, modifiers);
         }
 
+        @Override
         public boolean charTyped(char chr, int modifiers) {
             return this.field.charTyped(chr, modifiers);
         }
@@ -433,6 +443,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             });
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -473,6 +484,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         }
 
+        @Override
         public List<? extends Element> children() {
             return Arrays.asList(this.toggle, this.reset);
         }
