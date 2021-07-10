@@ -1,12 +1,16 @@
 package net.blancworks.figura.lua.api.sound;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import net.blancworks.figura.access.SoundManagerAccess;
+import net.blancworks.figura.access.SoundSystemAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.sound.Channel;
+import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
@@ -15,8 +19,10 @@ import net.minecraft.world.World;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class SoundAPI {
 
@@ -92,6 +98,32 @@ public class SoundAPI {
                     return NIL;
                 }
             });
+
+            set("replaceSound", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    script.getOrMakePlayerSoundCustomization(new Identifier(arg1.checkjstring())).soundEvent = soundEvents.get(arg2.checkjstring());
+                    return NIL;
+                }
+            });
+
+            set("getSounds", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    MinecraftClient client = MinecraftClient.getInstance();
+                    Map<SoundInstance, Channel.SourceManager> sources = ((SoundSystemAccess)((SoundManagerAccess)client.getSoundManager()).getSoundSystem()).getSources();
+
+                    LuaTable tbl = new LuaTable();
+                    int i = 1;
+                    for (SoundInstance sound: sources.keySet()) {
+                        tbl.set(i, LuaValue.valueOf(sound.getId().toString()));
+                        i += 1;
+                    }
+
+                    return tbl;
+                }
+            });
+
         }});
     }
 

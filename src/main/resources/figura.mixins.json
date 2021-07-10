@@ -9,6 +9,8 @@
     "ChatHudMixin",
     "ChatHudListenerMixin",
     "ClientLoginNetworkHandlerMixin",
+    "ClientPlayNetworkHandlerMixin",
+    "ClientPlayerEntityMixin",
     "DebugHudMixin",
     "ElytraEntityModelMixin",
     "ElytraFeatureRendererMixin",
@@ -26,6 +28,8 @@
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
     "ShoulderParrotFeatureRendererMixin",
+    "SoundManagerMixin",
+    "SoundSystemMixin",
     "WorldRendererMixin"
   ],
   "injectors": {
