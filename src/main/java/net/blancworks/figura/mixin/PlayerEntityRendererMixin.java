@@ -142,39 +142,39 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         String playerName = entity.getEntityName();
 
         PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
-        if (currentData != null && !playerName.equals("") && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
-            NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
+        if (currentData == null || playerName.equals("") || !currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
+            return;
 
-            if (nameplateData == null)
-                return;
+        NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
 
-            if (nameplateData.enabled != null && !nameplateData.enabled) {
-                ci.cancel();
-                return;
-            }
+        if (nameplateData == null)
+            return;
 
-            try {
-                if (text instanceof TranslatableText) {
-                    Object[] args = ((TranslatableText) text).getArgs();
-
-                    for (Object arg : args) {
-                        if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
-                            break;
-                    }
-                } else if (text instanceof LiteralText) {
-                    NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            //apply special nameplate settings
-            if (nameplateData.position != null)
-                translation.add(nameplateData.position);
-            if (nameplateData.scale != null)
-                scale = nameplateData.scale;
+        if (nameplateData.enabled != null && !nameplateData.enabled) {
+            ci.cancel();
+            return;
         }
-        else return;
+
+        try {
+            if (text instanceof TranslatableText) {
+                Object[] args = ((TranslatableText) text).getArgs();
+
+                for (Object arg : args) {
+                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
+                        break;
+                }
+            } else if (text instanceof LiteralText) {
+                NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //apply special nameplate settings
+        if (nameplateData.position != null)
+            translation.add(nameplateData.position);
+        if (nameplateData.scale != null)
+            scale = nameplateData.scale;
 
         matrices.push();
         matrices.translate(translation.getX(), translation.getY(), translation.getZ());
