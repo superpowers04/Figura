@@ -8,6 +8,7 @@ import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -266,17 +267,21 @@ public class CustomScript extends FiguraAsset {
                         message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
 
                         Text log;
-                        try {
-                            log = Text.Serializer.fromJson(new StringReader(arg.toString()));
-                        } catch (Exception ignored) {
-                            log = new LiteralText(arg.toString());
+                        if (arg instanceof LuaVector logText) {
+                            log = logText.toJsonText();
+                        } else {
+                            try {
+                                log = Text.Serializer.fromJson(new StringReader(arg.toString()));
+                            } catch (Exception ignored) {
+                                log = new LiteralText(arg.toString());
+                            }
                         }
 
                         message.append(log);
 
                         int config = (int) Config.entries.get("scriptLog").value;
                         if (config != 2) {
-                            FiguraMod.LOGGER.info(((LiteralText) message).getRawString());
+                            FiguraMod.LOGGER.info(message.getString());
                         }
                         if (config != 1) {
                             sendChatMessage(message);
@@ -305,7 +310,7 @@ public class CustomScript extends FiguraAsset {
 
                         int config = (int) Config.entries.get("scriptLog").value;
                         if (config != 2) {
-                            FiguraMod.LOGGER.info(((LiteralText) message).getRawString());
+                            FiguraMod.LOGGER.info(message.getString());
                         }
                         if (config != 1) {
                             sendChatMessage(message);
@@ -609,7 +614,7 @@ public class CustomScript extends FiguraAsset {
 
             if (value.istable()) {
                 if (config != 2) {
-                    FiguraMod.LOGGER.info(((LiteralText) valString).getRawString());
+                    FiguraMod.LOGGER.info(valString.getString());
                 }
                 if (config != 1) {
                     sendChatMessage(valString);
@@ -618,7 +623,7 @@ public class CustomScript extends FiguraAsset {
                 logTableContents(value.checktable(), depth + 1, spacing + depthString);
             } else {
                 if (config != 2) {
-                    FiguraMod.LOGGER.info(((LiteralText) valString).getRawString() + ",");
+                    FiguraMod.LOGGER.info(valString.getString() + ",");
                 }
                 if (config != 1) {
                     sendChatMessage(valString.append(","));
