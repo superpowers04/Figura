@@ -6,9 +6,10 @@
   "client": [
     "ArmorFeatureRendererMixin",
     "CameraMixin",
-    "ChatHudMixin",
     "ChatHudListenerMixin",
+    "ChatHudMixin",
     "ClientLoginNetworkHandlerMixin",
+    "ClientPlayerEntityMixin",
     "DebugHudMixin",
     "ElytraEntityModelMixin",
     "ElytraFeatureRendererMixin",

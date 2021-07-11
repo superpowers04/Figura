@@ -2,6 +2,7 @@ package net.blancworks.figura.lua;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.*;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
@@ -15,12 +16,8 @@ import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -49,7 +46,7 @@ public class CustomScript extends FiguraAsset {
 
     //The currently running task.
     //Updated as things are added to it.
-    public CompletableFuture currTask;
+    public CompletableFuture<Void> currTask;
 
 
     //How many instructions the last tick/render event used.
@@ -60,7 +57,7 @@ public class CustomScript extends FiguraAsset {
     private LuaEvent tickLuaEvent = null;
     private LuaEvent renderLuaEvent = null;
 
-    private CompletableFuture lastTickFunction = null;
+    private CompletableFuture<Void> lastTickFunction = null;
 
     public Map<String, LuaEvent> allEvents = new HashMap<>();
 
@@ -93,6 +90,10 @@ public class CustomScript extends FiguraAsset {
 
     //TODO maybe remove this out from scripting
     public DamageSource lastDamageSource;
+
+    public String commandPrefix = "\u0000";
+
+    public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").formatted(Formatting.BLUE));
 
     //----PINGS!----
 
@@ -155,15 +156,16 @@ public class CustomScript extends FiguraAsset {
                     // A simple lua error may be caught by the script, but a
                     // Java Error will pass through to top and stop the script.
                     loadError = true;
+                    String error = "Script overran resource limits";
 
                     if (data == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
-                        sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
-                                .append((data.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.DARK_RED, Formatting.BOLD)
-                                        .append(new LiteralText(" > Script overran resource limits"))
-                                )
-                        );
+                        MutableText message = LOG_PREFIX.shallowCopy();
+                        if (data != null && (boolean) Config.entries.get("logOthers").value) message.append(data.playerName.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
+                        message.append(new LiteralText(">> ").formatted(Formatting.BLUE)).append(error).formatted(Formatting.RED);
+
+                        sendChatMessage(message);
                     }
-                    throw new RuntimeException("Script overran resource limits");
+                    throw new RuntimeException(error);
                 }
             };
 
@@ -172,7 +174,7 @@ public class CustomScript extends FiguraAsset {
                     () -> {
                         try {
                             setInstructionLimitPermission(PlayerTrustManager.MAX_INIT_ID);
-                            data.lastEntity = null;
+                            if (data != null) data.lastEntity = null;
                             chunk.call();
                         } catch (Exception error) {
                             loadError = true;
@@ -204,7 +206,7 @@ public class CustomScript extends FiguraAsset {
         load(data, source);
     }
 
-    public void setPlayerEntity(PlayerEntity ent) {
+    public void setPlayerEntity() {
         if(!isDone)
             return;
         
@@ -213,13 +215,31 @@ public class CustomScript extends FiguraAsset {
             queueTask(() -> {
                 try {
                     allEvents.get("player_init").call();
-                } catch(Exception error){
-                    error.printStackTrace();
+                } catch (Exception error) {
+                    if (error instanceof LuaError)
+                        logLuaError((LuaError) error);
+                    else
+                        error.printStackTrace();
                 }
             });
         }
     }
 
+    public void onFiguraChatCommand(String message) {
+        if (!isDone)
+            return;
+
+        queueTask(() -> {
+            try {
+                allEvents.get("onCommand").call(LuaString.valueOf(message));
+            } catch (Exception error) {
+                if (error instanceof LuaError)
+                    logLuaError((LuaError) error);
+                else
+                    error.printStackTrace();
+            }
+        });
+    }
 
     //Sets up and creates all the LuaEvents for this script
     public void setupEvents() {
@@ -241,16 +261,25 @@ public class CustomScript extends FiguraAsset {
             public LuaValue call(LuaValue arg) {
                 try {
                     if (playerData == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
+                        MutableText message = LOG_PREFIX.shallowCopy();
+                        if ((boolean) Config.entries.get("logOthers").value) message.append(playerData.playerName.copy()).append(" ");
+                        message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
+
+                        Text log;
+                        try {
+                            log = Text.Serializer.fromJson(new StringReader(arg.toString()));
+                        } catch (Exception ignored) {
+                            log = new LiteralText(arg.toString());
+                        }
+
+                        message.append(log);
+
                         int config = (int) Config.entries.get("scriptLog").value;
                         if (config != 2) {
-                            FiguraMod.LOGGER.info("[lua] " + playerData.playerName.copy().getString() + " > " + arg.toString());
+                            FiguraMod.LOGGER.info(((LiteralText) message).getRawString());
                         }
                         if (config != 1) {
-                            sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
-                                    .append((playerData.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
-                                            .append(new LiteralText(" > " + arg.toString()))
-                                    )
-                            );
+                            sendChatMessage(message);
                         }
                     }
                 } catch (Exception e){
@@ -270,16 +299,16 @@ public class CustomScript extends FiguraAsset {
                     LuaTable table = arg.checktable();
 
                     if (playerData == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
+                        MutableText message = LOG_PREFIX.shallowCopy();
+                        if ((boolean) Config.entries.get("logOthers").value) message.append(playerData.playerName.copy()).append(" ");
+                        message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
+
                         int config = (int) Config.entries.get("scriptLog").value;
                         if (config != 2) {
-                            FiguraMod.LOGGER.info("[lua] " + playerData.playerName.copy().getString() + " >");
+                            FiguraMod.LOGGER.info(((LiteralText) message).getRawString());
                         }
                         if (config != 1) {
-                            sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
-                                    .append((playerData.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
-                                            .append(new LiteralText(" >"))
-                                    )
-                            );
+                            sendChatMessage(message);
                         }
     
                         logTableContents(table, 1, "");
@@ -420,7 +449,7 @@ public class CustomScript extends FiguraAsset {
 
     //--Tasks--
 
-    public CompletableFuture queueTask(Runnable task) {
+    public CompletableFuture<Void> queueTask(Runnable task) {
         synchronized (this) {
             if (currTask == null || currTask.isDone()) {
                 currTask = CompletableFuture.runAsync(task);
@@ -573,23 +602,26 @@ public class CustomScript extends FiguraAsset {
         for (LuaValue key : table.keys()) {
             LuaValue value = table.get(key);
 
-            String valString = spacing + depthString + '"' + key.toString() + '"' + " : " + value.toString();
+            MutableText valString = new LiteralText(spacing + depthString + '"').formatted(Formatting.ITALIC)
+                    .append(new LiteralText(key.toString()).formatted(Formatting.BLUE))
+                    .append('"' + " : ")
+                    .append(new LiteralText(value.toString()).formatted(Formatting.AQUA));
 
             if (value.istable()) {
                 if (config != 2) {
-                    FiguraMod.LOGGER.info(valString);
+                    FiguraMod.LOGGER.info(((LiteralText) valString).getRawString());
                 }
                 if (config != 1) {
-                    sendChatMessage(new LiteralText(valString).formatted(Formatting.ITALIC));
+                    sendChatMessage(valString);
                 }
 
                 logTableContents(value.checktable(), depth + 1, spacing + depthString);
             } else {
                 if (config != 2) {
-                    FiguraMod.LOGGER.info(valString + ",");
+                    FiguraMod.LOGGER.info(((LiteralText) valString).getRawString() + ",");
                 }
                 if (config != 1) {
-                    sendChatMessage(new LiteralText(valString + ",").formatted(Formatting.ITALIC));
+                    sendChatMessage(valString.append(","));
                 }
             }
         }

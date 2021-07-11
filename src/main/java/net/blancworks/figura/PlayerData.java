@@ -244,7 +244,7 @@ public class PlayerData {
 
             if (script != null) {
                 try {
-                    script.setPlayerEntity(lastEntity);
+                    script.setPlayerEntity();
                     script.tick();
                 } catch (Exception e) {
                     e.printStackTrace();
