@@ -4,28 +4,27 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.*;
-import org.luaj.vm2.ast.Str;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
 public class LuaVector extends LuaValue implements Iterable<Float> {
     public static final int TYPE = LuaValue.TVALUE;
-    public static final LuaVector ORIGIN = new LuaVector();
 
     private final float[] values;
-    private Double cachedLength = null;
 
-    private Map<String, LuaValue> luaValues = new ImmutableMap.Builder<String, LuaValue>()
+    private final Map<String, LuaValue> luaValues = new ImmutableMap.Builder<String, LuaValue>()
             .put("distanceTo", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
@@ -494,6 +493,17 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     @Override
     public String toString() {
-        return String.format("vector: x=%f, y=%f, z=%f, w=%f, t=%f, h=%f", x(), y(), z(), w(), t(), h());
+        return String.format("vec: {x=%f, y=%f, z=%f, w=%f, t=%f, h=%f}", x(), y(), z(), w(), t(), h());
+    }
+
+    public Text toJsonText() {
+        return new LiteralText("").append("vec: {")
+                .append(new LiteralText("\n  x").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(x())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  y").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(y())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  z").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(z())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  w").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(w())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  t").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(t())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  h").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(h())).formatted(Formatting.AQUA))
+                .append("\n}");
     }
 }
