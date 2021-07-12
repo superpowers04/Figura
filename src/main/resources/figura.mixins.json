@@ -9,8 +9,6 @@
     "ChatHudMixin",
     "ChatHudListenerMixin",
     "ClientLoginNetworkHandlerMixin",
-    "ClientPlayNetworkHandlerMixin",
-    "ClientPlayerEntityMixin",
     "DebugHudMixin",
     "ElytraEntityModelMixin",
     "ElytraFeatureRendererMixin",

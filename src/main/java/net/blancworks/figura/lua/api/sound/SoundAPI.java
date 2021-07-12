@@ -99,14 +99,6 @@ public class SoundAPI {
                 }
             });
 
-            set("replaceSound", new TwoArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    script.getOrMakePlayerSoundCustomization(new Identifier(arg1.checkjstring())).soundEvent = soundEvents.get(arg2.checkjstring());
-                    return NIL;
-                }
-            });
-
             set("getSounds", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {

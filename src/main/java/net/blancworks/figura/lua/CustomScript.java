@@ -10,7 +10,6 @@ import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.lua.api.sound.PlayerSoundCustomization;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
@@ -18,7 +17,6 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -79,9 +77,6 @@ public class CustomScript extends FiguraAsset {
     public Map<String, ActionWheelCustomization> actionWheelCustomizations = new HashMap<>();
     public int actionWheelLeftSize = 4;
     public int actionWheelRightSize = 4;
-
-    //Player sound customizations
-    public Map<Identifier, PlayerSoundCustomization> playerSoundCustomizations = new HashMap<>();
 
     //scripting custom keybinds
     public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
@@ -672,20 +667,6 @@ public class CustomScript extends FiguraAsset {
 
     public ActionWheelCustomization getActionWheelCustomization(String accessor) {
         return actionWheelCustomizations.get(accessor);
-    }
-
-    public PlayerSoundCustomization getOrMakePlayerSoundCustomization(Identifier accessor) {
-        PlayerSoundCustomization currCustomization = getPlayerSoundCustomization(accessor);
-
-        if (currCustomization == null) {
-            currCustomization = new PlayerSoundCustomization();
-            playerSoundCustomizations.put(accessor, currCustomization);
-        }
-        return currCustomization;
-    }
-
-    public PlayerSoundCustomization getPlayerSoundCustomization(Identifier accessor) {
-        return playerSoundCustomizations.get(accessor);
     }
 
     //--Pings--
