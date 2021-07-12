@@ -120,7 +120,6 @@ public class FiguraMod implements ClientModInitializer {
         //action wheel keybind
         actionWheel = new KeyBinding(
                 "key.figura.actionwheel",
-                InputUtil.Type.KEYSYM,
                 GLFW.GLFW_KEY_B,
                 "key.categories.misc"
         ){
