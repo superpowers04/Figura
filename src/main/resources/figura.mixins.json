@@ -18,6 +18,7 @@
     "HeadFeatureRendererMixin",
     "HeldItemModelMixin",
     "InGameHudMixin",
+    "KeyBindingAccessorMixin",
     "LivingEntityRendererMixin",
     "MatrixStackMixin",
     "MinecraftClientMixin",

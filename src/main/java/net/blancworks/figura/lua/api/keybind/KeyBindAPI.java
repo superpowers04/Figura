@@ -3,6 +3,7 @@ package net.blancworks.figura.lua.api.keybind;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.util.Identifier;
@@ -46,7 +47,6 @@ public class KeyBindAPI {
                     if (script.playerData != PlayerDataManager.localPlayer) {
                         keybind = new KeyBinding(
                                 arg1.checkjstring(),
-                                InputUtil.Type.KEYSYM,
                                 keys.get("NONE"),
                                 "script_others"
                         );
@@ -55,7 +55,6 @@ public class KeyBindAPI {
                     else {
                         keybind = new KeyBinding(
                                 arg1.checkjstring(),
-                                InputUtil.Type.KEYSYM,
                                 key,
                                 "script"
                         );
@@ -66,6 +65,17 @@ public class KeyBindAPI {
                     }
 
                     return getTable(keybind);
+                }
+            });
+
+            set("getRegisteredKeybind", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (script.playerData != PlayerDataManager.localPlayer)
+                        return getTable(new KeyBinding("null", InputUtil.UNKNOWN_KEY.getCode(), "script_others"));
+
+                    KeyBinding key = KeyBindingAccessorMixin.getKeysById().get(arg.checkjstring());
+                    return key == null ? NIL : getTable(key);
                 }
             });
 
@@ -242,5 +252,14 @@ public class KeyBindAPI {
         put("RIGHT_CONTROL", GLFW.GLFW_KEY_RIGHT_CONTROL);
         put("RIGHT_ALT", GLFW.GLFW_KEY_RIGHT_ALT);
         put("MENU", GLFW.GLFW_KEY_MENU);
+
+        put("MOUSE_1", GLFW.GLFW_MOUSE_BUTTON_1);
+        put("MOUSE_2", GLFW.GLFW_MOUSE_BUTTON_2);
+        put("MOUSE_3", GLFW.GLFW_MOUSE_BUTTON_3);
+        put("MOUSE_4", GLFW.GLFW_MOUSE_BUTTON_4);
+        put("MOUSE_5", GLFW.GLFW_MOUSE_BUTTON_5);
+        put("MOUSE_6", GLFW.GLFW_MOUSE_BUTTON_6);
+        put("MOUSE_7", GLFW.GLFW_MOUSE_BUTTON_7);
+        put("MOUSE_8", GLFW.GLFW_MOUSE_BUTTON_8);
     }};
 }
