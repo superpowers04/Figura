@@ -267,8 +267,8 @@ public class CustomScript extends FiguraAsset {
                         message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
 
                         Text log;
-                        if (arg instanceof LuaVector logText) {
-                            log = logText.toJsonText();
+                        if (arg instanceof LuaVector) {
+                            log = ((LuaVector)arg).toJsonText();
                         } else {
                             try {
                                 log = Text.Serializer.fromJson(new StringReader(arg.toString()));

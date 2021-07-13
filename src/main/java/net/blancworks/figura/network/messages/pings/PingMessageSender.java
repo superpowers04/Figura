@@ -28,31 +28,19 @@ public class PingMessageSender extends MessageSender {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         LittleEndianDataOutputStream outputStream = new LittleEndianDataOutputStream(bos);
 
-        outputStream.writeShort(pingSet.size());
+        stream.writeShort(pingSet.size());
         
         //System.out.println("Wrote " + pingSet.size() + " pings");
         
         for(int i = 0; i < pingSet.size(); i++){
             CustomScript.LuaPing p = pingSet.poll();
-            outputStream.writeShort(p.functionID);
+            stream.writeShort(p.functionID);
             try {
-
-
-                LuaNetworkReadWriter.writeLuaValue(p.args, outputStream);
-
-                byte[] data = bos.toByteArray();
-
-                outputStream.writeInt(data.length);
-                outputStream.write(data);
+                LuaNetworkReadWriter.writeLuaValue(p.args, stream);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        
-        byte[] dataArray = bos.toByteArray();
-        
-        stream.writeInt(dataArray.length);
-        stream.write(dataArray);
     }
 
     @Override
