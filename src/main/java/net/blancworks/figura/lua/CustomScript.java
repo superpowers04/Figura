@@ -210,7 +210,7 @@ public class CustomScript extends FiguraAsset {
     public void setPlayerEntity() {
         if(!isDone)
             return;
-        
+
         if (!hasPlayer) {
             hasPlayer = true;
             queueTask(() -> {
@@ -315,7 +315,7 @@ public class CustomScript extends FiguraAsset {
                         if (config != 1) {
                             sendChatMessage(message);
                         }
-    
+
                         logTableContents(table, 1, "");
                     }
                 } catch (Throwable e){
