@@ -84,6 +84,8 @@ public class FiguraLuaManager {
         registerEvent("render");
         registerEvent("player_init");
 
+        registerEvent("onCommand");
+
         registerEvent("onDamage");
     }
 

@@ -30,7 +30,12 @@ public class ChatAPI {
                     //only send messages for local player
                     if (script.playerData == PlayerDataManager.localPlayer) {
                         ClientPlayerEntity player = MinecraftClient.getInstance().player;
-                        if (player != null) player.sendChatMessage(arg.tojstring());
+
+                        if (player != null) {
+                            //trim messages to mimic vanilla behaviour
+                            String message = arg.tojstring().trim();
+                            if (!message.isEmpty()) player.sendChatMessage(message);
+                        }
                     }
 
                     return NIL;
@@ -45,11 +50,24 @@ public class ChatAPI {
 
                     //access message
                     try {
-                        //index - 1 to keep it with lua syntax
+                        //index - 1 to keep it within lua syntax
                         return LuaValue.valueOf(chat.get(arg.checkint() - 1).getText().getString());
                     } catch (Exception ignored) {
                         return NIL;
                     }
+                }
+            });
+
+            set("setFiguraCommandPrefix", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (arg.isnil()) {
+                        script.commandPrefix = "\u0000";
+                        return NIL;
+                    }
+
+                    script.commandPrefix = arg.checkjstring();
+                    return NIL;
                 }
             });
 

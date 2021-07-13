@@ -2,6 +2,9 @@ package net.blancworks.figura.lua.api.math;
 
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.math.Vector4f;
 import net.minecraft.util.math.MathHelper;
@@ -18,12 +21,10 @@ import java.util.Map;
 
 public class LuaVector extends LuaValue implements Iterable<Float> {
     public static final int TYPE = LuaValue.TVALUE;
-    public static final LuaVector ORIGIN = new LuaVector();
 
     private final float[] values;
-    private Double cachedLength = null;
 
-    private Map<String, LuaValue> luaValues = new ImmutableMap.Builder<String, LuaValue>()
+    private final Map<String, LuaValue> luaValues = new ImmutableMap.Builder<String, LuaValue>()
             .put("distanceTo", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
@@ -110,8 +111,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
                 for (int j = 0; j < tbl.length(); j++) {
                     fal.add(v.values[j]);
                 }
-            } else if (l instanceof LuaVector) {
-                LuaVector vect = (LuaVector) l;
+            } else if (l instanceof LuaVector vect) {
                 for (int j = 0; j < vect._size(); j++) {
                     float f = vect.values[j];
                     fal.add(f);
@@ -434,32 +434,15 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public Float _get(String name) {
-        switch (name) {
-            case "x":
-            case "r":
-            case "u":
-            case "pitch":
-                return x();
-            case "y":
-            case "g":
-            case "v":
-            case "yaw":
-            case "volume":
-                return y();
-            case "z":
-            case "b":
-            case "roll":
-                return z();
-            case "w":
-            case "a":
-                return w();
-            case "t":
-                return t();
-            case "h":
-                return h();
-            default:
-                return null;
-        }
+        return switch (name) {
+            case "x", "r", "u", "pitch" -> x();
+            case "y", "g", "v", "yaw", "volume" -> y();
+            case "z", "b", "roll" -> z();
+            case "w", "a" -> w();
+            case "t" -> t();
+            case "h" -> h();
+            default -> null;
+        };
     }
 
     @NotNull
@@ -492,6 +475,17 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     @Override
     public String toString() {
-        return String.format("vector: x=%f, y=%f, z=%f, w=%f, t=%f, h=%f", x(), y(), z(), w(), t(), h());
+        return String.format("vec: {x=%f, y=%f, z=%f, w=%f, t=%f, h=%f}", x(), y(), z(), w(), t(), h());
+    }
+
+    public Text toJsonText() {
+        return new LiteralText("").append("vec: {")
+                .append(new LiteralText("\n  x").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(x())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  y").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(y())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  z").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(z())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  w").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(w())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  t").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(t())).formatted(Formatting.AQUA))
+                .append(new LiteralText(",\n  h").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(h())).formatted(Formatting.AQUA))
+                .append("\n}");
     }
 }
