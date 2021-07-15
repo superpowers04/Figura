@@ -21,5 +21,4 @@ public abstract class PlayerEntityMixin {
             data.script.lastDamageSource = source;
         }
     }
-
 }
