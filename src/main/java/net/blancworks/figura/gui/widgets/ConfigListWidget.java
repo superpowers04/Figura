@@ -47,6 +47,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         //entries
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.previewnametag"), new TranslatableText("gui.figura.config.tooltip.previewnametag"), Config.entries.get("previewNameTag")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.nametagmods"), new TranslatableText("gui.figura.config.tooltip.nametagmods"), Config.entries.get("nameTagMods")));
+        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.showbadges"), new TranslatableText("gui.figura.config.tooltip.showbadges"), Config.entries.get("showBadges")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.chatmods"), new TranslatableText("gui.figura.config.tooltip.chatmods"), Config.entries.get("chatMods")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.listmods"), new TranslatableText("gui.figura.config.tooltip.listmods"), Config.entries.get("listMods")));
         this.addEntry(new ConfigListWidget.BooleanEntry(

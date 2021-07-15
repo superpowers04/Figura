@@ -81,6 +81,9 @@
   "gui.figura.config.nametagicon": "NameTag Mark as Icon",
   "gui.figura.config.tooltip.nametagicon": "Display The Mark △ as an icon %d on the NameTag",
 
+  "gui.figura.config.showbadges": "Show Badges",
+  "gui.figura.config.tooltip.showbadges": "Show badges next to names for people with Avatars",
+
   "gui.figura.config.ownnametag": "Render Own NameTag",
   "gui.figura.config.tooltip.ownnametag": "Renders your own NameTag ingame",
 

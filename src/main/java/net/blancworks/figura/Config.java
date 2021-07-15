@@ -102,6 +102,7 @@ public class Config {
         entries.put("chatMods", new ConfigEntry<>(true));
         entries.put("nameTagMods", new ConfigEntry<>(true));
         entries.put("nameTagIcon", new ConfigEntry<>(true));
+        entries.put("showBadges", new ConfigEntry<>(true));
         entries.put("ownNameTag", new ConfigEntry<>(false));
         entries.put("logOthers", new ConfigEntry<>(false));
         entries.put("actionWheel", new ConfigEntry<>(GLFW.GLFW_KEY_B));

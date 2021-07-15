@@ -171,11 +171,21 @@ public class NamePlateAPI {
                         String argument = formatting.get(i).checkjstring();
 
                         switch (argument) {
-                            case "BOLD": customization.bold = true; break;
-                            case "ITALIC": customization.italic = true; break;
-                            case "UNDERLINE": customization.underline = true; break;
-                            case "OBFUSCATED": customization.obfuscated = true; break;
-                            case "STRIKETHROUGH": customization.strikethrough = true; break;
+                            case "BOLD":
+                                customization.bold = true;
+                                break;
+                            case "ITALIC":
+                                customization.italic = true;
+                                break;
+                            case "UNDERLINE":
+                                customization.underline = true;
+                                break;
+                            case "OBFUSCATED":
+                                customization.obfuscated = true;
+                                break;
+                            case "STRIKETHROUGH":
+                                customization.strikethrough = true;
+                                break;
                         }
                     }
 
@@ -256,8 +266,7 @@ public class NamePlateAPI {
 
                 //append new text
                 text.append(transformed);
-            }
-            else {
+            } else {
                 //set text as transformed
                 ((FiguraTextAccess) text).figura$setText(((LiteralText) transformed).getRawString());
 
@@ -283,8 +292,7 @@ public class NamePlateAPI {
             }
 
             return true;
-        }
-        else {
+        } else {
             //then iterate through children
             for (Text sibling : siblings) {
                 //split args when translatable text
@@ -335,8 +343,7 @@ public class NamePlateAPI {
 
                     ((FiguraTextAccess) formattedText).figura$setText("");
                     formattedText.append(jsonText);
-                }
-                catch (Exception ignored) { //deprecated
+                } catch (Exception ignored) { //deprecated
                     //set color and properties
                     if (nameplateData.color != null)
                         originalStyle = originalStyle.withColor(TextColor.fromRgb(nameplateData.color));
@@ -381,7 +388,7 @@ public class NamePlateAPI {
             badges += "✭";
 
         //append badges
-        if (!badges.equals(" ")) {
+        if (!badges.equals(" ") && (boolean) Config.entries.get("showBadges").value) {
             //create badges text
             LiteralText badgesText = new LiteralText(badges);
 

@@ -147,14 +147,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
 
-        if (nameplateData == null)
-            return;
-
-        if (nameplateData.enabled != null && !nameplateData.enabled) {
-            ci.cancel();
-            return;
-        }
-
         try {
             if (text instanceof TranslatableText) {
                 Object[] args = ((TranslatableText) text).getArgs();
@@ -169,13 +161,20 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         } catch (Exception e) {
             e.printStackTrace();
         }
+        
+        if(nameplateData != null){
+            if (nameplateData.enabled != null && !nameplateData.enabled) {
+                ci.cancel();
+                return;
+            }
 
-        //apply special nameplate settings
-        if (nameplateData.position != null)
-            translation.add(nameplateData.position);
-        if (nameplateData.scale != null)
-            scale = nameplateData.scale;
-
+            //apply special nameplate settings
+            if (nameplateData.position != null)
+                translation.add(nameplateData.position);
+            if (nameplateData.scale != null)
+                scale = nameplateData.scale;
+        }
+        
         matrices.push();
         matrices.translate(translation.getX(), translation.getY(), translation.getZ());
         matrices.scale(scale.getX(), scale.getY(), scale.getZ());
