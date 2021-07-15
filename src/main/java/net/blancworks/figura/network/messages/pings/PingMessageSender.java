@@ -28,11 +28,14 @@ public class PingMessageSender extends MessageSender {
         ByteArrayOutputStream outStream = new ByteArrayOutputStream();
         LittleEndianDataOutputStream outWriter = new LittleEndianDataOutputStream(outStream);
 
-        outWriter.writeShort(pingSet.size());
+        int setSize = pingSet.size();
+
+
+        outWriter.writeShort(setSize);
         
         //System.out.println("Wrote " + pingSet.size() + " pings");
         
-        for(int i = 0; i < pingSet.size(); i++){
+        for(int i = 0; i < setSize; i++){
             CustomScript.LuaPing p = pingSet.poll();
             outWriter.writeShort(p.functionID);
             try {
