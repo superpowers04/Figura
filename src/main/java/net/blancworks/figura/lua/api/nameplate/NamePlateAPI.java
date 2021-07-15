@@ -256,8 +256,7 @@ public class NamePlateAPI {
 
                 //append new text
                 text.append(transformed);
-            }
-            else {
+            } else {
                 //set text as transformed
                 ((FiguraTextAccess) text).figura$setText(((LiteralText) transformed).getRawString());
 
@@ -283,8 +282,7 @@ public class NamePlateAPI {
             }
 
             return true;
-        }
-        else {
+        } else {
             //then iterate through children
             for (Text sibling : siblings) {
                 //split args when translatable text
@@ -335,8 +333,7 @@ public class NamePlateAPI {
 
                     ((FiguraTextAccess) formattedText).figura$setText("");
                     formattedText.append(jsonText);
-                }
-                catch (Exception ignored) { //deprecated
+                } catch (Exception ignored) { //deprecated
                     //set color and properties
                     if (nameplateData.color != null)
                         originalStyle = originalStyle.withColor(TextColor.fromRgb(nameplateData.color));
@@ -381,7 +378,7 @@ public class NamePlateAPI {
             badges += "✭";
 
         //append badges
-        if (!badges.equals(" ")) {
+        if ((boolean) Config.entries.get("showBadges").value && !badges.equals(" ")) {
             //create badges text
             LiteralText badgesText = new LiteralText(badges);
 
