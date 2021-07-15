@@ -21,6 +21,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -102,14 +103,21 @@ public class SoundAPI {
             set("getSounds", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    MinecraftClient client = MinecraftClient.getInstance();
-                    Map<SoundInstance, Channel.SourceManager> sources = ((SoundSystemAccess)((SoundManagerAccess)client.getSoundManager()).getSoundSystem()).getSources();
+                    Map<SoundInstance, Channel.SourceManager> sources = ((SoundSystemAccess) ((SoundManagerAccess) MinecraftClient.getInstance().getSoundManager()).getSoundSystem()).getSources();
 
-                    LuaTable tbl = new LuaTable();
+                    ArrayList<String> songs = new ArrayList<>();
+
+                    for (SoundInstance sound : sources.keySet()) {
+                        if (!songs.contains(sound.getId().toString()))
+                            songs.add(sound.getId().toString());
+                    }
+
                     int i = 1;
-                    for (SoundInstance sound: sources.keySet()) {
-                        tbl.set(i, LuaValue.valueOf(sound.getId().toString()));
-                        i += 1;
+                    LuaTable tbl = new LuaTable();
+
+                    for (String song : songs) {
+                        tbl.set(i, song);
+                        i++;
                     }
 
                     return tbl;
