@@ -25,34 +25,27 @@ public class PingMessageSender extends MessageSender {
     protected void write(LittleEndianDataOutputStream stream) throws IOException {
         super.write(stream);
 
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        LittleEndianDataOutputStream outputStream = new LittleEndianDataOutputStream(bos);
+        ByteArrayOutputStream outStream = new ByteArrayOutputStream();
+        LittleEndianDataOutputStream outWriter = new LittleEndianDataOutputStream(outStream);
 
-        outputStream.writeShort(pingSet.size());
+        outWriter.writeShort(pingSet.size());
         
         //System.out.println("Wrote " + pingSet.size() + " pings");
         
         for(int i = 0; i < pingSet.size(); i++){
             CustomScript.LuaPing p = pingSet.poll();
-            outputStream.writeShort(p.functionID);
+            outWriter.writeShort(p.functionID);
             try {
-
-
-                LuaNetworkReadWriter.writeLuaValue(p.args, outputStream);
-
-                byte[] data = bos.toByteArray();
-
-                outputStream.writeInt(data.length);
-                outputStream.write(data);
+                LuaNetworkReadWriter.writeLuaValue(p.args, outWriter);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        
-        byte[] dataArray = bos.toByteArray();
-        
-        stream.writeInt(dataArray.length);
-        stream.write(dataArray);
+
+        byte[] outData = outStream.toByteArray();
+
+        stream.writeInt(outData.length);
+        stream.write(outData);
     }
 
     @Override
