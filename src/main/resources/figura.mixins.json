@@ -28,6 +28,8 @@
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
     "ShoulderParrotFeatureRendererMixin",
+    "SoundManagerMixin",
+    "SoundSystemMixin",
     "WorldRendererMixin"
   ],
   "injectors": {
