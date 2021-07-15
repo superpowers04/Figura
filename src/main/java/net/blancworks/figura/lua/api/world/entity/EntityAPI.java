@@ -220,6 +220,13 @@ public class EntityAPI {
                     }
                 });
 
+                set("isWet", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        return LuaBoolean.valueOf(targetEntity.get().isWet());
+                    }
+                });
+
                 set("getNbtValue", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
