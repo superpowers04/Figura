@@ -579,11 +579,10 @@ public class CustomScript extends FiguraAsset {
         msg = msg.replace("\t", "   ");
         String[] messageParts = msg.split("\n");
 
-        sendChatMessage(new LiteralText("[lua] ").formatted(Formatting.BLUE, Formatting.ITALIC)
-                .append((playerData.playerName.copy()).setStyle(Style.EMPTY).formatted(Formatting.WHITE)
-                        .append(new LiteralText(" >"))
-                )
-        );
+        MutableText message = LOG_PREFIX.shallowCopy();
+        if (playerData != null && (boolean) Config.entries.get("logOthers").value) message.append(playerData.playerName.copy()).append(" ");
+        message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
+        sendChatMessage(message);
 
         for (String part : messageParts) {
             sendChatMessage(new LiteralText(part).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
