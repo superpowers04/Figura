@@ -12,7 +12,6 @@ import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
@@ -31,7 +30,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     private final FiguraConfigScreen parent;
 
     //focused binding
-    private KeyBinding focusedBinding;
+    public KeyBinding focusedBinding;
 
     //text types
     public static final Predicate<String> ANY = s -> true;
@@ -122,21 +121,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
         });
         return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.focusedBinding != null) {
-            this.focusedBinding.setBoundKey(keyCode == 256 ? InputUtil.UNKNOWN_KEY: InputUtil.fromKeyCode(keyCode, scanCode));
-            this.focusedBinding = null;
-
-            KeyBinding.updateKeysByCode();
-
-            return true;
-        }
-        else {
-            return super.keyPressed(keyCode, scanCode, modifiers);
-        }
     }
 
     public class CategoryEntry extends Entry {

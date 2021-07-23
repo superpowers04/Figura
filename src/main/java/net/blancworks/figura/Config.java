@@ -37,8 +37,7 @@ public class Config {
                         entry.setValue(jsonValue);
 
                         if (entry.modValue != null) {
-                            int value = Integer.parseInt(jsonValue) % (int) entry.modValue;
-                            if (value < 0) value += (int) entry.modValue;
+                            int value = (Integer.parseInt(jsonValue) + (int) entry.modValue) % (int) entry.modValue;
                             entry.setValue(String.valueOf(value));
                         }
                         else {

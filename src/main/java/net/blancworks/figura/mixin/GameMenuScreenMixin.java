@@ -25,7 +25,7 @@ public class GameMenuScreenMixin extends Screen {
         super(title);
     }
 
-    @Inject(at = @At("RETURN"), method = "initWidgets")
+    @Inject(at = @At("HEAD"), method = "initWidgets", require = 1)
     void initWidgets(CallbackInfo ci) {
         if (this.figura$screen == null)
             this.figura$screen = new FiguraGuiScreen(this);
