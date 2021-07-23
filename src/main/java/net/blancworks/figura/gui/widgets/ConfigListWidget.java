@@ -7,11 +7,11 @@ import net.blancworks.figura.gui.FiguraConfigScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
@@ -30,7 +30,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     private final FiguraConfigScreen parent;
 
     //focused binding
-    private KeyBinding focusedBinding;
+    public KeyBinding focusedBinding;
 
     //text types
     public static final Predicate<String> ANY = s -> true;
@@ -76,6 +76,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         );
         this.addEntry(new EnumEntry(new TranslatableText("gui.figura.config.scriptlog"), new TranslatableText("gui.figura.config.tooltip.scriptlog"), Config.entries.get("scriptLog"), scriptLogEntries));
 
+
         //category title
         this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.actionwheel")));
 
@@ -90,6 +91,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         );
         this.addEntry(new EnumEntry(new TranslatableText("gui.figura.config.actionwheelpos"), new TranslatableText("gui.figura.config.tooltip.actionwheelpos"), Config.entries.get("actionWheelPos"), actionWheelEntries));
 
+
         //category title
         this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.dev").formatted(Formatting.RED)));
 
@@ -99,7 +101,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.formatscript"), new TranslatableText("gui.figura.config.tooltip.formatscript"), Config.entries.get("formatScript")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.logothers"), new TranslatableText("gui.figura.config.tooltip.logothers"), Config.entries.get("logOthers")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.ownnametag"), new TranslatableText("gui.figura.config.tooltip.ownnametag"), Config.entries.get("ownNameTag")));
-    }
+        }
 
     @Override
     protected int getScrollbarPositionX() {
@@ -121,21 +123,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.focusedBinding != null) {
-            this.focusedBinding.setBoundKey(keyCode == 256 ? InputUtil.UNKNOWN_KEY: InputUtil.fromKeyCode(keyCode, scanCode));
-            this.focusedBinding = null;
-
-            KeyBinding.updateKeysByCode();
-
-            return true;
-        }
-        else {
-            return super.keyPressed(keyCode, scanCode, modifiers);
-        }
-    }
-
     public class CategoryEntry extends Entry {
         //properties
         private final Text text;
@@ -144,7 +131,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.text = text;
         }
 
-        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //render text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -160,8 +146,12 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return false;
         }
 
-        @Override
         public List<? extends Element> children() {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
             return Collections.emptyList();
         }
     }
@@ -192,7 +182,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
         }
 
-        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -227,6 +216,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -269,7 +263,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
         }
 
-        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -304,6 +297,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -350,7 +348,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             });
         }
 
-        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -395,6 +392,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
+        public List<? extends Selectable> selectableChildren() {
+            return Arrays.asList(this.field, this.reset);
+        }
+
+        @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             return this.field.mouseClicked(mouseX, mouseY, button) || this.reset.mouseClicked(mouseX, mouseY, button);
         }
@@ -404,12 +406,10 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return this.field.mouseReleased(mouseX, mouseY, button) || this.reset.mouseReleased(mouseX, mouseY, button);
         }
 
-        @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
             return super.keyPressed(keyCode, scanCode, modifiers) || this.field.keyPressed(keyCode, scanCode, modifiers);
         }
 
-        @Override
         public boolean charTyped(char chr, int modifiers) {
             return this.field.charTyped(chr, modifiers);
         }
@@ -444,7 +444,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             });
         }
 
-        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -487,6 +486,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

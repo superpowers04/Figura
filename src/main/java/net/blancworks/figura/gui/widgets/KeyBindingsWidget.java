@@ -6,10 +6,10 @@ import net.blancworks.figura.gui.FiguraKeyBindsScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
-import net.minecraft.client.options.KeyBinding;
-import net.minecraft.client.util.InputUtil;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -25,7 +25,7 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
     private final FiguraKeyBindsScreen parent;
 
     //focused binding
-    private KeyBinding focusedBinding;
+    public KeyBinding focusedBinding;
 
     public KeyBindingsWidget(FiguraKeyBindsScreen parent, MinecraftClient client) {
         super(client, parent.width + 45, parent.height, 43, parent.height - 32, 20);
@@ -45,21 +45,6 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
     @Override
     public int getRowWidth() {
         return super.getRowWidth() + 150;
-    }
-
-    @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (this.focusedBinding != null) {
-            this.focusedBinding.setBoundKey(keyCode == 256 ? InputUtil.UNKNOWN_KEY: InputUtil.fromKeyCode(keyCode, scanCode));
-            this.focusedBinding = null;
-
-            KeyBinding.updateKeysByCode();
-
-            return true;
-        }
-        else {
-            return super.keyPressed(keyCode, scanCode, modifiers);
-        }
     }
 
     public class KeyBindEntry extends KeyBindingsWidget.Entry {
@@ -86,7 +71,6 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
             });
         }
 
-        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = KeyBindingsWidget.this.client.textRenderer;
@@ -130,6 +114,11 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
 
         @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

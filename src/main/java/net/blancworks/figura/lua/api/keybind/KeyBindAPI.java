@@ -35,9 +35,10 @@ public class KeyBindAPI {
                     script.keyBindings.removeIf(binding -> binding.getTranslationKey().equals(arg1.checkjstring()));
 
                     //search for the binding
-                    Integer key = keys.get(arg2.checkjstring());
+                    String keyString = arg2.checkjstring();
+                    Integer key = keys.get(keyString);
                     if (key == null) {
-                        throw new LuaError("Could not find key " + arg2.checkjstring());
+                        throw new LuaError("Could not find key " + keyString);
                     }
 
                     //create keybind
@@ -47,6 +48,7 @@ public class KeyBindAPI {
                     if (script.playerData != PlayerDataManager.localPlayer) {
                         keybind = new KeyBinding(
                                 arg1.checkjstring(),
+                                InputUtil.Type.KEYSYM,
                                 keys.get("NONE"),
                                 "script_others"
                         );
@@ -55,6 +57,7 @@ public class KeyBindAPI {
                     else {
                         keybind = new KeyBinding(
                                 arg1.checkjstring(),
+                                keyString.startsWith("MOUSE") ? InputUtil.Type.MOUSE : InputUtil.Type.KEYSYM,
                                 key,
                                 "script"
                         );
@@ -110,15 +113,16 @@ public class KeyBindAPI {
             set("setKey", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    Integer key = keys.get(arg.checkjstring());
+                    String keyString = arg.checkjstring();
+                    Integer key = keys.get(keyString);
                     if (key == null) {
-                        throw new LuaError("Could not find key " + arg.checkjstring());
+                        throw new LuaError("Could not find key " + keyString);
                     }
 
                     if (keybind.getCategory().equals("script_others"))
                         return NIL;
 
-                    keybind.setBoundKey(InputUtil.Type.KEYSYM.createFromCode(key));
+                    keybind.setBoundKey(keyString.startsWith("MOUSE") ? InputUtil.Type.MOUSE.createFromCode(key) : InputUtil.Type.KEYSYM.createFromCode(key));
                     KeyBinding.updateKeysByCode();
                     return NIL;
                 }
