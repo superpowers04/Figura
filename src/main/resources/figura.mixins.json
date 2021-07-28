@@ -30,6 +30,7 @@
     "ShoulderParrotFeatureRendererMixin",
     "SoundManagerMixin",
     "SoundSystemMixin",
+    "SplashTextResourceSupplierMixin",
     "WorldRendererMixin"
   ],
   "injectors": {
