@@ -14,6 +14,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.Vibration;
 import net.minecraft.world.World;
 import net.minecraft.world.event.BlockPositionSource;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
@@ -138,9 +139,15 @@ public class ParticleAPI {
         //increase particle count
         script.particleSpawnCount++;
 
-        //return the particle id + particle
+        //get particle id and particle type
         Identifier identifier = new Identifier(id.checkjstring());
-        return new AbstractMap.SimpleEntry<>(identifier, particleTypes.get(identifier.toString()));
+        ParticleType<?> type = particleTypes.get(identifier.toString());
+
+        if (type == null)
+            throw new LuaError("Particle id not found!");
+
+        //return
+        return new AbstractMap.SimpleEntry<>(identifier, type);
     }
 
     private static void summonParticle(ParticleEffect particle, LuaVector pos) {
