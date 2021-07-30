@@ -50,7 +50,7 @@ public class KeyBindAPI {
                                 arg1.checkjstring(),
                                 InputUtil.Type.KEYSYM,
                                 keys.get("NONE"),
-                                "script_others"
+                                "figura$script_others"
                         );
                         //no need to update the keybinds here since we cant overwrite any used keybind
                     }
@@ -59,7 +59,7 @@ public class KeyBindAPI {
                                 arg1.checkjstring(),
                                 keyString.startsWith("MOUSE") ? InputUtil.Type.MOUSE : InputUtil.Type.KEYSYM,
                                 key,
-                                "script"
+                                "figura$script"
                         );
 
                         //update all keybinds then add it to the script
@@ -119,7 +119,7 @@ public class KeyBindAPI {
                         throw new LuaError("Could not find key " + keyString);
                     }
 
-                    if (keybind.getCategory().equals("script_others"))
+                    if (keybind.getCategory().equals("figura$script_others"))
                         return NIL;
 
                     keybind.setBoundKey(keyString.startsWith("MOUSE") ? InputUtil.Type.MOUSE.createFromCode(key) : InputUtil.Type.KEYSYM.createFromCode(key));

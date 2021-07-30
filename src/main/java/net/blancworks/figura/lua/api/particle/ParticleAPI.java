@@ -10,16 +10,16 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.particle.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.Vibration;
 import net.minecraft.world.World;
 import net.minecraft.world.event.BlockPositionSource;
-import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.Varargs;
+import org.luaj.vm2.lib.VarArgFunction;
 
+import java.util.AbstractMap;
 import java.util.HashMap;
 
 public class ParticleAPI {
@@ -39,107 +39,118 @@ public class ParticleAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-            set("addParticle", new TwoArgFunction() {
-                //deprecated
-                @Deprecated
+            set("addParticle", new VarArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    if(!arg1.isstring())
-                        return NIL;
+                    //setup particle
+                    AbstractMap.Entry<Identifier, ParticleType<?>> particleType = particleSetup(script, arg1);
+                    if (particleType == null || !(particleType.getValue() instanceof DefaultParticleType type)) return NIL;
 
-                    if(script.particleSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID))
-                        return NIL;
-                    script.particleSpawnCount++;
-                    
-
-                    ParticleType<?> targetType = particleTypes.get(arg1.checkjstring());
-                    if(!(targetType instanceof DefaultParticleType))
-                        return NIL;
-
-                    LuaVector vec = LuaVector.checkOrNew(arg2);
-
-                    World w = MinecraftClient.getInstance().world;
-
-                    if (!MinecraftClient.getInstance().isPaused() && w != null) {
-                        w.addParticle((DefaultParticleType) targetType,
-                                vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
-                        );
-                    }
+                    //particle
+                    summonParticle(type, LuaVector.checkOrNew(arg2));
 
                     return NIL;
                 }
 
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                    //check for particle name
-                    if(!arg1.isstring())
-                        return NIL;
+                    //setup particle
+                    AbstractMap.Entry<Identifier, ParticleType<?>> particleType = particleSetup(script, arg1);
+                    if (particleType == null || particleType.getValue() instanceof DefaultParticleType) return NIL;
 
-                    //check for trust settings particle count
-                    if(script.particleSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID))
-                        return NIL;
-                    script.particleSpawnCount++;
-
-                    //get particle
-                    Identifier id = new Identifier(arg1.checkjstring());
-                    ParticleType<?> targetType = particleTypes.get(id.toString());
-
-                    //particle pos and speed
-                    LuaVector vec = LuaVector.checkOrNew(arg2);
-
-                    //world
-                    World w = MinecraftClient.getInstance().world;
-
-                    //add particle
-                    if (!MinecraftClient.getInstance().isPaused() && w != null) {
-                        if (targetType instanceof DefaultParticleType) {
-                            w.addParticle((DefaultParticleType) targetType,
-                                    vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
-                            );
+                    //particle special args
+                    ParticleEffect particle;
+                    switch (particleType.getKey().toString()) {
+                        case "minecraft:dust" -> {
+                            LuaVector color = LuaVector.checkOrNew(arg3);
+                            particle = new DustParticleEffect(color.asV3f(), color.w());
                         }
-                        else {
-                            ParticleEffect particle;
-
-                            switch (id.toString()) {
-                                case "minecraft:dust" -> {
-                                    LuaVector extra = LuaVector.checkOrNew(arg3);
-                                    particle = new DustParticleEffect(new Vec3f(extra.x(), extra.y(), extra.z()), extra.w());
-                                }
-                                case "minecraft:falling_dust" -> {
-                                    BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
-                                    particle = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, blockState);
-                                }
-                                case "minecraft:block" -> {
-                                    BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
-                                    particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, blockState);
-                                }
-                                case "minecraft:item" -> {
-                                    ItemStack itemStack = Registry.ITEM.get(Identifier.tryParse(arg3.checkjstring())).getDefaultStack();
-                                    particle = new ItemStackParticleEffect(ParticleTypes.ITEM, itemStack);
-                                }
-                                case "minecraft:dust_color_transition" -> {
-                                    LuaVector vector = LuaVector.checkOrNew(arg3);
-                                    particle = new DustColorTransitionParticleEffect(new Vec3f(vector.x(), vector.y(), vector.z()), new Vec3f(vec.w(), vec.t(), vec.h()), vector.w());
-                                }
-                                case "minecraft:vibration" -> {
-                                    LuaVector vector = LuaVector.checkOrNew(arg3);
-                                    BlockPos start = new BlockPos(vector.x(), vector.y(), vector.z());
-                                    BlockPositionSource end = new BlockPositionSource(new BlockPos(vec.w(), vec.t(), vec.h()));
-
-                                    particle = new VibrationParticleEffect(new Vibration(start, end, (int) vector.w()));
-                                }
-                                default -> throw new LuaError("Couldnt find " + id + " particle" + (!id.getNamespace().equals("minecraft") ? "\nOnly vanilla particles are supported" : ""));
-                            }
-
-                            w.addParticle(particle,
-                                    vec.x(), vec.y(), vec.z(), vec.w(), vec.t(), vec.h()
-                            );
+                        case "minecraft:falling_dust" -> {
+                            BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
+                            particle = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, blockState);
+                        }
+                        case "minecraft:block" -> {
+                            BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
+                            particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, blockState);
+                        }
+                        case "minecraft:item" -> {
+                            ItemStack itemStack = Registry.ITEM.get(Identifier.tryParse(arg3.checkjstring())).getDefaultStack();
+                            particle = new ItemStackParticleEffect(ParticleTypes.ITEM, itemStack);
+                        }
+                        default -> {
+                            return NIL;
                         }
                     }
+
+                    //add particle
+                    summonParticle(particle, LuaVector.checkOrNew(arg2));
+
+                    return NIL;
+                }
+
+                @Override
+                public Varargs onInvoke(Varargs args) {
+                    //argos
+                    LuaValue arg1 = args.arg(1);
+                    LuaValue arg2 = args.arg(2);
+                    LuaValue arg3 = args.arg(3);
+                    LuaValue arg4 = args.arg(4);
+
+                    //setup particle
+                    AbstractMap.Entry<Identifier, ParticleType<?>> particleType = particleSetup(script, arg1);
+                    if (particleType == null || particleType.getValue() instanceof DefaultParticleType) return NIL;
+
+                    //particle special args
+                    ParticleEffect particle;
+                    switch (particleType.getKey().toString()) {
+                        case "minecraft:dust_color_transition" -> {
+                            LuaVector fromColor = LuaVector.checkOrNew(arg3);
+                            LuaVector toColor = LuaVector.checkOrNew(arg4);
+                            particle = new DustColorTransitionParticleEffect(fromColor.asV3f(), toColor.asV3f(), fromColor.w());
+                        }
+                        case "minecraft:vibration" -> {
+                            LuaVector start = LuaVector.checkOrNew(arg3);
+                            LuaVector end = LuaVector.checkOrNew(arg4);
+                            BlockPos startPos = new BlockPos(start.asV3d());
+                            BlockPositionSource endPos = new BlockPositionSource(new BlockPos(end.asV3d()));
+
+                            particle = new VibrationParticleEffect(new Vibration(startPos, endPos, (int) start.w()));
+                        }
+                        default -> {
+                            return NIL;
+                        }
+                    }
+
+                    //add particle
+                    summonParticle(particle, LuaVector.checkOrNew(arg2));
 
                     return NIL;
                 }
             });
         }});
+    }
+
+    private static AbstractMap.Entry<Identifier, ParticleType<?>> particleSetup(CustomScript script, LuaValue id) {
+        //check string or script particle count
+        if (!id.isstring() || script.particleSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID))
+            return null;
+
+        //increase particle count
+        script.particleSpawnCount++;
+
+        //return the particle id + particle
+        Identifier identifier = new Identifier(id.checkjstring());
+        return new AbstractMap.SimpleEntry<>(identifier, particleTypes.get(identifier.toString()));
+    }
+
+    private static void summonParticle(ParticleEffect particle, LuaVector pos) {
+        World w = MinecraftClient.getInstance().world;
+
+        //summon particle
+        if (!MinecraftClient.getInstance().isPaused() && w != null) {
+            w.addParticle(particle,
+                    pos.x(), pos.y(), pos.z(), pos.w(), pos.t(), pos.h()
+            );
+        }
     }
 }
