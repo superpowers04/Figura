@@ -51,7 +51,7 @@ public class CameraAPI {
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeCameraCustomization(accessor).position = LuaVector.checkOrNew(arg1).asV3f();
+                    targetScript.getOrMakeCameraCustomization(accessor).position = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -66,7 +66,7 @@ public class CameraAPI {
             ret.set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeCameraCustomization(accessor).rotation = LuaVector.checkOrNew(arg1).asV2f();
+                    targetScript.getOrMakeCameraCustomization(accessor).rotation = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV2f();
                     return NIL;
                 }
             });
@@ -81,7 +81,7 @@ public class CameraAPI {
             ret.set("setPivot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeCameraCustomization(accessor).pivot = LuaVector.checkOrNew(arg1).asV3f();
+                    targetScript.getOrMakeCameraCustomization(accessor).pivot = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });

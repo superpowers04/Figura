@@ -171,7 +171,7 @@ public class ActionWheelAPI {
             ret.set("setColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    targetScript.getOrMakeActionWheelCustomization(accessor).color = LuaVector.checkOrNew(arg).asV3f();
+                    targetScript.getOrMakeActionWheelCustomization(accessor).color = arg.isnil() ? null : LuaVector.checkOrNew(arg).asV3f();
                     return NIL;
                 }
             });
@@ -186,7 +186,7 @@ public class ActionWheelAPI {
             ret.set("setHoverColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverColor = LuaVector.checkOrNew(arg).asV3f();
+                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverColor = arg.isnil() ? null : LuaVector.checkOrNew(arg).asV3f();
                     return NIL;
                 }
             });

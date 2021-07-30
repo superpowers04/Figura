@@ -1,6 +1,5 @@
 package net.blancworks.figura.lua.api.client;
 
-import com.mojang.blaze3d.platform.GlDebugInfo;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -30,10 +29,11 @@ public class ClientAPI {
                         return NIL;
 
                     //get the current screen
-                    Class<?> screen = client.currentScreen.getClass();
-                    Class<?> screenEnclosing = screen.getEnclosingClass();
+                    String screenTitle = client.currentScreen.getTitle().getString();
+                    if (screenTitle.equals(""))
+                        screenTitle = client.currentScreen.getClass().getSimpleName();
 
-                    return LuaValue.valueOf(screenEnclosing != null ? screenEnclosing.getSimpleName() : screen.getSimpleName());
+                    return LuaValue.valueOf(screenTitle);
                 }
             });
 
@@ -136,6 +136,20 @@ public class ClientAPI {
                 @Override
                 public LuaValue call() {
                     return local ? LuaValue.valueOf(Runtime.getRuntime().totalMemory()) : NIL;
+                }
+            });
+
+            set("isWindowFocused", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return local ? LuaValue.valueOf(client.isWindowFocused()) : NIL;
+                }
+            });
+
+            set("isHudEnabled", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return local ? LuaValue.valueOf(MinecraftClient.isHudEnabled()) : NIL;
                 }
             });
 

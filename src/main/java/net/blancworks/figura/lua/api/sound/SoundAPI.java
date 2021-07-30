@@ -1,10 +1,8 @@
 package net.blancworks.figura.lua.api.sound;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.access.SoundManagerAccess;
 import net.blancworks.figura.access.SoundSystemAccess;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.LuaUtils;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -18,7 +16,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.ArrayList;
@@ -42,61 +40,16 @@ public class SoundAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-            set("playSound", new TwoArgFunction() {
-                // DEPRECATED
-                @Deprecated
+            set("playSound", new VarArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    // INCREDIBLY DEPRECATED
-                    if(script.soundSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID))
-                        return NIL;
-                    script.soundSpawnCount++;
-                    
-                    SoundEvent targetEvent = soundEvents.get(arg1.checkjstring());
-                    if (targetEvent == null)
-                        return NIL;
-
-                    FloatArrayList floats = LuaUtils.getFloatsFromTable(arg2.checktable());
-
-                    if (floats.size() != 5)
-                        return NIL;
-
-                    World w = MinecraftClient.getInstance().world;
-
-                    if (!MinecraftClient.getInstance().isPaused() && w != null) {
-                        w.playSound(
-                                floats.getFloat(0), floats.getFloat(1), floats.getFloat(2),
-                                targetEvent, SoundCategory.PLAYERS,
-                                floats.getFloat(3), floats.getFloat(4), true
-                        );
-                    }
-
+                    playSound(script, arg1, arg2, new LuaVector(1.0f, 1.0f));
                     return NIL;
                 }
 
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                    if(script.soundSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID))
-                        return NIL;
-                    script.soundSpawnCount++;
-
-                    SoundEvent targetEvent = soundEvents.get(arg1.checkjstring());
-                    if (targetEvent == null)
-                        return NIL;
-
-                    LuaVector pos = LuaVector.checkOrNew(arg2);
-                    LuaVector pitchVol = LuaVector.checkOrNew(arg3);
-
-                    World w = MinecraftClient.getInstance().world;
-
-                    if (!MinecraftClient.getInstance().isPaused() && w != null) {
-                        w.playSound(
-                                pos.x(), pos.y(), pos.z(),
-                                targetEvent, SoundCategory.PLAYERS,
-                                pitchVol.x(), pitchVol.y(), true
-                        );
-                    }
-
+                    playSound(script, arg1, arg2, arg3);
                     return NIL;
                 }
             });
@@ -128,4 +81,26 @@ public class SoundAPI {
         }});
     }
 
+    public static void playSound(CustomScript script, LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+        if (script.soundSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID))
+            return;
+        script.soundSpawnCount++;
+
+        World w = MinecraftClient.getInstance().world;
+        if (MinecraftClient.getInstance().isPaused() || w == null)
+            return;
+
+        SoundEvent targetEvent = soundEvents.get(arg1.checkjstring());
+        if (targetEvent == null)
+            return;
+
+        LuaVector pos = LuaVector.checkOrNew(arg2);
+        LuaVector pitchVol = LuaVector.checkOrNew(arg3);
+
+        w.playSound(
+                pos.x(), pos.y(), pos.z(),
+                targetEvent, SoundCategory.PLAYERS,
+                pitchVol.x(), pitchVol.y(), true
+        );
+    }
 }

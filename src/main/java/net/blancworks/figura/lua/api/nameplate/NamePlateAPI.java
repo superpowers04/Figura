@@ -68,7 +68,7 @@ public class NamePlateAPI {
             ret.set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeNameplateCustomization(accessor).position = LuaVector.checkOrNew(arg1).asV3f();
+                    targetScript.getOrMakeNameplateCustomization(accessor).position = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -105,7 +105,7 @@ public class NamePlateAPI {
             ret.set("setScale", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeNameplateCustomization(accessor).scale = LuaVector.checkOrNew(arg1).asV3f();
+                    targetScript.getOrMakeNameplateCustomization(accessor).scale = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });

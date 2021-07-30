@@ -140,10 +140,10 @@ public class CustomScript extends FiguraAsset {
         //Yeet debug library so nobody can access it.
         scriptGlobals.set("debug", LuaValue.NIL);
 
-        //Sets up events!
-        setupEvents();
         //Sets up the global values for the API and such in the script.
         setupGlobals();
+        //Sets up events!
+        setupEvents();
 
         try {
             //Load the script source, name defaults to "main" for scripts for other players.
