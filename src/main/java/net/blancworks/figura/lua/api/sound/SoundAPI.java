@@ -14,6 +14,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.VarArgFunction;
@@ -28,6 +29,7 @@ public class SoundAPI {
     public static HashMap<String, SoundEvent> soundEvents = new HashMap<String, SoundEvent>() {{
         for (Identifier id : Registry.SOUND_EVENT.getIds()) {
             SoundEvent type = Registry.SOUND_EVENT.get(id);
+
             put(id.getPath(), type);
             put(id.toString(), type);
         }
@@ -86,16 +88,16 @@ public class SoundAPI {
             return;
         script.soundSpawnCount++;
 
-        World w = MinecraftClient.getInstance().world;
-        if (MinecraftClient.getInstance().isPaused() || w == null)
-            return;
-
         SoundEvent targetEvent = soundEvents.get(arg1.checkjstring());
         if (targetEvent == null)
-            return;
+            throw new LuaError("Sound id not found!");
 
         LuaVector pos = LuaVector.checkOrNew(arg2);
         LuaVector pitchVol = LuaVector.checkOrNew(arg3);
+
+        World w = MinecraftClient.getInstance().world;
+        if (MinecraftClient.getInstance().isPaused() || w == null)
+            return;
 
         w.playSound(
                 pos.x(), pos.y(), pos.z(),
