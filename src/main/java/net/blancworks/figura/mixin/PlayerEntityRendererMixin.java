@@ -17,19 +17,19 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
+import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,18 +39,19 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.UUID;
 
 @Mixin(PlayerEntityRenderer.class)
 public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> implements PlayerEntityRendererAccess {
 
+    public PlayerEntityRendererMixin(EntityRendererFactory.Context ctx, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) {
+        super(ctx, model, shadowRadius);
+    }
+
     @Shadow protected abstract void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i);
 
     private ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
-
-    PlayerEntityRendererMixin(EntityRenderDispatcher dispatcher, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) {
-        super(dispatcher, model, shadowRadius);
-    }
 
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
@@ -62,18 +63,18 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         if (FiguraMod.currentData != null) {
             if (FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
-                figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().torso);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().body);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, this.getModel().rightArm);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, this.getModel().leftLeg);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, this.getModel().rightLeg);
 
-                figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().helmet);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().hat);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, this.getModel().jacket);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, this.getModel().leftSleeve);
                 figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
-                figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
-                figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPants);
+                figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants);
 
                 if (FiguraMod.currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID) && FiguraMod.currentData.script != null && FiguraMod.currentData.script.customShadowSize != null) {
                     shadowRadius = FiguraMod.currentData.script.customShadowSize;
@@ -113,107 +114,174 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         FiguraMod.setRenderingData(player, vertexConsumers, this.getModel(), MinecraftClient.getInstance().getTickDelta());
 
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().torso);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().body);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, this.getModel().rightArm);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, this.getModel().leftLeg);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, this.getModel().rightLeg);
 
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().helmet);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().hat);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, this.getModel().jacket);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, this.getModel().leftSleeve);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPants);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants);
     }
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
     private<T extends Entity> void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-
-        if (!(boolean) Config.entries.get("nameTagMods").value)
-            return;
-
-        float f = entity.getHeight() + 0.5F;
-        Vector3f translation = new Vector3f(0.0f, f, 0.0f);
-        Vector3f scale = new Vector3f(1.0f, 1.0f, 1.0f);
-
-        //apply nameplate changes
+        //get uuid and name
         UUID uuid = entity.getGameProfile().getId();
         String playerName = entity.getEntityName();
 
+        //check for data and trust settings
         PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
-        if (currentData == null || playerName.equals("") || !currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
+        if (!(boolean) Config.entries.get("nameTagMods").value || currentData == null || playerName.equals("") || !currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
             return;
 
+        //cancel callback info
+        ci.cancel();
+
+        //nameplate
         NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
 
+        //apply text and/or badges
         try {
             if (text instanceof TranslatableText) {
                 Object[] args = ((TranslatableText) text).getArgs();
 
                 for (Object arg : args) {
-                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
+                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData, true))
                         break;
                 }
             } else if (text instanceof LiteralText) {
-                NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
+                NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData, true);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
-        if(nameplateData != null){
-            if (nameplateData.enabled != null && !nameplateData.enabled) {
-                ci.cancel();
-                return;
-            }
 
-            //apply special nameplate settings
+        //nameplate transformations
+        float spacing = entity.getHeight() + 0.5F;
+        Vec3f translation = new Vec3f(0.0f, spacing, 0.0f);
+        Vec3f scale = new Vec3f(1.0f, 1.0f, 1.0f);
+        boolean enabled = true;
+        int extraOffset = 0;
+
+        //apply main nameplate transformations
+        if (nameplateData != null) {
+            if (nameplateData.enabled != null)
+                enabled = nameplateData.enabled;
             if (nameplateData.position != null)
                 translation.add(nameplateData.position);
             if (nameplateData.scale != null)
                 scale = nameplateData.scale;
         }
-        
+
         matrices.push();
         matrices.translate(translation.getX(), translation.getY(), translation.getZ());
         matrices.scale(scale.getX(), scale.getY(), scale.getZ());
 
         //render scoreboard
-        double d = this.dispatcher.getSquaredDistanceToCamera(entity);
-        if (d < 100.0D) {
+        double distance = this.dispatcher.getSquaredDistanceToCamera(entity);
+        if (enabled && distance < 100.0D) {
+            //get scoreboard
             Scoreboard scoreboard = entity.getScoreboard();
             ScoreboardObjective scoreboardObjective = scoreboard.getObjectiveForSlot(2);
             if (scoreboardObjective != null) {
-                matrices.translate(0.0D, -f, 0.0D);
+                //extra line offset
+                extraOffset++;
+
+                //render scoreboard
+                matrices.translate(0.0D, -spacing, 0.0D);
+
                 ScoreboardPlayerScore scoreboardPlayerScore = scoreboard.getPlayerScore(entity.getEntityName(), scoreboardObjective);
                 super.renderLabelIfPresent(entity, (new LiteralText(Integer.toString(scoreboardPlayerScore.getScore()))).append(" ").append(scoreboardObjective.getDisplayName()), matrices, vertexConsumers, light);
-                this.getFontRenderer().getClass();
-                matrices.translate(0.0D, 9.0F * 1.15F * 0.025F + f, 0.0D);
+
+                //apply line offset
+                matrices.translate(0.0D, 9.0F * 1.15F * 0.025F + spacing, 0.0D);
             }
         }
 
-        //render nametag
-        if (!(d > 4096.0D)) {
-            boolean bl = !entity.isSneaky();
+        //render nameplate
+        if (enabled && !(distance > 4096.0D)) {
+            //extra line offset
+            extraOffset++;
+
+            boolean sneaky = !entity.isSneaky();
+
+            //matrices transformations
             matrices.push();
+
             matrices.multiply(this.dispatcher.getRotation());
             matrices.scale(-0.025F, -0.025F, 0.025F);
             Matrix4f matrix4f = matrices.peek().getModel();
-            float g = MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F);
-            int j = (int)(g * 255.0F) << 24;
-            TextRenderer textRenderer = this.getFontRenderer();
-            float h = (float)(-textRenderer.getWidth(text) / 2);
-            textRenderer.draw(text, h, 0, 553648127, false, matrix4f, vertexConsumers, bl, j, light);
-            if (bl) {
-                textRenderer.draw(text, h, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
-            }
-            matrices.pop();
-        }
 
+            matrices.pop();
+
+            int backgroundColor = (int) (MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F) << 24;
+
+            TextRenderer textRenderer = Objects.requireNonNull(this.getTextRenderer());
+            float textWidth = (float) (-textRenderer.getWidth(text) / 2);
+
+            //render
+            textRenderer.draw(text, textWidth, 0, 553648127, false, matrix4f, vertexConsumers, sneaky, backgroundColor, light);
+            if (sneaky)
+                textRenderer.draw(text, textWidth, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
+        }
         matrices.pop();
 
-        ci.cancel();
+        //extra line
+        NamePlateCustomization extraData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY_EXTRA);
+
+        //finish if no new line
+        if (extraData == null || extraData.enabled == null || !extraData.enabled)
+            return;
+
+        //set extra text
+        Text extraText = new LiteralText("");
+        extraText = NamePlateAPI.applyNameplateFormatting(extraText, uuid, extraData, currentData, false);
+
+        //extra nameplate transformations
+        translation = new Vec3f(0.0f, 9.0F * 1.15F * 0.025F * extraOffset + spacing, 0.0f);
+        scale = new Vec3f(1.0f, 1.0f, 1.0f);
+
+        //apply extra nameplate transformations
+        if (extraData.enabled != null)
+            enabled = extraData.enabled;
+        if (extraData.position != null)
+            translation.add(extraData.position);
+        if (extraData.scale != null)
+            scale = extraData.scale;
+
+        matrices.push();
+        matrices.translate(translation.getX(), translation.getY(), translation.getZ());
+        matrices.scale(scale.getX(), scale.getY(), scale.getZ());
+
+        //render extra nameplate line
+        if (enabled && !(distance > 4096.0D)) {
+            boolean sneaky = !entity.isSneaky();
+
+            //matrices transformations
+            matrices.push();
+
+            matrices.multiply(this.dispatcher.getRotation());
+            matrices.scale(-0.025F, -0.025F, 0.025F);
+            Matrix4f matrix4f = matrices.peek().getModel();
+
+            matrices.pop();
+
+            int backgroundColor = (int) (MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F) << 24;
+
+            TextRenderer textRenderer = Objects.requireNonNull(this.getTextRenderer());
+            float textWidth = (float) (-textRenderer.getWidth(extraText) / 2);
+
+            //render
+            textRenderer.draw(extraText, textWidth, 0, 553648127, false, matrix4f, vertexConsumers, sneaky, backgroundColor, light);
+            if (sneaky)
+                textRenderer.draw(extraText, textWidth, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
+        }
+        matrices.pop();
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm")
@@ -246,7 +314,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 
             if (customization != null) {
-                ((ModelPartAccess) part).figura$setPartCustomization(customization);
+                ((ModelPartAccess) (Object) part).figura$setPartCustomization(customization);
                 figura$customizedParts.add(part);
             }
         }
@@ -254,7 +322,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
     public void figura$clearAllPartCustomizations() {
         for (ModelPart part : figura$customizedParts) {
-            ((ModelPartAccess) part).figura$setPartCustomization(null);
+            ((ModelPartAccess) (Object) part).figura$setPartCustomization(null);
         }
         figura$customizedParts.clear();
     }

@@ -7,10 +7,4 @@ public class NamePlateCustomization {
     public Vector3f position;
     public Vector3f scale;
     public Boolean enabled;
-    public Integer color;
-    public Boolean bold;
-    public Boolean italic;
-    public Boolean obfuscated;
-    public Boolean strikethrough;
-    public Boolean underline;
 }
