@@ -1,5 +1,6 @@
 package net.blancworks.figura.gui;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
@@ -34,6 +35,7 @@ public class FiguraTrustScreen extends Screen {
     public Screen parentScreen;
 
     private TextFieldWidget searchBox;
+    private TextFieldWidget uuidBox;
 
     private int paneY;
     private int paneWidth;
@@ -162,6 +164,17 @@ public class FiguraTrustScreen extends Screen {
         this.addDrawableChild(resetPermissionButton);
         this.addDrawableChild(resetAllPermissionsButton);
 
+        this.uuidBox = new TextFieldWidget(this.textRenderer, 140, 15, 138, 18, this.uuidBox, new TranslatableText("UUID"));
+        this.uuidBox.setMaxLength(36);
+        this.addSelectableChild(uuidBox);
+
+        this.addDrawableChild(new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("Get Avatar"), (btx) -> {
+            try {
+                UUID uuid = UUID.fromString(uuidBox.getText());
+                PlayerDataManager.getDataForPlayer(uuid);
+            } catch (Exception ignored) {}
+        }));
+
         playerList.reloadFilters();
         permissionList.rebuild();
     }
@@ -173,6 +186,7 @@ public class FiguraTrustScreen extends Screen {
         this.playerList.render(matrices, mouseX, mouseY, delta);
         this.permissionList.render(matrices, mouseX, mouseY, delta);
         this.searchBox.render(matrices, mouseX, mouseY, delta);
+        this.uuidBox.render(matrices, mouseX, mouseY, delta);
 
         if (playerListState.selected instanceof PlayerListEntry) {
             PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
@@ -284,7 +298,7 @@ public class FiguraTrustScreen extends Screen {
         if (getFocused() == permissionList) {
             return permissionList.keyPressed(keyCode, scanCode, modifiers);
         }
-        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchBox.keyPressed(keyCode, scanCode, modifiers) || this.uuidBox.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
@@ -301,7 +315,7 @@ public class FiguraTrustScreen extends Screen {
         if (getFocused() == permissionList) {
             return permissionList.charTyped(char_1, int_1);
         }
-        return this.searchBox.charTyped(char_1, int_1);
+        return this.searchBox.charTyped(char_1, int_1) || this.searchBox.charTyped(char_1, int_1);
     }
 
     @Override
@@ -317,11 +331,8 @@ public class FiguraTrustScreen extends Screen {
 
         tickCount++;
 
-        if (getFocused() == permissionList) {
-            searchBox.setTextFieldFocused(false);
-        } else {
-            searchBox.setTextFieldFocused(true);
-        }
+        searchBox.setTextFieldFocused(getFocused() == permissionList);
+        uuidBox.setTextFieldFocused(getFocused() == uuidBox);
 
         if (playerListState.selected instanceof PlayerListEntry) {
             resetPermissionButton.active = shiftPressed;
@@ -346,6 +357,7 @@ public class FiguraTrustScreen extends Screen {
         clearCacheButton.active = shiftPressed;
 
         this.searchBox.tick();
+        this.uuidBox.tick();
 
         if (tickCount > 20) {
             tickCount = 0;
