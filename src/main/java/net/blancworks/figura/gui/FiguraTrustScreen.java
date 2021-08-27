@@ -164,7 +164,7 @@ public class FiguraTrustScreen extends Screen {
         this.addDrawableChild(resetPermissionButton);
         this.addDrawableChild(resetAllPermissionsButton);
 
-        this.uuidBox = new TextFieldWidget(this.textRenderer, 140, 15, 138, 18, this.uuidBox, new TranslatableText("UUID"));
+        this.uuidBox = new TextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new TranslatableText("UUID"));
         this.uuidBox.setMaxLength(36);
         this.addSelectableChild(uuidBox);
 
@@ -315,7 +315,7 @@ public class FiguraTrustScreen extends Screen {
         if (getFocused() == permissionList) {
             return permissionList.charTyped(char_1, int_1);
         }
-        return this.searchBox.charTyped(char_1, int_1) || this.searchBox.charTyped(char_1, int_1);
+        return this.searchBox.charTyped(char_1, int_1) || this.uuidBox.charTyped(char_1, int_1);
     }
 
     @Override
@@ -331,7 +331,7 @@ public class FiguraTrustScreen extends Screen {
 
         tickCount++;
 
-        searchBox.setTextFieldFocused(getFocused() == permissionList);
+        searchBox.setTextFieldFocused(getFocused() == searchBox);
         uuidBox.setTextFieldFocused(getFocused() == uuidBox);
 
         if (playerListState.selected instanceof PlayerListEntry) {
