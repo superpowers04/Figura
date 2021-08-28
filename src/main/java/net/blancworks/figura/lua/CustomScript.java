@@ -22,6 +22,7 @@ import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
@@ -86,6 +87,9 @@ public class CustomScript extends FiguraAsset {
     public float soundSpawnCount = 0;
 
     public Float customShadowSize = null;
+
+    public Vec2f crossHairPos = null;
+    public boolean crossHairEnabled = true;
 
     public boolean hasPlayer = false;
 

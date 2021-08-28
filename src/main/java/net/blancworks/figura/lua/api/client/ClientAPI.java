@@ -3,11 +3,14 @@ package net.blancworks.figura.lua.api.client;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ClientAPI {
@@ -150,6 +153,57 @@ public class ClientAPI {
                 @Override
                 public LuaValue call() {
                     return local ? LuaValue.valueOf(MinecraftClient.isHudEnabled()) : NIL;
+                }
+            });
+
+            set("getWindowSize", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return local ? LuaVector.of(new Vec2f(MinecraftClient.getInstance().getWindow().getWidth(), MinecraftClient.getInstance().getWindow().getHeight())) : NIL;
+                }
+            });
+
+            set("getGUIScale", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return local ? LuaValue.valueOf(MinecraftClient.getInstance().options.guiScale) : NIL;
+                }
+            });
+
+            set("getFov", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return local ? LuaValue.valueOf(MinecraftClient.getInstance().options.fov) : NIL;
+                }
+            });
+
+            set("setCrosshairPos", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (local) script.crossHairPos = LuaVector.checkOrNew(arg).asV2f();
+                    return NIL;
+                }
+            });
+
+            set("getCrosshairPos", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return local ? LuaVector.of(script.crossHairPos) : NIL;
+                }
+            });
+
+            set("setCrosshairEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    if (local) script.crossHairEnabled = arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            set("getCrosshairEnabled", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return local ? LuaValue.valueOf(script.crossHairEnabled) : NIL;
                 }
             });
 
