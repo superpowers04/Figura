@@ -22,16 +22,15 @@ import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.TranslatableText;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -51,7 +50,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
     @Shadow protected abstract void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i);
 
-    private ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
+    private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
 
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
@@ -129,7 +128,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
     }
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
-    private<T extends Entity> void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    private void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         //get uuid and name
         UUID uuid = entity.getGameProfile().getId();
         String playerName = entity.getEntityName();
@@ -151,11 +150,11 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 Object[] args = ((TranslatableText) text).getArgs();
 
                 for (Object arg : args) {
-                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData, true))
+                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
                         break;
                 }
             } else if (text instanceof LiteralText) {
-                NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData, true);
+                NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -166,7 +165,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         Vec3f translation = new Vec3f(0.0f, spacing, 0.0f);
         Vec3f scale = new Vec3f(1.0f, 1.0f, 1.0f);
         boolean enabled = true;
-        int extraOffset = 0;
 
         //apply main nameplate transformations
         if (nameplateData != null) {
@@ -189,9 +187,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
             Scoreboard scoreboard = entity.getScoreboard();
             ScoreboardObjective scoreboardObjective = scoreboard.getObjectiveForSlot(2);
             if (scoreboardObjective != null) {
-                //extra line offset
-                extraOffset++;
-
                 //render scoreboard
                 matrices.translate(0.0D, -spacing, 0.0D);
 
@@ -205,9 +200,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         //render nameplate
         if (enabled && !(distance > 4096.0D)) {
-            //extra line offset
-            extraOffset++;
-
             boolean sneaky = !entity.isSneaky();
 
             //matrices transformations
@@ -230,64 +222,12 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 textRenderer.draw(text, textWidth, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
         }
         matrices.pop();
-
-        //extra line
-        NamePlateCustomization extraData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY_EXTRA);
-
-        //finish if no new line
-        if (extraData == null || extraData.enabled == null || !extraData.enabled)
-            return;
-
-        //set extra text
-        Text extraText = new LiteralText("");
-        extraText = NamePlateAPI.applyNameplateFormatting(extraText, uuid, extraData, currentData, false);
-
-        //extra nameplate transformations
-        translation = new Vec3f(0.0f, 9.0F * 1.15F * 0.025F * extraOffset + spacing, 0.0f);
-        scale = new Vec3f(1.0f, 1.0f, 1.0f);
-
-        //apply extra nameplate transformations
-        if (extraData.enabled != null)
-            enabled = extraData.enabled;
-        if (extraData.position != null)
-            translation.add(extraData.position);
-        if (extraData.scale != null)
-            scale = extraData.scale;
-
-        matrices.push();
-        matrices.translate(translation.getX(), translation.getY(), translation.getZ());
-        matrices.scale(scale.getX(), scale.getY(), scale.getZ());
-
-        //render extra nameplate line
-        if (enabled && !(distance > 4096.0D)) {
-            boolean sneaky = !entity.isSneaky();
-
-            //matrices transformations
-            matrices.push();
-
-            matrices.multiply(this.dispatcher.getRotation());
-            matrices.scale(-0.025F, -0.025F, 0.025F);
-            Matrix4f matrix4f = matrices.peek().getModel();
-
-            matrices.pop();
-
-            int backgroundColor = (int) (MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F) << 24;
-
-            TextRenderer textRenderer = Objects.requireNonNull(this.getTextRenderer());
-            float textWidth = (float) (-textRenderer.getWidth(extraText) / 2);
-
-            //render
-            textRenderer.draw(extraText, textWidth, 0, 553648127, false, matrix4f, vertexConsumers, sneaky, backgroundColor, light);
-            if (sneaky)
-                textRenderer.draw(extraText, textWidth, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
-        }
-        matrices.pop();
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm")
     private void postRenderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo ci) {
         PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
-        PlayerEntityModel model = realRenderer.getModel();
+        PlayerEntityModel<?> model = realRenderer.getModel();
         PlayerData playerData = FiguraMod.currentData;
 
         if (playerData != null && playerData.model != null) {
