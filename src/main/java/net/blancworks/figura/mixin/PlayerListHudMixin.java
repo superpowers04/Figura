@@ -37,11 +37,11 @@ public class PlayerListHudMixin {
                         Object[] args = ((TranslatableText) text).getArgs();
 
                         for (Object arg : args) {
-                            if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData, true))
+                            if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
                                 break;
                         }
                     } else if (text instanceof LiteralText) {
-                        NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData, true);
+                        NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();

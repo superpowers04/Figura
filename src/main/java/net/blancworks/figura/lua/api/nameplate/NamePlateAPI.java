@@ -27,7 +27,6 @@ public class NamePlateAPI {
     public static final String ENTITY = "ENTITY";
     public static final String CHAT = "CHAT";
     public static final String TABLIST = "LIST";
-    public static final String ENTITY_EXTRA = "ENTITY_EXTRA";
 
     public static Identifier getID() {
         return new Identifier("default", "nameplate");
@@ -38,7 +37,6 @@ public class NamePlateAPI {
             set(ENTITY, getTableForPart(ENTITY, script));
             set(CHAT, getTableForPart(CHAT, script));
             set(TABLIST, getTableForPart(TABLIST, script));
-            set(ENTITY_EXTRA, getTableForPart(ENTITY_EXTRA, script));
         }});
     }
 
@@ -105,7 +103,7 @@ public class NamePlateAPI {
             ret.set("setText", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    targetScript.getOrMakeNameplateCustomization(accessor).text = arg.isnil() ? null : arg.checkjstring().replaceAll("[\n\r]", "").replaceAll("figura:default", "minecraft:default");
+                    targetScript.getOrMakeNameplateCustomization(accessor).text = arg.isnil() ? null : arg.checkjstring().replaceAll("figura:default", "minecraft:default");
                     return NIL;
                 }
             });
@@ -121,14 +119,14 @@ public class NamePlateAPI {
         }
     }
 
-    public static boolean applyFormattingRecursive(LiteralText text, UUID uuid, String playerName, NamePlateCustomization nameplateData, PlayerData currentData, boolean withBadges) {
+    public static boolean applyFormattingRecursive(LiteralText text, UUID uuid, String playerName, NamePlateCustomization nameplateData, PlayerData currentData) {
         //save siblings
         ArrayList<Text> siblings = new ArrayList<>(text.getSiblings());
 
         //transform already transformed text
         if (((FiguraTextAccess) text).figura$getFigura()) {
             //transform the text
-            Text transformed = applyNameplateFormatting(text, uuid, nameplateData, currentData, withBadges);
+            Text transformed = applyNameplateFormatting(text, uuid, nameplateData, currentData);
 
             //set text as transformed
             ((FiguraTextAccess) text).figura$setText(((LiteralText) transformed).getRawString());
@@ -155,7 +153,7 @@ public class NamePlateAPI {
             Text playerNameSplitted = new LiteralText(playerName).setStyle(style);
 
             //transform the text
-            Text transformed = applyNameplateFormatting(playerNameSplitted, uuid, nameplateData, currentData, withBadges);
+            Text transformed = applyNameplateFormatting(playerNameSplitted, uuid, nameplateData, currentData);
 
             //return the text
             if (!textSplit[0].equals("")) {
@@ -201,13 +199,13 @@ public class NamePlateAPI {
                     Object[] args = ((TranslatableText) sibling).getArgs();
 
                     for (Object arg : args) {
-                        if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData, withBadges)) {
+                        if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData)) {
                             return true;
                         }
                     }
                 }
                 //else check and format literal text
-                else if (sibling instanceof LiteralText && applyFormattingRecursive((LiteralText) sibling, uuid, playerName, nameplateData, currentData, withBadges)) {
+                else if (sibling instanceof LiteralText && applyFormattingRecursive((LiteralText) sibling, uuid, playerName, nameplateData, currentData)) {
                     return true;
                 }
             }
@@ -216,7 +214,7 @@ public class NamePlateAPI {
         return false;
     }
 
-    public static Text applyNameplateFormatting(Text text, UUID uuid, NamePlateCustomization nameplateData, PlayerData currentData, boolean withBadges) {
+    public static Text applyNameplateFormatting(Text text, UUID uuid, NamePlateCustomization nameplateData, PlayerData currentData) {
         //dummy playername text
         MutableText formattedText = new LiteralText(((LiteralText) text).getRawString());
 
@@ -261,7 +259,7 @@ public class NamePlateAPI {
             badges += "✭";
 
         //append badges
-        if (withBadges && (boolean) Config.entries.get("showBadges").value && !badges.equals(" ")) {
+        if ((boolean) Config.entries.get("showBadges").value && !badges.equals(" ")) {
             //create badges text
             LiteralText badgesText = new LiteralText(badges);
 
