@@ -5,10 +5,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.lua.api.model.ElytraModelAPI;
-import net.blancworks.figura.lua.api.model.ItemModelAPI;
-import net.blancworks.figura.lua.api.model.ParrotModelAPI;
-import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.lua.api.model.*;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -277,6 +274,28 @@ public class CustomModelPart {
                             matrices.pop();
                         }});
                         break;
+                    case LeftSpyglass:
+                        FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsSpyglass(matrices, 4);
+                            applyTransformsAsSpyglass(transformStack, 4);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        break;
+                    case RightSpyglass:
+                        FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsSpyglass(matrices, -4);
+                            applyTransformsAsSpyglass(transformStack, -4);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        break;
                 }
             }
         } catch (Exception e) {
@@ -508,6 +527,15 @@ public class CustomModelPart {
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
+    //TODO move these to the mixins, probably.
+    public void applyTransformsAsSpyglass(MatrixStack stack, int offset) {
+        stack.translate((pivot.getX()+offset) / 16.0f, (pivot.getY() - 8) / 16.0f, -pivot.getZ() / 16.0f);
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX() + 90));
+        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+    }
+
     //Re-builds the mesh data for a custom model part.
     public void rebuild() {
     }
@@ -658,7 +686,9 @@ public class CustomModelPart {
         LeftParrotOrigin, //Left origin position of the shoulder parrot
         RightParrotOrigin, //Right origin position of the shoulder parrot
         LeftElytra, //Left position of the elytra model
-        RightElytra //Right position of the elytra model
+        RightElytra, //Right position of the elytra model,
+        LeftSpyglass, //Left position of the spyglass model
+        RightSpyglass //Right position of the spyglass model
     }
 
     public enum RotationType {

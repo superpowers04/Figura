@@ -25,6 +25,7 @@
     "ModelPartMixin",
     "PlayerEntityMixin",
     "PlayerEntityRendererMixin",
+    "PlayerHeldItemFeatureRendererMixin",
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
     "ShoulderParrotFeatureRendererMixin",
