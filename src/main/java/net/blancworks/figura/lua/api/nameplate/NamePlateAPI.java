@@ -10,19 +10,17 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
-import net.minecraft.util.math.Vec3f;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
-import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -76,21 +74,14 @@ public class NamePlateAPI {
             ret.set("getEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaBoolean.valueOf(targetScript.getOrMakeNameplateCustomization(accessor).enabled);
+                    return LuaValue.valueOf(targetScript.getOrMakeNameplateCustomization(accessor).enabled);
                 }
             });
 
             ret.set("setEnabled", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
-
-                    if (arg.isnil()) {
-                        customization.enabled = false;
-                        return NIL;
-                    }
-
-                    customization.enabled = arg.checkboolean();
+                    targetScript.getOrMakeNameplateCustomization(accessor).enabled = arg.isnil() ? null : arg.checkboolean();
                     return NIL;
                 }
             });
@@ -113,7 +104,14 @@ public class NamePlateAPI {
             ret.set("setText", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    targetScript.getOrMakeNameplateCustomization(accessor).text = arg.isnil() ? null : arg.checkjstring().replaceAll("[\n\r]", "").replaceAll("figura:default", "minecraft:default");
+                    String string = null;
+                    if (!arg.isnil()) {
+                        string = arg.checkjstring().replaceAll("figura:default", "minecraft:default");
+                        if (!accessor.equals("ENTITY"))
+                            string = string.replaceAll("[\n\r]", " ");
+                    }
+
+                    targetScript.getOrMakeNameplateCustomization(accessor).text = string;
                     return NIL;
                 }
             });
@@ -121,88 +119,7 @@ public class NamePlateAPI {
             ret.set("getText", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaBoolean.valueOf(targetScript.getOrMakeNameplateCustomization(accessor).text);
-                }
-            });
-
-            ret.set("setColor", new OneArgFunction() {
-                @Override
-                @Deprecated
-                public LuaValue call(LuaValue arg) {
-                    NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
-
-                    if (arg.isnil()) {
-                        customization.color = null;
-                        return NIL;
-                    }
-
-                    Vec3f color = LuaVector.checkOrNew(arg).asV3f();
-                    customization.color = ((Math.round(color.getX() * 255) & 0xFF) << 16) | ((Math.round(color.getY() * 255) & 0xFF) << 8) | (Math.round(color.getZ() * 255) & 0xFF);
-                    return NIL;
-                }
-            });
-
-            ret.set("getColor", new ZeroArgFunction() {
-                @Override
-                @Deprecated
-                public LuaValue call() {
-                    return VectorAPI.RGBfromInt(targetScript.getOrMakeNameplateCustomization(accessor).color);
-                }
-            });
-
-            ret.set("setFormatting", new OneArgFunction() {
-                @Override
-                @Deprecated
-                public LuaValue call(LuaValue arg) {
-                    NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
-
-                    customization.bold = null;
-                    customization.italic = null;
-                    customization.underline = null;
-                    customization.obfuscated = null;
-                    customization.strikethrough = null;
-
-                    if (arg.isnil())
-                        return NIL;
-
-                    LuaTable formatting = arg.checktable();
-
-                    for (int i = 1; i <= formatting.length() && i < 6; i++) {
-                        String argument = formatting.get(i).checkjstring();
-
-                        switch (argument) {
-                            case "BOLD" -> customization.bold = true;
-                            case "ITALIC" -> customization.italic = true;
-                            case "UNDERLINE" -> customization.underline = true;
-                            case "OBFUSCATED" -> customization.obfuscated = true;
-                            case "STRIKETHROUGH" -> customization.strikethrough = true;
-                        }
-                    }
-
-                    return NIL;
-                }
-            });
-
-            ret.set("getFormatting", new ZeroArgFunction() {
-                @Override
-                @Deprecated
-                public LuaValue call() {
-                    NamePlateCustomization customization = targetScript.getOrMakeNameplateCustomization(accessor);
-
-                    LuaTable formatting = new LuaTable();
-
-                    if (customization.bold != null)
-                        formatting.insert(0, LuaValue.valueOf("BOLD"));
-                    if (customization.italic != null)
-                        formatting.insert(0, LuaValue.valueOf("ITALIC"));
-                    if (customization.underline != null)
-                        formatting.insert(0, LuaValue.valueOf("UNDERLINE"));
-                    if (customization.obfuscated != null)
-                        formatting.insert(0, LuaValue.valueOf("OBFUSCATED"));
-                    if (customization.strikethrough != null)
-                        formatting.insert(0, LuaValue.valueOf("STRIKETHROUGH"));
-
-                    return formatting;
+                    return LuaValue.valueOf(targetScript.getOrMakeNameplateCustomization(accessor).text);
                 }
             });
 
@@ -318,14 +235,10 @@ public class NamePlateAPI {
 
         if (currentData != null) {
             //apply nameplate formatting
-            if (nameplateData != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
-
+            if (nameplateData != null && nameplateData.text != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
                 //try to parse the string as json text
-                //otherwise use the deprecated customization method
+                //otherwise use the raw text
                 try {
-                    if (nameplateData.text == null)
-                        throw new Exception("No text data found - using deprecated method");
-
                     MutableText jsonText = Text.Serializer.fromJson(new StringReader(nameplateData.text));
 
                     if (jsonText == null)
@@ -333,32 +246,8 @@ public class NamePlateAPI {
 
                     ((FiguraTextAccess) formattedText).figura$setText("");
                     formattedText.append(jsonText);
-                } catch (Exception ignored) { //deprecated
-                    //set color and properties
-                    if (nameplateData.color != null)
-                        originalStyle = originalStyle.withColor(TextColor.fromRgb(nameplateData.color));
-
-                    if (nameplateData.bold != null)
-                        originalStyle = originalStyle.withBold(nameplateData.bold);
-
-                    if (nameplateData.italic != null)
-                        originalStyle = originalStyle.withItalic(nameplateData.italic);
-
-                    if (nameplateData.underline != null)
-                        originalStyle = originalStyle.withUnderline(nameplateData.underline);
-
-                    if (nameplateData.strikethrough != null && nameplateData.strikethrough)
-                        originalStyle = originalStyle.withFormatting(Formatting.STRIKETHROUGH);
-
-                    if (nameplateData.obfuscated != null && nameplateData.obfuscated)
-                        originalStyle = originalStyle.withFormatting(Formatting.OBFUSCATED);
-
-                    //set text, if not null
-                    if (nameplateData.text != null)
-                        ((FiguraTextAccess) formattedText).figura$setText(nameplateData.text);
-
-                    //apply new style
-                    formattedText.setStyle(originalStyle);
+                } catch (Exception ignored) {
+                    ((FiguraTextAccess) formattedText).figura$setText(nameplateData.text);
                 }
             }
         }
@@ -394,4 +283,29 @@ public class NamePlateAPI {
 
         return formattedText;
     }
+
+    public static List<Text> splitText(Text text, String regex) {
+        ArrayList<Text> textList = new ArrayList<>();
+
+        MutableText currentText = new LiteralText("");
+        for (Text entry : text.getWithStyle(text.getStyle())) {
+            String entryString = entry.getString();
+            String[] lines = entryString.split(regex);
+            for (int i = 0; i < lines.length; i++) {
+                if (i != 0) {
+                    textList.add(currentText.shallowCopy());
+                    currentText = new LiteralText("");
+                }
+                currentText.append(new LiteralText(lines[i]).setStyle(entry.getStyle()));
+            }
+            if (entryString.endsWith(regex)) {
+                textList.add(currentText.shallowCopy());
+                currentText = new LiteralText("");
+            }
+        }
+        textList.add(currentText);
+
+        return textList;
+    }
+
 }

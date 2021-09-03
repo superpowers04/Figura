@@ -22,6 +22,7 @@ import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
@@ -87,6 +88,9 @@ public class CustomScript extends FiguraAsset {
 
     public Float customShadowSize = null;
 
+    public Vec2f crossHairPos = null;
+    public boolean crossHairEnabled = true;
+
     public boolean hasPlayer = false;
 
     //TODO maybe remove this out from scripting
@@ -95,6 +99,8 @@ public class CustomScript extends FiguraAsset {
     public String commandPrefix = "\u0000";
 
     public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").formatted(Formatting.BLUE));
+
+    public final Map<String, LuaValue> SHARED_VALUES = new HashMap<>();
 
     //----PINGS!----
 
@@ -114,7 +120,6 @@ public class CustomScript extends FiguraAsset {
     public CustomScript(PlayerData data, String content) {
         load(data, content);
     }
-
 
     //--Setup--
     //Loads the script using the targeted playerData and source code.
@@ -326,6 +331,16 @@ public class CustomScript extends FiguraAsset {
             }
         });
 
+        //store a value to be read from others scripts
+        scriptGlobals.set("storeValue", new TwoArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                String key = arg1.checkjstring();
+                SHARED_VALUES.put(key, arg2);
+                return NIL;
+            }
+        });
+
         LuaTable globalMetaTable = new LuaTable();
 
         //When creating a new variable.
@@ -397,6 +412,7 @@ public class CustomScript extends FiguraAsset {
                 return;
             lastTickFunction = queueTask(this::onTick);
         }
+
     }
 
     //Called whenever the game renders a new frame with this avatar in view
@@ -589,6 +605,23 @@ public class CustomScript extends FiguraAsset {
         }
 
         error.printStackTrace();
+
+        int i = msg.indexOf("]:")+2;
+        if (i >= 0) {
+            int lineNumber = -1;
+            try {
+                lineNumber = Integer.parseInt(msg.substring(i, msg.indexOf(":",i)));
+            } catch (Exception ignoredLLLLLLLLL) {}
+            if (lineNumber > 0) {
+                String src = source.split("\n")[lineNumber].replaceAll("\r","");
+                String ext = "";
+                if (src.length() > 30) {
+                    src = src.substring(0, 30);
+                    ext = " ... [Too long]";
+                }
+                sendChatMessage(new LiteralText("At: \"" + src + "\"" + ext).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+            }
+        }
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
