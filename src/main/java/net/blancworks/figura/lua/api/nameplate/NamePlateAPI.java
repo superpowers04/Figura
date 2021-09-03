@@ -22,6 +22,7 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NamePlateAPI {
@@ -106,7 +107,16 @@ public class NamePlateAPI {
                 public LuaValue call(LuaValue arg) {
                     String string = null;
                     if (!arg.isnil()) {
-                        string = arg.checkjstring().replaceAll("figura:default", "minecraft:default");
+                        //NO BADGES 4 YOU
+                        Matcher matcher = Pattern.compile("(?i)\\\\u([0-9a-f]{4})").matcher(arg.checkjstring());
+                        StringBuilder unescaped = new StringBuilder();
+                        while (matcher.find()) {
+                            matcher.appendReplacement(unescaped, (char) Integer.parseInt(matcher.group(1), 16) + "");
+                        }
+                        matcher.appendTail(unescaped);
+                        string = unescaped.toString().replaceAll("\"font\":\"figura:default\"", "\"font\":\"minecraft:default\"");
+
+                        //allow new lines only on entity
                         if (!accessor.equals("ENTITY"))
                             string = string.replaceAll("[\n\r]", " ");
                     }

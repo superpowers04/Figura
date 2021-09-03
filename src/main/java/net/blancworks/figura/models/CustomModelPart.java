@@ -530,10 +530,10 @@ public class CustomModelPart {
     //TODO move these to the mixins, probably. //OK GOT IT
     public void applyTransformsAsSpyglass(MatrixStack stack) {
         stack.translate(-pivot.getX() / 16.0f, -pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ() + 180));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(this.rot.getY()));
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(this.rot.getX() + 90));
-        stack.translate(this.pos.getX() / 16.0f, (this.pos.getY() - 5.5f) / 16.0f, this.pos.getZ() / 16.0f);
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
     //Re-builds the mesh data for a custom model part.
