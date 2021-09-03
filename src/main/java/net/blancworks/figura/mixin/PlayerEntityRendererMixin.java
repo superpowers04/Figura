@@ -38,6 +38,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -201,27 +202,37 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         //render nameplate
         if (enabled && !(distance > 4096.0D)) {
             boolean sneaky = !entity.isSneaky();
+            int i = 0;
+            List<Text> textList = NamePlateAPI.splitText(text, "\n");
+            for(Text splitText : textList) {
+                renderNameplate(matrices, vertexConsumers, sneaky, light, splitText, i-textList.size()+1);
+                i++;
 
-            //matrices transformations
-            matrices.push();
-
-            matrices.multiply(this.dispatcher.getRotation());
-            matrices.scale(-0.025F, -0.025F, 0.025F);
-            Matrix4f matrix4f = matrices.peek().getModel();
-
-            matrices.pop();
-
-            int backgroundColor = (int) (MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F) << 24;
-
-            TextRenderer textRenderer = Objects.requireNonNull(this.getTextRenderer());
-            float textWidth = (float) (-textRenderer.getWidth(text) / 2);
-
-            //render
-            textRenderer.draw(text, textWidth, 0, 553648127, false, matrix4f, vertexConsumers, sneaky, backgroundColor, light);
-            if (sneaky)
-                textRenderer.draw(text, textWidth, 0, -1, false, matrix4f, vertexConsumers, false, 0, light);
+            }
         }
         matrices.pop();
+    }
+
+    private void renderNameplate(MatrixStack matrices, VertexConsumerProvider vertexConsumers, boolean sneaky, int light, Text text, int line) {
+        //matrices transformations
+        matrices.push();
+
+        matrices.multiply(this.dispatcher.getRotation());
+        matrices.scale(-0.025F, -0.025F, 0.025F);
+        Matrix4f matrix4f = matrices.peek().getModel();
+
+        matrices.pop();
+
+        int backgroundColor = (int) (MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F) << 24;
+
+        TextRenderer textRenderer = Objects.requireNonNull(this.getTextRenderer());
+        float textWidth = (float) (-textRenderer.getWidth(text) / 2);
+
+        //render
+        textRenderer.draw(text, textWidth, 10.5f * line, 553648127, false, matrix4f, vertexConsumers, sneaky, backgroundColor, light);
+        if (sneaky)
+            textRenderer.draw(text, textWidth, 10.5f * line, -1, false, matrix4f, vertexConsumers, false, 0, light);
+
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm")
