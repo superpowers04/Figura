@@ -14,7 +14,6 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.Vibration;
 import net.minecraft.world.World;
 import net.minecraft.world.event.BlockPositionSource;
-import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
@@ -24,7 +23,7 @@ import java.util.AbstractMap;
 import java.util.HashMap;
 
 public class ParticleAPI {
-    
+
     public static HashMap<String, ParticleType<?>> particleTypes = new HashMap<>() {{
         for (Identifier id : Registry.PARTICLE_TYPE.getIds()) {
             ParticleType<?> type = Registry.PARTICLE_TYPE.get(id);
@@ -143,11 +142,8 @@ public class ParticleAPI {
         Identifier identifier = new Identifier(id.checkjstring());
         ParticleType<?> type = particleTypes.get(identifier.toString());
 
-        if (type == null)
-            throw new LuaError("Particle id not found!");
-
         //return
-        return new AbstractMap.SimpleEntry<>(identifier, type);
+        return type == null ? null : new AbstractMap.SimpleEntry<>(identifier, type);
     }
 
     private static void summonParticle(ParticleEffect particle, LuaVector pos) {

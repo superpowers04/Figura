@@ -90,7 +90,7 @@ public class SoundAPI {
 
         SoundEvent targetEvent = soundEvents.get(arg1.checkjstring());
         if (targetEvent == null)
-            throw new LuaError("Sound id not found!");
+            return;
 
         LuaVector pos = LuaVector.checkOrNew(arg2);
         LuaVector pitchVol = LuaVector.checkOrNew(arg3);
