@@ -277,22 +277,13 @@ public class NamePlateAPI {
         return formattedText;
     }
 
-    public static List<Text> getTextWithSiblings(Text text) {
-        ArrayList<Text> textList = new ArrayList<>();
-        textList.add(text);
-        if (text.getSiblings().size() != 0) {
-            text.getSiblings().forEach((s) -> textList.addAll(getTextWithSiblings(s)));
-        }
-        return textList;
-    }
-
     public static List<Text> splitText(Text text, String regex) {
         ArrayList<Text> textList = new ArrayList<>();
 
         MutableText currentText = new LiteralText("");
         for (Text entry : text.getWithStyle(text.getStyle())) {
             String entryString = entry.getString();
-            String[] lines = entryString.split("\n");
+            String[] lines = entryString.split(regex);
             for (int i = 0; i < lines.length; i++) {
                 if (i != 0) {
                     textList.add(currentText.shallowCopy());
@@ -300,7 +291,7 @@ public class NamePlateAPI {
                 }
                 currentText.append(new LiteralText(lines[i]).setStyle(entry.getStyle()));
             }
-            if (entryString.endsWith("\n")) {
+            if (entryString.endsWith(regex)) {
                 textList.add(currentText.shallowCopy());
                 currentText = new LiteralText("");
             }
