@@ -258,8 +258,8 @@ public class CustomModelPart {
                     case LeftSpyglass:
                         FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
-                            applyTransformsAsSpyglass(matrices, 4);
-                            applyTransformsAsSpyglass(transformStack, 4);
+                            applyTransformsAsSpyglass(matrices);
+                            applyTransformsAsSpyglass(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
                             visible = true;
@@ -269,8 +269,8 @@ public class CustomModelPart {
                     case RightSpyglass:
                         FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
                             matrices.push();
-                            applyTransformsAsSpyglass(matrices, -4);
-                            applyTransformsAsSpyglass(transformStack, -4);
+                            applyTransformsAsSpyglass(matrices);
+                            applyTransformsAsSpyglass(transformStack);
                             stackReference = matrices.peek();
                             part = CustomModelPart.this;
                             visible = true;
@@ -508,13 +508,13 @@ public class CustomModelPart {
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
-    //TODO move these to the mixins, probably.
-    public void applyTransformsAsSpyglass(MatrixStack stack, int offset) {
-        stack.translate((pivot.getX()+offset) / 16.0f, (pivot.getY() - 8) / 16.0f, -pivot.getZ() / 16.0f);
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX() + 90));
-        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+    //TODO move these to the mixins, probably. //OK GOT IT
+    public void applyTransformsAsSpyglass(MatrixStack stack) {
+        stack.translate(-pivot.getX() / 16.0f, -pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ() + 180));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(this.rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(this.rot.getX() + 90));
+        stack.translate(this.pos.getX() / 16.0f, (this.pos.getY() - 5.5f) / 16.0f, this.pos.getZ() / 16.0f);
     }
 
     //Re-builds the mesh data for a custom model part.

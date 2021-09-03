@@ -17,7 +17,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
 import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -56,7 +55,7 @@ public class PlayerHeldItemFeatureRendererMixin {
                     if (originModification.stackReference != null) {
                         //apply modifications
                         MatrixStack freshStack = new MatrixStack();
-                        MatrixStackAccess access = (MatrixStackAccess) (Object) freshStack;
+                        MatrixStackAccess access = (MatrixStackAccess) freshStack;
                         access.pushEntry(originModification.stackReference);
 
                         //flag to not render anymore
