@@ -61,7 +61,13 @@ public class PlayerHeldItemFeatureRendererMixin {
                         //flag to not render anymore
                         originModification.visible = null;
 
-                        MinecraftClient.getInstance().getHeldItemRenderer().renderItem(entity, stack, ModelTransformation.Mode.NONE, left, freshStack, vertexConsumers, light);
+                        //render :3
+                        freshStack.push();
+                        freshStack.translate(0f, 0f, 4.5f / 16f);
+                        freshStack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180f));
+                        freshStack.scale(0.625f, -0.625f, -0.625f);
+                        MinecraftClient.getInstance().getHeldItemRenderer().renderItem(entity, stack, ModelTransformation.Mode.HEAD, left, freshStack, vertexConsumers, light);
+                        freshStack.pop();
 
                         ci.cancel();
                         return;
