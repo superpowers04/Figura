@@ -1,6 +1,5 @@
 package net.blancworks.figura.gui;
 
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
@@ -166,6 +165,7 @@ public class FiguraTrustScreen extends Screen {
 
         this.uuidBox = new TextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new TranslatableText("UUID"));
         this.uuidBox.setMaxLength(36);
+        /*
         this.addSelectableChild(uuidBox);
 
         this.addDrawableChild(new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("Get Avatar"), (btx) -> {
@@ -174,6 +174,7 @@ public class FiguraTrustScreen extends Screen {
                 PlayerDataManager.getDataForPlayer(uuid);
             } catch (Exception ignored) {}
         }));
+        */
 
         playerList.reloadFilters();
         permissionList.rebuild();
@@ -186,7 +187,7 @@ public class FiguraTrustScreen extends Screen {
         this.playerList.render(matrices, mouseX, mouseY, delta);
         this.permissionList.render(matrices, mouseX, mouseY, delta);
         this.searchBox.render(matrices, mouseX, mouseY, delta);
-        this.uuidBox.render(matrices, mouseX, mouseY, delta);
+        //this.uuidBox.render(matrices, mouseX, mouseY, delta);
 
         if (playerListState.selected instanceof PlayerListEntry) {
             PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
@@ -357,7 +358,7 @@ public class FiguraTrustScreen extends Screen {
         clearCacheButton.active = shiftPressed;
 
         this.searchBox.tick();
-        this.uuidBox.tick();
+        //this.uuidBox.tick();
 
         if (tickCount > 20) {
             tickCount = 0;
