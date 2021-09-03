@@ -144,7 +144,8 @@ public class LivingEntityAPI {
             superTable.set("getActiveHand", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(targetEntity.get().getActiveHand() == Hand.MAIN_HAND ? "MAIN_HAND" : "OFF_HAND");
+                    Hand hand = targetEntity.get().getActiveHand();
+                    return hand == null ? NIL : LuaString.valueOf(hand.toString());
                 }
             });
 

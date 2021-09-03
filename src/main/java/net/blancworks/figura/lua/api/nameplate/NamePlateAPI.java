@@ -108,13 +108,7 @@ public class NamePlateAPI {
                     String string = null;
                     if (!arg.isnil()) {
                         //NO BADGES 4 YOU
-                        Matcher matcher = Pattern.compile("(?i)\\\\u([0-9a-f]{4})").matcher(arg.checkjstring());
-                        StringBuilder unescaped = new StringBuilder();
-                        while (matcher.find()) {
-                            matcher.appendReplacement(unescaped, (char) Integer.parseInt(matcher.group(1), 16) + "");
-                        }
-                        matcher.appendTail(unescaped);
-                        string = unescaped.toString().replaceAll("\"font\":\"figura:default\"", "\"font\":\"minecraft:default\"");
+                        string = unescapeUnicodeString(arg.checkjstring()).replaceAll("\"font\":\"figura:default\"", "\"font\":\"minecraft:default\"");
 
                         //allow new lines only on entity
                         if (!accessor.equals("ENTITY"))
@@ -294,6 +288,20 @@ public class NamePlateAPI {
         return formattedText;
     }
 
+    public static String unescapeUnicodeString(String string) {
+        Pattern pattern = Pattern.compile("(?i)\\\\u([0-9a-f]{4})");
+        Matcher matcher = pattern.matcher(string);
+        StringBuilder unescaped = new StringBuilder();
+        while (matcher.find()) {
+            matcher.appendReplacement(unescaped, (char) Integer.parseInt(matcher.group(1), 16) + "");
+        }
+        matcher.appendTail(unescaped);
+        string = unescaped.toString();
+
+        matcher = pattern.matcher(string);
+        return matcher.find(0) ? unescapeUnicodeString(string) : string;
+    }
+
     public static List<Text> splitText(Text text, String regex) {
         ArrayList<Text> textList = new ArrayList<>();
 
@@ -317,5 +325,4 @@ public class NamePlateAPI {
 
         return textList;
     }
-
 }
