@@ -38,6 +38,7 @@ repositories {
 		name = 'TerraformersMC'
 		url = 'https://raw.githubusercontent.com/TerraformersMC/Archive/main/releases/'
 	}
+
 }
 
 dependencies {
@@ -56,7 +57,7 @@ dependencies {
 	// OBJ Loader
 	implementation group: 'de.javagl', name: 'obj', version: '0.3.0'
 	include group: 'de.javagl', name: 'obj', version: '0.3.0'
-	
+
 	//SpruceUI
 	/*modImplementation "com.github.lambdaurora:spruceui:${project.spruceui_version}"
 	include "com.github.lambdaurora:spruceui:${project.spruceui_version}"
