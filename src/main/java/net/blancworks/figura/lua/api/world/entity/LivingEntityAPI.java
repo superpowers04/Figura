@@ -1,9 +1,12 @@
 package net.blancworks.figura.lua.api.world.entity;
 
+import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.*;
@@ -128,6 +131,31 @@ public class LivingEntityAPI {
                 @Override
                 public LuaValue call() {
                     return LuaBoolean.valueOf(targetEntity.get().getMainArm() == Arm.LEFT);
+                }
+            });
+
+            superTable.set("isUsingItem", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(targetEntity.get().isUsingItem());
+                }
+            });
+
+            superTable.set("getActiveHand", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(targetEntity.get().getActiveHand() == Hand.MAIN_HAND ? "MAIN_HAND" : "OFF_HAND");
+                }
+            });
+
+            superTable.set("getActiveItem", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    ItemStack targetStack = targetEntity.get().getActiveItem();
+                    if (targetStack.equals(ItemStack.EMPTY))
+                        return NIL;
+
+                    return ItemStackAPI.getTable(targetStack);
                 }
             });
 
