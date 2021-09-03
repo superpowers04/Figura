@@ -606,22 +606,26 @@ public class CustomScript extends FiguraAsset {
 
         error.printStackTrace();
 
-        int i = msg.indexOf("]:")+2;
-        if (i >= 0) {
-            int lineNumber = -1;
-            try {
-                lineNumber = Integer.parseInt(msg.substring(i, msg.indexOf(":",i)));
-            } catch (Exception ignoredLLLLLLLLL) {}
-            if (lineNumber > 0) {
-                String src = source.split("\n")[lineNumber].replaceAll("\r","");
-                String ext = "";
-                if (src.length() > 30) {
-                    src = src.substring(0, 30);
-                    ext = " ... [Too long]";
-                }
-                sendChatMessage(new LiteralText("At: \"" + src + "\"" + ext).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+        int lineNumber = -1;
+        try {
+            int i = msg.indexOf("]:");
+            if (i == -1) {
+                i = msg.indexOf(":");
+                lineNumber = Integer.parseInt(msg.substring(i+1, msg.indexOf(":",i+1)));
+            } else {
+                lineNumber = Integer.parseInt(msg.substring(i+2, msg.indexOf(":",i+2)));
             }
+        } catch (Exception ignored) {}
+        if (lineNumber > 0) {
+            String src = source.split("\n")[lineNumber-1].trim();
+            String ext = "";
+            if (src.length() > 100) {
+                src = src.substring(0, 100);
+                ext = " ... [Too long]";
+            }
+            sendChatMessage(new LiteralText("At: \"" + src + "\"" + ext).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
         }
+
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
