@@ -104,7 +104,14 @@ public class NamePlateAPI {
             ret.set("setText", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    targetScript.getOrMakeNameplateCustomization(accessor).text = arg.isnil() ? null : arg.checkjstring().replaceAll("figura:default", "minecraft:default");
+                    String string = null;
+                    if (!arg.isnil()) {
+                        string = arg.checkjstring().replaceAll("figura:default", "minecraft:default");
+                        if (!accessor.equals("ENTITY"))
+                            string = string.replaceAll("[\n\r]", " ");
+                    }
+
+                    targetScript.getOrMakeNameplateCustomization(accessor).text = string;
                     return NIL;
                 }
             });

@@ -121,7 +121,6 @@ public class CustomScript extends FiguraAsset {
         load(data, content);
     }
 
-
     //--Setup--
     //Loads the script using the targeted playerData and source code.
     public void load(PlayerData data, String src) {
@@ -413,6 +412,7 @@ public class CustomScript extends FiguraAsset {
                 return;
             lastTickFunction = queueTask(this::onTick);
         }
+
     }
 
     //Called whenever the game renders a new frame with this avatar in view
@@ -605,6 +605,23 @@ public class CustomScript extends FiguraAsset {
         }
 
         error.printStackTrace();
+
+        int i = msg.indexOf("]:")+2;
+        if (i >= 0) {
+            int lineNumber = -1;
+            try {
+                lineNumber = Integer.parseInt(msg.substring(i, msg.indexOf(":",i)));
+            } catch (Exception ignoredLLLLLLLLL) {}
+            if (lineNumber > 0) {
+                String src = source.split("\n")[lineNumber].replaceAll("\r","");
+                String ext = "";
+                if (src.length() > 30) {
+                    src = src.substring(0, 30);
+                    ext = " ... [Too long]";
+                }
+                sendChatMessage(new LiteralText("At: \"" + src + "\"" + ext).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+            }
+        }
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
