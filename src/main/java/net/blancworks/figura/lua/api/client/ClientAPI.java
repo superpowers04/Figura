@@ -207,6 +207,12 @@ public class ClientAPI {
                 }
             });
 
+            set("isHost", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(local);
+                }
+            });
         }});
     }
 }

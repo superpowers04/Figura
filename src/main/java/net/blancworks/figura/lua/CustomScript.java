@@ -31,12 +31,15 @@ import org.luaj.vm2.lib.jse.JseMathLib;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CustomScript extends FiguraAsset {
 
     public PlayerData playerData;
     public String source;
     public boolean loadError = false;
+    public String scriptName = "main";
 
     //Global script values
     public Globals scriptGlobals = new Globals();
@@ -130,6 +133,10 @@ public class CustomScript extends FiguraAsset {
         //Loads the source into this string variable for later use.
         source = src;
 
+        //get the script name
+        if (data == PlayerDataManager.localPlayer && (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.loadedName != null))
+            scriptName = PlayerDataManager.localPlayer.loadedName;
+
         //Load up the default libraries we wanna include.0
         scriptGlobals.load(new JseBaseLib());
         scriptGlobals.load(new PackageLib());
@@ -152,9 +159,6 @@ public class CustomScript extends FiguraAsset {
 
         try {
             //Load the script source, name defaults to "main" for scripts for other players.
-            String scriptName = (data == PlayerDataManager.localPlayer && (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.loadedName != null))
-                    ? PlayerDataManager.localPlayer.loadedName
-                    : "main";
             LuaValue chunk = FiguraLuaManager.modGlobals.load(source, scriptName, scriptGlobals);
 
             instructionCapFunction = new ZeroArgFunction() {
@@ -606,26 +610,34 @@ public class CustomScript extends FiguraAsset {
 
         error.printStackTrace();
 
-        int lineNumber = -1;
+        String location = "?";
         try {
-            int i = msg.indexOf("]:");
-            if (i == -1) {
-                i = msg.indexOf(":");
-                lineNumber = Integer.parseInt(msg.substring(i+1, msg.indexOf(":",i+1)));
-            } else {
-                lineNumber = Integer.parseInt(msg.substring(i+2, msg.indexOf(":",i+2)));
-            }
-        } catch (Exception ignored) {}
-        if (lineNumber > 0) {
-            String src = source.split("\n")[lineNumber-1].trim();
-            String ext = "";
-            if (src.length() > 100) {
-                src = src.substring(0, 100);
-                ext = " ... [Too long]";
-            }
-            sendChatMessage(new LiteralText("At: \"" + src + "\"" + ext).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
-        }
+            //split the line at the first :
+            String[] line = msg.split(Pattern.quote(scriptName), 2);
+            if (line.length < 2) return;
 
+            //use regex to get the first number group
+            Pattern pattern = Pattern.compile("([0-9]+)");
+            Matcher matcher = pattern.matcher(line[1]);
+
+            //try to parse the line number as int
+            if (matcher.find()) {
+                int lineNumber = Integer.parseInt(matcher.group(1));
+
+                //set the line text
+                if (lineNumber > 0) {
+                    String src = source.split("\n")[lineNumber - 1].trim();
+                    String ext = "";
+                    if (src.length() > 100) {
+                        src = src.substring(0, 100);
+                        ext = " [...]";
+                    }
+                    location = "'" + src + "'" + ext;
+                }
+            }
+        }
+        catch (Exception ignored) {}
+        sendChatMessage(new LiteralText("script:\n   " + location).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
