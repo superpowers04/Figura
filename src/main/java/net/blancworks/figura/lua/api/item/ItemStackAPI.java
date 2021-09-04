@@ -150,4 +150,12 @@ public class ItemStackAPI {
             throw new LuaError("Could not parse NBT");
         }
     }
+
+    public static ItemStack checkItemStack(LuaValue arg1) {
+        ItemStack item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
+        if (item == null)
+            throw new LuaError("Not a ItemStack table!");
+
+        return item;
+    }
 }

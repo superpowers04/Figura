@@ -206,13 +206,6 @@ public class ClientAPI {
                     return local ? LuaValue.valueOf(script.crossHairEnabled) : NIL;
                 }
             });
-
-            set("isHost", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(local);
-                }
-            });
         }});
     }
 }
