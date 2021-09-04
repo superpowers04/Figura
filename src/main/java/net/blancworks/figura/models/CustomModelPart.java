@@ -5,8 +5,11 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.lua.api.RendererAPI;
 import net.blancworks.figura.lua.api.model.*;
 import net.fabricmc.fabric.api.util.NbtType;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -21,7 +24,9 @@ import net.minecraft.util.math.Matrix4f;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -67,6 +72,11 @@ public class CustomModelPart {
     public Matrix4f lastModelMatrixInverse = new Matrix4f();
     public Matrix3f lastNormalMatrixInverse = new Matrix3f();
 
+    // Items/Blocks to render with this part
+    public Queue<RendererAPI.RenderTask> renderTasks = new LinkedList<>();
+
+    public RenderLayer temp;
+
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if(data.texture.isDone) {
@@ -78,8 +88,9 @@ public class CustomModelPart {
             int prevLeftToRender = data.model.leftToRender;
 
             //Render with main texture.
-            VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
-            int ret = render(prevLeftToRender, matrices, transformStack, mainTextureConsumer, light, overlay, alpha);
+            temp = RenderLayer.getEntityTranslucent(data.texture.id);
+            VertexConsumer mainTextureConsumer = vcp.getBuffer(temp);
+            int ret = render(prevLeftToRender, matrices, transformStack, mainTextureConsumer, light, overlay, alpha, true);
 
             //Render extra textures (emission, that sort)
             for (FiguraTexture extraTexture : data.extraTextures) {
@@ -88,7 +99,7 @@ public class CustomModelPart {
                 if (renderLayerGetter != null) {
                     VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
 
-                    render(prevLeftToRender, matrices, transformStack, extraTextureVertexConsumer, light, overlay, alpha);
+                    render(prevLeftToRender, matrices, transformStack, extraTextureVertexConsumer, light, overlay, alpha, false);
                 }
             }
 
@@ -98,13 +109,13 @@ public class CustomModelPart {
             excludeFilterParts(this, ShaderType.EndPortal);
 
             VertexConsumer portalConsumer = vcp.getBuffer(RenderLayer.getEndGateway());
-            render(prevLeftToRender, matrices, transformStack, portalConsumer, light, overlay, alpha);
+            render(prevLeftToRender, matrices, transformStack, portalConsumer, light, overlay, alpha, false);
 
             //glint
             filterParts(this, ShaderType.Glint);
 
             VertexConsumer glintConsumer = vcp.getBuffer(RenderLayer.getDirectEntityGlint());
-            render(prevLeftToRender, matrices, transformStack, glintConsumer, light, overlay, alpha);
+            render(prevLeftToRender, matrices, transformStack, glintConsumer, light, overlay, alpha, false);
 
             //reset rendering status
             setRenderStatus(this, true);
@@ -119,13 +130,13 @@ public class CustomModelPart {
         return renderUsingAllTextures(data, matrices, transformStack, vcp, light, overlay, alpha);
     }
 
-    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float alpha) {
-        return render(leftToRender, matrices, transformStack, vertices, light, overlay, 0, 0, new Vec3f(1, 1, 1), alpha);
+    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float alpha, boolean mayRenderExtras) {
+        return render(leftToRender, matrices, transformStack, vertices, light, overlay, 0, 0, new Vec3f(1, 1, 1), alpha, mayRenderExtras);
     }
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
-    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f prevColor, float alpha) {
+    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean mayRenderExtras) {
         //Don't render invisible parts.
         if (!this.visible || !this.shouldRender || this.isHidden) {
             return leftToRender;
@@ -342,6 +353,7 @@ public class CustomModelPart {
                 if (leftToRender <= 0)
                     break;
             }
+
         }
 
         for (CustomModelPart child : this.children) {
@@ -356,7 +368,19 @@ public class CustomModelPart {
             float childAlpha = child.alpha * alpha;
 
             //render part
-            leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, childAlpha);
+            leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, childAlpha, mayRenderExtras);
+        }
+
+        if (mayRenderExtras) {
+            MinecraftClient client = MinecraftClient.getInstance();
+            while (!renderTasks.isEmpty() && leftToRender > 0) {
+                RendererAPI.RenderTask task = renderTasks.remove();
+                matrices.push();
+                transformStack.push();
+                leftToRender -= task.render(matrices, transformStack, FiguraMod.vertexConsumerProvider, light, overlay, tempColor.getX(), tempColor.getY(), tempColor.getZ(), alpha, client);
+                matrices.pop();
+                transformStack.pop();
+            }
         }
 
         transformStack.pop();

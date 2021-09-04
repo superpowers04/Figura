@@ -206,7 +206,6 @@ public class ClientAPI {
                     return local ? LuaValue.valueOf(script.crossHairEnabled) : NIL;
                 }
             });
-
         }});
     }
 }

@@ -6,6 +6,7 @@ import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.*;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
+import net.blancworks.figura.lua.api.RendererAPI;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -79,6 +80,9 @@ public class CustomScript extends FiguraAsset {
 
     //scripting custom keybinds
     public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
+
+    // World Block/Item render tasks
+    public Queue<RendererAPI.RenderTask> renderTasks = new LinkedList<>();
 
     //Keep track of these because we want to apply data to them later.
     public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();
