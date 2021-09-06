@@ -6,16 +6,15 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.StringNbtReader;
-import net.minecraft.nbt.Tag;
 import net.minecraft.tag.ItemTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
-import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ItemStackAPI {
@@ -27,17 +26,13 @@ public class ItemStackAPI {
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
 
-            set("createItem", new VarArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1) {
-                    ItemStack item = Registry.ITEM.get(Identifier.tryParse(arg1.checkjstring())).getDefaultStack();
-
-                    return getTable(item);
-                }
+            set("createItem", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     ItemStack item = Registry.ITEM.get(Identifier.tryParse(arg1.checkjstring())).getDefaultStack();
-                    setItemNbt(item, arg2.checkjstring());
+
+                    if (!arg2.isnil())
+                        setItemNbt(item, arg2.checkjstring());
 
                     return getTable(item);
                 }
@@ -62,7 +57,7 @@ public class ItemStackAPI {
             set("getTag", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Tag tag = stack.getTag();
+                    NbtElement tag = stack.getTag();
                     return NBTAPI.fromTag(tag);
                 }
             });
@@ -143,19 +138,11 @@ public class ItemStackAPI {
         StringReader reader = new StringReader(s);
 
         try {
-            item.setTag((CompoundTag) new StringNbtReader(reader).parseTag());
+            item.setTag((NbtCompound) new StringNbtReader(reader).parseElement());
         } catch (CommandSyntaxException e) {
             throw new LuaError("NBT parse error\n" + e.getMessage());
         } catch (Exception e) {
             throw new LuaError("Could not parse NBT");
         }
-    }
-
-    public static ItemStack checkItemStack(LuaValue arg1) {
-        ItemStack item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
-        if (item == null)
-            throw new LuaError("Not a ItemStack table!");
-
-        return item;
     }
 }

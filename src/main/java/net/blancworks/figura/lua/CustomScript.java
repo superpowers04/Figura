@@ -1,12 +1,12 @@
 package net.blancworks.figura.lua;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.*;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
-import net.blancworks.figura.lua.api.RendererAPI;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -16,9 +16,9 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -83,9 +83,6 @@ public class CustomScript extends FiguraAsset {
 
     //scripting custom keybinds
     public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
-
-    // World Block/Item render tasks
-    public Queue<RendererAPI.RenderTask> renderTasks = new LinkedList<>();
 
     //Keep track of these because we want to apply data to them later.
     public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();
@@ -210,12 +207,29 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
-    public void toNBT(CompoundTag tag) {
-        tag.putString("src", cleanScriptSource(source));
+    public void toNBT(NbtCompound tag) {
+        if (source.length() <= 65000) {
+            tag.putString("src", cleanScriptSource(source));
+        } else {
+            int i = 0;
+            for (String substring : Splitter.fixedLength(65000).split(cleanScriptSource(source))) {
+                tag.putString("src_" + i, cleanScriptSource(substring));
+                i++;
+            }
+        }
     }
 
-    public void fromNBT(PlayerData data, CompoundTag tag) {
-        source = tag.getString("src");
+    public void fromNBT(PlayerData data, NbtCompound tag) {
+        Set<String> keys = tag.getKeys();
+        if (keys.size() <= 1) {
+            source = tag.getString("src");
+        } else {
+            StringBuilder script = new StringBuilder();
+            for (int i = 0; i < keys.size(); i++) {
+                script.append(tag.getString("src_" + i));
+            }
+            source = script.toString();
+        }
 
         load(data, source);
     }
@@ -280,8 +294,8 @@ public class CustomScript extends FiguraAsset {
                         message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
 
                         Text log;
-                        if (arg instanceof LuaVector) {
-                            log = ((LuaVector)arg).toJsonText();
+                        if (arg instanceof LuaVector logText) {
+                            log = logText.toJsonText();
                         } else {
                             try {
                                 log = Text.Serializer.fromJson(new StringReader(arg.toString()));
