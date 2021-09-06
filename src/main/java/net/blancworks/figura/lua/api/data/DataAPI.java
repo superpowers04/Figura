@@ -10,9 +10,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.util.Identifier;
-import org.luaj.vm2.LuaError;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
@@ -155,7 +153,13 @@ public class DataAPI {
             json.add(key, object);
         }
         else {
-            json.addProperty(key, value.tojstring());
+            //isnumber() returns true from "strings numbers" but we dont really want it to be converted
+            if (value instanceof LuaNumber)
+                json.addProperty(key, value.todouble());
+            else if (value instanceof LuaBoolean)
+                json.addProperty(key, value.toboolean());
+            else
+                json.addProperty(key, value.toString());
         }
     }
 
