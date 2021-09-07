@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.actionWheel;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -80,6 +81,12 @@ public class ActionWheelAPI {
                 }
             });
 
+            set("isOpen", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(FiguraMod.actionWheel.isPressed() && ActionWheel.enabled);
+                }
+            });
         }});
     }
 

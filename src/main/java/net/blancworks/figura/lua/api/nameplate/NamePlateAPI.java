@@ -22,7 +22,6 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class NamePlateAPI {
@@ -106,12 +105,13 @@ public class NamePlateAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     String string = null;
+
                     if (!arg.isnil()) {
-                        //NO BADGES 4 YOU
-                        string = unescapeUnicodeString(arg.checkjstring()).replaceAll("\"font\":\"figura:default\"", "\"font\":\"minecraft:default\"");
+                        //no ✭ 4 u
+                        string = arg.checkjstring().replaceAll("([△▲★✯☆✭]|\\\\u(?i)(25B3|25B2|2605|272F|2606|272D))", "\uFFFD");
 
                         //allow new lines only on entity
-                        if (!accessor.equals("ENTITY"))
+                        if (!accessor.equals(ENTITY))
                             string = string.replaceAll("[\n\r]", " ");
                     }
 
@@ -286,20 +286,6 @@ public class NamePlateAPI {
         }
 
         return formattedText;
-    }
-
-    public static String unescapeUnicodeString(String string) {
-        Pattern pattern = Pattern.compile("(?i)\\\\u([0-9a-f]{4})");
-        Matcher matcher = pattern.matcher(string);
-        StringBuilder unescaped = new StringBuilder();
-        while (matcher.find()) {
-            matcher.appendReplacement(unescaped, (char) Integer.parseInt(matcher.group(1), 16) + "");
-        }
-        matcher.appendTail(unescaped);
-        string = unescaped.toString();
-
-        matcher = pattern.matcher(string);
-        return matcher.find(0) ? unescapeUnicodeString(string) : string;
     }
 
     public static List<Text> splitText(Text text, String regex) {

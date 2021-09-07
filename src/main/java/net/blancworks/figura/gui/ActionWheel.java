@@ -5,7 +5,6 @@ import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
@@ -97,15 +96,15 @@ public class ActionWheel extends DrawableHelper {
             renderWheel(matrices, wheelPos, wheelSize, 4, 4);
 
             //draw warning texts
-            drawCenteredText(
+            drawCenteredTextWithShadow(
                     matrices, MinecraftClient.getInstance().textRenderer,
-                    new TranslatableText("gui.figura.actionwheel.warning").formatted(Formatting.UNDERLINE),
+                    new TranslatableText("gui.figura.actionwheel.warning").formatted(Formatting.UNDERLINE).asOrderedText(),
                     (int) wheelPos.x, (int) wheelPos.y - 4,
                     16733525
             );
-            drawCenteredText(
+            drawCenteredTextWithShadow(
                     matrices, MinecraftClient.getInstance().textRenderer,
-                    new TranslatableText("gui.figura.actionwheel.warninginfo"),
+                    new TranslatableText("gui.figura.actionwheel.warninginfo").asOrderedText(),
                     (int) wheelPos.x, (int) Math.max(wheelPos.y - wheelSize / 2.0 - 10, 4),
                     16733525
             );

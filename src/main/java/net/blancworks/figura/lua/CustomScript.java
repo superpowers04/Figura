@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.mojang.brigadier.StringReader;
@@ -211,11 +212,28 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void toNBT(NbtCompound tag) {
-        tag.putString("src", cleanScriptSource(source));
+        if (source.length() <= 65000) {
+            tag.putString("src", cleanScriptSource(source));
+        } else {
+            int i = 0;
+            for (String substring : Splitter.fixedLength(65000).split(cleanScriptSource(source))) {
+                tag.putString("src_" + i, cleanScriptSource(substring));
+                i++;
+            }
+        }
     }
 
     public void fromNBT(PlayerData data, NbtCompound tag) {
-        source = tag.getString("src");
+        Set<String> keys = tag.getKeys();
+        if (keys.size() <= 1) {
+            source = tag.getString("src");
+        } else {
+            StringBuilder script = new StringBuilder();
+            for (int i = 0; i < keys.size(); i++) {
+                script.append(tag.getString("src_" + i));
+            }
+            source = script.toString();
+        }
 
         load(data, source);
     }

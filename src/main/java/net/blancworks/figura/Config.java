@@ -1,5 +1,6 @@
 package net.blancworks.figura;
 
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.fabricmc.loader.api.FabricLoader;
@@ -71,9 +72,9 @@ public class Config {
                     config.addProperty(entry.getKey(), String.valueOf(entry.getValue().value));
             }
 
-            FileWriter fileWriter = new FileWriter(file);
-            String jsonString = config.toString().replaceAll(":",": ").replaceAll(",",",\n  ").replaceAll("\\{","{\n  ").replaceAll("}","\n}");
+            String jsonString = new GsonBuilder().setPrettyPrinting().create().toJson(config);
 
+            FileWriter fileWriter = new FileWriter(file);
             fileWriter.write(jsonString);
             fileWriter.close();
         } catch (Exception e) {

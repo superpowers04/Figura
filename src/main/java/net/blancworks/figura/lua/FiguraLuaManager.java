@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.api.MetaAPI;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelAPI;
 import net.blancworks.figura.lua.api.chat.ChatAPI;
 import net.blancworks.figura.lua.api.client.ClientAPI;
+import net.blancworks.figura.lua.api.data.DataAPI;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.keybind.KeyBindAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
@@ -79,6 +80,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(KeyBindAPI.getID(), KeyBindAPI::getForScript);
         apiSuppliers.put(ChatAPI.getID(), ChatAPI::getForScript);
         apiSuppliers.put(ClientAPI.getID(), ClientAPI::getForScript);
+        apiSuppliers.put(DataAPI.getID(), DataAPI::getForScript);
     }
 
     public static void registerEvents(){
