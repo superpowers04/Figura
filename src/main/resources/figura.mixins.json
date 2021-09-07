@@ -13,6 +13,7 @@
     "DebugHudMixin",
     "ElytraEntityModelMixin",
     "ElytraFeatureRendererMixin",
+    "EntityRenderDispatcherMixin",
     "FiguraTextImplMixin",
     "GameMenuScreenMixin",
     "HeadFeatureRendererMixin",
