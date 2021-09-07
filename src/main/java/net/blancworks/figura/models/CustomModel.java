@@ -3,11 +3,9 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.assets.FiguraAsset;
-import net.blancworks.figura.lua.api.RendererAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
@@ -20,7 +18,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,7 +71,6 @@ public class CustomModel extends FiguraAsset {
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
         render(player_model, matrices, new MatrixStack(), vcp, light, overlay, red, green, blue, alpha);
-
     }
 
     public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, MatrixStack transformStack,  VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
@@ -113,8 +109,6 @@ public class CustomModel extends FiguraAsset {
 
             matrices.pop();
         }
-
-
     }
 
     public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model, float alpha) {

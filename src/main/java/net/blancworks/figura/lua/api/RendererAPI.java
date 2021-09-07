@@ -178,7 +178,7 @@ public class RendererAPI {
             this.scale = scale;
             this.origin = origin;
         }
-        public abstract int render(EntityRenderDispatcher entityRenderDispatcher,Entity entity, CustomModelPart part, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha, MinecraftClient client);
+        public abstract int render(EntityRenderDispatcher entityRenderDispatcher, Entity entity, CustomModelPart part, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha, MinecraftClient client);
         public void transform(MatrixStack matrices) {
             matrices.translate(origin.getX(),origin.getY(),origin.getZ());
             matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
