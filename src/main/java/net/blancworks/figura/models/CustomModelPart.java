@@ -1,11 +1,11 @@
 package net.blancworks.figura.models;
 
 import com.google.common.collect.ImmutableMap;
+import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.api.RendererAPI;
 import net.blancworks.figura.lua.api.model.*;
 import net.fabricmc.fabric.api.util.NbtType;
@@ -13,14 +13,12 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
+
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.math.Vector4f;
+import net.minecraft.util.math.*;
 import net.minecraft.nbt.*;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Matrix3f;
-import net.minecraft.util.math.Matrix4f;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -294,6 +292,7 @@ public class CustomModelPart {
             e.printStackTrace();
         }
 
+
         applyTransforms(matrices);
         applyTransforms(transformStack);
 
@@ -371,20 +370,25 @@ public class CustomModelPart {
             leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, childAlpha, mayRenderExtras);
         }
 
-        if (mayRenderExtras) {
-            MinecraftClient client = MinecraftClient.getInstance();
-            while (!renderTasks.isEmpty() && leftToRender > 0) {
-                RendererAPI.RenderTask task = renderTasks.remove();
-                matrices.push();
-                transformStack.push();
-                leftToRender -= task.render(matrices, transformStack, FiguraMod.vertexConsumerProvider, light, overlay, tempColor.getX(), tempColor.getY(), tempColor.getZ(), alpha, client);
-                matrices.pop();
-                transformStack.pop();
-            }
-        }
+        /** temp
+         * if (mayRenderExtras) {
+         *             MinecraftClient client = MinecraftClient.getInstance();
+         *             while (!renderTasks.isEmpty() && leftToRender > 0) {
+         *                 RendererAPI.RenderTask task = renderTasks.remove();
+         *                 matrices.push();
+         *                 transformStack.push();
+         *                 leftToRender -= task.render(matrices, transformStack, FiguraMod.vertexConsumerProvider, light, overlay, tempColor.getX(), tempColor.getY(), tempColor.getZ(), alpha, client);
+         *                 matrices.pop();
+         *                 transformStack.pop();
+         *             }
+         *         }
+         */
 
         transformStack.pop();
         matrices.pop();
+
+
+
         return leftToRender;
     }
 
