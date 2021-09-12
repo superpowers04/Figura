@@ -4,16 +4,19 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.*;
+import net.blancworks.figura.Config;
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
-import net.blancworks.figura.lua.api.RendererAPI;
-import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
+import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
+import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
@@ -85,9 +88,6 @@ public class CustomScript extends FiguraAsset {
     //scripting custom keybindings
     public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
 
-    // World Block/Item render tasks
-    public Queue<RendererAPI.RenderTask> renderTasks = new LinkedList<>();
-
     //Keep track of these because we want to apply data to them later.
     public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();
 
@@ -105,7 +105,6 @@ public class CustomScript extends FiguraAsset {
 
     public boolean hasPlayer = false;
 
-    //TODO maybe remove this out from scripting
     public DamageSource lastDamageSource;
 
     public String commandPrefix = "\u0000";
@@ -485,6 +484,10 @@ public class CustomScript extends FiguraAsset {
     public void onRender(float deltaTime) {
         if (!isDone || renderLuaEvent == null || !hasPlayer || playerData.lastEntity == null)
             return;
+
+        for (CustomModelPart part : this.playerData.model.allParts) {
+            CustomModelPart.clearExtraRendering(part);
+        }
 
         setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
         try {
