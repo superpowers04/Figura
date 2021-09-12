@@ -81,7 +81,7 @@ public class CustomScript extends FiguraAsset {
     public int actionWheelLeftSize = 4;
     public int actionWheelRightSize = 4;
 
-    //scripting custom keybinds
+    //scripting custom keybindings
     public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
 
     //Keep track of these because we want to apply data to them later.
@@ -94,6 +94,10 @@ public class CustomScript extends FiguraAsset {
 
     public Vec2f crossHairPos = null;
     public boolean crossHairEnabled = true;
+
+    // If the player should render the entity their riding
+    public boolean renderMount = true;
+    public boolean renderMountShadow = true;
 
     public boolean hasPlayer = false;
 

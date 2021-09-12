@@ -162,6 +162,33 @@ public class RendererAPI {
                     return NIL;
                 }
             });
+
+            set("setMountEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    script.renderMount = arg.checkboolean();
+                    return NIL;
+                }
+            });
+            set("getMountEnabled", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(script.renderMount);
+                }
+            });
+            set("setMountShadowEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    script.renderMountShadow = arg.checkboolean();
+                    return NIL;
+                }
+            });
+            set("getMountShadowEnabled", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(script.renderMountShadow);
+                }
+            });
         }});
     }
 
