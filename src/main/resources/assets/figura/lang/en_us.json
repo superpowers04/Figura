@@ -93,6 +93,11 @@
   "gui.figura.config.formatscript": "Format Script",
   "gui.figura.config.tooltip.formatscript": "Format script when uploading your avatar",
 
+  "gui.figura.config.partshitbox": "Render Parts Pivot",
+  "gui.figura.config.tooltip.partshitbox": "Render the Pivots from %d and %d when the hitbox debug rendering is enabled",
+  "gui.figura.config.tooltip.partshitbox.cubes": "cubes",
+  "gui.figura.config.tooltip.partshitbox.groups": "groups",
+
   "gui.figura.config.buttonlocation": "Figura Button Location",
   "gui.figura.config.tooltip.buttonlocation": "Location where the Figura settings button should be",
   "gui.figura.config.buttonlocation.topleft": "Top Left",

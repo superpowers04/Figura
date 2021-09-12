@@ -204,10 +204,9 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
             boolean sneaky = !entity.isSneaky();
             int i = 0;
             List<Text> textList = NamePlateAPI.splitText(text, "\n");
-            for(Text splitText : textList) {
-                renderNameplate(matrices, vertexConsumers, sneaky, light, splitText, i-textList.size()+1);
+            for (Text splitText : textList) {
+                renderNameplate(matrices, vertexConsumers, sneaky, light, splitText, i - textList.size() + 1);
                 i++;
-
             }
         }
         matrices.pop();

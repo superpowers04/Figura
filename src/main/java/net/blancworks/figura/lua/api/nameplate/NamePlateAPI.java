@@ -14,6 +14,7 @@ import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -108,11 +109,16 @@ public class NamePlateAPI {
 
                     if (!arg.isnil()) {
                         //no ✭ 4 u
-                        string = arg.checkjstring().replaceAll("([△▲★✯☆✭]|\\\\u(?i)(25B3|25B2|2605|272F|2606|272D))", "\uFFFD");
+                        string = noBadges4U(arg.checkjstring());
 
                         //allow new lines only on entity
                         if (!accessor.equals(ENTITY))
                             string = string.replaceAll("[\n\r]", " ");
+
+                        //check if nameplate is too large
+                        if (string.length() > 65535) {
+                            throw new LuaError("Nameplate too long - oopsie!");
+                        }
                     }
 
                     targetScript.getOrMakeNameplateCustomization(accessor).text = string;
@@ -286,6 +292,10 @@ public class NamePlateAPI {
         }
 
         return formattedText;
+    }
+
+    public static String noBadges4U(String string) {
+        return string.replaceAll("([△▲★✯☆✭]|\\\\u(?i)(25B3|25B2|2605|272F|2606|272D))", "\uFFFD");
     }
 
     public static List<Text> splitText(Text text, String regex) {

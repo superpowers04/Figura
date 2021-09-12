@@ -100,8 +100,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.uselocalserver"), new TranslatableText("gui.figura.config.tooltip.uselocalserver"), Config.entries.get("useLocalServer")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.formatscript"), new TranslatableText("gui.figura.config.tooltip.formatscript"), Config.entries.get("formatScript")));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.logothers"), new TranslatableText("gui.figura.config.tooltip.logothers"), Config.entries.get("logOthers")));
+        this.addEntry(new ConfigListWidget.BooleanEntry(
+                new TranslatableText("gui.figura.config.partshitbox"),
+                new TranslatableText("gui.figura.config.tooltip.partshitbox", new TranslatableText("gui.figura.config.tooltip.partshitbox.cubes").setStyle(Style.EMPTY.withColor(0xff72b7)), new TranslatableText("gui.figura.config.tooltip.partshitbox.groups").setStyle(Style.EMPTY.withColor(0xaff2ff))),
+                Config.entries.get("partsHitBox")
+        ));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.ownnametag"), new TranslatableText("gui.figura.config.tooltip.ownnametag"), Config.entries.get("ownNameTag")));
-        }
+    }
 
     @Override
     protected int getScrollbarPositionX() {
