@@ -309,11 +309,11 @@ public class CustomModelPart {
         Vec3f color;
         float boxSize;
         if (this instanceof CustomModelPartCuboid) {
-            color = new Vec3f(1f, 0.45f, 0.72f); //0xff72b7
+            color = new Vec3f(1f, 0.45f, 0.72f); //0xff72b7 aka fran_pink
             boxSize = size / 2f;
         }
         else {
-            color = new Vec3f(0.69f, 0.95f, 1f); //0xaff2ff
+            color = new Vec3f(0.69f, 0.95f, 1f); //0xaff2ff aka ace_blue
             boxSize = size;
         }
 
@@ -511,6 +511,16 @@ public class CustomModelPart {
                 visible = true;
                 matrices.pop();
             }});
+            case Camera -> {
+                if (FiguraMod.renderDispatcher != null) {
+                    Quaternion rot = FiguraMod.renderDispatcher.getRotation().copy();
+                    Vec3f euler = rot.method_35828();
+
+                    matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
+                    matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
+                    matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
+                }
+            }
         }
     }
 
@@ -564,8 +574,7 @@ public class CustomModelPart {
     }
 
     //Re-builds the mesh data for a custom model part.
-    public void rebuild() {
-    }
+    public void rebuild() {}
 
     public void addVertex(Vec3f vert, float u, float v, Vec3f normal) {
         this.vertexData.add(vert.getX() / 16.0f);

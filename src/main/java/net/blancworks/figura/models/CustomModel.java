@@ -122,6 +122,8 @@ public class CustomModel extends FiguraAsset {
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
 
         for (CustomModelPart part : playerData.model.allParts) {
+            if (part.isParentSpecial()) continue;
+
             if (arm == model.rightArm)
                 playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.RightArm, playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
             else if (arm == model.leftArm)
