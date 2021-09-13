@@ -35,20 +35,20 @@ public class GameMenuScreenMixin extends Screen {
 
         int config = (int) Config.entries.get("buttonLocation").value;
         switch (config) {
-            case 1: //top right
+            //top right
+            case 1 -> x = this.width - 64 - 5;
+            //bottom left
+            case 2 -> y = this.height - 20 - 5;
+            //bottom right
+            case 3 -> {
                 x = this.width - 64 - 5;
-                break;
-            case 2: //bottom left
                 y = this.height - 20 - 5;
-                break;
-            case 3: //bottom right
-                x = this.width - 64 - 5;
-                y = this.height - 20 - 5;
-                break;
-            case 4: //icon
+            }
+            //icon
+            case 4 -> {
                 x = this.width / 2 + 4 + 100 + 2;
                 y = this.height / 4 + 96 + -16;
-                break;
+            }
         }
 
         if (config != 4) {
@@ -58,18 +58,18 @@ public class GameMenuScreenMixin extends Screen {
                 }
             } catch (Exception ignored) {}
 
-            addButton(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
-                    btn -> this.client.openScreen(figura$screen)));
+            addDrawableChild(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
+                    btn -> this.client.setScreen(figura$screen)));
         }
         else {
             Identifier iconTexture = new Identifier("figura", "textures/gui/config_icon.png");
-            addButton(new TexturedButtonWidget(x, y, 20, 20, 0, 0, 20, iconTexture, 20, 40, btn -> this.client.openScreen(figura$screen)));
+            addDrawableChild(new TexturedButtonWidget(x, y, 20, 20, 0, 0, 20, iconTexture, 20, 40, btn -> this.client.setScreen(figura$screen)));
         }
 
         if (this.figura$newScreen == null)
             this.figura$newScreen = new NewFiguraGuiScreen(this);
 
         //Identifier iconnnnn = new Identifier("figura", "textures/gui/config_icon.png");
-        //addButton(new TexturedButtonWidget(this.width / 2 + 4 + 100 + 2, this.height / 4 + 96 + -16 + 24, 20, 20, 0, 0, 20, iconnnnn, 20, 40, btn -> this.client.openScreen(figura$newScreen)));
+        //addDrawableChild(new TexturedButtonWidget(this.width / 2 + 4 + 100 + 2, this.height / 4 + 96 + -16 + 24, 20, 20, 0, 0, 20, iconnnnn, 20, 40, btn -> this.client.openScreen(figura$newScreen)));
     }
 }

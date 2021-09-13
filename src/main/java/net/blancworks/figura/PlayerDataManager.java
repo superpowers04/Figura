@@ -43,7 +43,7 @@ public final class PlayerDataManager {
         }
 
         if (!didInitLocalPlayer) {
-            if (id == MinecraftClient.getInstance().player.getUuid()) {
+            if (MinecraftClient.getInstance().player != null && id == MinecraftClient.getInstance().player.getUuid()) {
                 localPlayer = new LocalPlayerData();
                 localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
                 LOADED_PLAYER_DATA.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
@@ -61,7 +61,7 @@ public final class PlayerDataManager {
             }
         }
 
-        if (id == MinecraftClient.getInstance().player.getUuid())
+        if (MinecraftClient.getInstance().player != null && id == MinecraftClient.getInstance().player.getUuid())
             return localPlayer;
 
         if (!LOADED_PLAYER_DATA.containsKey(id)) {

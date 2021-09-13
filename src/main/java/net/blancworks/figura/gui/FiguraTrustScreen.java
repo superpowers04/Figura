@@ -43,8 +43,8 @@ public class FiguraTrustScreen extends Screen {
 
     public PlayerListWidget playerList;
     public PermissionListWidget permissionList;
-    public CustomListWidgetState playerListState = new CustomListWidgetState();
-    public CustomListWidgetState permissionListState = new CustomListWidgetState();
+    public CustomListWidgetState<Object> playerListState = new CustomListWidgetState<>();
+    public CustomListWidgetState<Object> permissionListState = new CustomListWidgetState<>();
 
     public ButtonWidget resetPermissionButton;
     public ButtonWidget resetAllPermissionsButton;
@@ -102,28 +102,21 @@ public class FiguraTrustScreen extends Screen {
 
             PlayerTrustManager.saveToDisk();
 
-            this.client.openScreen(parentScreen);
+            this.client.setScreen(parentScreen);
         }));
 
-        this.addDrawableChild(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
             //Open the trust menu from the Figura Wiki
             if (bl)
                 Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
-            this.client.openScreen(this);
+            this.client.setScreen(this);
         }, "https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu", true))));
 
-        this.addDrawableChild(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> {
-            PlayerDataManager.clearCache();
-        }));
+        this.addDrawableChild(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> PlayerDataManager.clearCache()));
 
         this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.reloadavatar"), (btx) -> {
-
-            if (playerListState.selected instanceof PlayerListEntry) {
-                PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
-
-                if (entry != null) {
-                    PlayerDataManager.clearPlayer(entry.getProfile().getId());
-                }
+            if (playerListState.selected instanceof PlayerListEntry entry) {
+                PlayerDataManager.clearPlayer(entry.getProfile().getId());
             }
         }));
 
@@ -133,7 +126,7 @@ public class FiguraTrustScreen extends Screen {
 
                 //if a perm is selected, reset only this perm
                 if (playerListState != null && permissionListState.selected != null)
-                    tc.reset(((PermissionSetting) permissionListState.selected).id);
+                    tc.reset(((PermissionSetting<?>) permissionListState.selected).id);
                 //else reset all the entry perms
                 else
                     tc.resetAll();
@@ -189,9 +182,7 @@ public class FiguraTrustScreen extends Screen {
         this.searchBox.render(matrices, mouseX, mouseY, delta);
         //this.uuidBox.render(matrices, mouseX, mouseY, delta);
 
-        if (playerListState.selected instanceof PlayerListEntry) {
-            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
-
+        if (playerListState.selected instanceof PlayerListEntry entry) {
             Text nameText = new LiteralText(entry.getProfile().getName()).setStyle(Style.EMPTY.withColor(TextColor.parse("white")));
             Text uuidText = new LiteralText(entry.getProfile().getId().toString()).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
 
@@ -249,7 +240,7 @@ public class FiguraTrustScreen extends Screen {
                 } else if (playerListState.selected instanceof Identifier) {
                     TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
 
-                    if (tc.isHidden) {
+                    if (tc != null && tc.isHidden) {
                         renderTooltip(matrices, new TranslatableText("gui.figura.button.tooltip.cantreset"), mouseX, mouseY);
                     } else {
                         renderTooltip(matrices, new TranslatableText("gui.figura.button.tooltip.resetallperm"), mouseX, mouseY);
@@ -322,7 +313,7 @@ public class FiguraTrustScreen extends Screen {
     @Override
     public void onClose() {
         PlayerTrustManager.saveToDisk();
-        this.client.openScreen(parentScreen);
+        this.client.setScreen(parentScreen);
     }
 
     int tickCount = 0;
@@ -339,8 +330,7 @@ public class FiguraTrustScreen extends Screen {
             resetPermissionButton.active = shiftPressed;
         } else if (playerListState.selected instanceof Identifier) {
             TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
-
-            if (!tc.isHidden)
+            if (tc != null && !tc.isHidden)
                 resetPermissionButton.active = shiftPressed;
         } else {
             resetPermissionButton.active = false;
@@ -406,10 +396,7 @@ public class FiguraTrustScreen extends Screen {
         if (playerList.isMouseOver(mouseX, mouseY) && playerList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
             return true;
 
-        if (playerList.isMouseOver(mouseX, mouseY) && playerListState.selected instanceof PlayerListEntry) {
-            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
-
-
+        if (playerList.isMouseOver(mouseX, mouseY) && playerListState.selected instanceof PlayerListEntry entry) {
             if (draggedId == null) {
                 if (Math.abs(mouseX - pressStartX) + Math.abs(mouseY - pressStartY) > 2) {
                     draggedId = entry.getProfile().getId();
@@ -422,7 +409,6 @@ public class FiguraTrustScreen extends Screen {
                     playerList.reloadFilters();
                 }
             }
-
             return true;
         }
 
@@ -446,20 +432,19 @@ public class FiguraTrustScreen extends Screen {
                         Identifier playerID = new Identifier("players", draggedId.toString());
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
 
-                        tc.setParent((Identifier) obj);
+                        if (tc != null) tc.setParent((Identifier) obj);
                     } else if (obj instanceof PlayerListEntry) {
                         Identifier playerID = new Identifier("players", draggedId.toString());
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
                         Identifier droppedID = new Identifier("players", ((PlayerListEntry) obj).getProfile().getId().toString());
                         TrustContainer droppedTC = PlayerTrustManager.getContainer(droppedID);
 
-                        tc.setParent(droppedTC.getParentIdentifier());
+                        if (tc != null) tc.setParent(droppedTC.getParentIdentifier());
                     }
                 }
             }
         }
         draggedId = null;
-
 
         playerList.reloadFilters();
         permissionList.rebuild();
