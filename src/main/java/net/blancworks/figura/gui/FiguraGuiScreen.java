@@ -51,7 +51,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
 
-    public static final List<Text> deleteTooltip = new ArrayList<Text>(){{
+    public static final List<Text> deleteTooltip = new ArrayList<>() {{
         add(new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
         add(new TranslatableText("gui.figura.button.tooltip.deleteavatartwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
     }};
@@ -106,7 +106,7 @@ public class FiguraGuiScreen extends Screen {
     public FiguraConfigScreen configScreen = new FiguraConfigScreen(this);
     public FiguraKeyBindsScreen keyBindsScreen = new FiguraKeyBindsScreen(this);
 
-    public CustomListWidgetState modelFileListState = new CustomListWidgetState();
+    public CustomListWidgetState<Object> modelFileListState = new CustomListWidgetState<>();
     public ModelFileListWidget modelFileList;
 
     public FiguraGuiScreen(Screen parentScreen) {
@@ -160,20 +160,20 @@ public class FiguraGuiScreen extends Screen {
         }));
 
         //back button
-        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.openScreen(parentScreen)));
+        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.setScreen(parentScreen)));
 
         //trust button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.openScreen(trustScreen)));
+        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.setScreen(trustScreen)));
 
         //config button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.configmenu"), (buttonWidgetx) -> this.client.openScreen(configScreen)));
+        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.configmenu"), (buttonWidgetx) -> this.client.setScreen(configScreen)));
 
         //help button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 65, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 65, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
             if (bl) {
                 Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
             }
-            this.client.openScreen(this);
+            this.client.setScreen(this);
         }, "https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel", true))));
 
         //keybinds button
@@ -182,7 +182,7 @@ public class FiguraGuiScreen extends Screen {
                 20, 20,
                 0, 0, 20,
                 keybindsTexture, 40, 40,
-                (bx) -> this.client.openScreen(keyBindsScreen)
+                (bx) -> this.client.setScreen(keyBindsScreen)
         );
         this.addDrawableChild(keybindsButton);
         keybindsButton.active = false;
@@ -207,9 +207,7 @@ public class FiguraGuiScreen extends Screen {
                 25, 25,
                 0, 0, 25,
                 uploadTexture, 25, 50,
-                (bx) -> {
-                    FiguraMod.networkManager.postAvatar().thenRun(()->System.out.println("UPLOADED AVATAR"));
-                }
+                (bx) -> FiguraMod.networkManager.postAvatar().thenRun(()->System.out.println("UPLOADED AVATAR"))
         );
         this.addDrawableChild(uploadButton);
 
@@ -250,7 +248,7 @@ public class FiguraGuiScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.client.openScreen(parentScreen);
+        this.client.setScreen(parentScreen);
     }
 
     int tickCount = 0;
@@ -636,7 +634,7 @@ public class FiguraGuiScreen extends Screen {
         super.filesDragged(paths);
 
         String string = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
-        this.client.openScreen(new ConfirmScreen((bl) -> {
+        this.client.setScreen(new ConfirmScreen((bl) -> {
             Path destPath = LocalPlayerData.getContentDirectory();
             if (bl) {
                 paths.forEach((path2) -> {
@@ -664,7 +662,7 @@ public class FiguraGuiScreen extends Screen {
 
                 });
             }
-            this.client.openScreen(this);
+            this.client.setScreen(this);
         }, new TranslatableText("gui.figura.dropconfirm"), new LiteralText(string)));
     }
 

@@ -31,7 +31,7 @@ public class NewFiguraGuiScreen extends Screen {
     @Override
     public void onClose() {
         this.client.options.hudHidden = this.hudHidden;
-        this.client.openScreen(parentScreen);
+        this.client.setScreen(parentScreen);
     }
 
     @Override

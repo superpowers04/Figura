@@ -57,7 +57,7 @@ public class ItemStackAPI {
             set("getTag", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    NbtElement tag = stack.getTag();
+                    NbtElement tag = stack.getNbt();
                     return NBTAPI.fromTag(tag);
                 }
             });
@@ -138,7 +138,7 @@ public class ItemStackAPI {
         StringReader reader = new StringReader(s);
 
         try {
-            item.setTag((NbtCompound) new StringNbtReader(reader).parseElement());
+            item.setNbt((NbtCompound) new StringNbtReader(reader).parseElement());
         } catch (CommandSyntaxException e) {
             throw new LuaError("NBT parse error\n" + e.getMessage());
         } catch (Exception e) {
