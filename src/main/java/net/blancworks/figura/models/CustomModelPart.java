@@ -116,7 +116,7 @@ public class CustomModelPart {
             //extras//
 
             //render the extra parts
-            ret = renderExtras(ret, matrices, vcp);
+            ret = renderExtras(ret, matrices, vcp, light);
 
             return ret;
         }
@@ -250,7 +250,7 @@ public class CustomModelPart {
 
     //Render the extra amazing parts (text/block/item)
     //Just like the default render, it follows leftToRender rules
-    public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp) {
+    public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
         //Don't render invisible parts.
         if (!this.visible || !this.shouldRender || this.isHidden) {
             return leftToRender;
@@ -263,7 +263,7 @@ public class CustomModelPart {
 
         //Render extra parts
         for (RenderTask task : this.renderTasks) {
-            leftToRender -= task.render(matrices, vcp);
+            leftToRender -= task.render(matrices, vcp, light);
             if (leftToRender <= 0) break;
         }
 
@@ -277,7 +277,7 @@ public class CustomModelPart {
                 continue;
 
             //render child part extras
-            leftToRender = child.renderExtras(leftToRender, matrices, vcp);
+            leftToRender = child.renderExtras(leftToRender, matrices, vcp, light);
         }
 
         //return
