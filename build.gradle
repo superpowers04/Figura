@@ -36,7 +36,7 @@ repositories {
 
 	maven {
 		name = 'TerraformersMC'
-		url = 'https://raw.githubusercontent.com/TerraformersMC/Archive/main/releases/'
+		url = 'https://maven.terraformersmc.com/releases/'
 	}
 
 }

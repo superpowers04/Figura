@@ -62,6 +62,8 @@ public class CustomScript extends FiguraAsset {
     //How many instructions the last tick/render event used.
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
+    public int pingSent = 0;
+    public int pingReceived = 0;
 
     //References to the tick and render functions for easy use elsewhere.
     private LuaEvent tickLuaEvent = null;
@@ -463,6 +465,9 @@ public class CustomScript extends FiguraAsset {
             tickLuaEvent.call();
 
             //Process all pings.
+            pingSent = outgoingPingQueue.size();
+            pingReceived = incomingPingQueue.size();
+
             while (incomingPingQueue.size() > 0) {
                 LuaPing p = incomingPingQueue.poll();
 

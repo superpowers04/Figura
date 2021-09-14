@@ -1,11 +1,8 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.Config;
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
-import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -41,10 +38,6 @@ public abstract class EntityRenderDispatcherMixin {
     @Inject(at = @At("HEAD"), method = "render")
     public <E extends Entity> void render(E entity, double x, double y, double z, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         renderShadowOld = this.renderShadows;
-
-        if (entity instanceof PlayerEntity) {
-            FiguraMod.renderDispatcher = (EntityRenderDispatcher) (Object) this;
-        }
     }
 
     @Redirect(method = "render", at = @At(target = "Lnet/minecraft/client/render/entity/EntityRenderer;render(Lnet/minecraft/entity/Entity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", value = "INVOKE"))
@@ -57,17 +50,5 @@ public abstract class EntityRenderDispatcherMixin {
     @Inject(method = "render", at = @At("TAIL"))
     private <T extends Entity> void renderEnd(T entity, double x, double y, double z, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         this.renderShadows = renderShadowOld;
-    }
-
-    @Inject(at = @At("HEAD"), method = "renderHitbox")
-    private static void renderHitbox(MatrixStack matrices, VertexConsumer vertices, Entity entity, float tickDelta, CallbackInfo ci) {
-        if (entity instanceof PlayerEntity player && (boolean) Config.entries.get("partsHitBox").value) {
-
-            PlayerData data = PlayerDataManager.getDataForPlayer(player.getUuid());
-            if (data == null || data.model == null) return;
-
-            FiguraMod.currentData = data;
-            data.model.allParts.forEach(part -> part.renderPivotHitbox(matrices, vertices, 1 / 32f));
-        }
     }
 }

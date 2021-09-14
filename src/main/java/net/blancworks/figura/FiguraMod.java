@@ -82,7 +82,6 @@ public class FiguraMod implements ClientModInitializer {
     public static PlayerData currentData;
     public static VertexConsumerProvider vertexConsumerProvider;
     public static float deltaTime;
-    public static EntityRenderDispatcher renderDispatcher;
 
     private static final boolean USE_DEBUG_MODEL = true;
     private static WatchKey watchKey;
