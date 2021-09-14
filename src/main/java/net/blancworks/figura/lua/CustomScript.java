@@ -4,15 +4,19 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.*;
+import net.blancworks.figura.Config;
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.lua.api.LuaEvent;
-import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
+import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
+import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
@@ -58,6 +62,8 @@ public class CustomScript extends FiguraAsset {
     //How many instructions the last tick/render event used.
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
+    public int pingSent = 0;
+    public int pingReceived = 0;
 
     //References to the tick and render functions for easy use elsewhere.
     private LuaEvent tickLuaEvent = null;
@@ -81,7 +87,7 @@ public class CustomScript extends FiguraAsset {
     public int actionWheelLeftSize = 4;
     public int actionWheelRightSize = 4;
 
-    //scripting custom keybinds
+    //scripting custom keybindings
     public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
 
     //Keep track of these because we want to apply data to them later.
@@ -95,9 +101,12 @@ public class CustomScript extends FiguraAsset {
     public Vec2f crossHairPos = null;
     public boolean crossHairEnabled = true;
 
+    // If the player should render the entity their riding
+    public boolean renderMount = true;
+    public boolean renderMountShadow = true;
+
     public boolean hasPlayer = false;
 
-    //TODO maybe remove this out from scripting
     public DamageSource lastDamageSource;
 
     public String commandPrefix = "\u0000";
@@ -456,6 +465,9 @@ public class CustomScript extends FiguraAsset {
             tickLuaEvent.call();
 
             //Process all pings.
+            pingSent = outgoingPingQueue.size();
+            pingReceived = incomingPingQueue.size();
+
             while (incomingPingQueue.size() > 0) {
                 LuaPing p = incomingPingQueue.poll();
 
@@ -477,6 +489,10 @@ public class CustomScript extends FiguraAsset {
     public void onRender(float deltaTime) {
         if (!isDone || renderLuaEvent == null || !hasPlayer || playerData.lastEntity == null)
             return;
+
+        for (CustomModelPart part : this.playerData.model.allParts) {
+            CustomModelPart.clearExtraRendering(part);
+        }
 
         setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
         try {

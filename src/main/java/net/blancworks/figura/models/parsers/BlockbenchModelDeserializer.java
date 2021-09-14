@@ -41,6 +41,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("RIGHT_ELYTRA", CustomModelPart.ParentType.RightElytra)
                     .put("LEFT_SPYGLASS", CustomModelPart.ParentType.LeftSpyglass)
                     .put("RIGHT_SPYGLASS", CustomModelPart.ParentType.RightSpyglass)
+                    .put("CAMERA", CustomModelPart.ParentType.Camera)
                     .build();
 
     private static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =

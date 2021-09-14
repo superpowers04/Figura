@@ -25,13 +25,13 @@ public class FiguraConfigScreen extends Screen {
 
         this.addDrawableChild(new ButtonWidget(this.width / 2 - 154, this.height - 29, 150, 20, new TranslatableText("gui.cancel"), (buttonWidgetx) -> {
             Config.discardConfig();
-            this.client.openScreen(parentScreen);
+            this.client.setScreen(parentScreen);
         }));
 
         this.addDrawableChild(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
             Config.copyConfig();
             Config.saveConfig();
-            this.client.openScreen(parentScreen);
+            this.client.setScreen(parentScreen);
         }));
 
         this.configListWidget = new ConfigListWidget(this, this.client);
@@ -42,7 +42,7 @@ public class FiguraConfigScreen extends Screen {
     public void onClose() {
         Config.copyConfig();
         Config.saveConfig();
-        this.client.openScreen(parentScreen);
+        this.client.setScreen(parentScreen);
     }
 
     @Override

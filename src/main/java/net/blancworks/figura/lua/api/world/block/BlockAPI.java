@@ -23,5 +23,4 @@ public class BlockAPI {
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return globalLuaTable;
     }
-    
 }

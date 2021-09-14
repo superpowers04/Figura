@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModelPart;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
@@ -280,7 +281,17 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("part", LuaValue.userdataOf(targetPart));
+
             return ret;
         }
+    }
+
+    public static CustomModelPart checkCustomModelPart(LuaValue arg1) {
+        CustomModelPart part = (CustomModelPart) arg1.get("part").touserdata(CustomModelPart.class);
+        if (part == null)
+            throw new LuaError("Not a CustomModelPart table!");
+
+        return part;
     }
 }

@@ -23,6 +23,7 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
@@ -66,7 +67,7 @@ public class FiguraMod implements ClientModInitializer {
 
     //This task is what's used to manage all loading requests in the whole mod.
     //If an asset is set to load, it will attach to this if it exists, or create a new one if it doesn't.
-    private static CompletableFuture globalLoadTask;
+    private static CompletableFuture<?> globalLoadTask;
 
     private PlayerDataManager dataManagerInstance;
 
@@ -91,7 +92,7 @@ public class FiguraMod implements ClientModInitializer {
     //Set current player.
     //If there is a model loaded for the player, it'll be assigned here to the current model.
     //Otherwise, sends the model to the request list.
-    public static void setRenderingData(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel mdl, float dt) {
+    public static void setRenderingData(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel<?> mdl, float dt) {
         currentPlayer = player;
         currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
         currentData.vanillaModel = mdl;
@@ -147,7 +148,7 @@ public class FiguraMod implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
         WorldRenderEvents.AFTER_ENTITIES.register(FiguraMod::renderFirstPersonWorldParts);
         ClientLifecycleEvents.CLIENT_STOPPING.register((v) -> networkManager.onClose());
-        
+
         dataManagerInstance = new PlayerDataManager();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
@@ -271,6 +272,8 @@ public class FiguraMod implements ClientModInitializer {
             UUID.fromString("aa0e3391-e497-4e8e-8afe-b69dfaa46afa"), //salad
             UUID.fromString("da53c608-d17c-4759-94fe-a0317ed63876"), //zandra
             UUID.fromString("66a6c5c4-963b-4b73-a0d9-162faedd8b7f"), //fran
-            UUID.fromString("45361fcf-f188-46de-ae96-43d89afd6658")  //monty58
+            UUID.fromString("45361fcf-f188-46de-ae96-43d89afd6658"), //money
+            UUID.fromString("d47ce8af-b942-47de-8790-f602241531e3"), //omo
+            UUID.fromString("0d04770a-9482-4a39-8011-fcbb7c99b8e1")  //lily
     );
 }

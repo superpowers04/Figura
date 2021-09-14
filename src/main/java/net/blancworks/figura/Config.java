@@ -108,6 +108,7 @@ public class Config {
         entries.put("actionWheel", new ConfigEntry<>(GLFW.GLFW_KEY_B));
         entries.put("formatScript", new ConfigEntry<>(true));
         entries.put("actionWheelPos", new ConfigEntry<>(0, 4));
+        entries.put("partsHitBox", new ConfigEntry<>(true));
     }
 
     public static class ConfigEntry<T> {
