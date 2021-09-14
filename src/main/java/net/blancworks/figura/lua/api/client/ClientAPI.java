@@ -213,6 +213,14 @@ public class ClientAPI {
                     return LuaValue.valueOf(local);
                 }
             });
+
+            set("getSystemTime", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(System.currentTimeMillis());
+                }
+            });
+
         }});
     }
 }
