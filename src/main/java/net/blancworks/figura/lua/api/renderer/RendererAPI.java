@@ -101,8 +101,11 @@ public class RendererAPI {
                 @Override
                 public Varargs onInvoke(Varargs args) {
                     String arg1 = NamePlateAPI.noBadges4U(args.arg(1).checkjstring()).replaceAll("[\n\r]", " ");
-                    Text text;
 
+                    if (arg1.length() > 65535)
+                        throw new LuaError("Text too long - oopsie!");
+
+                    Text text;
                     try {
                         text = Text.Serializer.fromJson(new StringReader(arg1));
                     } catch (Exception ignored) {

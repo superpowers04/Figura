@@ -14,7 +14,9 @@ public class DebugHudMixin {
 
     @Inject(at = @At("RETURN"), method = "getRightText()Ljava/util/List;")
     protected void getRightText(CallbackInfoReturnable<List<String>> cir) {
-        if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.script != null)
-            cir.getReturnValue().add(4, String.format("[FIGURA] tick instructions : %d render instructions : %d", PlayerDataManager.localPlayer.script.tickInstructionCount, PlayerDataManager.localPlayer.script.renderInstructionCount));
+        if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.script != null) {
+            cir.getReturnValue().add(4, String.format("[§bFIGURA§r] tick instructions: %d, render instructions: %d", PlayerDataManager.localPlayer.script.tickInstructionCount, PlayerDataManager.localPlayer.script.renderInstructionCount));
+            cir.getReturnValue().add(5, String.format("[§bFIGURA§r] pings sent: %d, pings received: %d", PlayerDataManager.localPlayer.script.pingSent, PlayerDataManager.localPlayer.script.pingReceived));
+        }
     }
 }
