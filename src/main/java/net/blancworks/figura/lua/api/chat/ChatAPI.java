@@ -2,18 +2,23 @@ package net.blancworks.figura.lua.api.chat;
 
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ChatHudAccess;
+import net.blancworks.figura.access.ChatScreenAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHudLine;
+import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ChatAPI {
 
@@ -55,6 +60,17 @@ public class ChatAPI {
                     } catch (Exception ignored) {
                         return NIL;
                     }
+                }
+            });
+
+            set("getInputText", new ZeroArgFunction() {
+                public LuaValue call() {
+                    if (MinecraftClient.getInstance().currentScreen instanceof ChatScreen chatScreen) {
+                        String message = ((ChatScreenAccess) chatScreen).getChatField().getText();
+                        return message == null || Objects.equals(message, "") ? NIL : LuaString.valueOf(message);
+                    }
+
+                    return NIL;
                 }
             });
 
