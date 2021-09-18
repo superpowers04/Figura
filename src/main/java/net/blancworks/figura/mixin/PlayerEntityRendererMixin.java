@@ -87,8 +87,14 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
     public boolean shouldRender(AbstractClientPlayerEntity entity, Frustum frustum, double x, double y, double z) {
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
 
-        if(data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_OFFSCREEN_RENDERING))
-            return true;
+        if (data != null) {
+            //ikr this is not the right place, but no need to create a new mixin only for this
+            if (data.script != null)
+                data.script.onWorldRender(MinecraftClient.getInstance().getTickDelta());
+
+            if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_OFFSCREEN_RENDERING))
+                return true;
+        }
 
         return super.shouldRender(entity, frustum, x, y, z);
     }

@@ -6,7 +6,6 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModelPart;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
@@ -153,10 +152,14 @@ public class CustomModelAPI {
             ret.set("setParentType", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetPart.parentType = CustomModelPart.ParentType.valueOf(arg1.checkjstring());
+                    try {
+                        targetPart.parentType = CustomModelPart.ParentType.valueOf(arg1.checkjstring());
 
-                    if (targetPart.isParentSpecial())
-                        partOwner.model.sortAllParts();
+                        if (targetPart.isParentSpecial())
+                            partOwner.model.sortAllParts();
+                    } catch (Exception ignored) {
+                        targetPart.parentType = CustomModelPart.ParentType.Model;
+                    }
 
                     return NIL;
                 }
@@ -209,7 +212,12 @@ public class CustomModelAPI {
             ret.set("setShader", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetPart.shaderType = CustomModelPart.ShaderType.valueOf(arg1.checkjstring());
+                    try {
+                        targetPart.shaderType = CustomModelPart.ShaderType.valueOf(arg1.checkjstring());
+                    } catch (Exception ignored) {
+                        targetPart.shaderType = CustomModelPart.ShaderType.None;
+                    }
+
                     return NIL;
                 }
             });
@@ -245,11 +253,11 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vec3f v3f = new Vec3f(v.x() / 16.0f, -(v.y()) / 16.0f, v.z() / 16.0f);
+                    Vector4f v4f = new Vector4f(v.x() / 16.0f, -(v.y()) / 16.0f, v.z() / 16.0f, 1.0f);
 
-                    v3f.transform(targetPart.lastNormalMatrix);
+                    v4f.transform(targetPart.lastModelMatrixInverse);
 
-                    return LuaVector.of(v3f);
+                    return LuaVector.of(v4f);
                 }
             });
 
@@ -260,7 +268,7 @@ public class CustomModelAPI {
 
                     Vec3f v3f = new Vec3f(v.x(), -(v.y()), v.z());
 
-                    v3f.transform(targetPart.lastNormalMatrix);
+                    v3f.transform(targetPart.lastNormalMatrixInverse);
 
                     return LuaVector.of(v3f);
                 }
