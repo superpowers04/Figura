@@ -1,7 +1,6 @@
 package net.blancworks.figura.models;
 
 import com.google.common.collect.ImmutableMap;
-import com.mojang.blaze3d.systems.RenderSystem;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.Config;
@@ -23,6 +22,7 @@ import net.minecraft.util.math.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -53,9 +53,7 @@ public class CustomModelPart {
 
     public ShaderType shaderType = ShaderType.None;
 
-    public boolean shouldRender = true;
-
-    public RenderType renderType = RenderType.None;
+    //public RenderType renderType = RenderType.None;
 
     public float alpha = 1.0f;
 
@@ -72,87 +70,160 @@ public class CustomModelPart {
     //Extra special rendering for this part
     public ArrayList<RenderTask> renderTasks = new ArrayList<>();
 
-    public RenderLayer temp;
+    public static boolean canRenderHitBox;
+    public static ParentType renderOnly = null;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
-    public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        if(data.texture.isDone) {
-            //apply part alpha value
-            alpha = this.alpha * alpha;
-            //Store this value for extra textures
-            int prevLeftToRender = data.model.leftToRender;
+    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        if (data.texture.isDone) {
+            //hit boxes :3
+            canRenderHitBox = (boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-            //Render with main texture.
-            temp = RenderLayer.getEntityTranslucent(data.texture.id);
-            VertexConsumer mainTextureConsumer = vcp.getBuffer(temp);
-            int ret = render(prevLeftToRender, matrices, transformStack, mainTextureConsumer, light, overlay, alpha);
+            //render!
+            int ret = render(data, data.model.leftToRender, matrices, transformStack, vcp, light, overlay, 0, 0, new Vec3f(1, 1, 1), alpha, new HashSet<>(), false);
 
-            //Render extra textures (emission, that sort)
-            for (FiguraTexture extraTexture : data.extraTextures) {
-                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
-
-                if (renderLayerGetter != null) {
-                    VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
-
-                    render(prevLeftToRender, matrices, transformStack, extraTextureVertexConsumer, light, overlay, alpha);
-                }
-            }
-
-            //shaders//
-
-            //end portal
-            excludeFilterParts(this, ShaderType.EndPortal);
-
-            VertexConsumer portalConsumer = vcp.getBuffer(RenderLayer.getEndGateway());
-            render(prevLeftToRender, matrices, transformStack, portalConsumer, light, overlay, alpha);
-
-            //glint
-            filterParts(this, ShaderType.Glint);
-
-            VertexConsumer glintConsumer = vcp.getBuffer(RenderLayer.getDirectEntityGlint());
-            render(prevLeftToRender, matrices, transformStack, glintConsumer, light, overlay, alpha);
-
-            //reset rendering status
-            setRenderStatus(this, true);
-
-            //extras//
-
-            //render the extra parts
-            ret = renderExtras(ret, matrices, vcp, light);
-
-            //render hitboxes
-            if ((boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes()) {
-                RenderSystem.disableDepthTest();
-                renderPivotHitbox(matrices, vcp.getBuffer(RenderLayer.getLines()));
-            }
-
+            //post render
+            renderOnly = null;
             return ret;
         }
         return 0;
     }
 
-    public int renderUsingAllTexturesFiltered(ParentType filter, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        filterParts(this, filter);
-        return renderUsingAllTextures(data, matrices, transformStack, vcp, light, overlay, alpha);
-    }
-
-    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float alpha) {
-        return render(leftToRender, matrices, transformStack, vertices, light, overlay, 0, 0, new Vec3f(1, 1, 1), alpha);
-    }
-
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f prevColor, float alpha) {
-        //Don't render invisible parts.
-        if (!this.visible || !this.shouldRender || this.isHidden) {
+    public int render(PlayerData data, int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, HashSet<ShaderType> shadersToRender, boolean canRenderChild) {
+        //do not render invisible parts
+        if (!this.visible || this.isHidden)
             return leftToRender;
-        }
 
         matrices.push();
         transformStack.push();
 
-        applyVanillaModelTransforms(matrices);
-        applyVanillaModelTransforms(transformStack);
+        try {
+            PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
+            if (this.isMimicMode && parentType != ParentType.None && parentType != ParentType.Model) {
+                switch (this.parentType) {
+                    case Head -> this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
+                    case Torso -> this.rot = new Vec3f(model.body.pitch, model.body.yaw, model.body.roll);
+                    case LeftArm -> this.rot = new Vec3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
+                    case LeftLeg -> this.rot = new Vec3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
+                    case RightArm -> this.rot = new Vec3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
+                    case RightLeg -> this.rot = new Vec3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
+                }
+
+                float multiply = MathHelper.DEGREES_PER_RADIAN;
+                this.rot.multiplyComponentwise(multiply, multiply, multiply);
+            }
+            else if (parentType != ParentType.Model) {
+                switch (parentType) {
+                    case Head -> {
+                        model.head.rotate(matrices);
+                        model.head.rotate(transformStack);
+                    }
+                    case Torso -> {
+                        model.body.rotate(matrices);
+                        model.body.rotate(transformStack);
+                    }
+                    case LeftArm -> {
+                        model.leftArm.rotate(matrices);
+                        model.leftArm.rotate(transformStack);
+                    }
+                    case LeftLeg -> {
+                        model.leftLeg.rotate(matrices);
+                        model.leftLeg.rotate(transformStack);
+                    }
+                    case RightArm -> {
+                        model.rightArm.rotate(matrices);
+                        model.rightArm.rotate(transformStack);
+                    }
+                    case RightLeg -> {
+                        model.rightLeg.rotate(matrices);
+                        model.rightLeg.rotate(transformStack);
+                    }
+                    case LeftItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
+                        matrices.push();
+                        applyTransformsAsItem(matrices);
+                        applyTransformsAsItem(transformStack);
+                        stackReference = matrices.peek();
+                        part = CustomModelPart.this;
+                        visible = true;
+                        matrices.pop();
+                    }});
+                    case RightItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
+                        matrices.push();
+                        applyTransformsAsItem(matrices);
+                        applyTransformsAsItem(transformStack);
+                        stackReference = matrices.peek();
+                        part = CustomModelPart.this;
+                        visible = true;
+                        matrices.pop();
+                    }});
+                    case LeftElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
+                        matrices.push();
+                        applyTransformsAsElytraOrParrot(matrices);
+                        applyTransformsAsElytraOrParrot(transformStack);
+                        stackReference = matrices.peek();
+                        part = CustomModelPart.this;
+                        visible = true;
+                        matrices.pop();
+                    }});
+                    case RightElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
+                        matrices.push();
+                        applyTransformsAsElytraOrParrot(matrices);
+                        applyTransformsAsElytraOrParrot(transformStack);
+                        stackReference = matrices.peek();
+                        part = CustomModelPart.this;
+                        visible = true;
+                        matrices.pop();
+                    }});
+                    case LeftParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
+                        matrices.push();
+                        applyTransformsAsElytraOrParrot(matrices);
+                        applyTransformsAsElytraOrParrot(transformStack);
+                        stackReference = matrices.peek();
+                        part = CustomModelPart.this;
+                        visible = true;
+                        matrices.pop();
+                    }});
+                    case RightParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
+                        matrices.push();
+                        applyTransformsAsElytraOrParrot(matrices);
+                        applyTransformsAsElytraOrParrot(transformStack);
+                        stackReference = matrices.peek();
+                        part = CustomModelPart.this;
+                        visible = true;
+                        matrices.pop();
+                    }});
+                    case LeftSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
+                        matrices.push();
+                        applyTransformsAsSpyglass(matrices);
+                        applyTransformsAsSpyglass(transformStack);
+                        stackReference = matrices.peek();
+                        part = CustomModelPart.this;
+                        visible = true;
+                        matrices.pop();
+                    }});
+                    case RightSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
+                        matrices.push();
+                        applyTransformsAsSpyglass(matrices);
+                        applyTransformsAsSpyglass(transformStack);
+                        stackReference = matrices.peek();
+                        part = CustomModelPart.this;
+                        visible = true;
+                        matrices.pop();
+                    }});
+                    case Camera -> {
+                        Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
+                        Vec3f euler = rot.method_35828();
+                        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
+                        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
+                        matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         applyTransforms(matrices);
         applyTransforms(transformStack);
@@ -165,17 +236,73 @@ public class CustomModelPart {
         lastNormalMatrixInverse = lastNormalMatrix.copy();
         lastNormalMatrixInverse.invert();
 
-        Matrix4f modelMatrix = matrices.peek().getModel();
-        Matrix3f normalMatrix = matrices.peek().getNormal();
-
+        //uv -> color -> alpha -> shaders
         u += this.uOffset;
         v += this.vOffset;
 
-        Vec3f tempColor = color.copy();
-        tempColor.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
+        Vec3f color = this.color.copy();
+        color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
 
-        for (int i = 0; i < this.vertexCount; i++) {
-            int startIndex = i * 8;
+        alpha = this.alpha * alpha;
+
+        HashSet<ShaderType> shaders = (HashSet<ShaderType>) shadersToRender.clone();
+        if (this.shaderType != ShaderType.None)
+            shaders.add(this.shaderType);
+
+        //render!
+        if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
+            canRenderChild = true;
+
+            //render using default texture
+            renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id)), light, overlay, u, v, color, alpha);
+
+            //render using other texture types
+            for (FiguraTexture extraTexture : data.extraTextures) {
+                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
+
+                if (renderLayerGetter != null) {
+                    VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
+                    renderCube(leftToRender, matrices, extraTextureVertexConsumer, light, overlay, u, v, color, alpha);
+                }
+            }
+
+            //shaders
+            if (shaders.contains(ShaderType.EndPortal))
+                renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEndGateway()), light, overlay, u, v, color, alpha);
+            if (shaders.contains(ShaderType.Glint))
+                renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getDirectEntityGlint()), light, overlay, u, v, color, alpha);
+
+            //render extras
+            leftToRender = renderExtras(leftToRender, matrices, vcp, light);
+
+            //render hit box
+            if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
+        }
+
+        for (CustomModelPart child : this.children) {
+            if (leftToRender <= 0)
+                break;
+
+            //Don't render special parts.
+            if (child.isParentSpecial())
+                continue;
+
+            //render part
+            leftToRender = child.render(data, leftToRender, matrices, transformStack, vcp, light, overlay, u, v, color, alpha, shaders, canRenderChild);
+        }
+
+        matrices.pop();
+        transformStack.pop();
+
+        return leftToRender;
+    }
+
+    public void renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
+        Matrix4f modelMatrix = matrices.peek().getModel();
+        Matrix3f normalMatrix = matrices.peek().getNormal();
+
+        for (int i = 1; i <= this.vertexCount; i++) {
+            int startIndex = (i - 1) * 8;
 
             //Get vertex.
             Vector4f fullVert = new Vector4f(
@@ -200,7 +327,7 @@ public class CustomModelPart {
             //Push vertex.
             vertices.vertex(
                     fullVert.getX(), fullVert.getY(), fullVert.getZ(),
-                    tempColor.getX(), tempColor.getY(), tempColor.getZ(), alpha,
+                    color.getX(), color.getY(), color.getZ(), alpha,
                     vertU + u, vertV + v,
                     overlay, light,
                     normal.getX(), normal.getY(), normal.getZ()
@@ -213,87 +340,19 @@ public class CustomModelPart {
                 if (leftToRender <= 0)
                     break;
             }
-
         }
-
-        for (CustomModelPart child : this.children) {
-            if (leftToRender <= 0)
-                break;
-
-            //Don't render special parts.
-            if (child.isParentSpecial())
-                continue;
-
-            //set child alpha
-            float childAlpha = child.alpha * alpha;
-
-            //render part
-            leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, childAlpha);
-        }
-
-        transformStack.pop();
-        matrices.pop();
-        return leftToRender;
     }
 
-    //Render the extra amazing parts (text/block/item)
-    //Just like the default render, it follows leftToRender rules
     public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
-        //Don't render invisible parts.
-        if (!this.visible || !this.shouldRender || this.isHidden) {
-            return leftToRender;
-        }
-
-        //matrix transforms
-        matrices.push();
-        applyVanillaModelTransforms(matrices);
-        applyTransforms(matrices);
-
         //Render extra parts
         for (RenderTask task : this.renderTasks) {
             leftToRender -= task.render(matrices, vcp, light);
             if (leftToRender <= 0) break;
         }
-
-        //children loop
-        for (CustomModelPart child : this.children) {
-            if (leftToRender <= 0)
-                break;
-
-            //Don't render for special parts.
-            if (child.isParentSpecial())
-                continue;
-
-            //render child part extras
-            leftToRender = child.renderExtras(leftToRender, matrices, vcp, light);
-        }
-
-        //return
-        matrices.pop();
         return leftToRender;
     }
 
-    //clear all extra render tasks
-    public static void clearExtraRendering(CustomModelPart part) {
-        part.renderTasks.clear();
-
-        for (CustomModelPart child : part.children) {
-            clearExtraRendering(child);
-        }
-    }
-
-    //render part pivot hitbox
-    public void renderPivotHitbox(MatrixStack matrices, VertexConsumer vertices) {
-        if (!this.visible || !this.shouldRender || this.isHidden) {
-            return;
-        }
-
-        //matrix transforms
-        matrices.push();
-        applyVanillaModelTransforms(matrices);
-        applyTransforms(matrices);
-
-        //prepare vars
+    public void renderHitBox(MatrixStack matrices, VertexConsumer vertices) {
         Vec3f color;
         float boxSize;
         if (this instanceof CustomModelPartCuboid) {
@@ -307,110 +366,17 @@ public class CustomModelPart {
 
         //render the box
         WorldRenderer.drawBox(matrices, vertices, -boxSize, -boxSize, -boxSize, boxSize, boxSize, boxSize, color.getX(), color.getY(), color.getZ(), 1f);
-
-        //render for children
-        for (CustomModelPart child : this.children) {
-            //Don't render for special parts.
-            if (child.isParentSpecial())
-                continue;
-
-            child.renderPivotHitbox(matrices, vertices);
-        }
-
-        matrices.pop();
     }
 
-    public static void setRenderStatus(CustomModelPart part, boolean status) {
-        //set for parent
-        part.shouldRender = status;
-
-        //iterate over the children
-        for (CustomModelPart child : part.children) {
-            setRenderStatus(child, status);
-        }
-    }
-
-    public static void filterParts(CustomModelPart part, Object filter) {
-        //error temp variable
-        boolean unmatched = false;
-
-        //check for filter type, then flag to render if the property matches the filter
-        if (filter instanceof ParentType) {
-            if (part.parentType == filter)
-                setRenderStatus(part, true);
-            else
-                unmatched = true;
-        }
-        else if (filter instanceof ShaderType) {
-            if (part.shaderType == filter)
-                setRenderStatus(part, true);
-            else
-                unmatched = true;
-        }
-        else if (filter instanceof RenderType) {
-            if (part.renderType == filter)
-                setRenderStatus(part, true);
-            else
-                unmatched = true;
-        }
-        else {
-            //filter not found, then no elements should render
-            unmatched = true;
-        }
-
-        if (unmatched) {
-            //flag it to dont render
-            part.shouldRender = false;
-
-            //if is a group, enable the group rendering and iterate through its children
-            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof CustomModelPartMesh)) {
-                part.shouldRender = true;
-                for (CustomModelPart child : part.children) {
-                    filterParts(child, filter);
-                }
-            }
-        }
-    }
-
-    public static void excludeFilterParts(CustomModelPart part, Object filter) {
-        //error temp variable
-        boolean unmatched = false;
-
-        //check for filter type, then flag to render if the property matches the filter
-        if (filter instanceof ParentType) {
-            if (part.parentType != filter)
-                unmatched = true;
-        }
-        else if (filter instanceof ShaderType) {
-            if (part.shaderType != filter)
-                unmatched = true;
-        }
-        else if (filter instanceof RenderType) {
-            if (part.renderType != filter)
-                unmatched = true;
-        }
-        else {
-            //filter not found, then no elements should render
-            unmatched = true;
-        }
-
-        if (unmatched) {
-            //flag it to dont render
-            part.shouldRender = false;
-
-            //if is a group, enable the group rendering and iterate through its children
-            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof CustomModelPartMesh)) {
-                part.shouldRender = true;
-                for (CustomModelPart child : part.children) {
-                    excludeFilterParts(child, filter);
-                }
-            }
-        }
+    //clear all extra render tasks
+    public static void clearExtraRendering(CustomModelPart part) {
+        part.renderTasks.clear();
+        part.children.forEach(CustomModelPart::clearExtraRendering);
     }
 
     public int getComplexity() {
         //don't render filtered parts
-        if (!this.visible || !this.shouldRender || this.isParentSpecial() || this.isHidden) {
+        if (!this.visible || this.isParentSpecial() || this.isHidden) {
             return 0;
         }
 
@@ -422,111 +388,6 @@ public class CustomModelPart {
         }
 
         return complexity;
-    }
-
-    public void applyVanillaModelTransforms(MatrixStack matrices) {
-        try {
-            if (this.isMimicMode && parentType != ParentType.None && parentType != ParentType.Model) {
-                PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
-
-                switch (this.parentType) {
-                    case Head -> this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
-                    case Torso -> this.rot = new Vec3f(model.body.pitch, model.body.yaw, model.body.roll);
-                    case LeftArm -> this.rot = new Vec3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
-                    case LeftLeg -> this.rot = new Vec3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
-                    case RightArm -> this.rot = new Vec3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
-                    case RightLeg -> this.rot = new Vec3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
-                }
-
-                float multiply = 57.2958f;
-                this.rot.multiplyComponentwise(multiply, multiply, multiply);
-            } else if (parentType != ParentType.Model) {
-                PlayerEntityModel<?> playerModel = FiguraMod.currentData.vanillaModel;
-
-                switch (parentType) {
-                    case Head -> playerModel.head.rotate(matrices);
-                    case Torso -> playerModel.body.rotate(matrices);
-                    case LeftArm -> playerModel.leftArm.rotate(matrices);
-                    case LeftLeg -> playerModel.leftLeg.rotate(matrices);
-                    case RightArm -> playerModel.rightArm.rotate(matrices);
-                    case RightLeg -> playerModel.rightLeg.rotate(matrices);
-                    case LeftItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsItem(matrices);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsItem(matrices);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsSpyglass(matrices);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsSpyglass(matrices);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case Camera -> {
-                        Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
-                        Vec3f euler = rot.method_35828();
-
-                        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
-                        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
-                        matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void applyTransforms(MatrixStack stack) {

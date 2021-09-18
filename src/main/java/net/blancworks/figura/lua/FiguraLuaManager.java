@@ -83,13 +83,12 @@ public class FiguraLuaManager {
         apiSuppliers.put(DataAPI.getID(), DataAPI::getForScript);
     }
 
-    public static void registerEvents(){
-        registerEvent("tick");
-        registerEvent("render");
+    public static void registerEvents() {
         registerEvent("player_init");
-
+        registerEvent("world_render");
+        registerEvent("render");
+        registerEvent("tick");
         registerEvent("onCommand");
-
         registerEvent("onDamage");
     }
 

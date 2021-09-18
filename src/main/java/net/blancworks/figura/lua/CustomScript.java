@@ -62,6 +62,7 @@ public class CustomScript extends FiguraAsset {
     //How many instructions the last tick/render event used.
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
+    public int worldRenderInstructionCount = 0;
     public int pingSent = 0;
     public int pingReceived = 0;
 
@@ -244,7 +245,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void setPlayerEntity() {
-        if(!isDone)
+        if (!isDone)
             return;
 
         if (!hasPlayer) {
@@ -275,6 +276,24 @@ public class CustomScript extends FiguraAsset {
                 else
                     error.printStackTrace();
             }
+        });
+    }
+
+    public void onWorldRender(float deltaTime) {
+        if (!isDone)
+            return;
+
+        queueTask(() -> {
+            setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
+            try {
+                allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
+            } catch (Exception error) {
+                if (error instanceof LuaError)
+                    logLuaError((LuaError) error);
+                else
+                    error.printStackTrace();
+            }
+            worldRenderInstructionCount = scriptGlobals.running.state.bytecodes;
         });
     }
 
