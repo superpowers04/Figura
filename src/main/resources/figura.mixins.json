@@ -8,6 +8,7 @@
     "CameraMixin",
     "ChatHudListenerMixin",
     "ChatHudMixin",
+    "ChatScreenAccessorMixin",
     "ClientLoginNetworkHandlerMixin",
     "ClientPlayerEntityMixin",
     "DebugHudMixin",
