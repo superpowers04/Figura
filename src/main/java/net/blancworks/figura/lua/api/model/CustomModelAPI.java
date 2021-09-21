@@ -152,11 +152,22 @@ public class CustomModelAPI {
             ret.set("setParentType", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
+                    if (targetPart.isParentSpecial()) {
+                        partOwner.model.worldParts.remove(targetPart);
+                        partOwner.model.leftElytraParts.remove(targetPart);
+                        partOwner.model.rightElytraParts.remove(targetPart);
+                    }
+
                     try {
                         targetPart.parentType = CustomModelPart.ParentType.valueOf(arg1.checkjstring());
 
-                        if (targetPart.isParentSpecial())
-                            partOwner.model.sortAllParts();
+                        if (targetPart.isParentSpecial()) {
+                            switch (targetPart.parentType) {
+                                case WORLD -> partOwner.model.worldParts.add(targetPart);
+                                case LeftElytra -> partOwner.model.leftElytraParts.add(targetPart);
+                                case RightElytra -> partOwner.model.rightElytraParts.add(targetPart);
+                            }
+                        }
                     } catch (Exception ignored) {
                         targetPart.parentType = CustomModelPart.ParentType.Model;
                     }

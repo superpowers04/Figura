@@ -162,6 +162,9 @@ public class CustomScript extends FiguraAsset {
         setHook = scriptGlobals.get("debug").get("sethook");
         //Yeet debug library so nobody can access it.
         scriptGlobals.set("debug", LuaValue.NIL);
+        scriptGlobals.set("dofile", LuaValue.NIL);
+        scriptGlobals.set("loadfile", LuaValue.NIL);
+        scriptGlobals.set("require", LuaValue.NIL);
 
         //Sets up the global values for the API and such in the script.
         setupGlobals();
