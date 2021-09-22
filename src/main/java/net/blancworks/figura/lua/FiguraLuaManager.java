@@ -36,8 +36,8 @@ import java.util.function.Function;
 
 public class FiguraLuaManager {
 
-    public static HashMap<Identifier, Function<CustomScript, ? extends ReadOnlyLuaTable>> apiSuppliers = new HashMap<Identifier, Function<CustomScript, ? extends ReadOnlyLuaTable>>();
-    public static Map<String, Function<String, LuaEvent>> registeredEvents = new HashMap<String, Function<String, LuaEvent>>();
+    public static HashMap<Identifier, Function<CustomScript, ? extends ReadOnlyLuaTable>> apiSuppliers = new HashMap<>();
+    public static Map<String, Function<String, LuaEvent>> registeredEvents = new HashMap<>();
 
     //The globals for the entire lua system.
     public static Globals modGlobals;
@@ -75,6 +75,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(CameraAPI.getID(), CameraAPI::getForScript);
         apiSuppliers.put(ParrotModelAPI.getID(), ParrotModelAPI::getForScript);
         apiSuppliers.put(ActionWheelAPI.getID(), ActionWheelAPI::getForScript);
+        apiSuppliers.put(SpyglassModelAPI.getID(), SpyglassModelAPI::getForScript);
         apiSuppliers.put(NetworkAPI.getID(), NetworkAPI::getForScript);
         apiSuppliers.put(ItemStackAPI.getID(), ItemStackAPI::getForScript);
         apiSuppliers.put(KeyBindAPI.getID(), KeyBindAPI::getForScript);
@@ -93,8 +94,7 @@ public class FiguraLuaManager {
     }
 
     public static void loadScript(PlayerData data, String content) {
-        CustomScript newScript = new CustomScript(data, content);
-        data.script = newScript;
+        data.script = new CustomScript(data, content);
     }
 
     public static void setupScriptAPI(CustomScript script) {
