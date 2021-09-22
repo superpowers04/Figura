@@ -8,6 +8,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
 import net.blancworks.figura.gui.widgets.ModelFileListWidget;
 import net.blancworks.figura.gui.widgets.TexturedButtonWidget;
+import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.ConfirmScreen;
@@ -48,6 +49,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier deleteTexture = new Identifier("figura", "textures/gui/delete.png");
     public Identifier expandTexture = new Identifier("figura", "textures/gui/expand.png");
     public Identifier keybindsTexture = new Identifier("figura", "textures/gui/keybinds.png");
+    public Identifier backendStatusTexture = new Identifier("figura", "textures/gui/backend_status.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
 
@@ -59,6 +61,7 @@ public class FiguraGuiScreen extends Screen {
     public static final TranslatableText uploadTooltip = new TranslatableText("gui.figura.button.tooltip.upload");
     public static final TranslatableText reloadTooltip = new TranslatableText("gui.figura.button.tooltip.reloadavatar");
     public static final TranslatableText keybindTooltip = new TranslatableText("gui.figura.button.tooltip.keybinds");
+    public static final Text backendStatus = new TranslatableText("gui.figura.button.tooltip.backendstatus").setStyle(Style.EMPTY.withColor(TextColor.parse("light_purple")));
 
     public TexturedButtonWidget uploadButton;
     public TexturedButtonWidget reloadButton;
@@ -298,7 +301,10 @@ public class FiguraGuiScreen extends Screen {
 
         //draw text
         if (!expand) {
-            int currY = 82;
+            int currY = 88;
+
+            RenderSystem.setShaderTexture(0, backendStatusTexture);
+            drawTexture(matrices, this.width - 18, currY, 10 * NewFiguraNetworkManager.connectionStatus, 0, 10, 10, 30, 10);
 
             if (nameText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 16777215);
@@ -331,6 +337,13 @@ public class FiguraGuiScreen extends Screen {
             matrices.push();
             matrices.translate(0, 0, 599);
             renderTooltip(matrices, reloadTooltip, mouseX, mouseY);
+            matrices.pop();
+        }
+
+        if (mouseX >= this.width - 18 && mouseX < this.width - 8 && mouseY >= 90 && mouseY < 100) {
+            matrices.push();
+            matrices.translate(0, 0, 599);
+            renderTooltip(matrices, List.of(backendStatus, new TranslatableText("gui.figura.button.backendstatus." + NewFiguraNetworkManager.connectionStatus)), mouseX, mouseY);
             matrices.pop();
         }
 
@@ -397,12 +410,12 @@ public class FiguraGuiScreen extends Screen {
 
             //error loading script
             if (PlayerDataManager.localPlayer.script.loadError) {
-                text = new TranslatableText("gui.script.error");
+                text = new TranslatableText("gui.figura.script.error");
                 text.setStyle(text.getStyle().withColor(TextColor.parse("red")));
             }
             //loading okei
             else {
-                text = new TranslatableText("gui.script.ok");
+                text = new TranslatableText("gui.figura.script.ok");
                 text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
             }
 
@@ -410,7 +423,7 @@ public class FiguraGuiScreen extends Screen {
         }
         //script not found
         else {
-            TranslatableText text = new TranslatableText("gui.script.none");
+            TranslatableText text = new TranslatableText("gui.figura.script.none");
             text.setStyle(text.getStyle().withColor(TextColor.parse("white")));
             fsText.append(text);
         }

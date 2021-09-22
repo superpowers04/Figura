@@ -40,12 +40,14 @@ import java.util.function.Supplier;
 
 public class NewFiguraNetworkManager implements IFiguraNetwork {
 
-    public static CompletableFuture networkTasks;
+    public static CompletableFuture<?> networkTasks;
 
     //The protocol version for this version of the mod.
     public static final int PROTOCOL_VERSION = 0;
 
     private static boolean lastNetworkState = false;
+
+    public static int connectionStatus = 0;
 
     //----- WEBSOCKETS -----
 
@@ -76,10 +78,10 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     private static boolean hasInited = false;
 
-    private static ArrayList<UUID> allSubscriptions = new ArrayList<UUID>();
-    private static ArrayList<UUID> newSubscriptions = new ArrayList<UUID>();
+    private static final ArrayList<UUID> allSubscriptions = new ArrayList<>();
+    private static final ArrayList<UUID> newSubscriptions = new ArrayList<>();
 
-    private static CompletableFuture doTask(Runnable toRun) {
+    private static CompletableFuture<?> doTask(Runnable toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = CompletableFuture.runAsync(toRun);
         } else {
@@ -89,7 +91,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         return networkTasks;
     }
 
-    private static CompletableFuture doTask(Supplier<CompletableFuture> toRun) {
+    private static CompletableFuture<?> doTask(Supplier<CompletableFuture<?>> toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = toRun.get();
         } else {
@@ -99,7 +101,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         return networkTasks;
     }
 
-    private static <T> CompletableFuture doTaskSupply(Supplier<T> toRun) {
+    private static <T> CompletableFuture<?> doTaskSupply(Supplier<T> toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = CompletableFuture.supplyAsync(toRun);
         } else {
@@ -116,17 +118,19 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public void tickNetwork() {
+        connectionStatus = 0;
 
         if ((boolean) Config.entries.get("useLocalServer").value != lastNetworkState && currWebSocket != null) {
             currWebSocket.disconnect();
             lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
         }
 
-        if (authConnection != null && !authConnection.isOpen()) {
+        if (authConnection != null && !authConnection.isOpen())
             authConnection.handleDisconnection();
-        }
 
         if (currWebSocket != null && currWebSocket.isOpen() && !msgRegistry.isEmpty()) {
+            connectionStatus = 2;
+
             if (newSubscriptions.size() > 0) {
                 allSubscriptions.addAll(newSubscriptions);
 
@@ -134,9 +138,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 newSubscriptions.toArray(ids);
                 newSubscriptions.clear();
 
-                doTask(() -> {
-                    new SubscribeToUsersMessageSender(ids).sendMessage(currWebSocket);
-                });
+                doTask(() -> new SubscribeToUsersMessageSender(ids).sendMessage(currWebSocket));
             }
         } else if (allSubscriptions.size() > 0) {
             newSubscriptions.addAll(allSubscriptions);
@@ -146,20 +148,19 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         //If the old token we had is old enough, re-auth us.
         Date currTime = new Date();
 
-        if (tokenReauthCooldown > 0) {
+        if (tokenReauthCooldown > 0)
             tokenReauthCooldown--;
-        } else {
-            if (tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME) {
-                tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
+        else if (tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME) {
+            tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
+            connectionStatus = 1;
 
-                //Auth user ASAP
-                doTask(() -> authUser(true));
-            }
+            //Auth user ASAP
+            doTask(() -> authUser(true));
         }
     }
 
     @Override
-    public CompletableFuture getAvatarData(UUID id) {
+    public CompletableFuture<?> getAvatarData(UUID id) {
         doTask(this::ensureConnection);
         return doTask(() -> {
             try {
@@ -167,13 +168,12 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                     new UserGetCurrentAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
             } catch (Exception e) {
                 e.printStackTrace();
-                return;
             }
         });
     }
 
     @Override
-    public CompletableFuture postAvatar() {
+    public CompletableFuture<?> postAvatar() {
         doTask(this::ensureConnection);
         return doTask(() -> {
             if (currWebSocket != null && currWebSocket.isOpen()) {
@@ -204,12 +204,12 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     }
 
     @Override
-    public CompletableFuture setCurrentUserAvatar(UUID avatarID) {
+    public CompletableFuture<?> setCurrentUserAvatar(UUID avatarID) {
         return null;
     }
 
     @Override
-    public CompletableFuture deleteAvatar() {
+    public CompletableFuture<?> deleteAvatar() {
         doTask(this::ensureConnection);
         return doTask(() -> {
             try {
@@ -220,13 +220,12 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                return;
             }
         });
     }
 
     @Override
-    public CompletableFuture checkAvatarHash(UUID playerID, String lastHash) {
+    public CompletableFuture<?> checkAvatarHash(UUID playerID, String lastHash) {
         doTask(this::ensureConnection);
         return doTask(() -> {
             try {
@@ -311,7 +310,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             socketFactory.setServerName("figuranew.blancworks.org");
         }
 
-        if (currWebSocket == null || currWebSocket.isOpen() == false) {
+        if (currWebSocket == null || !currWebSocket.isOpen()) {
             try {
                 lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
                 return openNewConnection();
@@ -357,7 +356,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         if (currWebSocket == null)
             return;
 
-        if (currWebSocket.isOpen() == false) {
+        if (!currWebSocket.isOpen()) {
             currWebSocket = null;
             return;
         }
@@ -394,10 +393,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
             //Set listener/handler
             connection.setPacketListener(
-                    new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
-                        FiguraMod.LOGGER.info(text.getString());
-                    }) {
-
+                    new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> FiguraMod.LOGGER.info(text.getString())) {
                         //Handle disconnect message
                         @Override
                         public void onDisconnected(Text reason) {
@@ -405,8 +401,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                                 Text dcReason = connection.getDisconnectReason();
 
                                 if (dcReason != null) {
-                                    Text tc = dcReason;
-                                    parseKickAuthMessage(tc);
+                                    parseKickAuthMessage(dcReason);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
