@@ -1,6 +1,8 @@
 package net.blancworks.figura.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraTrustScreen;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -40,25 +42,29 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
         //Foreach player
         for (PlayerListEntry listEntry : client.getNetworkHandler().getPlayerList()) {
-            if (listEntry.getProfile().getName().toLowerCase().contains(searchTerm.toLowerCase()) && listEntry.getProfile().getId() != realScreen.draggedId) {
+            PlayerData data = PlayerDataManager.getDataForPlayer(listEntry.getProfile().getId());
+            if (data == null || data.model == null)
+                continue;
 
-                //Get trust container for that player
-                TrustContainer container = PlayerTrustManager.getContainer(new Identifier("players", listEntry.getProfile().getId().toString()));
-                Identifier groupName = container.getParentIdentifier();
-                
-                if(container.isHidden)
-                    continue;
+            if (!listEntry.getProfile().getName().toLowerCase().contains(searchTerm.toLowerCase()) || listEntry.getProfile().getId() == realScreen.draggedId)
+                continue;
 
-                //Create sorting group if need be
-                if (!sortedEntries.containsKey(groupName)) {
-                    sortedEntries.put(groupName, new ArrayList<PlayerListEntry>());
-                    sortedEntriesOrdered.add(groupName);
-                }
+            //Get trust container for that player
+            TrustContainer container = PlayerTrustManager.getContainer(new Identifier("players", listEntry.getProfile().getId().toString()));
+            Identifier groupName = container.getParentIdentifier();
 
-                //Add to sorting group
-                ArrayList<PlayerListEntry> list = sortedEntries.get(groupName);
-                list.add(listEntry);
+            if (container.isHidden)
+                continue;
+
+            //Create sorting group if need be
+            if (!sortedEntries.containsKey(groupName)) {
+                sortedEntries.put(groupName, new ArrayList<>());
+                sortedEntriesOrdered.add(groupName);
             }
+
+            //Add to sorting group
+            ArrayList<PlayerListEntry> list = sortedEntries.get(groupName);
+            list.add(listEntry);
         }
 
         //For all the sorted entries

@@ -1,7 +1,4 @@
 {
-  "figura.mark": "△",
-  "figura.star": "⭐",
-
   "gui.figura.trustmenutitle": "Figura Trust Menu",
   "gui.figura.configtitle": "Figura Config Menu",
   "gui.figura.menutitle": "Figura Menu",
@@ -24,9 +21,9 @@
 
   "gui.figura.dropconfirm": "Do you want to add the following models to Figura?",
 
-  "gui.script.none": "none",
-  "gui.script.ok": "OK",
-  "gui.script.error": "ERROR",
+  "gui.figura.script.none": "none",
+  "gui.figura.script.ok": "OK",
+  "gui.figura.script.error": "ERROR",
 
   "gui.figura.button.trustmenu": "Trust Menu",
   "gui.figura.button.configmenu": "Settings",
@@ -40,6 +37,10 @@
   "gui.figura.button.reloadavatar": "Reload avatar",
   "gui.figura.button.search": "Search...",
 
+  "gui.figura.button.backendstatus.0": "Disconnected!",
+  "gui.figura.button.backendstatus.1": "Connecting...",
+  "gui.figura.button.backendstatus.2": "Connected!",
+
   "gui.figura.button.tooltip.upload": "Click to upload and show avatar in multiplayer",
   "gui.figura.button.tooltip.reloadavatar": "Click to clear you avatar locally and redownload it",
   "gui.figura.button.tooltip.deleteavatar": "Hold LEFT SHIFT and click to CLEAR YOUR AVATAR ONLINE",
@@ -49,6 +50,7 @@
   "gui.figura.button.tooltip.resetallperm": "Hold LEFT SHIFT and click to reset the permissions for this user",
   "gui.figura.button.tooltip.clearcache": "Hold LEFT SHIFT and click to clear all loaded avatar data",
   "gui.figura.button.tooltip.keybinds": "Current Script Keybinds",
+  "gui.figura.button.tooltip.backendstatus": "Backend Connection:",
 
   "gui.figura.deprecatedwarning" : "*The use of models in the root folder is deprecated, see the wiki for more info",
   "gui.figura.complexity": "Complexity: %d",
