@@ -7,6 +7,7 @@ import net.minecraft.util.math.Vec3f;
 public class VanillaModelPartCustomization {
     public Vec3f pos;
     public Vec3f rot;
+    public Vec3f scale;
     public Boolean visible;
     public MatrixStack.Entry stackReference;
     public CustomModelPart part;

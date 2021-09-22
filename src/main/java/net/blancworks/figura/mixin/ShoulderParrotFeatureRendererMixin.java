@@ -110,6 +110,11 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
                         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(figura$customization.rot.getY()));
                         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(figura$customization.rot.getX()));
                     }
+
+                    if (figura$customization.scale != null) {
+                        Vec3f scale = figura$customization.scale;
+                        matrices.scale(scale.getX(), scale.getY(), scale.getZ());
+                    }
                 }
             }
         } catch (Exception e) {

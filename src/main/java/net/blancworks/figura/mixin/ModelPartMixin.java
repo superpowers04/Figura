@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -72,10 +73,16 @@ public class ModelPartMixin implements ModelPartAccess {
     @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V")
     public void onRender(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha, CallbackInfo ci) {
         prevVisible = visible;
+        matrices.push();
         if (figura$customization != null) {
 
             if (visible && figura$customization.visible != null) {
                 visible = figura$customization.visible;
+            }
+
+            if (figura$customization.scale != null) {
+                Vec3f scale = figura$customization.scale;
+                matrices.scale(scale.getX(), scale.getY(), scale.getZ());
             }
         }
     }
@@ -84,6 +91,7 @@ public class ModelPartMixin implements ModelPartAccess {
     @Inject(at = @At("RETURN"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumer;IIFFFF)V")
     public void postRender(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha, CallbackInfo ci) {
         visible = prevVisible;
+        matrices.pop();
     }
 
     @Override

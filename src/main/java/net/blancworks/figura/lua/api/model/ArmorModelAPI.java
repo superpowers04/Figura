@@ -85,6 +85,22 @@ public class ArmorModelAPI {
                 }
             });
 
+            ret.set("getScale", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaVector.of(targetScript.getOrMakePartCustomization(accessor).scale);
+                }
+            });
+
+            ret.set("setScale", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
+                    customization.scale = LuaVector.checkOrNew(arg1).asV3f();
+                    return NIL;
+                }
+            });
+
             ret.set("getEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
