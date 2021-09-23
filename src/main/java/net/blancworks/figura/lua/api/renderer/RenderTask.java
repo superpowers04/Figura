@@ -1,19 +1,14 @@
 package net.blancworks.figura.lua.api.renderer;
 
-import net.blancworks.figura.FiguraMod;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.model.json.ModelTransformation;
-import net.minecraft.client.texture.SpriteAtlasTexture;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3f;
 
 public abstract class RenderTask {
@@ -81,15 +76,8 @@ public abstract class RenderTask {
             this.transform(matrices);
             matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180));
 
-            BlockPos pos;
-            if (FiguraMod.currentData != null && FiguraMod.currentData.lastEntity != null) {
-                pos = FiguraMod.currentData.lastEntity.getBlockPos();
-            } else {
-                pos = new BlockPos(Vec3d.ZERO);
-            }
-
             MinecraftClient client = MinecraftClient.getInstance();
-            client.getBlockRenderManager().renderBlock(state, pos, client.world, matrices, vcp.getBuffer(emissive ? RenderLayer.getEyes(SpriteAtlasTexture.BLOCK_ATLAS_TEXTURE) : RenderLayer.getTranslucent()), false, client.world.random);
+            client.getBlockRenderManager().renderBlockAsEntity(state, matrices, vcp, emissive ? 0xF000F0 : light, OverlayTexture.DEFAULT_UV);
 
             int complexity = 4 * client.getBlockRenderManager().getModel(state).getQuads(state, null, client.world.random).size();
 

@@ -2,10 +2,7 @@ package net.blancworks.figura.network;
 
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketFactory;
-import net.blancworks.figura.Config;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.*;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.messages.MessageRegistry;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
@@ -175,19 +172,30 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     public CompletableFuture<?> postAvatar() {
         doTask(this::ensureConnection);
         return doTask(() -> {
+            //Get NBT tag for local player avatar
             if (currWebSocket != null && currWebSocket.isOpen()) {
-                //Get NBT tag for local player avatar
-                PlayerData data = PlayerDataManager.localPlayer;
+                LocalPlayerData data = PlayerDataManager.localPlayer;
+
+                //if not local, does not upload
+                if (!data.isLocalAvatar)
+                    return;
+
+                //mark as not local
                 data.isLocalAvatar = false;
-                NbtCompound infoNbt = new NbtCompound();
-                data.writeNbt(infoNbt);
+
+                //get nbt
+                NbtCompound nbt = new NbtCompound();
+                if (data.modelData != null && !data.modelData.isEmpty())
+                    nbt = data.modelData;
+                else
+                    data.writeNbt(nbt);
 
                 try {
                     //Set up streams.
                     ByteArrayOutputStream baos = new ByteArrayOutputStream();
                     DataOutputStream nbtDataStream = new DataOutputStream(baos);
 
-                    NbtIo.writeCompressed(infoNbt, nbtDataStream);
+                    NbtIo.writeCompressed(nbt, nbtDataStream);
 
                     byte[] result = baos.toByteArray();
 
