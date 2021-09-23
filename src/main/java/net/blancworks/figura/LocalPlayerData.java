@@ -7,12 +7,12 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
 import java.nio.file.*;
-import java.sql.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -29,6 +29,7 @@ public class LocalPlayerData extends PlayerData {
     private final Map<String, WatchKey> watchKeys = new Object2ObjectOpenHashMap<>();
     private final Set<String> watchedFiles = new HashSet<>();
     public static WatchService ws;
+    public NbtCompound modelData;
 
     static {
         try {
@@ -377,6 +378,12 @@ public class LocalPlayerData extends PlayerData {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        //pack avatar on load
+        FiguraMod.doTask(() -> {
+            NbtCompound nbt = new NbtCompound();
+            this.modelData = this.writeNbt(nbt) ? nbt : null;
+        });
     }
 
     public void tickFileWatchers() {

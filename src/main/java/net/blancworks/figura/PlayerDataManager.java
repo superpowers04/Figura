@@ -6,6 +6,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.LiteralText;
 
 import java.io.DataInputStream;
@@ -35,35 +36,34 @@ public final class PlayerDataManager {
     }
 
     public static PlayerData getDataForPlayer(UUID id) {
-        PlayerData getData;
-
-        if (TO_CLEAR.contains(id)) {
-            TO_CLEAR.remove(id);
+        if (TO_CLEAR.remove(id))
             LOADED_PLAYER_DATA.remove(id);
-        }
 
-        if (!didInitLocalPlayer) {
-            if (MinecraftClient.getInstance().player != null && id == MinecraftClient.getInstance().player.getUuid()) {
-                localPlayer = new LocalPlayerData();
-                localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
-                LOADED_PLAYER_DATA.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
-                didInitLocalPlayer = true;
+        if (MinecraftClient.getInstance().player != null && id == MinecraftClient.getInstance().player.getUuid()) {
+            if (didInitLocalPlayer)
+                return localPlayer;
 
-                if (lastLoadedFileName != null) {
-                    localPlayer.vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
-                    localPlayer.loadModelFile(lastLoadedFileName);
-                    localPlayer.getFileSize();
-                    return localPlayer;
-                }
+            localPlayer = new LocalPlayerData();
+            localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
+            LOADED_PLAYER_DATA.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
+            didInitLocalPlayer = true;
 
-                getPlayerAvatarFromServerOrCache(localPlayer.playerId, localPlayer);
+            if (lastLoadedFileName != null) {
+                localPlayer.vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
+                localPlayer.loadModelFile(lastLoadedFileName);
+                localPlayer.getFileSize();
                 return localPlayer;
             }
+
+            getPlayerAvatarFromServerOrCache(localPlayer.playerId, localPlayer);
+
+            NbtCompound nbt = new NbtCompound();
+            localPlayer.modelData = localPlayer.writeNbt(nbt) ? nbt : null;
+
+            return localPlayer;
         }
 
-        if (MinecraftClient.getInstance().player != null && id == MinecraftClient.getInstance().player.getUuid())
-            return localPlayer;
-
+        PlayerData getData;
         if (!LOADED_PLAYER_DATA.containsKey(id)) {
             getData = new PlayerData();
             getData.playerId = id;
@@ -71,12 +71,18 @@ public final class PlayerDataManager {
             getPlayerAvatarFromServerOrCache(id, getData);
 
             LOADED_PLAYER_DATA.put(id, getData);
-        } else {
+        }
+        else {
             getData = LOADED_PLAYER_DATA.get(id);
         }
 
-        PlayerListEntry playerEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
-        getData.playerName = playerEntry != null && playerEntry.getProfile() != null ? new LiteralText(playerEntry.getProfile().getName()) : new LiteralText("");
+        LiteralText playerName = new LiteralText("");
+        if (MinecraftClient.getInstance().getNetworkHandler() != null) {
+            PlayerListEntry playerEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
+            if (playerEntry != null && playerEntry.getProfile() != null)
+                playerName = new LiteralText(playerEntry.getProfile().getName());
+        }
+        getData.playerName = playerName;
 
         return getData;
     }

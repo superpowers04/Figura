@@ -33,7 +33,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -53,12 +52,17 @@ public class FiguraGuiScreen extends Screen {
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
 
-    public static final List<Text> deleteTooltip = new ArrayList<>() {{
-        add(new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
-        add(new TranslatableText("gui.figura.button.tooltip.deleteavatartwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
-    }};
+    public static final List<Text> deleteTooltip = List.of(
+        new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))),
+        new TranslatableText("gui.figura.button.tooltip.deleteavatartwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red")))
+    );
 
     public static final TranslatableText uploadTooltip = new TranslatableText("gui.figura.button.tooltip.upload");
+    public static final List<Text> uploadLocalTooltip = List.of(
+        new TranslatableText("gui.figura.button.tooltip.uploadlocal").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))),
+        new TranslatableText("gui.figura.button.tooltip.uploadlocaltwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red")))
+    );
+
     public static final TranslatableText reloadTooltip = new TranslatableText("gui.figura.button.tooltip.reloadavatar");
     public static final TranslatableText keybindTooltip = new TranslatableText("gui.figura.button.tooltip.keybinds");
     public static final Text backendStatus = new TranslatableText("gui.figura.button.tooltip.backendstatus").setStyle(Style.EMPTY.withColor(TextColor.parse("light_purple")));
@@ -209,7 +213,7 @@ public class FiguraGuiScreen extends Screen {
                 this.width / 2 + modelBgSize / 2 + 4, this.height / 2 + modelBgSize / 2 - 25,
                 25, 25,
                 0, 0, 25,
-                uploadTexture, 25, 50,
+                uploadTexture, 50, 50,
                 (bx) -> FiguraMod.networkManager.postAvatar().thenRun(()->System.out.println("UPLOADED AVATAR"))
         );
         this.addDrawableChild(uploadButton);
@@ -300,12 +304,8 @@ public class FiguraGuiScreen extends Screen {
         searchBox.render(matrices, mouseX, mouseY, delta);
 
         //draw text
+        int currY = 76;
         if (!expand) {
-            int currY = 88;
-
-            RenderSystem.setShaderTexture(0, backendStatusTexture);
-            drawTexture(matrices, this.width - 18, currY, 10 * NewFiguraNetworkManager.connectionStatus, 0, 10, 10, 30, 10);
-
             if (nameText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 16777215);
             if (fileSizeText != null)
@@ -313,7 +313,10 @@ public class FiguraGuiScreen extends Screen {
             if (modelComplexityText != null)
                 drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY += 12, 16777215);
             if (scriptText != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, scriptText, this.width - this.textRenderer.getWidth(scriptText) - 8, currY + 12, 16777215);
+                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, scriptText, this.width - this.textRenderer.getWidth(scriptText) - 8, currY += 12, 16777215);
+
+            RenderSystem.setShaderTexture(0, backendStatusTexture);
+            drawTexture(matrices, this.width - 18, currY += 11, 10 * NewFiguraNetworkManager.connectionStatus, 0, 10, 10, 30, 10);
 
             //deprecated warning
             if (rawNameText != null && rawNameText.getString().endsWith("*"))
@@ -326,12 +329,22 @@ public class FiguraGuiScreen extends Screen {
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
 
-        if (uploadButton.isMouseOver(mouseX, mouseY)){
+        uploadButton.active = PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.isLocalAvatar;
+
+        boolean wasUploadActive = uploadButton.active;
+        uploadButton.active = true;
+        if (uploadButton.isMouseOver(mouseX, mouseY)) {
             matrices.push();
             matrices.translate(0, 0, 599);
-            renderTooltip(matrices, uploadTooltip, mouseX, mouseY);
+
+            if (wasUploadActive)
+                renderTooltip(matrices, uploadTooltip, mouseX, mouseY);
+            else
+                renderTooltip(matrices, uploadLocalTooltip, mouseX, mouseY);
+
             matrices.pop();
         }
+        uploadButton.active = wasUploadActive;
 
         if (reloadButton.isMouseOver(mouseX, mouseY)){
             matrices.push();
@@ -340,7 +353,7 @@ public class FiguraGuiScreen extends Screen {
             matrices.pop();
         }
 
-        if (mouseX >= this.width - 18 && mouseX < this.width - 8 && mouseY >= 90 && mouseY < 100) {
+        if (mouseX >= this.width - 18 && mouseX < this.width - 8 && mouseY >= currY && mouseY < currY + 10) {
             matrices.push();
             matrices.translate(0, 0, 599);
             renderTooltip(matrices, List.of(backendStatus, new TranslatableText("gui.figura.button.backendstatus." + NewFiguraNetworkManager.connectionStatus)), mouseX, mouseY);
