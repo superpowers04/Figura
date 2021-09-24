@@ -23,7 +23,6 @@ import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
@@ -137,12 +136,13 @@ public class FiguraMod implements ClientModInitializer {
         //Set up network
         //oldNetworkManager = new FiguraNetworkManager();
         newNetworkManager = new NewFiguraNetworkManager();
+        networkManager = newNetworkManager;
 
-        //if ((boolean) Config.entries.get("useNewNetwork").value) {
+        /*if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
-        //} else {
-            //networkManager = oldNetworkManager;
-        //}
+        } else {
+            networkManager = oldNetworkManager;
+        }*/
 
         //Register fabric events
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
@@ -195,26 +195,17 @@ public class FiguraMod implements ClientModInitializer {
         return p;
     }
 
-    public static CompletableFuture doTask(Runnable toRun) {
+    public static CompletableFuture<?> doTask(Runnable toRun) {
         return doTask(toRun, null);
     }
 
-    public static CompletableFuture doTask(Runnable toRun, @Nullable Runnable onFinished) {
+    public static CompletableFuture<?> doTask(Runnable toRun, @Nullable Runnable onFinished) {
         //If the global load task doesn't exist, create it.
-        if (globalLoadTask == null || globalLoadTask.isDone()) {
-            globalLoadTask = CompletableFuture.runAsync(
-                    () -> {
-                        runTask(toRun, onFinished);
-                    }
-            );
-        } else {
-            //Otherwise, queue up next task.
-            globalLoadTask = globalLoadTask.thenRunAsync(
-                    () -> {
-                        runTask(toRun, onFinished);
-                    }
-            );
-        }
+        if (globalLoadTask == null || globalLoadTask.isDone())
+            globalLoadTask = CompletableFuture.runAsync(() -> runTask(toRun, onFinished));
+        //Otherwise, queue up next task.
+        else
+            globalLoadTask = globalLoadTask.thenRunAsync(() -> runTask(toRun, onFinished));
 
         return globalLoadTask;
     }
@@ -246,7 +237,7 @@ public class FiguraMod implements ClientModInitializer {
                             int prevCount = data.model.leftToRender;
                             data.model.leftToRender = Integer.MAX_VALUE - 100;
 
-                            if (data != null && data.model != null) {
+                            if (FiguraMod.vertexConsumerProvider != null) {
                                 for (CustomModelPart part : data.model.worldParts) {
                                     part.renderUsingAllTextures(data, context.matrixStack(), new MatrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
                                 }
