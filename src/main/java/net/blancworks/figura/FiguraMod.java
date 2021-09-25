@@ -250,9 +250,6 @@ public class FiguraMod implements ClientModInitializer {
                     }
 
                     context.matrixStack().pop();
-
-                    ((VertexConsumerProvider.Immediate) FiguraMod.vertexConsumerProvider).draw();
-
                     FiguraMod.clearRenderingData();
                 }
             }
