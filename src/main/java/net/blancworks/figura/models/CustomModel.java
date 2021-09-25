@@ -36,9 +36,6 @@ public class CustomModel extends FiguraAsset {
 
     public float texWidth = 64, texHeight = 64;
 
-    //The size of the avatar in bytes, either from when it was downloaded, or otherwise.
-    public long totalSize = 0;
-
     public int leftToRender = 0;
     public int lastComplexity = 0;
 

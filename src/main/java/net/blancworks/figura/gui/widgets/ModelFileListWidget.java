@@ -34,6 +34,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
         }
 
         File[] files = contentDirectory.listFiles();
+        if (files == null) return;
 
         for (File file : files) {
             //get file name
@@ -43,29 +44,33 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
             if (!fileName.toLowerCase().contains(searchTerm.toLowerCase()))
                 continue;
 
-            //if directory
-            if (file.isDirectory() && (Files.exists(file.toPath().resolve("model.bbmodel")) ||Files.exists(file.toPath().resolve("player_model.bbmodel"))) && Files.exists(file.toPath().resolve("texture.png")))
-                addEntry(new ModelFileListWidgetEntry(file.getName(), this));
-            //zip support
-            else if (file.getName().endsWith(".zip")) {
-                try {
+            try {
+                byte load = 0;
+
+                //zip load
+                if (file.getName().endsWith(".zip")) {
                     ZipFile zipFile = new ZipFile(file.getPath());
 
-                    boolean hasModel = zipFile.getEntry("model.bbmodel") != null || zipFile.getEntry("player_model.bbmodel") != null;
-                    boolean hasTexture = zipFile.getEntry("texture.png") != null;
-
-                    //add entry
-                    if (hasModel && hasTexture)
-                        addEntry(new ModelFileListWidgetEntry(file.getName(), this));
-
-                } catch (Exception e) {
-                    FiguraMod.LOGGER.warn("Failed to load model " + file.getName());
-                    e.printStackTrace();
+                    if (zipFile.getEntry("model.bbmodel") != null) load = (byte) (load | 1);
+                    if (zipFile.getEntry("player_model.bbmodel") != null) load = (byte) (load | 2);
+                    if (zipFile.getEntry("texture.png") != null) load = (byte) (load | 4);
+                    if (zipFile.getEntry("script.lua") != null) load = (byte) (load | 8);
                 }
+                //directory load
+                else if (file.isDirectory()) {
+                    if (Files.exists(file.toPath().resolve("model.bbmodel"))) load = (byte) (load | 1);
+                    if (Files.exists(file.toPath().resolve("player_model.bbmodel"))) load = (byte) (load | 2);
+                    if (Files.exists(file.toPath().resolve("texture.png"))) load = (byte) (load | 4);
+                    if (Files.exists(file.toPath().resolve("script.lua"))) load = (byte) (load | 8);
+                }
+
+                //add to list if valid
+                if (load != 0 && load != 4)
+                    addEntry(new ModelFileListWidgetEntry(file.getName(), this));
+            } catch (Exception e) {
+                FiguraMod.LOGGER.warn("Failed to load model " + file.getName());
+                e.printStackTrace();
             }
-            //old system compatibility
-            else if (file.getName().endsWith(".bbmodel") && Files.exists(contentDirectory.toPath().resolve(fileName + ".png")))
-                addEntry(new ModelFileListWidgetEntry(fileName + "*", this));
         }
     }
 

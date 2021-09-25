@@ -10,10 +10,7 @@ import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.renderer.RenderTask;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.*;
@@ -75,18 +72,18 @@ public class CustomModelPart {
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        if (data.texture.isDone) {
-            //hit boxes :3
-            canRenderHitBox = (boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+        if (data.texture == null || !data.texture.isDone)
+            return 0;
 
-            //render!
-            int ret = render(data, data.model.leftToRender, matrices, transformStack, vcp, light, overlay, 0, 0, new Vec3f(1, 1, 1), alpha, new HashSet<>(), false);
+        //hit boxes :3
+        canRenderHitBox = (boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-            //post render
-            renderOnly = null;
-            return ret;
-        }
-        return 0;
+        //render!
+        int ret = render(data, data.model.leftToRender, matrices, transformStack, vcp, light, overlay, 0, 0, new Vec3f(1, 1, 1), alpha, new HashSet<>(), false);
+
+        //post render
+        renderOnly = null;
+        return ret;
     }
 
     //Renders this custom model part and all its children.
@@ -342,14 +339,17 @@ public class CustomModelPart {
             }
         }
 
-        ((VertexConsumerProvider.Immediate) FiguraMod.vertexConsumerProvider).draw();
+        if (FiguraMod.vertexConsumerProvider instanceof VertexConsumerProvider.Immediate immediate)
+            immediate.draw();
     }
 
     public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
         //Render extra parts
         for (RenderTask task : this.renderTasks) {
             leftToRender -= task.render(matrices, vcp, light);
-            ((VertexConsumerProvider.Immediate) FiguraMod.vertexConsumerProvider).draw();
+
+            if (vcp instanceof VertexConsumerProvider.Immediate immediate)
+                immediate.draw();
 
             if (leftToRender <= 0) break;
         }

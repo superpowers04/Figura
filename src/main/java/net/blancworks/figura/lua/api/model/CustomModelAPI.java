@@ -19,8 +19,10 @@ public class CustomModelAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ScriptLocalAPITable(script, new LuaTable() {{
-            for (CustomModelPart part : script.playerData.model.allParts) {
-                set(part.name, new CustomModelPartTable(part, script.playerData));
+            if (script.playerData.model != null) {
+                for (CustomModelPart part : script.playerData.model.allParts) {
+                    set(part.name, new CustomModelPartTable(part, script.playerData));
+                }
             }
         }});
     }

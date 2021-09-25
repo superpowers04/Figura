@@ -9,10 +9,12 @@ import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -41,12 +43,27 @@ public class LocalPlayerData extends PlayerData {
 
     @Override
     public void tick() {
-
         if (this.loadedName != null)
             this.lastHash = "";
         super.tick();
 
         this.tickFileWatchers();
+    }
+
+    @Override
+    public long getFileSize() {
+        if (modelData == null)
+            return super.getFileSize();
+
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            DataOutputStream w = new DataOutputStream(out);
+
+            NbtIo.writeCompressed(modelData, w);
+            return w.size();
+        } catch (Exception ignored) {}
+
+        return 0;
     }
 
     public static Path getContentDirectory() {
@@ -56,9 +73,16 @@ public class LocalPlayerData extends PlayerData {
     /**
      * Loads a model file at a specific directory.
      *
-     * @param fileName
+     * @param fileName - the file to load
      */
     public void loadModelFile(String fileName) {
+        //clear current data
+        this.model = null;
+        this.texture = null;
+        this.script = null;
+
+        extraTextures.clear();
+
         KeyBinding.updateKeysByCode();
         watchedFiles.clear();
 
@@ -73,93 +97,70 @@ public class LocalPlayerData extends PlayerData {
 
         //check file type
         boolean isZip = fileName.endsWith(".zip");
-        boolean isDirectory = !isZip && !fileName.endsWith("*");
 
-        //reset paths
-        Path jsonPath = null;
-        Path jsonPlayerPath = null;
-        Path texturePath = null;
-        Path scriptPath = null;
-        Path metadataPath;
+        //avatar file
+        File file = new File(contentDirectory.resolve(fileName).toString());
 
-        //dummy file - must be initialized
-        File file = null;
+        //loading stuff
+        //1 - model | 2 - player model | 4 - texture | 8 - script
+        byte data = 0;
+        HashMap<String, Path> avatarPaths = new HashMap<>();
 
-        //folder data
-        if (isDirectory) {
-            file = new File(contentDirectory.resolve(fileName).toString());
+        //zip
+        if (isZip) {
+            //add zip to watched files, even if you cant edit opened zip files, you might be able to
+            watchedFiles.add(file.toString());
 
+            try {
+                ZipFile zipFile = new ZipFile(file.getPath());
+
+                if (zipFile.getEntry("model.bbmodel") != null) data = (byte) (data | 1);
+                if (zipFile.getEntry("player_model.bbmodel") != null) data = (byte) (data | 2);
+                if (zipFile.getEntry("texture.png") != null) data = (byte) (data | 4);
+                if (zipFile.getEntry("script.lua") != null) data = (byte) (data | 8);
+            } catch (Exception e) {
+                e.printStackTrace();
+                data = 0;
+            }
+        }
+        //folder
+        else {
             //set root directory
             contentDirectory = file.toPath();
 
             //set paths
-            jsonPath = contentDirectory.resolve("model.bbmodel");
-            jsonPlayerPath = contentDirectory.resolve("player_model.bbmodel");
-            texturePath = contentDirectory.resolve("texture.png");
-            scriptPath = contentDirectory.resolve("script.lua");
-            metadataPath = contentDirectory.resolve("metadata.nbt");
+            Path modelPath = contentDirectory.resolve("model.bbmodel");
+            Path playerModelPath = contentDirectory.resolve("player_model.bbmodel");
+            Path texturePath = contentDirectory.resolve("texture.png");
+            Path scriptPath = contentDirectory.resolve("script.lua");
 
             //add watchedfiles
-            watchedFiles.add(jsonPath.toString());
-            watchedFiles.add(jsonPlayerPath.toString());
+            watchedFiles.add(modelPath.toString());
+            watchedFiles.add(playerModelPath.toString());
             watchedFiles.add(texturePath.toString());
             watchedFiles.add(scriptPath.toString());
-            watchedFiles.add(metadataPath.toString());
-        }
-        //zip data
-        else if (isZip) {
-            //add zip to watched files, even if you cant edit opened zip files, you might be able to
-            file = new File(contentDirectory.resolve(fileName).toString());
-            watchedFiles.add(file.toString());
-        }
-        //then must be a .bbmodel *
-        else {
-            //remove invalid * from name
-            fileName = fileName.substring(0, fileName.length() - 1);
 
-            //set paths
-            jsonPath = contentDirectory.resolve(fileName + ".bbmodel");
-            jsonPlayerPath = contentDirectory.resolve("player_" + fileName + ".bbmodel");
-            texturePath = contentDirectory.resolve(fileName + ".png");
-            scriptPath = contentDirectory.resolve(fileName + ".lua");
-            metadataPath = contentDirectory.resolve(fileName + ".nbt");
+            //load!
+            if (Files.exists(modelPath)) data = (byte) (data | 1);
+            if (Files.exists(playerModelPath)) data = (byte) (data | 2);
+            if (Files.exists(texturePath)) data = (byte) (data | 4);
+            if (Files.exists(scriptPath)) data = (byte) (data | 8);
 
-            //add watched files
-            watchedFiles.add(jsonPath.toString());
-            watchedFiles.add(texturePath.toString());
-            watchedFiles.add(scriptPath.toString());
-            watchedFiles.add(metadataPath.toString());
-
-            //add * back
-            fileName += "*";
-        }
-
-        //check if files exists
-        boolean cantLoad = !isZip && ((!Files.exists(jsonPath) && !Files.exists(jsonPlayerPath)) || !Files.exists(texturePath));
-
-        //check for zip files
-        if (isZip) {
-            try {
-                ZipFile zipFile = new ZipFile(file.getPath());
-
-                boolean hasModel = zipFile.getEntry("model.bbmodel") != null;
-                boolean hasPlayerModel = zipFile.getEntry("player_model.bbmodel") != null;
-                boolean hasTexture = zipFile.getEntry("texture.png") != null;
-
-                cantLoad = (!hasModel && !hasPlayerModel) || !hasTexture;
-            } catch (Exception e) {
-                e.printStackTrace();
-                cantLoad = true;
-            }
+            //add to hash map
+            avatarPaths.put("model", modelPath);
+            avatarPaths.put("player_model", playerModelPath);
+            avatarPaths.put("texture", texturePath);
+            avatarPaths.put("script", scriptPath);
         }
 
         //log and clear player model
-        if (cantLoad) {
+        if (data == 0 || data == 4) {
             FiguraMod.LOGGER.warn("Failed to load model " + fileName);
             PlayerDataManager.clearLocalPlayer();
             return;
         }
 
+        //add directory to watched files
         if (!watchKeys.containsKey(contentDirectory.toString())) {
             try {
                 watchKeys.put(contentDirectory.toString(), contentDirectory.register(ws, StandardWatchEventKinds.ENTRY_MODIFY));
@@ -170,7 +171,6 @@ public class LocalPlayerData extends PlayerData {
 
         //set loaded name
         this.loadedName = fileName;
-
 
         //Set up ZIP file.
         ZipFile modelZip = null;
@@ -183,36 +183,60 @@ public class LocalPlayerData extends PlayerData {
             return;
         }
 
+        //try to load JSON model
+        if ((data & 1) == 1 || (data & 2) == 2) loadModel((data & 1) == 1, avatarPaths, isZip, modelZip);
+
+        //try to load main texture
+        if ((data & 4) == 4) loadTexture(avatarPaths.get("texture"), isZip, modelZip);
+
+        //try to load script
+        if ((data & 8) == 8) loadScript(avatarPaths.get("script"), isZip, modelZip);
+
+        //try to load extra textures
+        loadExtraTextures(file, isZip, modelZip);
+
+        //Close ZIP stream.
+        try {
+            if (isZip)
+                modelZip.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //pack avatar on load
+        FiguraMod.doTask(() -> {
+            NbtCompound nbt = new NbtCompound();
+            this.modelData = this.writeNbt(nbt) ? nbt : null;
+            getFileSize();
+        });
+    }
+
+    public void loadModel(boolean model, HashMap<String, Path> paths, boolean isZip, ZipFile modelZip) {
         InputStream inputStream = null;
 
-        //load JSON model.
         try {
-            //Clear current model
-            this.model = null;
-            //Set up string for later
-            String modelJsonText = null;
-            
-
-            //Get input stream, either from file, or from zip.
+            //get input stream, either from zip, or directory
             if (isZip) {
-                ZipEntry modelEntry = modelZip.getEntry("model.bbmodel");
-
-                if (modelEntry == null){
+                ZipEntry modelEntry;
+                if (model)
+                    modelEntry = modelZip.getEntry("model.bbmodel");
+                else {
                     modelEntry = modelZip.getEntry("player_model.bbmodel");
                     BlockbenchModelDeserializer.overrideAsPlayerModel = true;
                 }
 
                 inputStream = modelZip.getInputStream(modelEntry);
             } else {
-                if (Files.exists(jsonPath)) {
-                    inputStream = new FileInputStream(jsonPath.toFile());
-                } else {
-                    inputStream = new FileInputStream(jsonPlayerPath.toFile());
+                if (model)
+                    inputStream = new FileInputStream(paths.get("model").toFile());
+                else {
+                    inputStream = new FileInputStream(paths.get("player_model").toFile());
                     BlockbenchModelDeserializer.overrideAsPlayerModel = true;
                 }
             }
 
             //Try to read from input stream
+            String modelJsonText;
             try (final Reader reader = new InputStreamReader(inputStream)) {
                 modelJsonText = CharStreams.toString(reader);
             }
@@ -234,51 +258,42 @@ public class LocalPlayerData extends PlayerData {
         if (inputStream != null) {
             try {
                 inputStream.close();
-                inputStream = null;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
 
-
-        //Load texture.
+    public void loadTexture(Path texturePath, boolean isZip, ZipFile modelZip) {
         try {
-            //Clear current texture.
-            this.texture = null;
-
             //Generate Identifier for texture.
             Identifier id = new Identifier("figura", playerId.toString());
 
             //Create new texture, and register it.
             this.texture = new FiguraTexture();
+
+            //load texture, if any
             this.texture.id = id;
             getTextureManager().registerTexture(id, texture);
 
             //Get input stream, either from file, or from zip.
-            if (isZip) {
+            InputStream inputStream;
+            if (isZip)
                 inputStream = modelZip.getInputStream(modelZip.getEntry("texture.png"));
-            } else {
+            else
                 inputStream = new FileInputStream(texturePath.toFile());
-            }
 
             //Load texture (tasks are managed by the texture itself)
             texture.loadFromStream(inputStream);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
 
-        //We don't have to close the input stream for textures, they do that for us.
-        //We'll still set it to null, tho.
-        inputStream = null;
+    public void loadScript(Path scriptPath, boolean isZip, ZipFile modelZip) {
+        InputStream inputStream = null;
 
-
-        //Load script.
         try {
-            //Clear previous script.
-            this.script = null;
-            //Set up string for later
-            String scriptSource = null;
-
             //Get input stream, either from file, or from zip.
             if (isZip) {
                 //Get entry
@@ -293,6 +308,7 @@ public class LocalPlayerData extends PlayerData {
             //If there is a script, try to load it
             if (inputStream != null) {
                 //Try to read from input stream
+                String scriptSource;
                 try (final Reader reader = new InputStreamReader(inputStream)) {
                     scriptSource = CharStreams.toString(reader);
                 }
@@ -303,9 +319,7 @@ public class LocalPlayerData extends PlayerData {
                 //Finalize script source for lambda.
                 String finalScriptSource = scriptSource;
                 //Load script on off-thread.
-                FiguraMod.doTask(() -> {
-                    this.script.load(this, finalScriptSource);
-                });
+                FiguraMod.doTask(() -> this.script.load(this, finalScriptSource));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -315,15 +329,15 @@ public class LocalPlayerData extends PlayerData {
         if (inputStream != null) {
             try {
                 inputStream.close();
-                inputStream = null;
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
+    }
 
-        //Load extra textures
+    public void loadExtraTextures(File file, boolean isZip, ZipFile modelZip) {
         try {
-            extraTextures.clear();
+            InputStream inputStream = null;
 
             for (FiguraTexture.TextureType textureType : FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.keySet()) {
                 Path location = null;
@@ -335,14 +349,10 @@ public class LocalPlayerData extends PlayerData {
                     //If there is an entry that matches this texture
                     if (fileEntry != null)
                         inputStream = modelZip.getInputStream(fileEntry);
-                } else { //If this is not a zip file
-
-                    //Check for directory first
-                    if (isDirectory) {
-                        location = file.toPath().resolve("texture" + textureType.toString() + ".png");
-                    } else { //Legacy support.
-                        location = contentDirectory.resolve(fileName.substring(0, fileName.length() - 1) + textureType.toString() + ".png");
-                    }
+                }
+                //then its a directory
+                else {
+                    location = file.toPath().resolve("texture" + textureType.toString() + ".png");
 
                     //If file exists at that location, make a stream for it, and set it to be watched.
                     if (Files.exists(location)) {
@@ -354,7 +364,7 @@ public class LocalPlayerData extends PlayerData {
                 //If there IS a stream for this extra texture
                 if (inputStream != null) {
                     FiguraTexture extraTexture = new FiguraTexture();
-                    extraTexture.id = new Identifier("figura", playerId.toString() + textureType.toString());
+                    extraTexture.id = new Identifier("figura", playerId.toString() + textureType);
                     extraTexture.filePath = location;
                     getTextureManager().registerTexture(extraTexture.id, extraTexture);
                     extraTexture.type = textureType;
@@ -367,23 +377,6 @@ public class LocalPlayerData extends PlayerData {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        //We don't need to close the input stream here, because if it exists, it's an extra-texture stream.
-        //We keep those open until texture loading is finished.
-
-        //Close ZIP stream.
-        try {
-            if (isZip)
-                modelZip.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        //pack avatar on load
-        FiguraMod.doTask(() -> {
-            NbtCompound nbt = new NbtCompound();
-            this.modelData = this.writeNbt(nbt) ? nbt : null;
-        });
     }
 
     public void tickFileWatchers() {
@@ -423,7 +416,7 @@ public class LocalPlayerData extends PlayerData {
                         doReload = true;
 
                 } catch (Exception e) {
-                    System.err.println(e);
+                    e.printStackTrace();
                 }
             }
         }
