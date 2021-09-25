@@ -341,14 +341,19 @@ public class CustomModelPart {
                     break;
             }
         }
+
+        ((VertexConsumerProvider.Immediate) FiguraMod.vertexConsumerProvider).draw();
     }
 
     public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
         //Render extra parts
         for (RenderTask task : this.renderTasks) {
             leftToRender -= task.render(matrices, vcp, light);
+            ((VertexConsumerProvider.Immediate) FiguraMod.vertexConsumerProvider).draw();
+
             if (leftToRender <= 0) break;
         }
+
         return leftToRender;
     }
 

@@ -5,7 +5,6 @@
   "compatibilityLevel": "JAVA_16",
   "client": [
     "ArmorFeatureRendererMixin",
-    "BlockModelRendererAccessorMixin",
     "CameraMixin",
     "ChatHudListenerMixin",
     "ChatHudMixin",
