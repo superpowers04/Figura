@@ -8,14 +8,16 @@ import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
+import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -23,14 +25,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-
 
 /**
  * Responsible for storing all the data associated with the player on this client.
@@ -48,22 +47,22 @@ public class PlayerData {
     //The custom script for the model.
     public CustomScript script;
     //Vanilla model for the player, in case we need it for something.
-    public PlayerEntityModel vanillaModel;
+    public PlayerEntityModel<?> vanillaModel;
 
     //Extra textures for the model (like emission)
     public final List<FiguraTexture> extraTextures = new ArrayList<>();
 
     public PlayerEntity lastEntity;
-    
+
     //The last hash code of the avatar.
     public String lastHash = "";
     //True if the model needs to be re-loaded due to a hash mismatch.
     public boolean isInvalidated = false;
 
     private Identifier trustIdentifier;
-    
+
     public Text playerName;
-    
+
     public boolean isLocalAvatar = true;
 
     public Identifier getTrustIdentifier() {
@@ -84,41 +83,40 @@ public class PlayerData {
      * @param nbt the nbt to write to
      * @return {@code true} if the player data was written into the NBT, otherwise {@code false}
      */
-    public boolean writeNbt(CompoundTag nbt) {
+    public boolean writeNbt(NbtCompound nbt) {
         //You cannot save a model that is incomplete.
-        if (model == null || texture == null)
+        if (model == null && script == null)
             return false;
 
         //Put ID.
         nbt.putUuid("id", playerId);
 
         //Put Model.
-        CompoundTag modelNbt = new CompoundTag();
-        model.writeNbt(modelNbt);
-        nbt.put("model", modelNbt);
-
-        //Put Texture.
-        try {
-            CompoundTag textureNbt = new CompoundTag();
-            texture.writeNbt(textureNbt);
-            nbt.put("texture", textureNbt);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return false;
+        if (model != null) {
+            NbtCompound modelNbt = new NbtCompound();
+            model.writeNbt(modelNbt);
+            nbt.put("model", modelNbt);
         }
 
+        //Put Texture.
+        if (texture != null && texture.data != null) {
+            NbtCompound textureNbt = new NbtCompound();
+            texture.writeNbt(textureNbt);
+            nbt.put("texture", textureNbt);
+        }
+
+        //Put Script.
         if (script != null) {
-            //Put Script.
-            CompoundTag scriptNbt = new CompoundTag();
+            NbtCompound scriptNbt = new NbtCompound();
             script.toNBT(scriptNbt);
             nbt.put("script", scriptNbt);
         }
 
-        if (extraTextures.size() > 0) {
-            ListTag texList = new ListTag();
+        if (!extraTextures.isEmpty()) {
+            NbtList texList = new NbtList();
 
             for (FiguraTexture extraTexture : extraTextures) {
-                CompoundTag elytraTextureNbt = new CompoundTag();
+                NbtCompound elytraTextureNbt = new NbtCompound();
                 extraTexture.writeNbt(elytraTextureNbt);
                 texList.add(elytraTextureNbt);
             }
@@ -134,7 +132,7 @@ public class PlayerData {
      *
      * @param nbt the nbt to read
      */
-    public void readNbt(CompoundTag nbt) {
+    public void readNbt(NbtCompound nbt) {
         playerId = nbt.getUuid("id");
 
         model = null;
@@ -145,45 +143,46 @@ public class PlayerData {
 
         try {
             //Create model on main thread.
-            CompoundTag modelNbt = (CompoundTag) nbt.get("model");
-            model = new CustomModel();
+            NbtCompound modelNbt = (NbtCompound) nbt.get("model");
 
             //Load model on off-thread.
-            FiguraMod.doTask(() -> {
-                try {
-                    model.readNbt(modelNbt);
-                    model.owner = this;
-                    model.isDone = true;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            });
+            if (modelNbt != null) {
+                FiguraMod.doTask(() -> {
+                    try {
+                        model = new CustomModel();
+                        model.readNbt(modelNbt);
+                        model.owner = this;
+                        model.isDone = true;
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
             //Create texture on main thread
-            CompoundTag textureNbt = (CompoundTag) nbt.get("texture");
-            texture = new FiguraTexture();
-            texture.id = new Identifier("figura", playerId.toString());
-            getTextureManager().registerTexture(texture.id, texture);
+            NbtCompound textureNbt = (NbtCompound) nbt.get("texture");
 
-            //Load texture on off-thread
-            FiguraMod.doTask(() -> {
-                texture.readNbt(textureNbt);
-            });
+            //Load texture, if any
+            if (textureNbt != null) {
+                texture = new FiguraTexture();
+                texture.id = new Identifier("figura", playerId.toString());
+                getTextureManager().registerTexture(texture.id, texture);
+                FiguraMod.doTask(() -> texture.readNbt(textureNbt));
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         try {
             if (nbt.contains("script")) {
-                CompoundTag scriptNbt = (CompoundTag) nbt.get("script");
+                NbtCompound scriptNbt = (NbtCompound) nbt.get("script");
 
-                script = new CustomScript();
-
-                FiguraMod.doTask(() -> {
+                if (scriptNbt != null) FiguraMod.doTask(() -> {
+                    script = new CustomScript();
                     script.fromNBT(this, scriptNbt);
                 });
             }
@@ -193,17 +192,17 @@ public class PlayerData {
 
         try {
             if (nbt.contains("exTexs")) {
-                ListTag textureList = (ListTag) nbt.get("exTexs");
+                NbtList textureList = (NbtList) nbt.get("exTexs");
 
-                for (Tag element : textureList) {
-                    FiguraTexture newTexture = new FiguraTexture();
-                    newTexture.id = new Identifier("figura", playerId.toString() + newTexture.type.toString());
-                    getTextureManager().registerTexture(newTexture.id, newTexture);
-                    extraTextures.add(newTexture);
+                if (textureList != null) {
+                    for (NbtElement element : textureList) {
+                        FiguraTexture newTexture = new FiguraTexture();
+                        newTexture.id = new Identifier("figura", playerId.toString() + newTexture.type.toString());
+                        getTextureManager().registerTexture(newTexture.id, newTexture);
+                        extraTextures.add(newTexture);
 
-                    FiguraMod.doTask(() -> {
-                        newTexture.readNbt((CompoundTag) element);
-                    });
+                        FiguraMod.doTask(() -> newTexture.readNbt((NbtCompound) element));
+                    }
                 }
             }
         } catch (Exception e) {
@@ -212,8 +211,8 @@ public class PlayerData {
     }
 
     //Returns the file size, in bytes.
-    public int getFileSize() {
-        CompoundTag writtenNbt = new CompoundTag();
+    public long getFileSize() {
+        NbtCompound writtenNbt = new NbtCompound();
         this.writeNbt(writtenNbt);
 
         try {
@@ -221,23 +220,22 @@ public class PlayerData {
             DataOutputStream w = new DataOutputStream(out);
 
             NbtIo.writeCompressed(writtenNbt, w);
-
-            this.model.totalSize = w.size();
             return w.size();
         } catch (Exception ignored) {}
 
-        return -1;
+        return 0;
     }
 
     //Ticks from client.
     public void tick() {
         if (this.isInvalidated)
             PlayerDataManager.clearPlayer(playerId);
+
         vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
-        lastEntity = MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId);
-        
+        lastEntity = MinecraftClient.getInstance().world != null ? MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId) : null;
+
         FiguraMod.currentPlayer = (AbstractClientPlayerEntity) lastEntity;
-        
+
         NewFiguraNetworkManager.subscribe(playerId);
 
         if (lastEntity != null) {
@@ -252,14 +250,25 @@ public class PlayerData {
                 }
             }
         }
+
+        if (texture == null || texture.id == DefaultSkinHelper.getTexture(playerId)) {
+            if (MinecraftClient.getInstance().getNetworkHandler() != null) {
+                PlayerListEntry player = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(playerId);
+                if (player != null) {
+                    texture = new FiguraTexture();
+                    texture.id = player.getSkinTexture();
+                    texture.isDone = true;
+                }
+            }
+        }
     }
 
     public void loadFromNbt(DataInputStream input) throws Exception {
-        CompoundTag nbt = NbtIo.readCompressed(input);
+        NbtCompound nbt = NbtIo.readCompressed(input);
         loadFromNbt(nbt);
     }
 
-    public void loadFromNbt(CompoundTag tag) {
+    public void loadFromNbt(NbtCompound tag) {
         this.readNbt(tag);
         getFileSize();
     }
@@ -285,12 +294,12 @@ public class PlayerData {
             Path hashFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".hsh");
 
             try {
-                CompoundTag targetTag = new CompoundTag();
+                NbtCompound targetTag = new NbtCompound();
                 this.writeNbt(targetTag);
 
                 Files.createDirectories(nbtFilePath.getParent());
                 NbtIo.writeCompressed(targetTag, new FileOutputStream(nbtFilePath.toFile()));
-                Files.write(hashFilePath, this.lastHash.getBytes(StandardCharsets.UTF_8));
+                Files.writeString(hashFilePath, this.lastHash);
             } catch (Exception e) {
                 e.printStackTrace();
             }

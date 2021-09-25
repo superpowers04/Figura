@@ -54,7 +54,6 @@
   "gui.figura.button.tooltip.keybinds": "Current Script Keybinds",
   "gui.figura.button.tooltip.backendstatus": "Backend Connection:",
 
-  "gui.figura.deprecatedwarning" : "*The use of models in the root folder is deprecated, see the wiki for more info",
   "gui.figura.complexity": "Complexity: %d",
   "gui.figura.filesize": "File Size: %dkb",
   "gui.figura.name": "Name: %d",

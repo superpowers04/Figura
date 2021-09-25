@@ -51,7 +51,6 @@ public final class PlayerDataManager {
             if (lastLoadedFileName != null) {
                 localPlayer.vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
                 localPlayer.loadModelFile(lastLoadedFileName);
-                localPlayer.getFileSize();
                 return localPlayer;
             }
 

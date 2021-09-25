@@ -35,8 +35,11 @@ public class FiguraTexture extends ResourceTexture {
 
     public boolean isDone = false;
 
+    public static final Identifier DEFAULT_ID = new Identifier("minecraft", "textures/entity/steve.png");
+
     public FiguraTexture() {
-        super(new Identifier("minecraft", "textures/entity/steve.png"));
+        super(DEFAULT_ID);
+        this.id = DEFAULT_ID;
     }
 
     public void loadFromDisk(Path targetPath) {

@@ -74,7 +74,6 @@ public class FiguraGuiScreen extends Screen {
     public TexturedButtonWidget keybindsButton;
 
     public MutableText nameText;
-    public MutableText rawNameText;
     public MutableText fileSizeText;
     public MutableText modelComplexityText;
     public MutableText scriptText;
@@ -241,15 +240,7 @@ public class FiguraGuiScreen extends Screen {
         );
         this.addDrawableChild(expandButton);
 
-        //reload status
-        if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
-            if (PlayerDataManager.lastLoadedFileName != null)
-                nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
-            modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
-            FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
-            scriptText = getScriptText();
-        }
-
+        updateAvatarData();
         updateExpand();
     }
 
@@ -273,13 +264,7 @@ public class FiguraGuiScreen extends Screen {
             modelFileList.reloadFilters();
 
             //reload data
-            if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.model != null) {
-                if (PlayerDataManager.lastLoadedFileName == null)
-                    nameText = null;
-                modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
-                FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
-                scriptText = getScriptText();
-            }
+            updateAvatarData();
         }
     }
 
@@ -317,10 +302,6 @@ public class FiguraGuiScreen extends Screen {
 
             RenderSystem.setShaderTexture(0, backendStatusTexture);
             drawTexture(matrices, this.width - 18, currY += 11, 10 * NewFiguraNetworkManager.connectionStatus, 0, 10, 10, 30, 10);
-
-            //deprecated warning
-            if (rawNameText != null && rawNameText.getString().endsWith("*"))
-                drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new TranslatableText("gui.figura.deprecatedwarning"), this.width / 2, 4, TextColor.parse("red").getRgb());
 
             //mod version
             drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)), this.width / 2, this.height - 12, TextColor.parse("dark_gray").getRgb());
@@ -406,13 +387,24 @@ public class FiguraGuiScreen extends Screen {
                 }
             }
 
-            nameText = new TranslatableText("gui.figura.name", fileName.substring(0, Math.min(20, fileName.length())));
-            rawNameText = new LiteralText(fileName);
-            modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
-            FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
-            scriptText = getScriptText();
+            updateAvatarData();
 
         }, Util.getMainWorkerExecutor());
+    }
+
+    public void updateAvatarData() {
+        nameText = null;
+        modelComplexityText = null;
+        fileSizeText = null;
+        scriptText = null;
+
+        if (PlayerDataManager.localPlayer != null) {
+            if (PlayerDataManager.lastLoadedFileName != null)
+                nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
+            modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model != null ? PlayerDataManager.localPlayer.model.getRenderComplexity() : 0);
+            FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
+            scriptText = getScriptText();
+        }
     }
 
     public MutableText getScriptText() {
@@ -444,12 +436,12 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public MutableText getFileSizeText() {
-        int fileSize = PlayerDataManager.localPlayer.getFileSize();
+        long fileSize = PlayerDataManager.localPlayer.getFileSize();
 
         //format file size
         DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
         df.setRoundingMode(RoundingMode.HALF_UP);
-        float size = Float.parseFloat(df.format(fileSize / 1000.0f));
+        float size = Float.parseFloat(df.format(fileSize / 1024.0f));
 
         MutableText fsText = new TranslatableText("gui.figura.filesize", size);
 
