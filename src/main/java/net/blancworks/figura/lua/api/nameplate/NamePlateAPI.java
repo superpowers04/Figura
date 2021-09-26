@@ -11,6 +11,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -21,7 +22,6 @@ import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -109,7 +109,7 @@ public class NamePlateAPI {
 
                     if (!arg.isnil()) {
                         //no ✭ 4 u
-                        string = noBadges4U(arg.checkjstring());
+                        string = TextUtils.noBadges4U(arg.checkjstring());
 
                         //allow new lines only on entity
                         if (!accessor.equals(ENTITY))
@@ -294,31 +294,4 @@ public class NamePlateAPI {
         return formattedText;
     }
 
-    public static String noBadges4U(String string) {
-        return string.replaceAll("([△▲★✯☆✭]|\\\\u(?i)(25B3|25B2|2605|272F|2606|272D))", "\uFFFD");
-    }
-
-    public static List<Text> splitText(Text text, String regex) {
-        ArrayList<Text> textList = new ArrayList<>();
-
-        MutableText currentText = new LiteralText("");
-        for (Text entry : text.getWithStyle(text.getStyle())) {
-            String entryString = entry.getString();
-            String[] lines = entryString.split(regex);
-            for (int i = 0; i < lines.length; i++) {
-                if (i != 0) {
-                    textList.add(currentText.shallowCopy());
-                    currentText = new LiteralText("");
-                }
-                currentText.append(new LiteralText(lines[i]).setStyle(entry.getStyle()));
-            }
-            if (entryString.endsWith(regex)) {
-                textList.add(currentText.shallowCopy());
-                currentText = new LiteralText("");
-            }
-        }
-        textList.add(currentText);
-
-        return textList;
-    }
 }

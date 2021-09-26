@@ -1,11 +1,13 @@
 package net.blancworks.figura.gui;
 
+import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
+import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
@@ -20,6 +22,8 @@ import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.LuaError;
 
+import java.util.List;
+
 public class ActionWheel extends DrawableHelper {
 
     private final MinecraftClient client;
@@ -27,6 +31,7 @@ public class ActionWheel extends DrawableHelper {
     public static final Identifier ACTION_WHEEL = new Identifier("figura", "textures/gui/action_wheel.png");
     public static final Identifier ACTION_WHEEL_SELECTED = new Identifier("figura", "textures/gui/action_wheel_selected.png");
     public static final Vec3f ERROR_COLOR = new Vec3f(1.0f, 0.28f, 0.28f);
+    public static final List<Text> NO_FUNCTION_MESSAGE = ImmutableList.of(new TranslatableText("gui.figura.actionwheel.nofunction"));
 
     public static int selectedSlot = -1;
     public static boolean enabled = true;
@@ -249,25 +254,27 @@ public class ActionWheel extends DrawableHelper {
         //customization
         ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
 
-        Text text = new TranslatableText("gui.figura.actionwheel.nofunction");
+        List<Text> lines = NO_FUNCTION_MESSAGE;
         int textColor = Formatting.RED.getColorValue();
 
         if (customization != null && customization.function != null) {
             if (customization.title == null)
                 return;
 
+            Text text;
             try {
                 text = Text.Serializer.fromJson(new StringReader(customization.title));
             } catch (Exception ignored) {
                 text = new LiteralText(customization.title);
             }
+            lines = TextUtils.splitText(text, "\n");
 
             textColor = Formatting.WHITE.getColorValue();
         }
 
         //text pos
         Vec2f textPos;
-        int titleLen = this.client.textRenderer.getWidth(text) / 2;
+        int titleLen = this.client.textRenderer.getWidth(lines.get(0)) / 2;
 
         switch ((int) Config.entries.get("actionWheelPos").value) {
             //top
@@ -283,7 +290,11 @@ public class ActionWheel extends DrawableHelper {
         //draw
         matrices.push();
         matrices.translate(0, 0, 599);
-        drawTextWithShadow(matrices, this.client.textRenderer, text, (int) textPos.x, (int) textPos.y, textColor);
+        int i = 0;
+        for (Text text : lines) {
+            drawTextWithShadow(matrices, this.client.textRenderer, text, (int) textPos.x, (int) textPos.y + (i-lines.size()+1)*9, textColor);
+            i++;
+        }
         matrices.pop();
     }
 
