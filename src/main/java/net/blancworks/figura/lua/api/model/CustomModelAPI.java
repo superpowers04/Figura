@@ -7,9 +7,12 @@ import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import org.luaj.vm2.*;
-import org.luaj.vm2.lib.*;
-import net.minecraft.util.math.*;
+import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class CustomModelAPI {
 
@@ -235,11 +238,14 @@ public class CustomModelAPI {
                 }
             });
 
-            ret.set("setTexture", new OneArgFunction() {
+            ret.set("setTexture", new TwoArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1) {
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     try {
                         targetPart.textureType = CustomModelPart.TextureType.valueOf(arg1.checkjstring());
+
+                        if (targetPart.textureType == CustomModelPart.TextureType.Resource)
+                            targetPart.textureVanilla = new Identifier(arg2.checkjstring());
                     } catch (Exception ignored) {
                         targetPart.textureType = CustomModelPart.TextureType.Custom;
                     }
