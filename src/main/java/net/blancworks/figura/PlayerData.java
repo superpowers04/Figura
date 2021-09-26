@@ -12,7 +12,6 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
-import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -53,6 +52,7 @@ public class PlayerData {
     public final List<FiguraTexture> extraTextures = new ArrayList<>();
 
     public PlayerEntity lastEntity;
+    public PlayerListEntry playerListEntry;
 
     //The last hash code of the avatar.
     public String lastHash = "";
@@ -99,7 +99,7 @@ public class PlayerData {
         }
 
         //Put Texture.
-        if (texture != null && texture.data != null) {
+        if (texture != null) {
             NbtCompound textureNbt = new NbtCompound();
             texture.writeNbt(textureNbt);
             nbt.put("texture", textureNbt);
@@ -247,17 +247,6 @@ public class PlayerData {
                     script.tick();
                 } catch (Exception e) {
                     e.printStackTrace();
-                }
-            }
-        }
-
-        if (texture == null || texture.id == DefaultSkinHelper.getTexture(playerId)) {
-            if (MinecraftClient.getInstance().getNetworkHandler() != null) {
-                PlayerListEntry player = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(playerId);
-                if (player != null) {
-                    texture = new FiguraTexture();
-                    texture.id = player.getSkinTexture();
-                    texture.isDone = true;
                 }
             }
         }

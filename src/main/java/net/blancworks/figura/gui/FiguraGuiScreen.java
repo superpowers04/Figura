@@ -21,6 +21,7 @@ import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.Quaternion;
@@ -33,8 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -48,7 +48,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier deleteTexture = new Identifier("figura", "textures/gui/delete.png");
     public Identifier expandTexture = new Identifier("figura", "textures/gui/expand.png");
     public Identifier keybindsTexture = new Identifier("figura", "textures/gui/keybinds.png");
-    public Identifier backendStatusTexture = new Identifier("figura", "textures/gui/backend_status.png");
+    public Identifier statusIndicatorTexture = new Identifier("figura", "textures/gui/status_indicator.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
 
@@ -63,9 +63,34 @@ public class FiguraGuiScreen extends Screen {
         new TranslatableText("gui.figura.button.tooltip.uploadlocaltwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red")))
     );
 
+    public static final Map<Integer, Style> textColors = Map.of(
+        0, Style.EMPTY.withColor(Formatting.WHITE),
+        1, Style.EMPTY.withColor(Formatting.RED),
+        2, Style.EMPTY.withColor(Formatting.YELLOW),
+        3, Style.EMPTY.withColor(Formatting.GREEN)
+    );
+
+    public static final Text statusDividerText = new LiteralText(" | ").setStyle(textColors.get(0));
+    public static final TranslatableText modelStatusText = new TranslatableText("gui.figura.model");
+    public static final TranslatableText textureStatusText = new TranslatableText("gui.figura.texture");
+    public static final TranslatableText scriptStatusText = new TranslatableText("gui.figura.script");
+    public static final TranslatableText backendStatusText = new TranslatableText("gui.figura.backend");
+
+    public static final List<Text> statusTooltip = new ArrayList<>(Arrays.asList(
+            new LiteralText("").append(modelStatusText).append(statusDividerText)
+                    .append(textureStatusText).append(statusDividerText)
+                    .append(scriptStatusText).append(statusDividerText)
+                    .append(backendStatusText),
+
+                    new LiteralText(""),
+                    new TranslatableText("gui.figura.button.tooltip.status").setStyle(textColors.get(0)),
+                    new TranslatableText("gui.figura.button.tooltip.statustwo").setStyle(textColors.get(1)),
+                    new TranslatableText("gui.figura.button.tooltip.statusthree").setStyle(textColors.get(2)),
+                    new TranslatableText("gui.figura.button.tooltip.statusfour").setStyle(textColors.get(3))
+    ));
+
     public static final TranslatableText reloadTooltip = new TranslatableText("gui.figura.button.tooltip.reloadavatar");
     public static final TranslatableText keybindTooltip = new TranslatableText("gui.figura.button.tooltip.keybinds");
-    public static final Text backendStatus = new TranslatableText("gui.figura.button.tooltip.backendstatus").setStyle(Style.EMPTY.withColor(TextColor.parse("light_purple")));
 
     public TexturedButtonWidget uploadButton;
     public TexturedButtonWidget reloadButton;
@@ -76,7 +101,10 @@ public class FiguraGuiScreen extends Screen {
     public MutableText nameText;
     public MutableText fileSizeText;
     public MutableText modelComplexityText;
-    public MutableText scriptText;
+
+    private int textureStatus = 0;
+    private int modelSizeStatus = 0;
+    private int scriptStatus = 0;
 
     private TextFieldWidget searchBox;
     private int paneY;
@@ -282,29 +310,34 @@ public class FiguraGuiScreen extends Screen {
             drawTexture(matrices, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
         }
 
-        drawEntity(modelX, modelY, (int) (modelSize + scaledValue), angleX, angleY, MinecraftClient.getInstance().player);
+        drawEntity(modelX, modelY, (int) (modelSize + scaledValue), angleX, angleY, client.player);
 
         //draw search box and file list
         modelFileList.render(matrices, mouseX, mouseY, delta);
         searchBox.render(matrices, mouseX, mouseY, delta);
 
-        //draw text
-        int currY = 76;
-        if (!expand) {
-            if (nameText != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 16777215);
-            if (fileSizeText != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, fileSizeText, this.width - this.textRenderer.getWidth(fileSizeText) - 8, currY += 12, 16777215);
-            if (modelComplexityText != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY += 12, 16777215);
-            if (scriptText != null)
-                drawTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, scriptText, this.width - this.textRenderer.getWidth(scriptText) - 8, currY += 12, 16777215);
+        //draw status indicators
+        RenderSystem.setShaderTexture(0, statusIndicatorTexture);
 
-            RenderSystem.setShaderTexture(0, backendStatusTexture);
-            drawTexture(matrices, this.width - 18, currY += 11, 10 * NewFiguraNetworkManager.connectionStatus, 0, 10, 10, 30, 10);
+        //backend, script, texture, model
+        int currX = this.width;
+        drawTexture(matrices, currX -= 16, 88, 10 * NewFiguraNetworkManager.connectionStatus, 0, 10, 10, 40, 10);
+        drawTexture(matrices, currX -= 18, 88, 10 * scriptStatus, 0, 10, 10, 40, 10);
+        drawTexture(matrices, currX -= 18, 88, 10 * textureStatus, 0, 10, 10, 40, 10);
+        drawTexture(matrices, currX - 18, 88, 10 * modelSizeStatus, 0, 10, 10, 40, 10);
+
+        //draw text
+        if (!expand) {
+            int currY = 90;
+            if (nameText != null)
+                drawTextWithShadow(matrices, this.textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 0xFFFFFF);
+            if (fileSizeText != null)
+                drawTextWithShadow(matrices, this.textRenderer, fileSizeText, this.width - this.textRenderer.getWidth(fileSizeText) - 8, currY += 12, 0xFFFFFF);
+            if (modelComplexityText != null)
+                drawTextWithShadow(matrices, this.textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY += 12, 0xFFFFFF);
 
             //mod version
-            drawCenteredText(matrices, MinecraftClient.getInstance().textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)), this.width / 2, this.height - 12, TextColor.parse("dark_gray").getRgb());
+            drawCenteredText(matrices, client.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)), this.width / 2, this.height - 12, Formatting.DARK_GRAY.getColorValue());
         }
 
         //draw buttons
@@ -334,10 +367,11 @@ public class FiguraGuiScreen extends Screen {
             matrices.pop();
         }
 
-        if (mouseX >= this.width - 18 && mouseX < this.width - 8 && mouseY >= currY && mouseY < currY + 10) {
+        //status tooltip
+        if (mouseX >= this.width - 69 && mouseX < this.width - 6 && mouseY >= 88 && mouseY < 99) {
             matrices.push();
             matrices.translate(0, 0, 599);
-            renderTooltip(matrices, List.of(backendStatus, new TranslatableText("gui.figura.button.backendstatus." + NewFiguraNetworkManager.connectionStatus)), mouseX, mouseY);
+            renderTooltip(matrices, statusTooltip, mouseX, mouseY);
             matrices.pop();
         }
 
@@ -367,8 +401,8 @@ public class FiguraGuiScreen extends Screen {
         }
     }
 
-    private static final int FILESIZE_WARNING_THRESHOLD = 75000;
-    private static final int FILESIZE_LARGE_THRESHOLD = 100000;
+    private static final int FILESIZE_WARNING_THRESHOLD = 76800;
+    private static final int FILESIZE_LARGE_THRESHOLD = 102400;
 
     public void clickButton(String fileName) {
         PlayerDataManager.lastLoadedFileName = fileName;
@@ -393,46 +427,37 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public void updateAvatarData() {
-        nameText = null;
-        modelComplexityText = null;
-        fileSizeText = null;
-        scriptText = null;
+        if (PlayerDataManager.localPlayer != null && (PlayerDataManager.localPlayer.model != null || PlayerDataManager.localPlayer.script != null)) {
+            nameText = PlayerDataManager.lastLoadedFileName != null ? new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length()))) : null;
 
-        if (PlayerDataManager.localPlayer != null) {
-            if (PlayerDataManager.lastLoadedFileName != null)
-                nameText = new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length())));
-            modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model != null ? PlayerDataManager.localPlayer.model.getRenderComplexity() : 0);
-            FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
-            scriptText = getScriptText();
-        }
-    }
-
-    public MutableText getScriptText() {
-        MutableText fsText = new LiteralText("Script: ");
-
-        if (PlayerDataManager.localPlayer.script != null) {
-            TranslatableText text;
-
-            //error loading script
-            if (PlayerDataManager.localPlayer.script.loadError) {
-                text = new TranslatableText("gui.figura.script.error");
-                text.setStyle(text.getStyle().withColor(TextColor.parse("red")));
+            if (PlayerDataManager.localPlayer.model != null) {
+                modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
+                FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
             }
-            //loading okei
             else {
-                text = new TranslatableText("gui.figura.script.ok");
-                text.setStyle(text.getStyle().withColor(TextColor.parse("green")));
+                modelComplexityText = new TranslatableText("gui.figura.complexity", 0);
+                modelSizeStatus = 0;
             }
 
-            fsText.append(text);
+            scriptStatus = PlayerDataManager.localPlayer.script != null ? PlayerDataManager.localPlayer.script.loadError ? 1 : 3 : 0;
+            textureStatus = PlayerDataManager.localPlayer.texture != null ? 3 : 0;
+        } else {
+            nameText = null;
+            modelComplexityText = null;
+            fileSizeText = null;
+
+            textureStatus = 0;
+            modelSizeStatus = 0;
+            scriptStatus = 0;
         }
-        //script not found
-        else {
-            TranslatableText text = new TranslatableText("gui.figura.script.none");
-            text.setStyle(text.getStyle().withColor(TextColor.parse("white")));
-            fsText.append(text);
-        }
-        return fsText;
+
+        statusTooltip.set(0,
+                new LiteralText("").append(
+                modelStatusText.setStyle(textColors.get(modelSizeStatus))).append(statusDividerText)
+                        .append(textureStatusText.setStyle(textColors.get(textureStatus))).append(statusDividerText)
+                        .append(scriptStatusText.setStyle(textColors.get(scriptStatus))).append(statusDividerText)
+                        .append(backendStatusText.setStyle(textColors.get(NewFiguraNetworkManager.connectionStatus)))
+        );
     }
 
     public MutableText getFileSizeText() {
@@ -445,12 +470,20 @@ public class FiguraGuiScreen extends Screen {
 
         MutableText fsText = new TranslatableText("gui.figura.filesize", size);
 
-        if (fileSize >= FILESIZE_LARGE_THRESHOLD)
+        if (fileSize >= FILESIZE_LARGE_THRESHOLD) {
             fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("red")));
-        else if (fileSize >= FILESIZE_WARNING_THRESHOLD)
+            modelSizeStatus = 1;
+        }
+        else if (fileSize >= FILESIZE_WARNING_THRESHOLD) {
             fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("orange")));
-        else
+            modelSizeStatus = 2;
+        }
+        else {
             fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("white")));
+            modelSizeStatus = 3;
+        }
+
+        modelSizeStatus = PlayerDataManager.localPlayer.model != null ? modelSizeStatus : 0;
 
         return fsText;
     }

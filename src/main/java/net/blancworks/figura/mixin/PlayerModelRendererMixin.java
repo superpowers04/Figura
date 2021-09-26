@@ -32,14 +32,11 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
 
         if (playerData != null) {
             if (playerData.model != null) {
-                if (playerData.texture == null || !playerData.texture.isDone)
-                    return;
-
                 matrices.push();
                 
                 MatrixStack transformStack = new MatrixStack();
-                if(playerData.lastEntity != null) {
-                    PlayerEntityRenderer renderer = (PlayerEntityRenderer)(LivingEntityRenderer)MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(playerData.lastEntity);
+                if (playerData.lastEntity != null) {
+                    PlayerEntityRenderer renderer = (PlayerEntityRenderer) (LivingEntityRenderer<?, ?>) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(playerData.lastEntity);
                     PlayerEntityRendererAccess per = (PlayerEntityRendererAccess) renderer;
 
                     Vec3d lastPos = playerData.lastEntity.getPos();
@@ -60,7 +57,7 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
                 }
                 
                 try {
-                    playerData.model.render((PlayerEntityModel<T>) (Object) this, matrices, transformStack, FiguraMod.vertexConsumerProvider, light, overlay, 1, 1, 1, alpha);
+                    playerData.model.render((PlayerEntityModel<T>) (Object) this, matrices, transformStack, FiguraMod.vertexConsumerProvider, light, overlay, alpha);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

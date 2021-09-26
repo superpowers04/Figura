@@ -235,6 +235,34 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("setTexture", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    try {
+                        targetPart.textureType = CustomModelPart.TextureType.valueOf(arg1.checkjstring());
+                    } catch (Exception ignored) {
+                        targetPart.textureType = CustomModelPart.TextureType.Custom;
+                    }
+
+                    return NIL;
+                }
+            });
+
+            ret.set("getExtraTexEnabled", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(targetPart.extraTex);
+                }
+            });
+
+            ret.set("setExtraTexEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    targetPart.extraTex = arg.checkboolean();
+                    return null;
+                }
+            });
+
             ret.set("partToWorldPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {

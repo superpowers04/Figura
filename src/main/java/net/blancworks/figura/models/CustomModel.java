@@ -7,10 +7,7 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
@@ -62,15 +59,14 @@ public class CustomModel extends FiguraAsset {
     public int getMaxRenderAmount() {
         Identifier playerId = new Identifier("players", this.owner.playerId.toString());
         TrustContainer tc = PlayerTrustManager.getContainer(playerId);
-        return tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID);
+        return tc != null ? tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) : 0;
     }
 
-
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
-        render(player_model, matrices, new MatrixStack(), vcp, light, overlay, red, green, blue, alpha);
+    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        render(player_model, matrices, new MatrixStack(), vcp, light, overlay, alpha);
     }
 
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, MatrixStack transformStack,  VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
+    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, MatrixStack transformStack,  VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         leftToRender = getMaxRenderAmount();
         int maxRender = leftToRender;
 
@@ -106,10 +102,8 @@ public class CustomModel extends FiguraAsset {
         }
     }
 
-    public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model, float alpha) {
-        VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(playerData.texture.id));
-
-        if (owner.script != null) {
+    public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, ModelPart arm, PlayerEntityModel<?> model, float alpha) {
+        if (owner != null && owner.script != null) {
             owner.script.render(FiguraMod.deltaTime);
         }
 
@@ -143,16 +137,17 @@ public class CustomModel extends FiguraAsset {
     public void readNbt(NbtCompound tag) {
         NbtList partList = (NbtList) tag.get("parts");
 
-        for (int i = 0; i < partList.size(); i++) {
-            NbtCompound partTag = (NbtCompound) partList.get(i);
-            int type = partTag.getInt("type");
+        if (partList != null) {
+            for (net.minecraft.nbt.NbtElement nbtElement : partList) {
+                NbtCompound partTag = (NbtCompound) nbtElement;
 
-            CustomModelPart part = CustomModelPart.fromNbt(partTag);
+                CustomModelPart part = CustomModelPart.fromNbt(partTag);
 
-            if (part != null) {
-                part.rebuild();
+                if (part != null) {
+                    part.rebuild();
 
-                allParts.add(part);
+                    allParts.add(part);
+                }
             }
         }
 
