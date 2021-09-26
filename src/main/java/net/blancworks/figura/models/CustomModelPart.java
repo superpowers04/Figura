@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.*;
 import net.minecraft.util.Identifier;
@@ -53,6 +54,7 @@ public class CustomModelPart {
     //public RenderType renderType = RenderType.None;
 
     public TextureType textureType = TextureType.Custom;
+    public Identifier textureVanilla = FiguraTexture.DEFAULT_ID;
 
     public boolean extraTex = true;
 
@@ -90,6 +92,7 @@ public class CustomModelPart {
             switch (this.textureType) {
                 case Cape -> textureId = Objects.requireNonNullElse(data.playerListEntry.getCapeTexture(), FiguraTexture.DEFAULT_ID);
                 case Elytra -> textureId = Objects.requireNonNullElse(data.playerListEntry.getElytraTexture(), new Identifier("minecraft", "textures/entity/elytra.png"));
+                case Resource -> textureId = MinecraftClient.getInstance().getResourceManager().containsResource(textureVanilla) ? textureVanilla : MissingSprite.getMissingSpriteId();
                 default -> textureId = data.playerListEntry.getSkinTexture();
             }
         } else {
@@ -731,7 +734,8 @@ public class CustomModelPart {
         Custom,
         Skin,
         Cape,
-        Elytra;
+        Elytra,
+        Resource
     }
 
     //---------MODEL PART TYPES---------
