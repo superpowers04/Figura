@@ -8,9 +8,9 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
-import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.renderer.RenderTask.*;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.model.json.ModelTransformation;
@@ -100,7 +100,7 @@ public class RendererAPI {
             set("renderText", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-                    String arg1 = NamePlateAPI.noBadges4U(args.arg(1).checkjstring()).replaceAll("[\n\r]", " ");
+                    String arg1 = TextUtils.noBadges4U(args.arg(1).checkjstring()).replaceAll("[\n\r]", " ");
 
                     if (arg1.length() > 65535)
                         throw new LuaError("Text too long - oopsie!");
@@ -121,6 +121,20 @@ public class RendererAPI {
                     parent.renderTasks.add(new TextRenderTask(text, emissive, pos, rot, scale));
 
                     return NIL;
+                }
+            });
+
+            set("getTextLength", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    String arg1 = TextUtils.noBadges4U(arg.checkjstring()).replaceAll("[\n\r]", " ");
+                    Text text;
+                    try {
+                        text = Text.Serializer.fromJson(new StringReader(arg1));
+                    } catch (Exception ignored) {
+                        text = new LiteralText(arg1);
+                    }
+                    return LuaNumber.valueOf(MinecraftClient.getInstance().textRenderer.getWidth(text));
                 }
             });
 

@@ -11,6 +11,7 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.model.ModelPart;
@@ -209,7 +210,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         if (enabled && !(distance > 4096.0D)) {
             boolean sneaky = !entity.isSneaky();
             int i = 0;
-            List<Text> textList = NamePlateAPI.splitText(text, "\n");
+            List<Text> textList = TextUtils.splitText(text, "\n");
             for (Text splitText : textList) {
                 renderNameplate(matrices, vertexConsumers, sneaky, light, splitText, i - textList.size() + 1);
                 i++;
