@@ -124,7 +124,7 @@ public class RendererAPI {
                 }
             });
 
-            set("getTextLength", new OneArgFunction() {
+            set("getTextWidth", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     String arg1 = TextUtils.noBadges4U(arg.checkjstring()).replaceAll("[\n\r]", " ");
