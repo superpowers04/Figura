@@ -37,10 +37,6 @@
   "gui.figura.button.reloadavatar": "Reload avatar",
   "gui.figura.button.search": "Search...",
 
-  "gui.figura.button.backendstatus.0": "Disconnected!",
-  "gui.figura.button.backendstatus.1": "Connecting...",
-  "gui.figura.button.backendstatus.2": "Connected!",
-
   "gui.figura.button.tooltip.upload": "Click to upload and show your avatar in multiplayer",
   "gui.figura.button.tooltip.uploadlocal": "Avatar is already uploaded!",
   "gui.figura.button.tooltip.uploadlocaltwo": "You must select a Local Avatar before uploading!",
@@ -52,9 +48,17 @@
   "gui.figura.button.tooltip.resetallperm": "Hold LEFT SHIFT and click to reset the permissions for this user",
   "gui.figura.button.tooltip.clearcache": "Hold LEFT SHIFT and click to clear all loaded avatar data",
   "gui.figura.button.tooltip.keybinds": "Current Script Keybinds",
-  "gui.figura.button.tooltip.backendstatus": "Backend Connection:",
 
-  "gui.figura.deprecatedwarning" : "*The use of models in the root folder is deprecated, see the wiki for more info",
+  "gui.figura.button.tooltip.status": "> none / not found",
+  "gui.figura.button.tooltip.statustwo": "> 100kb+ / error / disconnected",
+  "gui.figura.button.tooltip.statusthree": "> 75kb+ / connecting",
+  "gui.figura.button.tooltip.statusfour": "> ok / connected",
+
+  "gui.figura.model": "Model",
+  "gui.figura.texture": "Texture",
+  "gui.figura.script": "Script",
+  "gui.figura.backend": "Backend",
+
   "gui.figura.complexity": "Complexity: %d",
   "gui.figura.filesize": "File Size: %dkb",
   "gui.figura.name": "Name: %d",

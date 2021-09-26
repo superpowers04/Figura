@@ -10,10 +10,7 @@ import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.renderer.RenderTask;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.WorldRenderer;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.*;
@@ -22,8 +19,8 @@ import net.minecraft.util.math.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -55,6 +52,10 @@ public class CustomModelPart {
 
     //public RenderType renderType = RenderType.None;
 
+    public TextureType textureType = TextureType.Custom;
+
+    public boolean extraTex = true;
+
     public float alpha = 1.0f;
 
     //All the vertex data is stored here! :D
@@ -75,23 +76,58 @@ public class CustomModelPart {
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        if (data.texture.isDone) {
-            //hit boxes :3
-            canRenderHitBox = (boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+        //no texture to render
+        if ((data.texture == null || !data.texture.isDone) && data.playerListEntry == null)
+            return 0;
 
-            //render!
-            int ret = render(data, data.model.leftToRender, matrices, transformStack, vcp, light, overlay, 0, 0, new Vec3f(1, 1, 1), alpha, new HashSet<>(), false);
+        //hit boxes :3
+        canRenderHitBox = (boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-            //post render
-            renderOnly = null;
-            return ret;
+        //lets render boys!!
+        //main texture
+        Identifier textureId;
+        if (data.texture == null || this.textureType != TextureType.Custom) {
+            switch (this.textureType) {
+                case Cape -> textureId = Objects.requireNonNullElse(data.playerListEntry.getCapeTexture(), FiguraTexture.DEFAULT_ID);
+                case Elytra -> textureId = Objects.requireNonNullElse(data.playerListEntry.getElytraTexture(), new Identifier("minecraft", "textures/entity/elytra.png"));
+                default -> textureId = data.playerListEntry.getSkinTexture();
+            }
+        } else {
+            textureId = data.texture.id;
         }
-        return 0;
+
+        VertexConsumer texture = vcp.getBuffer(RenderLayer.getEntityTranslucent(textureId));
+        int ret = renderUsingTexture(data.model.leftToRender, matrices, transformStack, texture, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false);
+
+        //alt textures
+        if (extraTex) {
+            for (FiguraTexture figuraTexture : data.extraTextures) {
+                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
+
+                if (renderLayerGetter != null) {
+                    VertexConsumer extraTexture = vcp.getBuffer(renderLayerGetter.apply(figuraTexture.id));
+                    ret = renderUsingTexture(ret, matrices, transformStack, extraTexture, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false);
+                }
+            }
+        }
+        draw(vcp);
+
+        //shaders
+        ret = renderShaders(ret, matrices, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, (byte) 0);
+        draw(vcp);
+
+        //extra stuff and hitboxes
+        ret = renderExtraParts(ret, matrices, vcp, light, false);
+        draw(vcp);
+
+        //post render
+        renderOnly = null;
+        return ret;
     }
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int render(PlayerData data, int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, HashSet<ShaderType> shadersToRender, boolean canRenderChild) {
+    public int renderUsingTexture(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer texture, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRenderChild) {
         //do not render invisible parts
         if (!this.visible || this.isHidden)
             return leftToRender;
@@ -99,6 +135,228 @@ public class CustomModelPart {
         matrices.push();
         transformStack.push();
 
+        applyRenderingData(matrices, transformStack);
+
+        //uv -> color -> alpha
+        u += this.uOffset;
+        v += this.vOffset;
+
+        Vec3f color = this.color.copy();
+        color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
+
+        alpha = this.alpha * alpha;
+
+        //render!
+        if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
+            canRenderChild = true;
+
+            //render the cube!
+            renderCube(leftToRender, matrices, texture, light, overlay, u, v, color, alpha);
+        }
+
+        for (CustomModelPart child : this.children) {
+            if (leftToRender <= 0)
+                break;
+
+            //Don't render special parts.
+            if (child.isParentSpecial())
+                continue;
+
+            //render part
+            leftToRender = child.renderUsingTexture(leftToRender, matrices, transformStack, texture, light, overlay, u, v, color, alpha, canRenderChild);
+        }
+
+        matrices.pop();
+        transformStack.pop();
+
+        return leftToRender;
+    }
+
+    public int renderShaders(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRenderChild, byte shadersToRender) {
+        //do not render invisible parts
+        if (!this.visible || this.isHidden)
+            return leftToRender;
+
+        matrices.push();
+        applyRenderingData(matrices, new MatrixStack());
+
+        //uv -> color -> alpha -> shaders
+        u += this.uOffset;
+        v += this.vOffset;
+
+        Vec3f color = this.color.copy();
+        color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
+
+        alpha = this.alpha * alpha;
+
+        byte shaders = shadersToRender;
+        if (this.shaderType != ShaderType.None)
+            shaders = (byte) (shaders | this.shaderType.id);
+
+        //render!
+        if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
+            canRenderChild = true;
+
+            //shaders
+            if (ShaderType.EndPortal.isShader(shaders))
+                renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEndGateway()), light, overlay, u, v, color, alpha);
+            if (ShaderType.Glint.isShader(shaders))
+                renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getDirectEntityGlint()), light, overlay, u, v, color, alpha);
+        }
+
+        for (CustomModelPart child : this.children) {
+            if (leftToRender <= 0)
+                break;
+
+            //Don't render special parts.
+            if (child.isParentSpecial())
+                continue;
+
+            //render part
+            leftToRender = child.renderShaders(leftToRender, matrices, vcp, light, overlay, u, v, color, alpha, canRenderChild, shaders);
+        }
+
+        matrices.pop();
+
+        return leftToRender;
+    }
+
+    public int renderExtraParts(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRenderChild) {
+        //do not render invisible parts
+        if (!this.visible || this.isHidden)
+            return leftToRender;
+
+        matrices.push();
+        applyRenderingData(matrices, new MatrixStack());
+
+        //render!
+        if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
+            canRenderChild = true;
+
+            //render extras
+            leftToRender = renderExtras(leftToRender, matrices, vcp, light);
+        }
+
+        for (CustomModelPart child : this.children) {
+            if (leftToRender <= 0)
+                break;
+
+            //Don't render special parts.
+            if (child.isParentSpecial())
+                continue;
+
+            //render part
+            leftToRender = child.renderExtraParts(leftToRender, matrices, vcp, light, canRenderChild);
+        }
+
+        matrices.pop();
+
+        return leftToRender;
+    }
+
+    public void draw(VertexConsumerProvider vcp) {
+        if (vcp instanceof VertexConsumerProvider.Immediate immediate) immediate.draw();
+        else if (vcp instanceof OutlineVertexConsumerProvider outline) outline.draw();
+    }
+
+    public void renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
+        Matrix4f modelMatrix = matrices.peek().getModel();
+        Matrix3f normalMatrix = matrices.peek().getNormal();
+
+        for (int i = 1; i <= this.vertexCount; i++) {
+            int startIndex = (i - 1) * 8;
+
+            //Get vertex.
+            Vector4f fullVert = new Vector4f(
+                    this.vertexData.getFloat(startIndex++),
+                    this.vertexData.getFloat(startIndex++),
+                    this.vertexData.getFloat(startIndex++),
+                    1
+            );
+
+            float vertU = this.vertexData.getFloat(startIndex++);
+            float vertV = this.vertexData.getFloat(startIndex++);
+
+            Vec3f normal = new Vec3f(
+                    this.vertexData.getFloat(startIndex++),
+                    this.vertexData.getFloat(startIndex++),
+                    this.vertexData.getFloat(startIndex)
+            );
+
+            fullVert.transform(modelMatrix);
+            normal.transform(normalMatrix);
+
+            //Push vertex.
+            vertices.vertex(
+                    fullVert.getX(), fullVert.getY(), fullVert.getZ(),
+                    color.getX(), color.getY(), color.getZ(), alpha,
+                    vertU + u, vertV + v,
+                    overlay, light,
+                    normal.getX(), normal.getY(), normal.getZ()
+            );
+
+            //Every 4 verts (1 face)
+            if (i % 4 == 0) {
+                leftToRender -= 4;
+
+                if (leftToRender <= 0)
+                    break;
+            }
+        }
+    }
+
+    public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+        //Render extra parts
+        for (RenderTask task : this.renderTasks) {
+            leftToRender -= task.render(matrices, vcp, light);
+            if (leftToRender <= 0) break;
+        }
+
+        //Render hit box
+        if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
+
+        return leftToRender;
+    }
+
+    public void renderHitBox(MatrixStack matrices, VertexConsumer vertices) {
+        Vec3f color;
+        float boxSize;
+        if (this instanceof CustomModelPartCuboid) {
+            color = new Vec3f(1f, 0.45f, 0.72f); //0xff72b7 aka fran_pink
+            boxSize = 1 / 48f;
+        }
+        else {
+            color = new Vec3f(0.69f, 0.95f, 1f); //0xaff2ff aka ace_blue
+            boxSize = 1 / 24f;
+        }
+
+        //render the box
+        WorldRenderer.drawBox(matrices, vertices, -boxSize, -boxSize, -boxSize, boxSize, boxSize, boxSize, color.getX(), color.getY(), color.getZ(), 1f);
+    }
+
+    //clear all extra render tasks
+    public static void clearExtraRendering(CustomModelPart part) {
+        part.renderTasks.clear();
+        part.children.forEach(CustomModelPart::clearExtraRendering);
+    }
+
+    public int getComplexity() {
+        //don't render filtered parts
+        if (!this.visible || this.isParentSpecial() || this.isHidden) {
+            return 0;
+        }
+
+        int complexity = this.vertexCount;
+
+        //iterate over children
+        for (CustomModelPart child : this.children) {
+            complexity += child.getComplexity();
+        }
+
+        return complexity;
+    }
+
+    public void applyRenderingData(MatrixStack matrices, MatrixStack transformStack) {
         try {
             PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
             if (this.isMimicMode && parentType != ParentType.None && parentType != ParentType.Model) {
@@ -230,169 +488,11 @@ public class CustomModelPart {
 
         lastModelMatrix = transformStack.peek().getModel().copy();
         lastNormalMatrix = transformStack.peek().getNormal().copy();
-        
+
         lastModelMatrixInverse = lastModelMatrix.copy();
         lastModelMatrixInverse.invert();
         lastNormalMatrixInverse = lastNormalMatrix.copy();
         lastNormalMatrixInverse.invert();
-
-        //uv -> color -> alpha -> shaders
-        u += this.uOffset;
-        v += this.vOffset;
-
-        Vec3f color = this.color.copy();
-        color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
-
-        alpha = this.alpha * alpha;
-
-        HashSet<ShaderType> shaders = (HashSet<ShaderType>) shadersToRender.clone();
-        if (this.shaderType != ShaderType.None)
-            shaders.add(this.shaderType);
-
-        //render!
-        if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
-            canRenderChild = true;
-
-            //render using default texture
-            renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id)), light, overlay, u, v, color, alpha);
-
-            //render using other texture types
-            for (FiguraTexture extraTexture : data.extraTextures) {
-                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
-
-                if (renderLayerGetter != null) {
-                    VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
-                    renderCube(leftToRender, matrices, extraTextureVertexConsumer, light, overlay, u, v, color, alpha);
-                }
-            }
-
-            //shaders
-            if (shaders.contains(ShaderType.EndPortal))
-                renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEndGateway()), light, overlay, u, v, color, alpha);
-            if (shaders.contains(ShaderType.Glint))
-                renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getDirectEntityGlint()), light, overlay, u, v, color, alpha);
-
-            //render extras
-            leftToRender = renderExtras(leftToRender, matrices, vcp, light);
-
-            //render hit box
-            if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
-        }
-
-        for (CustomModelPart child : this.children) {
-            if (leftToRender <= 0)
-                break;
-
-            //Don't render special parts.
-            if (child.isParentSpecial())
-                continue;
-
-            //render part
-            leftToRender = child.render(data, leftToRender, matrices, transformStack, vcp, light, overlay, u, v, color, alpha, shaders, canRenderChild);
-        }
-
-        matrices.pop();
-        transformStack.pop();
-
-        return leftToRender;
-    }
-
-    public void renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
-        Matrix4f modelMatrix = matrices.peek().getModel();
-        Matrix3f normalMatrix = matrices.peek().getNormal();
-
-        for (int i = 1; i <= this.vertexCount; i++) {
-            int startIndex = (i - 1) * 8;
-
-            //Get vertex.
-            Vector4f fullVert = new Vector4f(
-                    this.vertexData.getFloat(startIndex++),
-                    this.vertexData.getFloat(startIndex++),
-                    this.vertexData.getFloat(startIndex++),
-                    1
-            );
-
-            float vertU = this.vertexData.getFloat(startIndex++);
-            float vertV = this.vertexData.getFloat(startIndex++);
-
-            Vec3f normal = new Vec3f(
-                    this.vertexData.getFloat(startIndex++),
-                    this.vertexData.getFloat(startIndex++),
-                    this.vertexData.getFloat(startIndex)
-            );
-
-            fullVert.transform(modelMatrix);
-            normal.transform(normalMatrix);
-
-            //Push vertex.
-            vertices.vertex(
-                    fullVert.getX(), fullVert.getY(), fullVert.getZ(),
-                    color.getX(), color.getY(), color.getZ(), alpha,
-                    vertU + u, vertV + v,
-                    overlay, light,
-                    normal.getX(), normal.getY(), normal.getZ()
-            );
-
-            //Every 4 verts (1 face)
-            if (i % 4 == 0) {
-                leftToRender -= 4;
-
-                if (leftToRender <= 0)
-                    break;
-            }
-        }
-
-        ((VertexConsumerProvider.Immediate) FiguraMod.vertexConsumerProvider).draw();
-    }
-
-    public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
-        //Render extra parts
-        for (RenderTask task : this.renderTasks) {
-            leftToRender -= task.render(matrices, vcp, light);
-            ((VertexConsumerProvider.Immediate) FiguraMod.vertexConsumerProvider).draw();
-
-            if (leftToRender <= 0) break;
-        }
-
-        return leftToRender;
-    }
-
-    public void renderHitBox(MatrixStack matrices, VertexConsumer vertices) {
-        Vec3f color;
-        float boxSize;
-        if (this instanceof CustomModelPartCuboid) {
-            color = new Vec3f(1f, 0.45f, 0.72f); //0xff72b7 aka fran_pink
-            boxSize = 1 / 48f;
-        }
-        else {
-            color = new Vec3f(0.69f, 0.95f, 1f); //0xaff2ff aka ace_blue
-            boxSize = 1 / 24f;
-        }
-
-        //render the box
-        WorldRenderer.drawBox(matrices, vertices, -boxSize, -boxSize, -boxSize, boxSize, boxSize, boxSize, color.getX(), color.getY(), color.getZ(), 1f);
-    }
-
-    //clear all extra render tasks
-    public static void clearExtraRendering(CustomModelPart part) {
-        part.renderTasks.clear();
-        part.children.forEach(CustomModelPart::clearExtraRendering);
-    }
-
-    public int getComplexity() {
-        //don't render filtered parts
-        if (!this.visible || this.isParentSpecial() || this.isHidden) {
-            return 0;
-        }
-
-        int complexity = this.vertexCount;
-
-        //iterate over children
-        for (CustomModelPart child : this.children) {
-            complexity += child.getComplexity();
-        }
-
-        return complexity;
     }
 
     public void applyTransforms(MatrixStack stack) {
@@ -604,9 +704,18 @@ public class CustomModelPart {
     }
 
     public enum ShaderType {
-        None,
-        EndPortal,
-        Glint
+        None(0),
+        EndPortal(1),
+        Glint(2);
+
+        public final int id;
+        ShaderType(int id) {
+            this.id = id;
+        }
+
+        public boolean isShader(int shader) {
+            return (id & shader) == id;
+        }
     }
 
     public enum RenderType {
@@ -616,6 +725,13 @@ public class CustomModelPart {
         Translucent,
         TranslucentNoCull,
         NoTransparent
+    }
+
+    public enum TextureType {
+        Custom,
+        Skin,
+        Cape,
+        Elytra;
     }
 
     //---------MODEL PART TYPES---------

@@ -4,7 +4,6 @@ import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.FiguraTextAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -268,8 +267,13 @@ public class NamePlateAPI {
         String badges = " ";
 
         //the mark
-        if (currentData != null && currentData.model != null) {
-            badges += FiguraMod.IS_CHEESE ? "\uD83E\uDDC0" : PlayerDataManager.getDataForPlayer(uuid).model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) ? "△" : "▲";
+        if (currentData != null && (currentData.model != null || currentData.script != null)) {
+            if (FiguraMod.IS_CHEESE)
+                badges += "\uD83E\uDDC0";
+            else if (currentData.model != null)
+                badges += currentData.model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) ? "△" : "▲";
+            else
+                badges += "△";
         }
 
         //special badges

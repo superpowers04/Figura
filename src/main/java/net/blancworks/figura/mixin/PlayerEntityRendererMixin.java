@@ -248,16 +248,8 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         PlayerData playerData = FiguraMod.currentData;
 
         if (playerData != null && playerData.model != null) {
-            //Only render if texture is ready
-            if (playerData.texture == null || !playerData.texture.isDone) {
-                FiguraMod.clearRenderingData();
-                figura$clearAllPartCustomizations();
-                return;
-            }
-
             arm.pitch = 0;
-
-            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, player, arm, sleeve, model, 1.0f);
+            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, arm, model, 1f);
         }
 
         FiguraMod.clearRenderingData();

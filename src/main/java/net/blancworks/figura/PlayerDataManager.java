@@ -48,10 +48,12 @@ public final class PlayerDataManager {
             LOADED_PLAYER_DATA.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
             didInitLocalPlayer = true;
 
+            if (MinecraftClient.getInstance().getNetworkHandler() != null)
+                localPlayer.playerListEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(localPlayer.playerId);
+
             if (lastLoadedFileName != null) {
                 localPlayer.vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
                 localPlayer.loadModelFile(lastLoadedFileName);
-                localPlayer.getFileSize();
                 return localPlayer;
             }
 
@@ -83,6 +85,9 @@ public final class PlayerDataManager {
                 playerName = new LiteralText(playerEntry.getProfile().getName());
         }
         getData.playerName = playerName;
+
+        if (MinecraftClient.getInstance().getNetworkHandler() != null)
+            getData.playerListEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
 
         return getData;
     }
