@@ -57,8 +57,10 @@ public class CustomModel extends FiguraAsset {
     }
 
     public int getMaxRenderAmount() {
-        Identifier playerId = new Identifier("players", this.owner.playerId.toString());
-        TrustContainer tc = PlayerTrustManager.getContainer(playerId);
+        if (this.owner == null)
+            return 0;
+
+        TrustContainer tc = PlayerTrustManager.getContainer(new Identifier("players", this.owner.playerId.toString()));
         return tc != null ? tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) : 0;
     }
 
@@ -70,7 +72,7 @@ public class CustomModel extends FiguraAsset {
         leftToRender = getMaxRenderAmount();
         int maxRender = leftToRender;
 
-        if (owner.script != null) {
+        if (owner != null && owner.script != null) {
             owner.script.render(FiguraMod.deltaTime);
         }
 
