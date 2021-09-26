@@ -7,8 +7,6 @@ import net.blancworks.figura.lua.api.network.LuaNetworkReadWriter;
 import net.blancworks.figura.network.messages.pubsub.ChannelMessageHandler;
 import org.luaj.vm2.LuaValue;
 
-import java.util.ArrayList;
-
 public class PingMessageHandler extends ChannelMessageHandler {
     
     @Override
@@ -18,11 +16,13 @@ public class PingMessageHandler extends ChannelMessageHandler {
         short count = (short) Math.max(Math.min(stream.readShort(), 32), 0);
         
         PlayerData data = PlayerDataManager.getDataForPlayer(senderID);
-        
-        for(int i = 0; i < count; i++){
-            short id = stream.readShort();
-            LuaValue val = LuaNetworkReadWriter.readLuaValue(stream);
-            data.script.handlePing(id, val);
+
+        if (data != null && data.script != null) {
+            for (int i = 0; i < count; i++) {
+                short id = stream.readShort();
+                LuaValue val = LuaNetworkReadWriter.readLuaValue(stream);
+                data.script.handlePing(id, val);
+            }
         }
     }
 

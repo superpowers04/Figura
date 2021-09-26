@@ -114,7 +114,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public void tickNetwork() {
-        connectionStatus = 0;
+        connectionStatus = 1;
 
         if ((boolean) Config.entries.get("useLocalServer").value != lastNetworkState && currWebSocket != null) {
             currWebSocket.disconnect();
@@ -125,7 +125,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             authConnection.handleDisconnection();
 
         if (currWebSocket != null && currWebSocket.isOpen() && !msgRegistry.isEmpty()) {
-            connectionStatus = 2;
+            connectionStatus = 3;
 
             if (newSubscriptions.size() > 0) {
                 allSubscriptions.addAll(newSubscriptions);
@@ -148,7 +148,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             tokenReauthCooldown--;
         else if (tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME) {
             tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
-            connectionStatus = 1;
+            connectionStatus = 2;
 
             //Auth user ASAP
             doTask(() -> authUser(true));
