@@ -85,6 +85,26 @@ public class CustomModelPart {
         //hit boxes :3
         canRenderHitBox = (boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
+        //prepare mimic rotations
+        try {
+            PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
+            if (this.isMimicMode && parentType != ParentType.None) {
+                switch (this.parentType) {
+                    case Head -> this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
+                    case Torso -> this.rot = new Vec3f(model.body.pitch, model.body.yaw, model.body.roll);
+                    case LeftArm -> this.rot = new Vec3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
+                    case LeftLeg -> this.rot = new Vec3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
+                    case RightArm -> this.rot = new Vec3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
+                    case RightLeg -> this.rot = new Vec3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
+                }
+
+                float multiply = MathHelper.DEGREES_PER_RADIAN;
+                this.rot.multiplyComponentwise(multiply, multiply, multiply);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         //lets render boys!!
         //main texture
         Identifier textureId;
@@ -139,6 +159,7 @@ public class CustomModelPart {
         transformStack.push();
 
         applyRenderingData(matrices, transformStack);
+        updateModelMatrices(transformStack);
 
         //uv -> color -> alpha
         u += this.uOffset;
@@ -362,20 +383,7 @@ public class CustomModelPart {
     public void applyRenderingData(MatrixStack matrices, MatrixStack transformStack) {
         try {
             PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
-            if (this.isMimicMode && parentType != ParentType.None && parentType != ParentType.Model) {
-                switch (this.parentType) {
-                    case Head -> this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
-                    case Torso -> this.rot = new Vec3f(model.body.pitch, model.body.yaw, model.body.roll);
-                    case LeftArm -> this.rot = new Vec3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
-                    case LeftLeg -> this.rot = new Vec3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
-                    case RightArm -> this.rot = new Vec3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
-                    case RightLeg -> this.rot = new Vec3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
-                }
-
-                float multiply = MathHelper.DEGREES_PER_RADIAN;
-                this.rot.multiplyComponentwise(multiply, multiply, multiply);
-            }
-            else if (parentType != ParentType.Model) {
+            if (!this.isMimicMode && parentType != ParentType.None && parentType != ParentType.Model) {
                 switch (parentType) {
                     case Head -> {
                         model.head.rotate(matrices);
@@ -488,9 +496,11 @@ public class CustomModelPart {
 
         applyTransforms(matrices);
         applyTransforms(transformStack);
+    }
 
-        lastModelMatrix = transformStack.peek().getModel().copy();
-        lastNormalMatrix = transformStack.peek().getNormal().copy();
+    public void updateModelMatrices(MatrixStack stack) {
+        lastModelMatrix = stack.peek().getModel().copy();
+        lastNormalMatrix = stack.peek().getNormal().copy();
 
         lastModelMatrixInverse = lastModelMatrix.copy();
         lastModelMatrixInverse.invert();

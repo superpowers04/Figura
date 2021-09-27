@@ -274,7 +274,7 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vector4f v4f = new Vector4f(v.x() / 16.0f, -(v.y() / 16.0f), v.z() / 16.0f, 1.0f);
+                    Vector4f v4f = new Vector4f(v.x() / 16f, v.y() / -16f, v.z() / 16f, 1f);
 
                     v4f.transform(targetPart.lastModelMatrix);
 
@@ -287,7 +287,7 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vec3f v3f = new Vec3f(v.x(), -(v.y()), v.z());
+                    Vec3f v3f = new Vec3f(v.x(), -v.y(), v.z());
 
                     v3f.transform(targetPart.lastNormalMatrix);
 
@@ -300,11 +300,11 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vector4f v4f = new Vector4f(v.x() / 16.0f, -(v.y()) / 16.0f, v.z() / 16.0f, 1.0f);
+                    Vector4f v4f = new Vector4f(v.x(), v.y(), v.z(), 1f);
 
                     v4f.transform(targetPart.lastModelMatrixInverse);
 
-                    return LuaVector.of(v4f);
+                    return LuaVector.of(new Vec3f(v4f.getX() * 16f, v4f.getY() * -16f, v4f.getZ() * 16f));
                 }
             });
 
@@ -313,11 +313,11 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
 
-                    Vec3f v3f = new Vec3f(v.x(), -(v.y()), v.z());
+                    Vec3f v3f = new Vec3f(v.x(), v.y(), v.z());
 
                     v3f.transform(targetPart.lastNormalMatrixInverse);
 
-                    return LuaVector.of(v3f);
+                    return LuaVector.of(new Vec3f(v3f.getX(), -v3f.getY(), v3f.getZ()));
                 }
             });
 
