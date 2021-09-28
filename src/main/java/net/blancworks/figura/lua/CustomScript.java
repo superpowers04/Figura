@@ -330,6 +330,9 @@ public class CustomScript extends FiguraAsset {
                         } else {
                             try {
                                 log = Text.Serializer.fromJson(new StringReader(arg.toString()));
+
+                                if (log == null)
+                                    throw new Exception("Error parsing JSON string");
                             } catch (Exception ignored) {
                                 log = new LiteralText(arg.toString());
                             }
