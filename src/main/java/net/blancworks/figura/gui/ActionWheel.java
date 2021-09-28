@@ -264,6 +264,9 @@ public class ActionWheel extends DrawableHelper {
             Text text;
             try {
                 text = Text.Serializer.fromJson(new StringReader(customization.title));
+
+                if (text == null)
+                    throw new Exception("Error parsing JSON string");
             } catch (Exception ignored) {
                 text = new LiteralText(customization.title);
             }

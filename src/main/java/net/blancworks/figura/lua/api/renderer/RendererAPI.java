@@ -108,6 +108,9 @@ public class RendererAPI {
                     Text text;
                     try {
                         text = Text.Serializer.fromJson(new StringReader(arg1));
+
+                        if (text == null)
+                            throw new Exception("Error parsing JSON string");
                     } catch (Exception ignored) {
                         text = new LiteralText(arg1);
                     }
@@ -131,6 +134,9 @@ public class RendererAPI {
                     Text text;
                     try {
                         text = Text.Serializer.fromJson(new StringReader(arg1));
+
+                        if (text == null)
+                            throw new Exception("Error parsing JSON string");
                     } catch (Exception ignored) {
                         text = new LiteralText(arg1);
                     }
