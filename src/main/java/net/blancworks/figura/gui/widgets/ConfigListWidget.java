@@ -7,16 +7,12 @@ import net.blancworks.figura.gui.FiguraConfigScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 
 import java.util.Arrays;
@@ -102,7 +98,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.logothers"), new TranslatableText("gui.figura.config.tooltip.logothers"), Config.entries.get("logOthers")));
         this.addEntry(new ConfigListWidget.BooleanEntry(
                 new TranslatableText("gui.figura.config.partshitbox"),
-                new TranslatableText("gui.figura.config.tooltip.partshitbox", new TranslatableText("gui.figura.config.tooltip.partshitbox.cubes").setStyle(Style.EMPTY.withColor(0xff72b7)), new TranslatableText("gui.figura.config.tooltip.partshitbox.groups").setStyle(Style.EMPTY.withColor(0xaff2ff))),
+                new TranslatableText("gui.figura.config.tooltip.partshitbox", new TranslatableText("gui.figura.config.tooltip.partshitbox.cubes").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xff72b7))), new TranslatableText("gui.figura.config.tooltip.partshitbox.groups").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xaff2ff)))),
                 Config.entries.get("partsHitBox")
         ));
         this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.ownnametag"), new TranslatableText("gui.figura.config.tooltip.ownnametag"), Config.entries.get("ownNameTag")));
@@ -152,11 +148,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         public List<? extends Element> children() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Collections.emptyList();
         }
     }
@@ -221,11 +212,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -302,11 +288,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -393,11 +374,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.field, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.field, this.reset);
         }
 
@@ -491,11 +467,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

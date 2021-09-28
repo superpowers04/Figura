@@ -5,7 +5,7 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.client.util.math.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -81,7 +81,7 @@ public class ModelPartMixin implements ModelPartAccess {
             }
 
             if (figura$customization.scale != null) {
-                Vec3f scale = figura$customization.scale;
+                Vector3f scale = figura$customization.scale;
                 matrices.scale(scale.getX(), scale.getY(), scale.getZ());
             }
         }

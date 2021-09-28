@@ -27,7 +27,8 @@ public class WorldRendererMixin {
 
     @Inject(at = @At("HEAD"), method = "renderEntity")
     private void renderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-        if (entity instanceof AbstractClientPlayerEntity ent) {
+        if (entity instanceof AbstractClientPlayerEntity) {
+            AbstractClientPlayerEntity ent = (AbstractClientPlayerEntity) entity;
 
             matrices.push();
 

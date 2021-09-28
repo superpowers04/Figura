@@ -41,8 +41,8 @@ public class MinecraftClientMixin {
         }
     }
 
-    @Inject(at = @At("HEAD"), method = "setScreen")
-    public void setScreen(Screen screen, CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "openScreen")
+    public void openScreen(Screen screen, CallbackInfo ci) {
         if (actionWheelActive) {
             ActionWheel.play();
             actionWheelActive = false;

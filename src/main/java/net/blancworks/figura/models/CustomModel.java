@@ -11,8 +11,8 @@ import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
@@ -124,11 +124,11 @@ public class CustomModel extends FiguraAsset {
         playerData.model.leftToRender = prevCount;
     }
 
-    public void writeNbt(NbtCompound nbt) {
-        NbtList partList = new NbtList();
+    public void writeNbt(CompoundTag nbt) {
+        ListTag partList = new ListTag();
 
         for (CustomModelPart part : allParts) {
-            NbtCompound partNbt = new NbtCompound();
+            CompoundTag partNbt = new CompoundTag();
             CustomModelPart.writeToNbt(partNbt, part);
             partList.add(partNbt);
         }
@@ -136,12 +136,12 @@ public class CustomModel extends FiguraAsset {
         nbt.put("parts", partList);
     }
 
-    public void readNbt(NbtCompound tag) {
-        NbtList partList = (NbtList) tag.get("parts");
+    public void readNbt(CompoundTag tag) {
+        ListTag partList = (ListTag) tag.get("parts");
 
         if (partList != null) {
-            for (net.minecraft.nbt.NbtElement nbtElement : partList) {
-                NbtCompound partTag = (NbtCompound) nbtElement;
+            for (net.minecraft.nbt.Tag nbtElement : partList) {
+                CompoundTag partTag = (CompoundTag) nbtElement;
 
                 CustomModelPart part = CustomModelPart.fromNbt(partTag);
 

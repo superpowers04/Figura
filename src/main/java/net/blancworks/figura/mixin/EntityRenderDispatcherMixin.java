@@ -25,8 +25,8 @@ public abstract class EntityRenderDispatcherMixin {
     private boolean renderShadowOld;
 
     private final Predicate<Entity> MOUNT_DISABLED_PREDICATE = (entity -> {
-        if (entity instanceof PlayerEntity player) {
-            PlayerData data = PlayerDataManager.getDataForPlayer(player.getUuid());
+        if (entity instanceof PlayerEntity) {
+            PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
             if (data != null && data.script != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                 this.renderShadows = data.script.renderMountShadow;
                 return !data.script.renderMount;
@@ -42,7 +42,7 @@ public abstract class EntityRenderDispatcherMixin {
 
     @Redirect(method = "render", at = @At(target = "Lnet/minecraft/client/render/entity/EntityRenderer;render(Lnet/minecraft/entity/Entity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", value = "INVOKE"))
     private <T extends Entity>void renderRenderEntity(EntityRenderer<T> entityRenderer, T entity, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-        if (!entity.hasPassengerType(MOUNT_DISABLED_PREDICATE)) {
+        if (!MOUNT_DISABLED_PREDICATE.test(entity.getPrimaryPassenger())) {
             entityRenderer.render(entity, yaw, tickDelta, matrices, vertexConsumers, light);
         }
     }

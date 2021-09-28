@@ -112,7 +112,7 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
                     }
 
                     if (figura$customization.scale != null) {
-                        Vec3f scale = figura$customization.scale;
+                        Vector3f scale = figura$customization.scale;
                         matrices.scale(scale.getX(), scale.getY(), scale.getZ());
                     }
                 }

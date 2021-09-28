@@ -3,7 +3,7 @@ package net.blancworks.figura.gui;
 import net.blancworks.figura.gui.widgets.KeyBindingsWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
@@ -22,15 +22,15 @@ public class FiguraKeyBindsScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height - 29, 150, 20, new TranslatableText("gui.back"), (buttonWidgetx) -> this.client.setScreen(parentScreen)));
+        this.addButton(new ButtonWidget(this.width / 2 - 75, this.height - 29, 150, 20, new TranslatableText("gui.back"), (buttonWidgetx) -> this.client.openScreen(parentScreen)));
 
         this.keyBindingsWidget = new KeyBindingsWidget(this, this.client);
-        this.addSelectableChild(this.keyBindingsWidget);
+        this.children.add(this.keyBindingsWidget);
     }
 
     @Override
     public void onClose() {
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     @Override

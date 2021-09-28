@@ -126,7 +126,8 @@ public class DataAPI {
         if (value.isfunction()) return;
 
         //add to json
-        if (value instanceof LuaTable tbl) {
+        if (value instanceof LuaTable) {
+            LuaTable tbl = (LuaTable) value;
             JsonObject object = new JsonObject();
             object.addProperty("type", "TABLE");
 
@@ -140,7 +141,8 @@ public class DataAPI {
             object.add("entries", entries);
             json.add(key, object);
         }
-        else if (value instanceof LuaVector vec) {
+        else if (value instanceof LuaVector) {
+            LuaVector vec = (LuaVector) value;
             JsonObject object = new JsonObject();
             object.addProperty("type", "VECTOR");
 

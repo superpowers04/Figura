@@ -1,6 +1,5 @@
 package net.blancworks.figura.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.util.math.MatrixStack;
@@ -32,7 +31,7 @@ public class NewFiguraGuiScreen extends Screen {
     @Override
     public void onClose() {
         this.client.options.hudHidden = this.hudHidden;
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     @Override

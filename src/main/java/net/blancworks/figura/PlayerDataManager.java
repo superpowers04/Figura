@@ -6,7 +6,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.LiteralText;
 
 import java.io.DataInputStream;
@@ -59,7 +59,7 @@ public final class PlayerDataManager {
 
             getPlayerAvatarFromServerOrCache(localPlayer.playerId, localPlayer);
 
-            NbtCompound nbt = new NbtCompound();
+            CompoundTag nbt = new CompoundTag();
             localPlayer.modelData = localPlayer.writeNbt(nbt) ? nbt : null;
 
             return localPlayer;

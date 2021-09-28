@@ -20,9 +20,9 @@ import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -220,7 +220,7 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
-    public void toNBT(NbtCompound tag) {
+    public void toNBT(CompoundTag tag) {
         if (source.length() <= 65000) {
             tag.putString("src", cleanScriptSource(source));
         } else {
@@ -232,7 +232,7 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
-    public void fromNBT(PlayerData data, NbtCompound tag) {
+    public void fromNBT(PlayerData data, CompoundTag tag) {
         Set<String> keys = tag.getKeys();
         if (keys.size() <= 1) {
             source = tag.getString("src");
@@ -325,8 +325,8 @@ public class CustomScript extends FiguraAsset {
                         message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
 
                         Text log;
-                        if (arg instanceof LuaVector logText) {
-                            log = logText.toJsonText();
+                        if (arg instanceof LuaVector) {
+                            log = ((LuaVector) arg).toJsonText();
                         } else {
                             try {
                                 log = Text.Serializer.fromJson(new StringReader(arg.toString()));

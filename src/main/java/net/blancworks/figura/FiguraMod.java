@@ -20,13 +20,13 @@ import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
@@ -58,7 +58,7 @@ public class FiguraMod implements ClientModInitializer {
     public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 
     public static final boolean IS_CHEESE = LocalDate.now().getDayOfMonth() == 1 && LocalDate.now().getMonthValue() == 4;
-    public static NbtCompound cheese;
+    public static CompoundTag cheese;
 
     public static KeyBinding actionWheel;
 
@@ -157,7 +157,7 @@ public class FiguraMod implements ClientModInitializer {
             }
 
             @Override
-            public void reload(ResourceManager manager) {
+            public void apply(ResourceManager manager) {
                 PlayerDataManager.reloadAllTextures();
 
                 try {

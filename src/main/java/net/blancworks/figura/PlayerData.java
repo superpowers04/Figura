@@ -13,10 +13,10 @@ import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -83,7 +84,7 @@ public class PlayerData {
      * @param nbt the nbt to write to
      * @return {@code true} if the player data was written into the NBT, otherwise {@code false}
      */
-    public boolean writeNbt(NbtCompound nbt) {
+    public boolean writeNbt(CompoundTag nbt) {
         //You cannot save a model that is incomplete.
         if (model == null && script == null)
             return false;
@@ -93,30 +94,30 @@ public class PlayerData {
 
         //Put Model.
         if (model != null) {
-            NbtCompound modelNbt = new NbtCompound();
+            CompoundTag modelNbt = new CompoundTag();
             model.writeNbt(modelNbt);
             nbt.put("model", modelNbt);
         }
 
         //Put Texture.
         if (texture != null) {
-            NbtCompound textureNbt = new NbtCompound();
+            CompoundTag textureNbt = new CompoundTag();
             texture.writeNbt(textureNbt);
             nbt.put("texture", textureNbt);
         }
 
         //Put Script.
         if (script != null) {
-            NbtCompound scriptNbt = new NbtCompound();
+            CompoundTag scriptNbt = new CompoundTag();
             script.toNBT(scriptNbt);
             nbt.put("script", scriptNbt);
         }
 
         if (!extraTextures.isEmpty()) {
-            NbtList texList = new NbtList();
+            ListTag texList = new ListTag();
 
             for (FiguraTexture extraTexture : extraTextures) {
-                NbtCompound elytraTextureNbt = new NbtCompound();
+                CompoundTag elytraTextureNbt = new CompoundTag();
                 extraTexture.writeNbt(elytraTextureNbt);
                 texList.add(elytraTextureNbt);
             }
@@ -132,7 +133,7 @@ public class PlayerData {
      *
      * @param nbt the nbt to read
      */
-    public void readNbt(NbtCompound nbt) {
+    public void readNbt(CompoundTag nbt) {
         playerId = nbt.getUuid("id");
 
         model = null;
@@ -143,7 +144,7 @@ public class PlayerData {
 
         try {
             //Create model on main thread.
-            NbtCompound modelNbt = (NbtCompound) nbt.get("model");
+            CompoundTag modelNbt = (CompoundTag) nbt.get("model");
 
             //Load model on off-thread.
             if (modelNbt != null) {
@@ -164,7 +165,7 @@ public class PlayerData {
 
         try {
             //Create texture on main thread
-            NbtCompound textureNbt = (NbtCompound) nbt.get("texture");
+            CompoundTag textureNbt = (CompoundTag) nbt.get("texture");
 
             //Load texture, if any
             if (textureNbt != null) {
@@ -179,7 +180,7 @@ public class PlayerData {
 
         try {
             if (nbt.contains("script")) {
-                NbtCompound scriptNbt = (NbtCompound) nbt.get("script");
+                CompoundTag scriptNbt = (CompoundTag) nbt.get("script");
 
                 if (scriptNbt != null) FiguraMod.doTask(() -> {
                     script = new CustomScript();
@@ -192,16 +193,16 @@ public class PlayerData {
 
         try {
             if (nbt.contains("exTexs")) {
-                NbtList textureList = (NbtList) nbt.get("exTexs");
+                ListTag textureList = (ListTag) nbt.get("exTexs");
 
                 if (textureList != null) {
-                    for (NbtElement element : textureList) {
+                    for (Tag element : textureList) {
                         FiguraTexture newTexture = new FiguraTexture();
                         newTexture.id = new Identifier("figura", playerId.toString() + newTexture.type.toString());
                         getTextureManager().registerTexture(newTexture.id, newTexture);
                         extraTextures.add(newTexture);
 
-                        FiguraMod.doTask(() -> newTexture.readNbt((NbtCompound) element));
+                        FiguraMod.doTask(() -> newTexture.readNbt((CompoundTag) element));
                     }
                 }
             }
@@ -212,7 +213,7 @@ public class PlayerData {
 
     //Returns the file size, in bytes.
     public long getFileSize() {
-        NbtCompound writtenNbt = new NbtCompound();
+        CompoundTag writtenNbt = new CompoundTag();
         this.writeNbt(writtenNbt);
 
         try {
@@ -253,11 +254,11 @@ public class PlayerData {
     }
 
     public void loadFromNbt(DataInputStream input) throws Exception {
-        NbtCompound nbt = NbtIo.readCompressed(input);
+        CompoundTag nbt = NbtIo.readCompressed(input);
         loadFromNbt(nbt);
     }
 
-    public void loadFromNbt(NbtCompound tag) {
+    public void loadFromNbt(CompoundTag tag) {
         this.readNbt(tag);
         getFileSize();
     }
@@ -283,12 +284,12 @@ public class PlayerData {
             Path hashFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".hsh");
 
             try {
-                NbtCompound targetTag = new NbtCompound();
+                CompoundTag targetTag = new CompoundTag();
                 this.writeNbt(targetTag);
 
                 Files.createDirectories(nbtFilePath.getParent());
                 NbtIo.writeCompressed(targetTag, new FileOutputStream(nbtFilePath.toFile()));
-                Files.writeString(hashFilePath, this.lastHash);
+                Files.write(hashFilePath, this.lastHash.getBytes(StandardCharsets.UTF_8));
             } catch (Exception e) {
                 e.printStackTrace();
             }

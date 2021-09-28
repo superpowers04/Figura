@@ -98,7 +98,7 @@ public class HeldItemModelMixin<T extends LivingEntity, M extends EntityModel<T>
                     }
 
                     if (figura$customization.scale != null) {
-                        Vec3f scale = figura$customization.scale;
+                        Vector3f scale = figura$customization.scale;
                         matrices.scale(scale.getX(), scale.getY(), scale.getZ());
                     }
                 }

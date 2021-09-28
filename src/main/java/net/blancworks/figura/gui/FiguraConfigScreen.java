@@ -4,7 +4,7 @@ import net.blancworks.figura.Config;
 import net.blancworks.figura.gui.widgets.ConfigListWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
@@ -23,26 +23,26 @@ public class FiguraConfigScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 154, this.height - 29, 150, 20, new TranslatableText("gui.cancel"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width / 2 - 154, this.height - 29, 150, 20, new TranslatableText("gui.cancel"), (buttonWidgetx) -> {
             Config.discardConfig();
-            this.client.setScreen(parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
             Config.copyConfig();
             Config.saveConfig();
-            this.client.setScreen(parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
         this.configListWidget = new ConfigListWidget(this, this.client);
-        this.addSelectableChild(this.configListWidget);
+        this.children.add(this.configListWidget);
     }
 
     @Override
     public void onClose() {
         Config.copyConfig();
         Config.saveConfig();
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     @Override

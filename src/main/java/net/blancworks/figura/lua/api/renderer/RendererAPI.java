@@ -19,7 +19,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.client.util.math.Vector3f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
@@ -66,9 +66,9 @@ public class RendererAPI {
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
                     boolean emissive = !args.arg(4).isnil() && args.arg(4).checkboolean();
-                    Vec3f pos = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
-                    Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
+                    Vector3f pos = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vector3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                    Vector3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
 
                     parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale));
 
@@ -84,9 +84,9 @@ public class RendererAPI {
                         BlockState state = BlockStateArgumentType.blockState().parse(new StringReader(args.arg(1).checkjstring())).getBlockState();
                         CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                         boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
-                        Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
-                        Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                        Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                        Vector3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
+                        Vector3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                        Vector3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
 
                         parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale));
                     } catch (CommandSyntaxException e) {
@@ -117,9 +117,9 @@ public class RendererAPI {
 
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
-                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
-                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                    Vector3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
+                    Vector3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vector3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
 
                     parent.renderTasks.add(new TextRenderTask(text, emissive, pos, rot, scale));
 
