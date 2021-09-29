@@ -210,6 +210,50 @@ public class WorldAPI {
                 }
             });
 
+            set("isOpenSky", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue a) {
+                    LuaVector vec = LuaVector.checkOrNew(a);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
+
+                    if (getWorld().getChunk(pos) == null) return NIL;
+
+                    return LuaBoolean.valueOf(getWorld().isSkyVisible(pos));
+                }
+            });
+
+            set("getBiomeTemperature", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue a) {
+                    LuaVector vec = LuaVector.checkOrNew(a);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
+
+                    if (getWorld().getChunk(pos) == null) return NIL;
+
+                    Biome b = getWorld().getBiome(pos);
+
+                    if (b == null) return NIL;
+
+                    return LuaNumber.valueOf(b.getTemperature(pos));
+                }
+            });
+
+            set("getBiomePrecipitation", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue a) {
+                    LuaVector vec = LuaVector.checkOrNew(a);
+                    BlockPos pos = new BlockPos(vec.asV3iFloored());
+
+                    if (getWorld().getChunk(pos) == null) return NIL;
+
+                    Biome b = getWorld().getBiome(pos);
+
+                    if (b == null) return NIL;
+
+                    return LuaString.valueOf(b.getPrecipitation().name());
+                }
+            });
+
             set("getFiguraPlayers", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
