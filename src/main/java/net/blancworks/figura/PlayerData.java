@@ -3,6 +3,7 @@ package net.blancworks.figura;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -45,6 +46,9 @@ public class PlayerData {
     public FiguraTexture texture;
     //The custom script for the model.
     public CustomScript script;
+    //The custom VCP for the model.
+    public FiguraVertexConsumerProvider customVCP;
+
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel<?> vanillaModel;
 
