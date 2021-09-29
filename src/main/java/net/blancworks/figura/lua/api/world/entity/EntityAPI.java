@@ -14,6 +14,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.*;
@@ -220,10 +221,40 @@ public class EntityAPI {
                     }
                 });
 
-                set("isWet", new OneArgFunction() {
+                set("isWet", new ZeroArgFunction() {
                     @Override
-                    public LuaValue call(LuaValue arg) {
+                    public LuaValue call() {
                         return LuaBoolean.valueOf(targetEntity.get().isWet());
+                    }
+                });
+
+                set("isTouchingWater", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaBoolean.valueOf(targetEntity.get().isTouchingWater());
+                    }
+                });
+
+                set("isUnderwater", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaBoolean.valueOf(targetEntity.get().isSubmergedInWater());
+                    }
+                });
+
+                set("isInLava", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaBoolean.valueOf(targetEntity.get().isInLava());
+                    }
+                });
+
+                set("isInRain", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        Entity entity = targetEntity.get();
+                        BlockPos blockPos = entity.getBlockPos();
+                        return LuaBoolean.valueOf(entity.world.hasRain(blockPos) || entity.world.hasRain(new BlockPos(blockPos.getX(), entity.getBoundingBox().maxY, blockPos.getZ())));
                     }
                 });
 
