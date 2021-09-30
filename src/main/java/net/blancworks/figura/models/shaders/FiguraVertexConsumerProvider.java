@@ -7,6 +7,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.mixin.RenderPhaseInvoker;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
+import net.minecraft.client.gl.Program;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
@@ -24,6 +25,7 @@ import java.util.function.Supplier;
 public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immediate {
 
     private static final ArrayList<String> defaultTextures;
+    private final Map<String, RenderLayer> stringLayerMap = new HashMap<>();
 
     protected FiguraVertexConsumerProvider(BufferBuilder fallbackBuffer, Map<RenderLayer, BufferBuilder> layerBuilderMap) {
         super(fallbackBuffer, layerBuilderMap);
@@ -48,15 +50,13 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
     //Default backup is the vanilla EntityVertexConsumers
     public VertexConsumer getBuffer(RenderLayer renderLayer) {
-        //Super ugly hack to get an arbitrary vertexConsumer from the storage, there should only be one
-        RenderLayer layer = layerBuffers.keySet().iterator().next();
-        return super.getBuffer(layer);
-
-        //Normal code below, for now just always return a specific renderLayer.
-//        VertexConsumerProvider backup = FiguraMod.vertexConsumerProvider;
-//        return getBuffer(renderLayer, backup);
+        VertexConsumerProvider backup = FiguraMod.vertexConsumerProvider;
+        return getBuffer(renderLayer, backup);
     }
 
+    public RenderLayer getRenderLayer(String name) {
+        return stringLayerMap.get(name);
+    }
 
     /**
      * Loads all renderLayers for this avatar and attaches a new FiguraVertexConsumerProvider to the avatar.
@@ -68,6 +68,8 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
     public static void parse(PlayerData playerData, InputStream inputStream, Path rootPath) {
         try {
             Map<RenderLayer, BufferBuilder> layerBufferBuilderMap = new HashMap<>();
+
+            playerData.customVCP = new FiguraVertexConsumerProvider(new BufferBuilder(256), layerBufferBuilderMap);
 
 //            Reader reader = Files.newBufferedReader(renderLayersFile.toPath());
 //            Map jsonData = FiguraMod.GSON.fromJson(reader, Map.class);
@@ -123,7 +125,15 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                     FiguraShaderResourceFactory shaderFactory = new FiguraShaderResourceFactory(rootPath);
                     RenderSystem.recordRenderCall(() -> {
                         try {
-                            Shader customShader = new Shader(shaderFactory, shaderStr, vertexFormat);
+                            //Remove shader from the cache, so it can be changed
+                            //Without this, problems arise when:
+                            //Saving the file, since the cached version remains
+                            //If you load two avatars that have a shader with the same name, the two will use
+                            //The same shader.
+                            //These following two lines are to prevent this behavior.
+                            Program.Type.VERTEX.getProgramCache().put(shaderStr, null);
+                            Program.Type.FRAGMENT.getProgramCache().put(shaderStr, null);
+                            Shader customShader = new FiguraShader(shaderFactory, shaderStr, vertexFormat);
                             shader.complete(customShader);
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -270,12 +280,13 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
                 //Put the render layer into the map
                 layerBufferBuilderMap.put(renderLayer, bufferBuilder);
-
+                //Keep a reference to the render layer by name
+                playerData.customVCP.stringLayerMap.put(name, renderLayer);
             }
 
             //Now, layerBufferBuildMap contains all of the RenderLayer and BufferBuilder objects we need.
             //All we need to do now is put it into the avatar.
-            playerData.customVCP = new FiguraVertexConsumerProvider(new BufferBuilder(256), layerBufferBuilderMap);
+
 
         } catch(Exception e) {
             e.printStackTrace();

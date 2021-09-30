@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.model;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -234,6 +235,21 @@ public class CustomModelAPI {
                         targetPart.shaderType = CustomModelPart.ShaderType.None;
                     }
 
+                    return NIL;
+                }
+            });
+
+            ret.set("setRenderLayer", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    try {
+                        String layerName = arg1.checkjstring();
+                        targetPart.customLayer = partOwner.customVCP.getRenderLayer(layerName);
+                    } catch (Exception badArgument) {
+                        //I'm not sure how to error in chat, so this is where I am right now
+                        FiguraMod.LOGGER.warn("Argument must be a string");
+                        targetPart.customLayer = null;
+                    }
                     return NIL;
                 }
             });
