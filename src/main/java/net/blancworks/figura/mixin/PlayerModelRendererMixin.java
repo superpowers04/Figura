@@ -57,7 +57,7 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
                 }
                 
                 try {
-                    playerData.model.render((PlayerEntityModel<T>) (Object) this, matrices, transformStack, playerData.customVCP, light, overlay, alpha);
+                    playerData.model.render((PlayerEntityModel<T>) (Object) this, matrices, transformStack, playerData.getVCP(), light, overlay, alpha);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

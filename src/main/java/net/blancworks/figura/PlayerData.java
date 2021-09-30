@@ -10,6 +10,7 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
@@ -48,6 +49,12 @@ public class PlayerData {
     public CustomScript script;
     //The custom VCP for the model.
     public FiguraVertexConsumerProvider customVCP;
+
+    public VertexConsumerProvider getVCP() {
+        if (customVCP != null)
+            return customVCP;
+        return MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+    }
 
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel<?> vanillaModel;

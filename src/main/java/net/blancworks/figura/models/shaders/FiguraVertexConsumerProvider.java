@@ -17,13 +17,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
 public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immediate {
+
+    private static final ArrayList<String> defaultTextures;
 
     protected FiguraVertexConsumerProvider(BufferBuilder fallbackBuffer, Map<RenderLayer, BufferBuilder> layerBuilderMap) {
         super(fallbackBuffer, layerBuilderMap);
@@ -60,12 +60,12 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
     /**
      * Loads all renderLayers for this avatar and attaches a new FiguraVertexConsumerProvider to the avatar.
-     * @param avatar The figura avatar this VCP is attached to
+     * @param playerData The figura player data this VCP is attached to
      * @param inputStream An input stream containing data for all custom render layers.
-     * @param rootPath The path to the folder containing avatar.json
+     * @param rootPath The path to the folder containing model.bbmodel
      */
 
-    public static void parse(PlayerData avatar, InputStream inputStream, Path rootPath) {
+    public static void parse(PlayerData playerData, InputStream inputStream, Path rootPath) {
         try {
             Map<RenderLayer, BufferBuilder> layerBufferBuilderMap = new HashMap<>();
 
@@ -93,9 +93,13 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
                 //Get values from json for each parameter
                 String shaderStr = parameters.getOrDefault("shader", "RENDERTYPE_ENTITY_TRANSLUCENT_SHADER").toString();
-                String textureStr = parameters.getOrDefault("texture", "MY_TEXTURE").toString();
+
                 //If the texture value is "MY_TEXTURE", then the chosen texture is the texture.png file of your avatar.
-                //Otherwise, textureStr is treated as an Identifier.
+                //If "SKIP", the texture slot is skipped. This is useful if you want to use slots 1 and 2 for overlay or lightmap,
+                //As the game will overwrite slots 1 and 2 with overlay and lighting if you enable them.
+                //In other cases, the strings are treated as Identifiers.
+                ArrayList<String> textures = new ArrayList<>();
+                ((List<Object>) parameters.getOrDefault("textures", defaultTextures)).forEach((textureStr) -> textures.add(textureStr.toString()));
 
                 //For the rest, the default value is treated the same as in the normal RenderLayer.MultiPhaseParameters.Builder class.
                 Boolean enableLightmap = (Boolean) parameters.getOrDefault("lightmap", false);
@@ -139,12 +143,15 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                         e.printStackTrace();
                     }
 
-                    //Set the texture using the texture string
+                    //Set textures using the provided strings
                     RenderSystem.enableTexture();
-                    if (textureStr.equals("MY_TEXTURE")) {
-                        //We'll figura this out later, once Zandra starts putting textures into the TextureManager.
-                    } else if (!textureStr.equals("NO_TEXTURE")) { //If there is no texture, then don't set the shader texture
-                        RenderSystem.setShaderTexture(0, new Identifier(textureStr));
+                    for (int i = 0; i < textures.size(); i++) {
+                        String textureStr = textures.get(i);
+                        if (textureStr.equals("MY_TEXTURE")) {
+                            RenderSystem.setShaderTexture(i, playerData.texture.id);
+                        } else if (!textureStr.equals("SKIP")) { //If there is no texture, then don't set the shader texture
+                            RenderSystem.setShaderTexture(i, new Identifier(textureStr));
+                        }
                     }
 
                     //Enable lightmap if requested
@@ -268,7 +275,7 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
             //Now, layerBufferBuildMap contains all of the RenderLayer and BufferBuilder objects we need.
             //All we need to do now is put it into the avatar.
-            avatar.customVCP = new FiguraVertexConsumerProvider(new BufferBuilder(256), layerBufferBuilderMap);
+            playerData.customVCP = new FiguraVertexConsumerProvider(new BufferBuilder(256), layerBufferBuilderMap);
 
         } catch(Exception e) {
             e.printStackTrace();
@@ -284,17 +291,21 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
      * the above section which has a map to access custom shaders.
      */
 
-    public static Map<String, VertexFormat> vertexFormatMap;
-    public static Map<String, VertexFormat.DrawMode> drawModeMap;
-    public static Map<String, Supplier<Shader>> vanillaShaderMap;
-    public static Map<String, Integer> depthTestsMap;
-    public static Map<String, Pair<Boolean, Boolean>> writeMaskStatesMap;
-    public static Map<String, Pair<Runnable, Runnable>> layeringModesMap;
-    public static Map<String, Pair<Boolean, Supplier<Framebuffer>>> targetsMap;
-    public static Map<String, Runnable> transparencyModesMap;
-    public static Map<String, Runnable> texturingModesMap;
+    public static final Map<String, VertexFormat> vertexFormatMap;
+    public static final Map<String, VertexFormat.DrawMode> drawModeMap;
+    public static final Map<String, Supplier<Shader>> vanillaShaderMap;
+    public static final Map<String, Integer> depthTestsMap;
+    public static final Map<String, Pair<Boolean, Boolean>> writeMaskStatesMap;
+    public static final Map<String, Pair<Runnable, Runnable>> layeringModesMap;
+    public static final Map<String, Pair<Boolean, Supplier<Framebuffer>>> targetsMap;
+    public static final Map<String, Runnable> transparencyModesMap;
+    public static final Map<String, Runnable> texturingModesMap;
 
     static {
+
+        defaultTextures = new ArrayList<>();
+        defaultTextures.add("MY_TEXTURE");
+
         //Vertex formats
         vertexFormatMap = new HashMap<>();
         vertexFormatMap.put("BLIT_SCREEN", VertexFormats.BLIT_SCREEN);
