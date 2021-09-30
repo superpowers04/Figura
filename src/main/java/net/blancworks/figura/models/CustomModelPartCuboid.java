@@ -1,12 +1,12 @@
 package net.blancworks.figura.models;
 
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.math.Vector4f;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtFloat;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +50,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
+                v.add(0, 0, texWidthOffset, texHeightOffset);
 
                 float rotation = 0;
 
@@ -76,6 +77,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
+                v.add(0, 0, texWidthOffset, texHeightOffset);
 
                 float rotation = 0;
 
@@ -102,6 +104,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
+                v.add(0, 0, texWidthOffset, texHeightOffset);
 
                 float rotation = 0;
 
@@ -128,6 +131,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
+                v.add(0, 0, texWidthOffset, texHeightOffset);
 
                 float rotation = 0;
 
@@ -154,6 +158,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
+                v.add(0, 0, texWidthOffset, texHeightOffset);
 
                 float rotation = 0;
 
@@ -180,6 +185,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
+                v.add(0, 0, texWidthOffset, texHeightOffset);
 
                 float rotation = 0;
 

@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3f;
@@ -129,7 +130,7 @@ public class CustomModelAPI {
             ret.set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vec3f uv = new Vec3f(targetPart.uOffset, targetPart.vOffset, 0);
+                    Vector4f uv = new Vector4f(targetPart.uOffset, targetPart.vOffset, targetPart.texHeightOffset, targetPart.texHeightOffset);
                     return LuaVector.of(uv);
                 }
             });
@@ -138,10 +139,11 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     LuaVector v = LuaVector.checkOrNew(arg1);
-                    targetPart.uOffset = v.x() % 1;
-                    targetPart.vOffset = v.y() % 1;
-                    if (targetPart.uOffset < 0) targetPart.uOffset++;
-                    if (targetPart.vOffset < 0) targetPart.vOffset++;
+                    targetPart.uOffset = (v.x() + 1) % 1;
+                    targetPart.vOffset = (v.y() + 1) % 1;
+
+                    if (v.z() != 0f && v.w() != 0f)
+                        setTextureOffset(targetPart, v.z(), v.w());
 
                     return NIL;
                 }
@@ -157,10 +159,12 @@ public class CustomModelAPI {
             ret.set("setParentType", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
+                    CustomModel model = partOwner.model;
+                    
                     if (targetPart.isParentSpecial()) {
-                        partOwner.model.worldParts.remove(targetPart);
-                        partOwner.model.leftElytraParts.remove(targetPart);
-                        partOwner.model.rightElytraParts.remove(targetPart);
+                        model.worldParts.remove(targetPart);
+                        model.leftElytraParts.remove(targetPart);
+                        model.rightElytraParts.remove(targetPart);
                     }
 
                     try {
@@ -348,5 +352,13 @@ public class CustomModelAPI {
             throw new LuaError("Not a CustomModelPart table!");
 
         return part;
+    }
+
+    public static void setTextureOffset(CustomModelPart part, float w, float h) {
+        part.texWidthOffset = w;
+        part.texHeightOffset = h;
+        part.rebuild();
+
+        part.children.forEach(child -> setTextureOffset(child, w, h));
     }
 }
