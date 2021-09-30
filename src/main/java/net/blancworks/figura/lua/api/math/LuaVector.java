@@ -5,12 +5,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.math.Vector4f;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -96,31 +91,33 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public static LuaValue of(LuaTable t) {
-        int n = Math.min(6, t.length());
         FloatArrayList fal = new FloatArrayList();
-        for (int i = 0; i < n; i++) {
-            LuaValue l = t.get(i + 1);
 
-            if (l.isnumber()) {
-                l.checknumber();
+        Varargs entry = t.next(LuaValue.NIL);
+        for (int i = 0; i < 6; i++) {
+            if (entry.arg1().isnil())
+                break;
+
+            LuaValue l = entry.arg(2);
+
+            if (l.isnil())
+                fal.add(0f);
+            else if (l.isnumber())
                 fal.add(l.tofloat());
-            } else if (l.istable()) {
-                LuaTable tbl = l.checktable();
-                LuaVector v = (LuaVector) of(tbl);
-
-                for (int j = 0; j < tbl.length(); j++) {
-                    fal.add(v.values[j]);
-                }
-            } else if (l instanceof LuaVector vect) {
-                for (int j = 0; j < vect._size(); j++) {
-                    float f = vect.values[j];
-                    fal.add(f);
-                }
+            else if (l.istable() || l instanceof LuaVector) {
+                LuaVector v = LuaVector.checkOrNew(l);
+                fal.addElements(fal.size(), v.values);
             }
+            else
+                throw new LuaError("Expected number, table or vector. got " + l.typename());
+
+            entry = t.next(entry.arg1());
         }
 
-        //Ensure size.
-        fal.size(6);
+        //ensure size
+        if (fal.size() > 6)
+            fal.size(6);
+
         return new LuaVector(fal.toFloatArray());
     }
 
@@ -226,6 +223,23 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         Float f = _get(key);
         if (f == null) return _functions(key);
         return LuaNumber.valueOf(f);
+    }
+
+    @Override
+    public void set(LuaValue key, LuaValue value) {
+        float f = value.checknumber().tofloat();
+
+        if (key.isnumber()) {
+            int index = key.checkint();
+
+            if (index > 6 || index < 1)
+                throw new LuaError("Index out of bounds");
+
+            if (index <= _size())
+                values[index - 1] = f;
+        }
+        else
+            values[_getIndex(key.tojstring()) - 1] = f;
     }
 
     @Override
@@ -434,13 +448,18 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public Float _get(String name) {
+        Integer i = _getIndex(name);
+        return i == null ? null : _get(i);
+    }
+
+    public Integer _getIndex(String name) {
         return switch (name) {
-            case "x", "r", "u", "pitch" -> x();
-            case "y", "g", "v", "yaw", "volume" -> y();
-            case "z", "b", "roll" -> z();
-            case "w", "a" -> w();
-            case "t" -> t();
-            case "h" -> h();
+            case "x", "r", "u", "pitch" -> 1;
+            case "y", "g", "v", "yaw", "volume" -> 2;
+            case "z", "b", "roll" -> 3;
+            case "w", "a" -> 4;
+            case "t" -> 5;
+            case "h" -> 6;
             default -> null;
         };
     }

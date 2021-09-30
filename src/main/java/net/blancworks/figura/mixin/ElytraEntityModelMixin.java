@@ -7,20 +7,15 @@ import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.FiguraTexture;
 import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.AnimalModel;
 import net.minecraft.client.render.entity.model.ElytraEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.function.Function;
 
 @Mixin(ElytraEntityModel.class)
 public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<T> implements ElytraEntityModelAccess {
@@ -65,7 +60,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
                 if (originModification != null && originModification.stackReference != null) {
                     if (originModification.visible != null && originModification.visible) {
                         originModification.visible = null;
-                        MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
+                        MatrixStackAccess msa = (MatrixStackAccess) new MatrixStack();
                         msa.pushEntry(originModification.stackReference);
                         getLeftWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
                     }
@@ -79,7 +74,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
                 if (originModification != null && originModification.stackReference != null) {
                     if (originModification.visible != null && originModification.visible) {
                         originModification.visible = null;
-                        MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
+                        MatrixStackAccess msa = (MatrixStackAccess) new MatrixStack();
                         msa.pushEntry(originModification.stackReference);
                         getRightWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
                     }
@@ -122,7 +117,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         getLeftWing().rotate(matrices);
 
         for (CustomModelPart modelPart : data.model.leftElytraParts) {
-            data.model.leftToRender = modelPart.renderUsingAllTextures(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+            data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;
@@ -135,7 +130,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         getRightWing().rotate(matrices);
 
         for (CustomModelPart modelPart : data.model.rightElytraParts) {
-            data.model.leftToRender = modelPart.renderUsingAllTextures(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+            data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
 
             if (data.model.leftToRender == 0)
                 break;

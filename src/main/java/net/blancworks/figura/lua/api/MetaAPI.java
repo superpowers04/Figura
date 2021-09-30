@@ -96,7 +96,7 @@ public class MetaAPI {
             set("getCurrentComplexity", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.model.lastComplexity);
+                    return LuaValue.valueOf(script.playerData.model != null ? script.playerData.model.lastComplexity : 0);
                 }
             });
 

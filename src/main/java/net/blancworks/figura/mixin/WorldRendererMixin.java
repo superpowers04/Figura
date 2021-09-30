@@ -40,7 +40,7 @@ public class WorldRendererMixin {
 
                 if (data != null && data.model != null && data.lastEntity != null) {
                     for (CustomModelPart part : data.model.worldParts) {
-                        data.model.leftToRender = part.renderUsingAllTextures(data, matrices, new MatrixStack(), vertexConsumers, entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1.0f);
+                        data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1.0f);
                     }
 
                     /*

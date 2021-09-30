@@ -8,8 +8,6 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.renderer.RenderTask;
-import net.blancworks.figura.models.shaders.FiguraRenderLayer;
-import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
@@ -55,8 +53,6 @@ public class CustomModelPart {
 
     //public RenderType renderType = RenderType.None;
 
-    public RenderLayer customLayer = null; //The name of the custom render layer to use
-
     public TextureType textureType = TextureType.Custom;
     public Identifier textureVanilla = FiguraTexture.DEFAULT_ID;
 
@@ -81,7 +77,7 @@ public class CustomModelPart {
     public static ParentType renderOnly = null;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
-    public int renderUsingAllTextures(PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+    public int render(PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         //no texture to render
         if ((data.texture == null || !data.texture.isDone) && data.playerListEntry == null)
             return 0;
@@ -91,7 +87,7 @@ public class CustomModelPart {
 
         //prepare mimic rotations
         try {
-            PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
+            PlayerEntityModel<?> model = data.vanillaModel;
             if (this.isMimicMode && parentType != ParentType.None) {
                 switch (this.parentType) {
                     case Head -> this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
@@ -110,33 +106,8 @@ public class CustomModelPart {
         }
 
         //lets render boys!!
-        //main texture
-        Identifier textureId;
-        if (data.texture == null || this.textureType != TextureType.Custom) {
-            switch (this.textureType) {
-                case Cape -> textureId = Objects.requireNonNullElse(data.playerListEntry.getCapeTexture(), FiguraTexture.DEFAULT_ID);
-                case Elytra -> textureId = Objects.requireNonNullElse(data.playerListEntry.getElytraTexture(), new Identifier("minecraft", "textures/entity/elytra.png"));
-                case Resource -> textureId = MinecraftClient.getInstance().getResourceManager().containsResource(textureVanilla) ? textureVanilla : MissingSprite.getMissingSpriteId();
-                default -> textureId = data.playerListEntry.getSkinTexture();
-            }
-        } else {
-            textureId = data.texture.id;
-        }
-        RenderLayer layer = RenderLayer.getEntityTranslucent(textureId);
-
-        int ret = renderUsingTexture(data.model.leftToRender, matrices, transformStack, vcp, layer, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false);
-
-        //alt textures
-        if (extraTex) {
-            for (FiguraTexture figuraTexture : data.extraTextures) {
-                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
-
-                if (renderLayerGetter != null) {
-                    RenderLayer extraLayer = renderLayerGetter.apply(figuraTexture.id);
-                    ret = renderUsingTexture(ret, matrices, transformStack, vcp, extraLayer, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false);
-                }
-            }
-        }
+        //textures
+        int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), this.extraTex);
         draw(vcp);
 
         //shaders
@@ -154,23 +125,10 @@ public class CustomModelPart {
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int renderUsingTexture(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRenderChild) {
+    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRenderChild, Identifier texture, boolean renderExtraTex) {
         //do not render invisible parts
         if (!this.visible || this.isHidden)
             return leftToRender;
-
-        VertexConsumer texture;
-        if (layer instanceof FiguraRenderLayer) {
-            texture = vcp.getBuffer(layer);
-        } else {
-            if (customLayer != null) {
-                texture = vcp.getBuffer(customLayer);
-                layer = customLayer;
-            } else {
-                texture = vcp.getBuffer(layer);
-            }
-        }
-
 
         matrices.push();
         transformStack.push();
@@ -187,12 +145,28 @@ public class CustomModelPart {
 
         alpha = this.alpha * alpha;
 
+        //texture
+        if (this.textureType != TextureType.Custom)
+            texture = getTexture();
+
         //render!
         if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
             canRenderChild = true;
 
-            //render the cube!
-            renderCube(leftToRender, matrices, texture, light, overlay, u, v, color, alpha);
+            //render using main texture
+            renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEntityTranslucent(texture)), light, overlay, u, v, color, alpha);
+
+            //render using extra textures
+            if (renderExtraTex) {
+                for (FiguraTexture figuraTexture : FiguraMod.currentData.extraTextures) {
+                    Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
+
+                    if (renderLayerGetter != null) {
+                        VertexConsumer extraTexture = vcp.getBuffer(renderLayerGetter.apply(figuraTexture.id));
+                        renderCube(leftToRender, matrices, extraTexture, light, overlay, u, v, color, alpha);
+                    }
+                }
+            }
         }
 
         for (CustomModelPart child : this.children) {
@@ -204,7 +178,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderUsingTexture(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRenderChild);
+            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, light, overlay, u, v, color, alpha, canRenderChild, texture, renderExtraTex && child.extraTex);
         }
 
         matrices.pop();
@@ -300,6 +274,24 @@ public class CustomModelPart {
         else if (vcp instanceof OutlineVertexConsumerProvider outline) outline.draw();
     }
 
+    public Identifier getTexture() {
+        PlayerData data = FiguraMod.currentData;
+
+        Identifier textureId;
+        if (data.texture == null || this.textureType != TextureType.Custom) {
+            switch (this.textureType) {
+                case Cape -> textureId = Objects.requireNonNullElse(data.playerListEntry.getCapeTexture(), FiguraTexture.DEFAULT_ID);
+                case Elytra -> textureId = Objects.requireNonNullElse(data.playerListEntry.getElytraTexture(), new Identifier("minecraft", "textures/entity/elytra.png"));
+                case Resource -> textureId = MinecraftClient.getInstance().getResourceManager().containsResource(textureVanilla) ? textureVanilla : MissingSprite.getMissingSpriteId();
+                default -> textureId = data.playerListEntry.getSkinTexture();
+            }
+        } else {
+            textureId = data.texture.id;
+        }
+
+        return textureId;
+    }
+
     public void renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
         Matrix4f modelMatrix = matrices.peek().getModel();
         Matrix3f normalMatrix = matrices.peek().getNormal();
@@ -362,7 +354,7 @@ public class CustomModelPart {
     public void renderHitBox(MatrixStack matrices, VertexConsumer vertices) {
         Vec3f color;
         float boxSize;
-        if (this instanceof CustomModelPartCuboid) {
+        if (this.getPartType().equals("cub")) {
             color = new Vec3f(1f, 0.45f, 0.72f); //0xff72b7 aka fran_pink
             boxSize = 1 / 48f;
         }
