@@ -86,9 +86,9 @@ public class FiguraLuaManager {
 
     public static void registerEvents() {
         registerEvent("player_init");
+        registerEvent("tick");
         registerEvent("world_render");
         registerEvent("render");
-        registerEvent("tick");
         registerEvent("onCommand");
         registerEvent("onDamage");
     }

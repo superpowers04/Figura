@@ -29,40 +29,38 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
 
         PlayerData playerData = FiguraMod.currentData;
 
-        if (playerData != null) {
-            if (playerData.model != null) {
-                matrices.push();
-                
-                MatrixStack transformStack = new MatrixStack();
-                if (playerData.lastEntity != null) {
-                    PlayerEntityRenderer renderer = (PlayerEntityRenderer) (LivingEntityRenderer<?, ?>) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(playerData.lastEntity);
-                    PlayerEntityRendererAccess per = (PlayerEntityRendererAccess) renderer;
+        if (playerData != null && playerData.model != null) {
+            matrices.push();
 
-                    Vec3d lastPos = playerData.lastEntity.getPos();
-                    Vec3d vec3d = renderer.getPositionOffset((AbstractClientPlayerEntity) playerData.lastEntity, FiguraMod.deltaTime);
-                    double x = lastPos.getX() + vec3d.getX();
-                    double y = lastPos.getY() + vec3d.getY();
-                    double z = lastPos.getZ() + vec3d.getZ();
-                    
-                    transformStack.translate(x,y,z);
+            MatrixStack transformStack = new MatrixStack();
+            if (playerData.lastEntity != null) {
+                PlayerEntityRenderer renderer = (PlayerEntityRenderer) (LivingEntityRenderer<?, ?>) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(playerData.lastEntity);
+                PlayerEntityRendererAccess per = (PlayerEntityRendererAccess) renderer;
 
-                    float bodyYaw = MathHelper.lerpAngleDegrees(FiguraMod.deltaTime, playerData.lastEntity.prevBodyYaw, playerData.lastEntity.bodyYaw);
-                    float animationProgress = playerData.lastEntity.age + FiguraMod.deltaTime;
+                Vec3d lastPos = playerData.lastEntity.getPos();
+                Vec3d vec3d = renderer.getPositionOffset((AbstractClientPlayerEntity) playerData.lastEntity, FiguraMod.deltaTime);
+                double x = lastPos.getX() + vec3d.getX();
+                double y = lastPos.getY() + vec3d.getY();
+                double z = lastPos.getZ() + vec3d.getZ();
 
-                    per.figura$setupTransformsPublic((AbstractClientPlayerEntity) playerData.lastEntity, transformStack, animationProgress, bodyYaw, FiguraMod.deltaTime );
-                    
-                    transformStack.scale(-1.0F, -1.0F, 1.0F);
-                    transformStack.translate(0.0D, -1.5010000467300415D, 0.0D);
-                }
-                
-                try {
-                    playerData.model.render((PlayerEntityModel<T>) (Object) this, matrices, transformStack, FiguraMod.vertexConsumerProvider, light, overlay, alpha);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                transformStack.translate(x,y,z);
 
-                matrices.pop();
+                float bodyYaw = MathHelper.lerpAngleDegrees(FiguraMod.deltaTime, playerData.lastEntity.prevBodyYaw, playerData.lastEntity.bodyYaw);
+                float animationProgress = playerData.lastEntity.age + FiguraMod.deltaTime;
+
+                per.figura$setupTransformsPublic((AbstractClientPlayerEntity) playerData.lastEntity, transformStack, animationProgress, bodyYaw, FiguraMod.deltaTime );
+
+                transformStack.scale(-1.0F, -1.0F, 1.0F);
+                transformStack.translate(0.0D, -1.5010000467300415D, 0.0D);
             }
+
+            try {
+                playerData.model.render((PlayerEntityModel<T>) (Object) this, matrices, transformStack, FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            matrices.pop();
         }
     }
 }

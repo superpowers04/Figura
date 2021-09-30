@@ -173,16 +173,16 @@ public class FiguraMod implements ClientModInitializer {
 
     //Client-side ticks.
     public static void ClientEndTick(MinecraftClient client) {
-        PlayerDataManager.tick();
+        try {
+            PlayerDataManager.tick();
 
-        //if ((boolean) Config.entries.get("useNewNetwork").value) {
             networkManager = newNetworkManager;
-        //} else {
-        //    //networkManager = oldNetworkManager;
-        //}
 
-        if (networkManager != null)
-            networkManager.tickNetwork();
+            if (networkManager != null)
+                networkManager.tickNetwork();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     public static Path getModContentDirectory() {
@@ -239,7 +239,7 @@ public class FiguraMod implements ClientModInitializer {
 
                             if (FiguraMod.vertexConsumerProvider != null) {
                                 for (CustomModelPart part : data.model.worldParts) {
-                                    part.renderUsingAllTextures(data, context.matrixStack(), new MatrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
+                                    part.render(data, context.matrixStack(), new MatrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
                                 }
                             }
 

@@ -267,7 +267,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onFiguraChatCommand(String message) {
-        if (!isDone)
+        if (!isDone || !hasPlayer || playerData.lastEntity == null)
             return;
 
         queueTask(() -> {
@@ -283,7 +283,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onWorldRender(float deltaTime) {
-        if (!isDone)
+        if (!isDone || !hasPlayer || playerData.lastEntity == null)
             return;
 
         queueTask(() -> {
