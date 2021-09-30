@@ -38,6 +38,8 @@ public class CustomModelPart {
     //Offsets
     public float uOffset = 0;
     public float vOffset = 0;
+    public float texWidthOffset = 0;
+    public float texHeightOffset = 0;
 
     public boolean visible = true;
     public boolean isHidden = false;
@@ -692,7 +694,7 @@ public class CustomModelPart {
     }
 
     public boolean isParentSpecial() {
-        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra;
+        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra || parentType == ParentType.Skull;
     }
 
     public void applyTrueOffset(Vec3f offset) {}
@@ -714,10 +716,11 @@ public class CustomModelPart {
         LeftParrotOrigin, //Left origin position of the shoulder parrot
         RightParrotOrigin, //Right origin position of the shoulder parrot
         LeftElytra, //Left position of the elytra model
-        RightElytra, //Right position of the elytra model,
+        RightElytra, //Right position of the elytra model
         LeftSpyglass, //Left position of the spyglass model
         RightSpyglass, //Right position of the spyglass model
-        Camera //paparazzi
+        Camera, //paparazzi
+        Skull //forgor
     }
 
     public enum RotationType {
@@ -801,7 +804,7 @@ public class CustomModelPart {
 
     private static Vec3f vec3fFromNbt(@Nullable NbtList nbt) {
         if (nbt == null || nbt.getHeldType() != NbtType.FLOAT)
-            return new Vec3f(0.f, 0.f, 0.f);
+            return new Vec3f(0f, 0f, 0f);
         return new Vec3f(nbt.getFloat(0), nbt.getFloat(1), nbt.getFloat(2));
     }
 

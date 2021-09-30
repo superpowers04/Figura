@@ -9,10 +9,11 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
@@ -30,6 +31,7 @@ public class CustomModel extends FiguraAsset {
     public ArrayList<CustomModelPart> leftElytraParts = new ArrayList<>();
     public ArrayList<CustomModelPart> rightElytraParts = new ArrayList<>();
     public ArrayList<CustomModelPart> worldParts = new ArrayList<>();
+    public ArrayList<CustomModelPart> skullParts = new ArrayList<>();
 
     public float texWidth = 64, texHeight = 64;
 
@@ -64,11 +66,11 @@ public class CustomModel extends FiguraAsset {
         return tc != null ? tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) : 0;
     }
 
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        render(player_model, matrices, new MatrixStack(), vcp, light, overlay, alpha);
+    public void render(EntityModel<?> entity_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        render(entity_model, matrices, new MatrixStack(), vcp, light, overlay, alpha);
     }
 
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, MatrixStack transformStack,  VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+    public void render(EntityModel<?> entity_model, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         leftToRender = getMaxRenderAmount();
         int maxRender = leftToRender;
 
@@ -84,7 +86,9 @@ public class CustomModel extends FiguraAsset {
             matrices.push();
 
             try {
-                player_model.setVisible(false);
+                if (entity_model instanceof PlayerEntityModel player_model) {
+                    player_model.setVisible(false);
+                }
 
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
@@ -124,11 +128,27 @@ public class CustomModel extends FiguraAsset {
         playerData.model.leftToRender = prevCount;
     }
 
-    public void writeNbt(CompoundTag nbt) {
-        ListTag partList = new ListTag();
+    public void renderHead(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float alpha) {
+        if (owner != null && owner.script != null) {
+            owner.script.render(FiguraMod.deltaTime);
+        }
+
+        int prevCount = playerData.model.leftToRender;
+        playerData.model.leftToRender = Integer.MAX_VALUE - 100;
+
+        for (CustomModelPart part : playerData.model.allParts) {
+            CustomModelPart.renderOnly = CustomModelPart.ParentType.Skull;
+            playerData.model.leftToRender = part.render(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+        }
+
+        playerData.model.leftToRender = prevCount;
+    }
+
+    public void writeNbt(NbtCompound nbt) {
+        NbtList partList = new NbtList();
 
         for (CustomModelPart part : allParts) {
-            CompoundTag partNbt = new CompoundTag();
+            NbtCompound partNbt = new NbtCompound();
             CustomModelPart.writeToNbt(partNbt, part);
             partList.add(partNbt);
         }
@@ -136,12 +156,12 @@ public class CustomModel extends FiguraAsset {
         nbt.put("parts", partList);
     }
 
-    public void readNbt(CompoundTag tag) {
-        ListTag partList = (ListTag) tag.get("parts");
+    public void readNbt(NbtCompound tag) {
+        NbtList partList = (NbtList) tag.get("parts");
 
         if (partList != null) {
-            for (net.minecraft.nbt.Tag nbtElement : partList) {
-                CompoundTag partTag = (CompoundTag) nbtElement;
+            for (net.minecraft.nbt.NbtElement nbtElement : partList) {
+                NbtCompound partTag = (NbtCompound) nbtElement;
 
                 CustomModelPart part = CustomModelPart.fromNbt(partTag);
 
@@ -161,6 +181,7 @@ public class CustomModel extends FiguraAsset {
         leftElytraParts.clear();
         rightElytraParts.clear();
         worldParts.clear();
+        skullParts.clear();
 
         for (CustomModelPart part : allParts) {
             sortPart(part);
@@ -168,12 +189,11 @@ public class CustomModel extends FiguraAsset {
     }
 
     public void sortPart(CustomModelPart part) {
-        if (part.parentType == CustomModelPart.ParentType.LeftElytra) {
-            leftElytraParts.add(part);
-        } else if (part.parentType == CustomModelPart.ParentType.RightElytra) {
-            rightElytraParts.add(part);
-        } else if (part.parentType == CustomModelPart.ParentType.WORLD) {
-            worldParts.add(part);
+        switch(part.parentType) {
+            case LeftElytra -> leftElytraParts.add(part);
+            case RightElytra -> rightElytraParts.add(part);
+            case WORLD -> worldParts.add(part);
+            case Skull -> skullParts.add(part);
         }
 
         for (CustomModelPart child : part.children) {

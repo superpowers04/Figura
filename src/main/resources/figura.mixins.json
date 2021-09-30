@@ -30,6 +30,7 @@
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
     "ShoulderParrotFeatureRendererMixin",
+    "SkullBlockEntityRendererMixin",
     "SoundManagerMixin",
     "SoundSystemMixin",
     "SplashTextResourceSupplierMixin",
