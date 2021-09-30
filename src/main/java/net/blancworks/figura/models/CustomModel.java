@@ -93,7 +93,7 @@ public class CustomModel extends FiguraAsset {
                 if (owner.lastEntity != null && owner.lastEntity.isSpectator())
                     CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
 
-                leftToRender = part.renderUsingAllTextures(owner, matrices, transformStack, vcp, light, overlay, alpha);
+                leftToRender = part.render(owner, matrices, transformStack, vcp, light, overlay, alpha);
 
                 lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
             } catch (Exception e) {
@@ -118,7 +118,7 @@ public class CustomModel extends FiguraAsset {
             else if (arm == model.leftArm)
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.LeftArm;
 
-            playerData.model.leftToRender = part.renderUsingAllTextures(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+            playerData.model.leftToRender = part.render(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
         }
 
         playerData.model.leftToRender = prevCount;
