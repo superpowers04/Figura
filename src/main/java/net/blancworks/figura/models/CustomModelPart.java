@@ -32,14 +32,16 @@ public class CustomModelPart {
     public Vec3f pivot = new Vec3f();
     public Vec3f pos = new Vec3f();
     public Vec3f rot = new Vec3f();
-    public Vec3f scale = new Vec3f(1, 1, 1);
-    public Vec3f color = new Vec3f(1, 1, 1);
+    public Vec3f scale = new Vec3f(1f, 1f, 1f);
+    public Vec3f color = new Vec3f(1f, 1f, 1f);
 
     //Offsets
-    public float uOffset = 0;
-    public float vOffset = 0;
-    public float texWidthOffset = 0;
-    public float texHeightOffset = 0;
+    public float uOffset = 0f;
+    public float vOffset = 0f;
+    public float texWidthOffset = 0f;
+    public float texHeightOffset = 0f;
+    public float texWidth = 0f;
+    public float texHeight = 0f;
 
     public boolean visible = true;
     public boolean isHidden = false;
@@ -60,7 +62,7 @@ public class CustomModelPart {
 
     public boolean extraTex = true;
 
-    public float alpha = 1.0f;
+    public float alpha = 1f;
 
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();

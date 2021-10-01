@@ -130,7 +130,7 @@ public class CustomModelAPI {
             ret.set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vector4f uv = new Vector4f(targetPart.uOffset, targetPart.vOffset, targetPart.texHeightOffset, targetPart.texHeightOffset);
+                    Vec3f uv = new Vec3f(targetPart.uOffset, targetPart.vOffset, 0f);
                     return LuaVector.of(uv);
                 }
             });
@@ -141,10 +141,23 @@ public class CustomModelAPI {
                     LuaVector v = LuaVector.checkOrNew(arg1);
                     targetPart.uOffset = (v.x() + 1) % 1;
                     targetPart.vOffset = (v.y() + 1) % 1;
+                    return NIL;
+                }
+            });
 
-                    if (v.z() != 0f && v.w() != 0f)
-                        setTextureOffset(targetPart, v.z(), v.w());
+            ret.set("getUVSize", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    Vector4f uv = new Vector4f(targetPart.texWidthOffset, targetPart.texHeightOffset, targetPart.texWidth, targetPart.texHeight);
+                    return LuaVector.of(uv);
+                }
+            });
 
+            ret.set("setUVSize", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector v = LuaVector.checkOrNew(arg);
+                    setTextureOffset(targetPart, v);
                     return NIL;
                 }
             });
@@ -354,11 +367,14 @@ public class CustomModelAPI {
         return part;
     }
 
-    public static void setTextureOffset(CustomModelPart part, float w, float h) {
-        part.texWidthOffset = w;
-        part.texHeightOffset = h;
+    public static void setTextureOffset(CustomModelPart part, LuaVector v) {
+        part.texWidthOffset = v.x();
+        part.texHeightOffset = v.y();
+        part.texWidth = v.z();
+        part.texHeight = v.w();
+
         part.rebuild();
 
-        part.children.forEach(child -> setTextureOffset(child, w, h));
+        part.children.forEach(child -> setTextureOffset(child, v));
     }
 }
