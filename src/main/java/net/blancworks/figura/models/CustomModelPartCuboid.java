@@ -18,7 +18,6 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
     @Override
     public void rebuild() {
-
         vertexData.clear();
         vertexCount = 0;
 
@@ -41,8 +40,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         to.add(inflate, inflate, inflate);
         to.add(mid);
 
-        float texWidth = cuboidProperties.getFloat("tw");
-        float texHeight = cuboidProperties.getFloat("th");
+        if (texWidth == 0f)
+            texWidth = cuboidProperties.getFloat("tw");
+        if (texHeight == 0f)
+            texHeight = cuboidProperties.getFloat("th");
 
         //North
         if (cuboidProperties.contains("n")) {
