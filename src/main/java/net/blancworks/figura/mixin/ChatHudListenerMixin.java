@@ -69,6 +69,9 @@ public class ChatHudListenerMixin {
                 Object[] args = ((TranslatableText) message).getArgs();
 
                 for (Object arg : args) {
+                    if (arg instanceof TranslatableText || !(arg instanceof Text))
+                        continue;
+
                     if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
                         break;
                 }

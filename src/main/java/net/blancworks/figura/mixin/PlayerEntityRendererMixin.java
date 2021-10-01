@@ -158,6 +158,9 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 Object[] args = ((TranslatableText) text).getArgs();
 
                 for (Object arg : args) {
+                    if (arg instanceof TranslatableText || !(arg instanceof Text))
+                        continue;
+
                     if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
                         break;
                 }
