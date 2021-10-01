@@ -172,9 +172,9 @@ public class CustomModelAPI {
 
                         if (targetPart.isParentSpecial()) {
                             switch (targetPart.parentType) {
-                                case WORLD -> partOwner.model.worldParts.add(targetPart);
-                                case LeftElytra -> partOwner.model.leftElytraParts.add(targetPart);
-                                case RightElytra -> partOwner.model.rightElytraParts.add(targetPart);
+                                case WORLD -> model.worldParts.add(targetPart);
+                                case LeftElytra -> model.leftElytraParts.add(targetPart);
+                                case RightElytra -> model.rightElytraParts.add(targetPart);
                             }
                         }
                     } catch (Exception ignored) {

@@ -216,6 +216,9 @@ public class NamePlateAPI {
                     Object[] args = ((TranslatableText) sibling).getArgs();
 
                     for (Object arg : args) {
+                        if (arg instanceof TranslatableText || !(arg instanceof Text))
+                            continue;
+
                         if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData)) {
                             return true;
                         }
