@@ -272,7 +272,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public LuaVector _add(LuaVector vec) {
-        int n = Math.min(_size(), vec._size());
+        int n = Math.max(_size(), vec._size());
         float[] vals = new float[n];
         for (int i = 0; i < n; i++) {
             vals[i] = _get(i + 1) + vec._get(i + 1);
@@ -290,7 +290,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public LuaVector _sub(LuaVector vec) {
-        int n = Math.min(_size(), vec._size());
+        int n = Math.max(_size(), vec._size());
         float[] vals = new float[n];
         for (int i = 0; i < n; i++) {
             vals[i] = _get(i + 1) - vec._get(i + 1);
@@ -308,7 +308,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public LuaVector _mul(LuaVector vec) {
-        int n = Math.min(_size(), vec._size());
+        int n = Math.max(_size(), vec._size());
         float[] vals = new float[n];
         for (int i = 0; i < n; i++) {
             vals[i] = _get(i + 1) * vec._get(i + 1);
@@ -326,7 +326,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public LuaVector _div(LuaVector vec) {
-        int n = Math.min(_size(), vec._size());
+        int n = Math.max(_size(), vec._size());
         float[] vals = new float[n];
         for (int i = 0; i < n; i++) {
             vals[i] = _get(i + 1) / vec._get(i + 1);
@@ -353,7 +353,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public double _distanceTo(LuaValue vector) {
         LuaVector vec = check(vector);
-        int n = Math.min(_size(), vec._size()); // Only calculate for as many values as actually exist between both vectors
+        int n = Math.max(_size(), vec._size()); // Only calculate for as many values as actually exist between both vectors
         float s = 0; // Sum value
         for (int i = 1; i <= n; i++) {
             float a = this._get(i); // This vector's value at current index
@@ -374,7 +374,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public double _dot(LuaValue vector) {
         LuaVector vec = check(vector);
-        int n = Math.min(_size(), vec._size());
+        int n = Math.max(_size(), vec._size());
         double s = 0d;
         for (int i = 1; i <= n; i++) {
             s += _get(i) * vec._get(i);
@@ -384,7 +384,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public LuaVector _cross(LuaValue vector){
         LuaVector vec = check(vector);
-        int n = Math.min(_size(), vec._size());
+        int n = Math.max(_size(), vec._size());
         float[] vals = new float[n];
         for (int i = 0; i < n; i++) {
             int j = ((i + 1) % n) + 1;

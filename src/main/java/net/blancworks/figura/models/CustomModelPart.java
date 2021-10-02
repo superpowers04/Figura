@@ -78,7 +78,6 @@ public class CustomModelPart {
     public ArrayList<RenderTask> renderTasks = new ArrayList<>();
 
     public static boolean canRenderHitBox = false;
-    public static boolean applyHiddenTransforms = true;
     public static ParentType renderOnly = null;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
@@ -134,17 +133,12 @@ public class CustomModelPart {
         matrices.push();
         transformStack.push();
 
-        if (applyHiddenTransforms) {
-            applyVanillaTransforms(matrices, transformStack);
+        applyVanillaTransforms(matrices, transformStack);
 
-            applyTransforms(matrices);
-            applyTransforms(transformStack);
+        applyTransforms(matrices);
+        applyTransforms(transformStack);
 
-            updateModelMatrices(transformStack);
-        } else if (canRender) {
-            applyTransforms(matrices);
-            applyTransforms(transformStack);
-        }
+        updateModelMatrices(transformStack);
 
         //uv -> color -> alpha
         u += this.uOffset;
@@ -191,12 +185,8 @@ public class CustomModelPart {
 
         matrices.push();
 
-        if (applyHiddenTransforms) {
-            applyVanillaTransforms(matrices, new MatrixStack());
-            applyTransforms(matrices);
-        } else if (canRender) {
-            applyTransforms(matrices);
-        }
+        applyVanillaTransforms(matrices, new MatrixStack());
+        applyTransforms(matrices);
 
         //uv -> color -> alpha -> shaders
         u += this.uOffset;
@@ -246,12 +236,8 @@ public class CustomModelPart {
 
         matrices.push();
 
-        if (applyHiddenTransforms) {
-            applyVanillaTransforms(matrices, new MatrixStack());
-            applyTransforms(matrices);
-        } else if (canRender) {
-            applyTransforms(matrices);
-        }
+        applyVanillaTransforms(matrices, new MatrixStack());
+        applyTransforms(matrices);
 
         //render!
         if (canRender)
@@ -712,7 +698,7 @@ public class CustomModelPart {
     }
 
     public boolean isParentSpecial() {
-        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra;
+        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra || parentType == ParentType.Skull;
     }
 
     public void applyTrueOffset(Vec3f offset) {}
@@ -737,7 +723,8 @@ public class CustomModelPart {
         RightElytra, //Right position of the elytra model
         LeftSpyglass, //Left position of the spyglass model
         RightSpyglass, //Right position of the spyglass model
-        Camera //paparazzi
+        Camera, //paparazzi
+        Skull
     }
 
     public enum RotationType {

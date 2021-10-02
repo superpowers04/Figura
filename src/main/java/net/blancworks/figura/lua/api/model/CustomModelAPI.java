@@ -178,6 +178,7 @@ public class CustomModelAPI {
                         model.worldParts.remove(targetPart);
                         model.leftElytraParts.remove(targetPart);
                         model.rightElytraParts.remove(targetPart);
+                        model.skullParts.remove(targetPart);
                     }
 
                     try {
@@ -188,6 +189,7 @@ public class CustomModelAPI {
                                 case WORLD -> model.worldParts.add(targetPart);
                                 case LeftElytra -> model.leftElytraParts.add(targetPart);
                                 case RightElytra -> model.rightElytraParts.add(targetPart);
+                                case Skull -> model.skullParts.add(targetPart);
                             }
                         }
                     } catch (Exception ignored) {

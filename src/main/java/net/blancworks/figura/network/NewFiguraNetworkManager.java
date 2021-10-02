@@ -43,7 +43,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     private static boolean lastNetworkState = false;
 
-    public static int connectionStatus = 0;
+    public static byte connectionStatus = 0;
 
     //----- WEBSOCKETS -----
 
@@ -114,12 +114,13 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public void tickNetwork() {
-        connectionStatus = 1;
-
         if ((boolean) Config.entries.get("useLocalServer").value != lastNetworkState && currWebSocket != null) {
             currWebSocket.disconnect();
             lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
         }
+
+        if (jwtToken == null)
+            connectionStatus = 1;
 
         if (authConnection != null && !authConnection.isOpen())
             authConnection.handleDisconnection();
@@ -148,7 +149,6 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             tokenReauthCooldown--;
         else if (tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME) {
             tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
-            connectionStatus = 2;
 
             //Auth user ASAP
             doTask(() -> authUser(true));
@@ -337,6 +337,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 String connectionString = String.format("%s/connect/", mainServerURL());
 
                 FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
+                connectionStatus = 2;
 
                 WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
                 newSocket.setPingInterval(15 * 1000);
@@ -353,6 +354,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
                 return messageHandler.initializedFuture;
             } catch (Exception e) {
+                connectionStatus = 1;
                 e.printStackTrace();
                 return CompletableFuture.completedFuture(null);
             }
@@ -389,6 +391,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         try {
             FiguraMod.LOGGER.info("Authenticating with Figura server");
+            connectionStatus = 2;
 
             String address = authServerURL();
             InetSocketAddress inetAddress = new InetSocketAddress(address, 25565);
@@ -430,6 +433,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             return disconnectedFuture;
 
         } catch (Exception e) {
+            connectionStatus = 1;
             e.printStackTrace();
             return CompletableFuture.completedFuture(null);
         }

@@ -21,10 +21,6 @@
 
   "gui.figura.dropconfirm": "Do you want to add the following models to Figura?",
 
-  "gui.figura.script.none": "none",
-  "gui.figura.script.ok": "OK",
-  "gui.figura.script.error": "ERROR",
-
   "gui.figura.button.trustmenu": "Trust Menu",
   "gui.figura.button.configmenu": "Settings",
   "gui.figura.button.back": "Back",

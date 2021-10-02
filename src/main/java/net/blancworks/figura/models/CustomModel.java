@@ -31,6 +31,7 @@ public class CustomModel extends FiguraAsset {
     public ArrayList<CustomModelPart> leftElytraParts = new ArrayList<>();
     public ArrayList<CustomModelPart> rightElytraParts = new ArrayList<>();
     public ArrayList<CustomModelPart> worldParts = new ArrayList<>();
+    public ArrayList<CustomModelPart> skullParts = new ArrayList<>();
 
     public float texWidth = 64, texHeight = 64;
 
@@ -127,20 +128,6 @@ public class CustomModel extends FiguraAsset {
         playerData.model.leftToRender = prevCount;
     }
 
-    public void renderSkull(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, float alpha) {
-        if (owner != null && owner.script != null) {
-            owner.script.render(FiguraMod.deltaTime);
-        }
-
-        leftToRender = getMaxRenderAmount();
-        CustomModelPart.applyHiddenTransforms = false;
-        for (CustomModelPart part : playerData.model.allParts) {
-            CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
-            leftToRender = part.render(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
-        }
-        CustomModelPart.applyHiddenTransforms = true;
-    }
-
     public void writeNbt(NbtCompound nbt) {
         NbtList partList = new NbtList();
 
@@ -178,6 +165,7 @@ public class CustomModel extends FiguraAsset {
         leftElytraParts.clear();
         rightElytraParts.clear();
         worldParts.clear();
+        skullParts.clear();
 
         for (CustomModelPart part : allParts) {
             sortPart(part);
@@ -189,6 +177,7 @@ public class CustomModel extends FiguraAsset {
             case LeftElytra -> leftElytraParts.add(part);
             case RightElytra -> rightElytraParts.add(part);
             case WORLD -> worldParts.add(part);
+            case Skull -> skullParts.add(part);
         }
 
         for (CustomModelPart child : part.children) {

@@ -63,6 +63,7 @@ public class CustomScript extends FiguraAsset {
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
     public int worldRenderInstructionCount = 0;
+    public int damageInstructionCount = 0;
     public int pingSent = 0;
     public int pingReceived = 0;
 
@@ -297,6 +298,24 @@ public class CustomScript extends FiguraAsset {
                     error.printStackTrace();
             }
             worldRenderInstructionCount = scriptGlobals.running.state.bytecodes;
+        });
+    }
+
+    public void onDamage(float amount) {
+        if (!isDone || !hasPlayer || playerData.lastEntity == null)
+            return;
+
+        queueTask(() -> {
+            setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+            try {
+                allEvents.get("onDamage").call(LuaNumber.valueOf(amount));
+            } catch (Exception error) {
+                if (error instanceof LuaError)
+                    logLuaError((LuaError) error);
+                else
+                    error.printStackTrace();
+            }
+            damageInstructionCount = scriptGlobals.running.state.bytecodes;
         });
     }
 
