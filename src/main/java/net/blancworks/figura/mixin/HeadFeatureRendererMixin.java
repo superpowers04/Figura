@@ -33,26 +33,23 @@ public class HeadFeatureRendererMixin<T extends LivingEntity, M extends EntityMo
 
     @Inject(at = @At("HEAD"), method = "render", cancellable = true)
     private void onRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-
         PlayerData data = FiguraMod.currentData;
 
+        if (data == null || data.playerId.compareTo(livingEntity.getUuid()) != 0 || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+            return;
+
         ModelPart part = this.getContextModel().getHead();
+        figura$applyPartCustomization(ArmorModelAPI.VANILLA_HEAD_ITEM, part);
 
-        if (data != null) {
-            if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
-                figura$applyPartCustomization(ArmorModelAPI.VANILLA_HEAD_ITEM, part);
+        VanillaModelPartCustomization customization = ((ModelPartAccess) (Object) part).figura$getPartCustomization();
 
-                VanillaModelPartCustomization customization = ((ModelPartAccess) part).figura$getPartCustomization();
-
-                if (customization != null) {
-                    if (customization.visible != null && !customization.visible) {
-                        figura$clearAllPartCustomizations();
-                        ci.cancel();
-                        return;
-                    }
-                    part.visible = true;
-                }
+        if (customization != null) {
+            if (customization.visible != null && !customization.visible) {
+                figura$clearAllPartCustomizations();
+                ci.cancel();
+                return;
             }
+            part.visible = true;
         }
     }
 
@@ -63,18 +60,16 @@ public class HeadFeatureRendererMixin<T extends LivingEntity, M extends EntityMo
 
     @Shadow
     @Override
-    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-
-    }
+    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {}
 
     public void figura$applyPartCustomization(String id, ModelPart part) {
         PlayerData data = FiguraMod.currentData;
 
-        if(data != null && data.script != null && data.script.allCustomizations != null) {
+        if (data != null && data.script != null && data.script.allCustomizations != null) {
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 
-            if(customization != null) {
-                ((ModelPartAccess) part).figura$setPartCustomization(customization);
+            if (customization != null) {
+                ((ModelPartAccess) (Object) part).figura$setPartCustomization(customization);
                 figura$customizedParts.add(part);
             }
         }
@@ -82,7 +77,7 @@ public class HeadFeatureRendererMixin<T extends LivingEntity, M extends EntityMo
 
     public void figura$clearAllPartCustomizations() {
         for (ModelPart part : figura$customizedParts) {
-            ((ModelPartAccess) part).figura$setPartCustomization(null);
+            ((ModelPartAccess) (Object) part).figura$setPartCustomization(null);
         }
 
         figura$customizedParts.clear();

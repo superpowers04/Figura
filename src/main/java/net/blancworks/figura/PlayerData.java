@@ -229,6 +229,9 @@ public class PlayerData {
 
     //Ticks from client.
     public void tick() {
+        if (this.playerId == null)
+            return;
+
         if (this.isInvalidated)
             PlayerDataManager.clearPlayer(playerId);
 

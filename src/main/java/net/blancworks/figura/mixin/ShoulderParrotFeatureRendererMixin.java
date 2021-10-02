@@ -6,7 +6,6 @@ import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.ParrotModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
-import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -17,10 +16,10 @@ import net.minecraft.client.render.entity.feature.ShoulderParrotFeatureRenderer;
 import net.minecraft.client.render.entity.model.ParrotEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -44,12 +43,7 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
     public void onRenderShoulder(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T player, float limbAngle, float limbDistance, float headYaw, float headPitch, boolean leftShoulder, CallbackInfo ci) {
         PlayerData data = FiguraMod.currentData;
 
-        if (data == null)
-            return;
-
-        TrustContainer tc = data.getTrustContainer();
-
-        if (tc == null || !tc.getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        if (data == null || data.playerId.compareTo(player.getUuid()) != 0 || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
             return;
 
         try {
@@ -65,14 +59,14 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
                     if (originModification.stackReference != null) {
                         //apply modifications
                         MatrixStack freshStack = new MatrixStack();
-                        MatrixStackAccess access = (MatrixStackAccess) (Object) freshStack;
+                        MatrixStackAccess access = (MatrixStackAccess) freshStack;
                         access.pushEntry(originModification.stackReference);
 
                         //flag to not render anymore
                         originModification.visible = null;
 
                         //render
-                        CompoundTag compoundTag = leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
+                        NbtCompound compoundTag = leftShoulder ? player.getShoulderEntityLeft() : player.getShoulderEntityRight();
                         EntityType.get(compoundTag.getString("id")).filter((entityType) -> entityType == EntityType.PARROT).ifPresent((entityType) -> {
                             freshStack.push();
                             freshStack.translate(leftShoulder ? 0.4000000059604645D : -0.4000000059604645D, player.isInSneakingPose() ? -1.2999999523162842D : -1.5D, 0.0D);
@@ -106,13 +100,13 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
                         matrices.translate(figura$customization.pos.getX() / 16.0f, figura$customization.pos.getY() / 16.0f, figura$customization.pos.getZ() / 16.0f);
 
                     if (figura$customization.rot != null) {
-                        matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(figura$customization.rot.getZ()));
-                        matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(figura$customization.rot.getY()));
-                        matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(figura$customization.rot.getX()));
+                        matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(figura$customization.rot.getZ()));
+                        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(figura$customization.rot.getY()));
+                        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(figura$customization.rot.getX()));
                     }
 
                     if (figura$customization.scale != null) {
-                        Vector3f scale = figura$customization.scale;
+                        Vec3f scale = figura$customization.scale;
                         matrices.scale(scale.getX(), scale.getY(), scale.getZ());
                     }
                 }

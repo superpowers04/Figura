@@ -30,38 +30,33 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
         super(context);
     }
 
-    private ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
+    private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
+    private final HashMap<EquipmentSlot, String> partMap = new HashMap<>();
 
-    private HashMap<EquipmentSlot, String> partMap = new HashMap<EquipmentSlot, String>();
-    
     @Inject(at = @At("HEAD"), method = "renderArmor")
     private void onRenderArmor(MatrixStack matrices, VertexConsumerProvider vertexConsumers, T livingEntity, EquipmentSlot equipmentSlot, int i, A bipedEntityModel, CallbackInfo ci) {
-        
-        if(partMap.size() == 0){
+        if (partMap.size() == 0) {
             partMap.put(EquipmentSlot.HEAD, ArmorModelAPI.VANILLA_HELMET);
             partMap.put(EquipmentSlot.CHEST, ArmorModelAPI.VANILLA_CHESTPLATE);
             partMap.put(EquipmentSlot.LEGS, ArmorModelAPI.VANILLA_LEGGINGS);
             partMap.put(EquipmentSlot.FEET, ArmorModelAPI.VANILLA_BOOTS);
         }
-        
+
         String partID = partMap.get(equipmentSlot);
-        
-        if(partID != null) {
+
+        if (partID != null) {
             PlayerData data = FiguraMod.currentData;
-            
-            if(data != null) {
-                if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
-                    figura$applyPartCustomization(partID, bipedEntityModel.head);
-                    figura$applyPartCustomization(partID, bipedEntityModel.helmet);
-                    figura$applyPartCustomization(partID, bipedEntityModel.torso);
-                    figura$applyPartCustomization(partID, bipedEntityModel.leftArm);
-                    figura$applyPartCustomization(partID, bipedEntityModel.leftLeg);
-                    figura$applyPartCustomization(partID, bipedEntityModel.rightArm);
-                    figura$applyPartCustomization(partID, bipedEntityModel.rightLeg);
-                }
+
+            if (data != null && data.playerId.compareTo(livingEntity.getUuid()) == 0 && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+                figura$applyPartCustomization(partID, bipedEntityModel.head);
+                figura$applyPartCustomization(partID, bipedEntityModel.hat);
+                figura$applyPartCustomization(partID, bipedEntityModel.body);
+                figura$applyPartCustomization(partID, bipedEntityModel.leftArm);
+                figura$applyPartCustomization(partID, bipedEntityModel.leftLeg);
+                figura$applyPartCustomization(partID, bipedEntityModel.rightArm);
+                figura$applyPartCustomization(partID, bipedEntityModel.rightLeg);
             }
         }
-        
     }
 
     @Inject(at = @At("RETURN"), method = "renderArmor")
@@ -71,28 +66,26 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
 
     @Shadow
     @Override
-    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {
-        
-    }
+    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {}
 
-    public void figura$applyPartCustomization(String id, ModelPart part){
+    public void figura$applyPartCustomization(String id, ModelPart part) {
         PlayerData data = FiguraMod.currentData;
 
-        if(data != null && data.script != null && data.script.allCustomizations != null) {
+        if (data != null && data.script != null && data.script.allCustomizations != null) {
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 
-            if(customization != null) {
-                ((ModelPartAccess)part).figura$setPartCustomization(customization);
+            if (customization != null) {
+                ((ModelPartAccess) (Object) part).figura$setPartCustomization(customization);
                 figura$customizedParts.add(part);
             }
         }
     }
 
-    public void figura$clearAllPartCustomizations(){
+    public void figura$clearAllPartCustomizations() {
         for (ModelPart part : figura$customizedParts) {
-            ((ModelPartAccess)part).figura$setPartCustomization(null);
+            ((ModelPartAccess) (Object) part).figura$setPartCustomization(null);
         }
-        
+
         figura$customizedParts.clear();
     }
 }
