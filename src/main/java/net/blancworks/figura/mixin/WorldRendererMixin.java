@@ -42,15 +42,6 @@ public class WorldRendererMixin {
                     for (CustomModelPart part : data.model.worldParts) {
                         data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1.0f);
                     }
-
-                    /*
-                    while (!data.script.renderTasks.isEmpty()) {
-                        RendererAPI.RenderTask task = data.script.renderTasks.remove();
-                        matrices.push();
-                        data.model.leftToRender -= task.render(matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, 15728880, OverlayTexture.DEFAULT_UV,1,1,1,1, client);
-                        matrices.pop();
-                    }
-                    */
                 }
 
                 FiguraMod.clearRenderingData();

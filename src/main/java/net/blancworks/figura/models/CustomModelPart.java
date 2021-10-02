@@ -134,11 +134,17 @@ public class CustomModelPart {
         matrices.push();
         transformStack.push();
 
-        if (applyHiddenTransforms || canRender)
-            applyRenderingData(matrices, transformStack);
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, transformStack);
 
-        if (applyHiddenTransforms)
+            applyTransforms(matrices);
+            applyTransforms(transformStack);
+
             updateModelMatrices(transformStack);
+        } else if (canRender) {
+            applyTransforms(matrices);
+            applyTransforms(transformStack);
+        }
 
         //uv -> color -> alpha
         u += this.uOffset;
@@ -185,8 +191,12 @@ public class CustomModelPart {
 
         matrices.push();
 
-        if (applyHiddenTransforms || canRender)
-            applyRenderingData(matrices, new MatrixStack());
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, new MatrixStack());
+            applyTransforms(matrices);
+        } else if (canRender) {
+            applyTransforms(matrices);
+        }
 
         //uv -> color -> alpha -> shaders
         u += this.uOffset;
@@ -236,8 +246,12 @@ public class CustomModelPart {
 
         matrices.push();
 
-        if (applyHiddenTransforms || canRender)
-            applyRenderingData(matrices, new MatrixStack());
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, new MatrixStack());
+            applyTransforms(matrices);
+        } else if (canRender) {
+            applyTransforms(matrices);
+        }
 
         //render!
         if (canRender)
@@ -380,7 +394,17 @@ public class CustomModelPart {
         return complexity;
     }
 
-    public void applyRenderingData(MatrixStack matrices, MatrixStack transformStack) {
+    public void updateModelMatrices(MatrixStack stack) {
+        lastModelMatrix = stack.peek().getModel().copy();
+        lastNormalMatrix = stack.peek().getNormal().copy();
+
+        lastModelMatrixInverse = lastModelMatrix.copy();
+        lastModelMatrixInverse.invert();
+        lastNormalMatrixInverse = lastNormalMatrix.copy();
+        lastNormalMatrixInverse.invert();
+    }
+
+    public void applyVanillaTransforms(MatrixStack matrices, MatrixStack transformStack) {
         if (parentType != ParentType.None && parentType != ParentType.Model) {
             try {
                 PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
@@ -511,19 +535,6 @@ public class CustomModelPart {
                 e.printStackTrace();
             }
         }
-
-        applyTransforms(matrices);
-        applyTransforms(transformStack);
-    }
-
-    public void updateModelMatrices(MatrixStack stack) {
-        lastModelMatrix = stack.peek().getModel().copy();
-        lastNormalMatrix = stack.peek().getNormal().copy();
-
-        lastModelMatrixInverse = lastModelMatrix.copy();
-        lastModelMatrixInverse.invert();
-        lastNormalMatrixInverse = lastNormalMatrix.copy();
-        lastNormalMatrixInverse.invert();
     }
 
     public void applyTransforms(MatrixStack stack) {
