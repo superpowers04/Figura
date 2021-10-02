@@ -82,14 +82,14 @@ public class MetaAPI {
             set("getCurrentTickCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.tickInstructionCount);
+                    return LuaValue.valueOf(script.tickInstructionCount + script.damageInstructionCount);
                 }
             });
 
             set("getCurrentRenderCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.renderInstructionCount);
+                    return LuaValue.valueOf(script.renderInstructionCount + script.worldRenderInstructionCount);
                 }
             });
 

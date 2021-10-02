@@ -456,7 +456,7 @@ public class FiguraGuiScreen extends Screen {
                 modelStatusText.setStyle(textColors.get(modelSizeStatus))).append(statusDividerText)
                         .append(textureStatusText.setStyle(textColors.get(textureStatus))).append(statusDividerText)
                         .append(scriptStatusText.setStyle(textColors.get(scriptStatus))).append(statusDividerText)
-                        .append(backendStatusText.setStyle(textColors.get(NewFiguraNetworkManager.connectionStatus)))
+                        .append(backendStatusText.setStyle(textColors.get((int) NewFiguraNetworkManager.connectionStatus)))
         );
     }
 
