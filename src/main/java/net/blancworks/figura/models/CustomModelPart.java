@@ -6,6 +6,7 @@ import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.renderer.RenderTask;
 import net.fabricmc.fabric.api.util.NbtType;
@@ -35,14 +36,19 @@ public class CustomModelPart {
     public Vec3f scale = new Vec3f(1f, 1f, 1f);
     public Vec3f color = new Vec3f(1f, 1f, 1f);
 
-    //Offsets
-    public float uOffset = 0f;
-    public float vOffset = 0f;
-    public float texWidthOffset = 0f;
-    public float texHeightOffset = 0f;
-    public float texWidth = 0f;
-    public float texHeight = 0f;
+    //uv stuff
+    public Map<UV, uvData> UVCustomizations = Map.of(
+            UV.NORTH, new uvData(),
+            UV.SOUTH, new uvData(),
+            UV.EAST, new uvData(),
+            UV.WEST, new uvData(),
+            UV.UP, new uvData(),
+            UV.DOWN, new uvData()
+    );
+    public Vec2f texSize = new Vec2f(0f, 0f);
+    public Vec2f uvOffset = new Vec2f(0f, 0f);
 
+    //model properties
     public boolean visible = true;
     public boolean isHidden = false;
 
@@ -141,8 +147,8 @@ public class CustomModelPart {
         updateModelMatrices(transformStack);
 
         //uv -> color -> alpha
-        u += this.uOffset;
-        v += this.vOffset;
+        u += this.uvOffset.x;
+        v += this.uvOffset.y;
 
         Vec3f color = this.color.copy();
         color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
@@ -189,8 +195,8 @@ public class CustomModelPart {
         applyTransforms(matrices);
 
         //uv -> color -> alpha -> shaders
-        u += this.uOffset;
-        v += this.vOffset;
+        u += this.uvOffset.x;
+        v += this.uvOffset.y;
 
         Vec3f color = this.color.copy();
         color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
@@ -575,16 +581,15 @@ public class CustomModelPart {
     //Re-builds the mesh data for a custom model part.
     public void rebuild() {}
 
-    public void addVertex(Vec3f vert, float u, float v, Vec3f normal) {
-        this.vertexData.add(vert.getX() / 16.0f);
-        this.vertexData.add(vert.getY() / 16.0f);
-        this.vertexData.add(vert.getZ() / 16.0f);
-        this.vertexData.add(u);
-        this.vertexData.add(v);
-        this.vertexData.add(-normal.getX());
-        this.vertexData.add(-normal.getY());
-        this.vertexData.add(-normal.getZ());
-        this.vertexCount++;
+    public void addVertex(Vec3f vert, float u, float v, Vec3f normal, FloatList vertexData) {
+        vertexData.add(vert.getX() / 16.0f);
+        vertexData.add(vert.getY() / 16.0f);
+        vertexData.add(vert.getZ() / 16.0f);
+        vertexData.add(u);
+        vertexData.add(v);
+        vertexData.add(-normal.getX());
+        vertexData.add(-normal.getY());
+        vertexData.add(-normal.getZ());
     }
 
     public void readNbt(NbtCompound partNbt) {
@@ -762,6 +767,38 @@ public class CustomModelPart {
         Cape,
         Elytra,
         Resource
+    }
+
+    public enum UV {
+        ALL,
+        NORTH,
+        SOUTH,
+        WEST,
+        EAST,
+        UP,
+        DOWN
+    }
+
+    public static class uvData {
+        public Vec2f uvOffset, uvSize;
+
+        public void setUVOffset(Vec2f uvOffset) {
+            this.uvOffset = uvOffset;
+        }
+
+        public void setUVSize(Vec2f uvSize) {
+            this.uvSize = uvSize;
+        }
+    }
+
+    public void applyUVMods(LuaVector v) {
+        if (v != null) texSize = new Vec2f(v.x(), v.y());
+        rebuild();
+
+        children.forEach(child -> {
+            child.UVCustomizations = UVCustomizations;
+            child.applyUVMods(v);
+        });
     }
 
     //---------MODEL PART TYPES---------

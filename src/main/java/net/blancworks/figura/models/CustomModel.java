@@ -16,6 +16,7 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +34,7 @@ public class CustomModel extends FiguraAsset {
     public ArrayList<CustomModelPart> worldParts = new ArrayList<>();
     public ArrayList<CustomModelPart> skullParts = new ArrayList<>();
 
-    public float texWidth = 64, texHeight = 64;
+    public Vec2f defaultTextureSize = new Vec2f(0f, 0f);
 
     public int leftToRender = 0;
     public int lastComplexity = 0;
