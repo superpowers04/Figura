@@ -1,5 +1,7 @@
 package net.blancworks.figura.models;
 
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import it.unimi.dsi.fastutil.floats.FloatList;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtFloat;
 import net.minecraft.nbt.NbtList;
@@ -18,8 +20,8 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
     @Override
     public void rebuild() {
-        vertexData.clear();
-        vertexCount = 0;
+        FloatList vertexData = new FloatArrayList();
+        int vertexCount = 0;
 
         float inflate = 0;
         if (cuboidProperties.contains("inf")) inflate = cuboidProperties.getFloat("inf");
@@ -40,18 +42,18 @@ public class CustomModelPartCuboid extends CustomModelPart {
         to.add(inflate, inflate, inflate);
         to.add(mid);
 
-        if (texWidth == 0f)
-            texWidth = cuboidProperties.getFloat("tw");
-        if (texHeight == 0f)
-            texHeight = cuboidProperties.getFloat("th");
-
         //North
         if (cuboidProperties.contains("n")) {
             NbtCompound faceData = (NbtCompound) cuboidProperties.get("n");
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
-                v.add(0, 0, texWidthOffset, texHeightOffset);
+
+                uvData data = UVCustomizations.get(UV.NORTH);
+                if (data.uvOffset != null)
+                    v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
+                if (data.uvOffset != null)
+                    v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
 
@@ -67,8 +69,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
                         new Vec3f(-to.getX(), -to.getY(), from.getZ()),
                         new Vec3f(-from.getX(), -to.getY(), from.getZ()),
                         cornerUVs,
-                        texWidth, texHeight
+                        texSize.x, texSize.y,
+                        vertexData
                 );
+                vertexCount += 4;
             }
         }
 
@@ -78,7 +82,12 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
-                v.add(0, 0, texWidthOffset, texHeightOffset);
+
+                uvData data = UVCustomizations.get(UV.SOUTH);
+                if (data.uvOffset != null)
+                    v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
+                if (data.uvOffset != null)
+                    v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
 
@@ -94,8 +103,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
                         new Vec3f(-from.getX(), -to.getY(), to.getZ()),
                         new Vec3f(-to.getX(), -to.getY(), to.getZ()),
                         cornerUVs,
-                        texWidth, texHeight
+                        texSize.x, texSize.y,
+                        vertexData
                 );
+                vertexCount += 4;
             }
         }
 
@@ -105,7 +116,12 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
-                v.add(0, 0, texWidthOffset, texHeightOffset);
+
+                uvData data = UVCustomizations.get(UV.EAST);
+                if (data.uvOffset != null)
+                    v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
+                if (data.uvOffset != null)
+                    v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
 
@@ -121,8 +137,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
                         new Vec3f(-to.getX(), -to.getY(), to.getZ()),
                         new Vec3f(-to.getX(), -to.getY(), from.getZ()),
                         cornerUVs,
-                        texWidth, texHeight
+                        texSize.x, texSize.y,
+                        vertexData
                 );
+                vertexCount += 4;
             }
         }
 
@@ -132,7 +150,12 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
-                v.add(0, 0, texWidthOffset, texHeightOffset);
+
+                uvData data = UVCustomizations.get(UV.WEST);
+                if (data.uvOffset != null)
+                    v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
+                if (data.uvOffset != null)
+                    v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
 
@@ -148,8 +171,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
                         new Vec3f(-from.getX(), -to.getY(), from.getZ()),
                         new Vec3f(-from.getX(), -to.getY(), to.getZ()),
                         cornerUVs,
-                        texWidth, texHeight
+                        texSize.x, texSize.y,
+                        vertexData
                 );
+                vertexCount += 4;
             }
         }
 
@@ -159,7 +184,12 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
-                v.add(0, 0, texWidthOffset, texHeightOffset);
+
+                uvData data = UVCustomizations.get(UV.UP);
+                if (data.uvOffset != null)
+                    v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
+                if (data.uvOffset != null)
+                    v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
 
@@ -175,8 +205,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
                         new Vec3f(-from.getX(), -to.getY(), from.getZ()),
                         new Vec3f(-to.getX(), -to.getY(), from.getZ()),
                         cornerUVs,
-                        texWidth, texHeight
+                        texSize.x, texSize.y,
+                        vertexData
                 );
+                vertexCount += 4;
             }
         }
 
@@ -186,7 +218,12 @@ public class CustomModelPartCuboid extends CustomModelPart {
 
             if (faceData.contains("texture")) {
                 Vector4f v = v4fFromNbtList((NbtList) faceData.get("uv"));
-                v.add(0, 0, texWidthOffset, texHeightOffset);
+
+                uvData data = UVCustomizations.get(UV.DOWN);
+                if (data.uvOffset != null)
+                    v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
+                if (data.uvOffset != null)
+                    v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
 
@@ -202,10 +239,15 @@ public class CustomModelPartCuboid extends CustomModelPart {
                         new Vec3f(-from.getX(), -from.getY(), to.getZ()),
                         new Vec3f(-to.getX(), -from.getY(), to.getZ()),
                         cornerUVs,
-                        texWidth, texHeight
+                        texSize.x, texSize.y,
+                        vertexData
                 );
+                vertexCount += 4;
             }
         }
+
+        this.vertexData = vertexData;
+        this.vertexCount = vertexCount;
     }
 
     @Override
@@ -235,7 +277,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
         rebuild();
     }
 
-    public void generateFace(Vec3f a, Vec3f b, Vec3f c, Vec3f d, List<Vec2f> uv, float texWidth, float texHeight) {
+    public void generateFace(Vec3f a, Vec3f b, Vec3f c, Vec3f d, List<Vec2f> uv, float texWidth, float texHeight, FloatList vertexData) {
         Vec3f nA = b.copy();
         nA.subtract(a);
         Vec3f nB = c.copy();
@@ -243,10 +285,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         nA.cross(nB);
         nA.normalize();
 
-        addVertex(b, uv.get(0).x / texWidth, uv.get(0).y / texHeight, nA);
-        addVertex(a, uv.get(1).x / texWidth, uv.get(1).y / texHeight, nA);
-        addVertex(d, uv.get(2).x / texWidth, uv.get(2).y / texHeight, nA);
-        addVertex(c, uv.get(3).x / texWidth, uv.get(3).y / texHeight, nA);
+        addVertex(b, uv.get(0).x / texWidth, uv.get(0).y / texHeight, nA, vertexData);
+        addVertex(a, uv.get(1).x / texWidth, uv.get(1).y / texHeight, nA, vertexData);
+        addVertex(d, uv.get(2).x / texWidth, uv.get(2).y / texHeight, nA, vertexData);
+        addVertex(c, uv.get(3).x / texWidth, uv.get(3).y / texHeight, nA, vertexData);
     }
 
     @Override

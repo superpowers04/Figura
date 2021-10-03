@@ -8,6 +8,7 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.blancworks.figura.models.CustomModelPartMesh;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.math.Vector4f;
 import net.minecraft.nbt.*;
@@ -89,9 +90,8 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
         if(meta.has("model_format") && meta.get("model_format").getAsString().equals("skin"))
             overrideAsPlayerModel = true;
-        
-        retModel.texWidth = resolution.get("width").getAsFloat();
-        retModel.texHeight = resolution.get("height").getAsFloat();
+
+        retModel.defaultTextureSize = new Vec2f(resolution.get("width").getAsFloat(), resolution.get("height").getAsFloat());
 
         Map<UUID, JsonObject> elementsByUuid = sortElements(elements);
         Map<UUID, CustomModelPart> parsedParts = new Object2ObjectOpenHashMap<>();
@@ -231,9 +231,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             elementPart.rot = corrected;
         }
 
-
-        Vec3f size = to.copy();
-        size.subtract(from);
+        elementPart.texSize = target.defaultTextureSize;
 
         JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
 
@@ -254,8 +252,8 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             add(NbtFloat.of(to.getZ()));
         }});
 
-        cuboidPropertiesTag.put("tw", NbtFloat.of(target.texWidth));
-        cuboidPropertiesTag.put("th", NbtFloat.of(target.texHeight));
+        cuboidPropertiesTag.put("tw", NbtFloat.of(target.defaultTextureSize.x));
+        cuboidPropertiesTag.put("th", NbtFloat.of(target.defaultTextureSize.y));
 
         cuboidPropertiesTag.put("n", getNbtElementFromJsonElement(facesObject.get("north")));
         cuboidPropertiesTag.put("s", getNbtElementFromJsonElement(facesObject.get("south")));

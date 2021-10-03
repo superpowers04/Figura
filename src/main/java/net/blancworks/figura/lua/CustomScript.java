@@ -167,6 +167,20 @@ public class CustomScript extends FiguraAsset {
         scriptGlobals.set("loadfile", LuaValue.NIL);
         scriptGlobals.set("require", LuaValue.NIL);
 
+        //math funnies :3
+        scriptGlobals.get("math").set("lerp", new ThreeArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                return LuaNumber.valueOf(MathHelper.lerp(arg3.checknumber().tofloat(), arg1.checknumber().tofloat(), arg2.checknumber().tofloat()));
+            }
+        });
+        scriptGlobals.get("math").set("clamp", new ThreeArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                return LuaNumber.valueOf(MathHelper.clamp(arg1.checknumber().tofloat(), arg2.checknumber().tofloat(), arg3.checknumber().tofloat()));
+            }
+        });
+
         //Sets up the global values for the API and such in the script.
         setupGlobals();
         //Sets up events!

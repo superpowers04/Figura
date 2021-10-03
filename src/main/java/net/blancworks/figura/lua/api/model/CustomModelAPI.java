@@ -8,6 +8,7 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.math.Vector4f;
 import org.luaj.vm2.*;
@@ -127,37 +128,90 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("getRebuiltUV", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    try {
+                        CustomModelPart.UV uv = CustomModelPart.UV.valueOf(arg1.checkjstring());
+
+                        if (uv == CustomModelPart.UV.ALL)
+                            throw new LuaError("Cannot get UV data for ALL faces at once");
+
+                        CustomModelPart.uvData data = targetPart.UVCustomizations.get(uv);
+                        Vec2f offset = data.uvOffset;
+                        Vec2f size = data.uvSize;
+
+                        if (offset == null)
+                            offset = new Vec2f(0f, 0f);
+
+                        if (size == null)
+                            size = new Vec2f(0f, 0f);
+
+                        return LuaVector.of(new Vector4f(offset.x, offset.y, size.x - offset.x, size.y - offset.y));
+                    } catch (Exception ignored) {
+                        throw new LuaError("UV Type not found!");
+                    }
+                }
+            });
+
+            ret.set("rebuildUV", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    try {
+                        CustomModelPart.UV uv = CustomModelPart.UV.valueOf(arg1.checkjstring());
+
+                        LuaVector vec = LuaVector.checkOrNew(arg2);
+                        Vec2f offset = new Vec2f(vec.x(), vec.y());
+                        Vec2f size = new Vec2f(vec.z() + vec.x(), vec.w() + vec.y());
+
+                        if (uv == CustomModelPart.UV.ALL) {
+                            targetPart.UVCustomizations.forEach((key, value) -> {
+                                value.setUVOffset(offset);
+                                value.setUVSize(size);
+                            });
+                        } else {
+                            CustomModelPart.uvData data = targetPart.UVCustomizations.get(uv);
+                            data.setUVOffset(offset);
+                            data.setUVSize(size);
+                        }
+
+                        targetPart.applyUVMods(null);
+                    } catch (Exception ignored) {
+                        throw new LuaError("UV Type not found!");
+                    }
+                    return NIL;
+                }
+            });
+
+            ret.set("getTextureSize", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    Vec2f uv = targetPart.texSize;
+                    return LuaVector.of(uv);
+                }
+            });
+
+            ret.set("setTextureSize", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    targetPart.applyUVMods(LuaVector.checkOrNew(arg));
+                    return NIL;
+                }
+            });
+
             ret.set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vec3f uv = new Vec3f(targetPart.uOffset, targetPart.vOffset, 0f);
+                    Vec2f uv = targetPart.uvOffset;
                     return LuaVector.of(uv);
                 }
             });
 
             ret.set("setUV", new OneArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1) {
-                    LuaVector v = LuaVector.checkOrNew(arg1);
-                    targetPart.uOffset = (v.x() + 1) % 1;
-                    targetPart.vOffset = (v.y() + 1) % 1;
-                    return NIL;
-                }
-            });
-
-            ret.set("getUVSize", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    Vector4f uv = new Vector4f(targetPart.texWidthOffset, targetPart.texHeightOffset, targetPart.texWidth, targetPart.texHeight);
-                    return LuaVector.of(uv);
-                }
-            });
-
-            ret.set("setUVSize", new OneArgFunction() {
-                @Override
                 public LuaValue call(LuaValue arg) {
-                    LuaVector v = LuaVector.checkOrNew(arg);
-                    setTextureOffset(targetPart, v);
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    targetPart.uvOffset = new Vec2f(vec.x(), vec.y());
                     return NIL;
                 }
             });
@@ -367,16 +421,5 @@ public class CustomModelAPI {
             throw new LuaError("Not a CustomModelPart table!");
 
         return part;
-    }
-
-    public static void setTextureOffset(CustomModelPart part, LuaVector v) {
-        part.texWidthOffset = v.x();
-        part.texHeightOffset = v.y();
-        part.texWidth = v.z();
-        part.texHeight = v.w();
-
-        part.rebuild();
-
-        part.children.forEach(child -> setTextureOffset(child, v));
     }
 }
