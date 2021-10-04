@@ -1,7 +1,7 @@
 package net.blancworks.figura.lua.api.nameplate;
 
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.FiguraTextAccess;
@@ -266,7 +266,7 @@ public class NamePlateAPI {
 
         //add badges
         //font
-        Identifier font = (boolean) Config.entries.get("nameTagIcon").value ? FiguraMod.FIGURA_FONT : Style.DEFAULT_FONT_ID;
+        Identifier font = (boolean) Config.BADGE_AS_ICONS.value ? FiguraMod.FIGURA_FONT : Style.DEFAULT_FONT_ID;
         String badges = " ";
 
         //the mark
@@ -284,7 +284,7 @@ public class NamePlateAPI {
             badges += "✭";
 
         //append badges
-        if ((boolean) Config.entries.get("showBadges").value && !badges.equals(" ")) {
+        if ((boolean) Config.BADGES.value && !badges.equals(" ")) {
             //create badges text
             LiteralText badgesText = new LiteralText(badges);
 

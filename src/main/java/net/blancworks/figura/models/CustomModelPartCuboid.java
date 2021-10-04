@@ -42,6 +42,10 @@ public class CustomModelPartCuboid extends CustomModelPart {
         to.add(inflate, inflate, inflate);
         to.add(mid);
 
+        Vec2f texSize = this.texSize;
+        if (texSize == null)
+            texSize = new Vec2f(cuboidProperties.getFloat("tw"), cuboidProperties.getFloat("th"));
+
         //North
         if (cuboidProperties.contains("n")) {
             NbtCompound faceData = (NbtCompound) cuboidProperties.get("n");
@@ -52,7 +56,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                 uvData data = UVCustomizations.get(UV.NORTH);
                 if (data.uvOffset != null)
                     v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
-                if (data.uvOffset != null)
+                if (data.uvSize != null)
                     v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
@@ -86,7 +90,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                 uvData data = UVCustomizations.get(UV.SOUTH);
                 if (data.uvOffset != null)
                     v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
-                if (data.uvOffset != null)
+                if (data.uvSize != null)
                     v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
@@ -120,7 +124,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                 uvData data = UVCustomizations.get(UV.EAST);
                 if (data.uvOffset != null)
                     v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
-                if (data.uvOffset != null)
+                if (data.uvSize != null)
                     v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
@@ -154,7 +158,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                 uvData data = UVCustomizations.get(UV.WEST);
                 if (data.uvOffset != null)
                     v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
-                if (data.uvOffset != null)
+                if (data.uvSize != null)
                     v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
@@ -188,7 +192,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                 uvData data = UVCustomizations.get(UV.UP);
                 if (data.uvOffset != null)
                     v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
-                if (data.uvOffset != null)
+                if (data.uvSize != null)
                     v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;
@@ -222,7 +226,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
                 uvData data = UVCustomizations.get(UV.DOWN);
                 if (data.uvOffset != null)
                     v.set(data.uvOffset.x, data.uvOffset.y, v.getZ(), v.getW());
-                if (data.uvOffset != null)
+                if (data.uvSize != null)
                     v.set(v.getX(), v.getY(), data.uvSize.x, data.uvSize.y);
 
                 float rotation = 0;

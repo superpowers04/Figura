@@ -1,6 +1,6 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
@@ -28,7 +28,7 @@ public class ChatHudListenerMixin {
 
     @Inject(method = "onChatMessage", at = @At("HEAD"))
     private void onChatMessage(MessageType type, Text message, UUID senderUuid, CallbackInfo ci) {
-        if (!(boolean) Config.entries.get("chatMods").value)
+        if (!(boolean) Config.CHAT_NAMEPLATE_MODS.value)
             return;
 
         String playerName = "";

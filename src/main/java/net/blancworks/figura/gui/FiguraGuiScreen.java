@@ -1,10 +1,11 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.config.ConfigManager.Config;
+import net.blancworks.figura.config.ConfigScreen;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
 import net.blancworks.figura.gui.widgets.ModelFileListWidget;
 import net.blancworks.figura.gui.widgets.TexturedButtonWidget;
@@ -34,7 +35,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -63,11 +67,11 @@ public class FiguraGuiScreen extends Screen {
         new TranslatableText("gui.figura.button.tooltip.uploadlocaltwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red")))
     );
 
-    public static final Map<Integer, Style> textColors = Map.of(
-        0, Style.EMPTY.withColor(Formatting.WHITE),
-        1, Style.EMPTY.withColor(Formatting.RED),
-        2, Style.EMPTY.withColor(Formatting.YELLOW),
-        3, Style.EMPTY.withColor(Formatting.GREEN)
+    public static final List<Style> textColors = List.of(
+        Style.EMPTY.withColor(Formatting.WHITE),
+        Style.EMPTY.withColor(Formatting.RED),
+        Style.EMPTY.withColor(Formatting.YELLOW),
+        Style.EMPTY.withColor(Formatting.GREEN)
     );
 
     public static final Text statusDividerText = new LiteralText(" | ").setStyle(textColors.get(0));
@@ -137,8 +141,8 @@ public class FiguraGuiScreen extends Screen {
     public static boolean showOwnNametag = false;
 
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
-    public FiguraConfigScreen configScreen = new FiguraConfigScreen(this);
     public FiguraKeyBindsScreen keyBindsScreen = new FiguraKeyBindsScreen(this);
+    public ConfigScreen configScreen = new ConfigScreen(this);
 
     public CustomListWidgetState<Object> modelFileListState = new CustomListWidgetState<>();
     public ModelFileListWidget modelFileList;
@@ -742,7 +746,7 @@ public class FiguraGuiScreen extends Screen {
         entity.headYaw = entity.getYaw();
         entity.prevHeadYaw = entity.getYaw();
         entity.setInvisible(false);
-        showOwnNametag = (boolean) Config.entries.get("previewNameTag").value;
+        showOwnNametag = (boolean) Config.PREVIEW_NAMEPLATE.value;
         DiffuseLighting.method_34742();
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();

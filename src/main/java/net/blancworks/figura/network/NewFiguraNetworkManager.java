@@ -3,6 +3,7 @@ package net.blancworks.figura.network;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import net.blancworks.figura.*;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.messages.MessageRegistry;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
@@ -114,9 +115,9 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public void tickNetwork() {
-        if ((boolean) Config.entries.get("useLocalServer").value != lastNetworkState && currWebSocket != null) {
+        if ((boolean) Config.USE_LOCAL_SERVER.value != lastNetworkState && currWebSocket != null) {
             currWebSocket.disconnect();
-            lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
+            lastNetworkState = (boolean) Config.USE_LOCAL_SERVER.value;
         }
 
         if (jwtToken == null)
@@ -279,14 +280,14 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     //Minecraft authentication server URL
     public String authServerURL() {
-        if ((boolean) Config.entries.get("useLocalServer").value)
+        if ((boolean) Config.USE_LOCAL_SERVER.value)
             return "localhost";
         return "figuranew.blancworks.org";
     }
 
     //Main server for distributing files URL
     public String mainServerURL() {
-        if ((boolean) Config.entries.get("useLocalServer").value)
+        if ((boolean) Config.USE_LOCAL_SERVER.value)
             return "http://localhost:6050";
         return "https://figuranew.blancworks.org";
     }
@@ -296,8 +297,8 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //Ensures there is a connection open with the server, if there was not before.
     public CompletableFuture<Void> ensureConnection() {
 
-        if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value || socketFactory == null) {
-            localLastCheck = (boolean) Config.entries.get("useLocalServer").value;
+        if (localLastCheck != (boolean) Config.USE_LOCAL_SERVER.value || socketFactory == null) {
+            localLastCheck = (boolean) Config.USE_LOCAL_SERVER.value;
 
             socketFactory = new WebSocketFactory();
 
@@ -319,7 +320,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         if (currWebSocket == null || !currWebSocket.isOpen()) {
             try {
-                lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
+                lastNetworkState = (boolean) Config.USE_LOCAL_SERVER.value;
                 return openNewConnection();
             } catch (Exception e) {
                 e.printStackTrace();
