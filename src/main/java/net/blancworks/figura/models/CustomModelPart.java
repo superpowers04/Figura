@@ -3,7 +3,7 @@ package net.blancworks.figura.models;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -45,7 +45,7 @@ public class CustomModelPart {
             UV.UP, new uvData(),
             UV.DOWN, new uvData()
     );
-    public Vec2f texSize = new Vec2f(0f, 0f);
+    public Vec2f texSize;
     public Vec2f uvOffset = new Vec2f(0f, 0f);
 
     //model properties
@@ -84,6 +84,7 @@ public class CustomModelPart {
     public ArrayList<RenderTask> renderTasks = new ArrayList<>();
 
     public static boolean canRenderHitBox = false;
+    public static boolean applyHiddenTransforms = true;
     public static ParentType renderOnly = null;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
@@ -93,7 +94,7 @@ public class CustomModelPart {
             return 0;
 
         //hit boxes :3
-        canRenderHitBox = (boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+        canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
         //lets render boys!!
 
@@ -133,18 +134,23 @@ public class CustomModelPart {
         if (!this.visible || this.isHidden)
             return leftToRender;
 
-        if (renderOnly == null || this.parentType == renderOnly)
-            canRender = true;
-
         matrices.push();
         transformStack.push();
 
-        applyVanillaTransforms(matrices, transformStack);
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, transformStack);
 
-        applyTransforms(matrices);
-        applyTransforms(transformStack);
+            applyTransforms(matrices);
+            applyTransforms(transformStack);
 
-        updateModelMatrices(transformStack);
+            updateModelMatrices(transformStack);
+        } else if (canRender) {
+            applyTransforms(matrices);
+            applyTransforms(transformStack);
+        }
+
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
 
         //uv -> color -> alpha
         u += this.uvOffset.x;
@@ -186,13 +192,17 @@ public class CustomModelPart {
         if (!this.visible || this.isHidden)
             return leftToRender;
 
-        if (renderOnly == null || this.parentType == renderOnly)
-            canRender = true;
-
         matrices.push();
 
-        applyVanillaTransforms(matrices, new MatrixStack());
-        applyTransforms(matrices);
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, new MatrixStack());
+            applyTransforms(matrices);
+        } else if (canRender) {
+            applyTransforms(matrices);
+        }
+
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
 
         //uv -> color -> alpha -> shaders
         u += this.uvOffset.x;
@@ -237,13 +247,17 @@ public class CustomModelPart {
         if (!this.visible || this.isHidden)
             return leftToRender;
 
-        if (renderOnly == null || this.parentType == renderOnly)
-            canRender = true;
-
         matrices.push();
 
-        applyVanillaTransforms(matrices, new MatrixStack());
-        applyTransforms(matrices);
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, new MatrixStack());
+            applyTransforms(matrices);
+        } else if (canRender) {
+            applyTransforms(matrices);
+        }
+
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
 
         //render!
         if (canRender)
@@ -616,7 +630,9 @@ public class CustomModelPart {
         if (partNbt.contains("ptype")) {
             try {
                 this.parentType = ParentType.valueOf(partNbt.get("ptype").asString());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                this.parentType = ParentType.Model;
+            }
         }
         if (partNbt.contains("mmc")) {
             this.isMimicMode = ((NbtByte) partNbt.get("mmc")).byteValue() == 1;
@@ -633,7 +649,9 @@ public class CustomModelPart {
         if (partNbt.contains("stype")) {
             try {
                 this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                this.shaderType = ShaderType.None;
+            }
         }
 
         if (partNbt.contains("chld")) {

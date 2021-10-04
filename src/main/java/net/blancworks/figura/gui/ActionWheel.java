@@ -3,7 +3,7 @@ package net.blancworks.figura.gui;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
@@ -281,7 +281,7 @@ public class ActionWheel extends DrawableHelper {
         Vec2f textPos;
         int titleLen = this.client.textRenderer.getWidth(lines.get(0)) / 2;
 
-        switch ((int) Config.entries.get("actionWheelPos").value) {
+        switch ((int) Config.ACTION_WHEEL_TITLE_POS.value) {
             //top
             case 1: textPos = new Vec2f(pos.x - titleLen, (float) Math.max(pos.y - size / 2.0 - 10, 4)); break;
             //bottom

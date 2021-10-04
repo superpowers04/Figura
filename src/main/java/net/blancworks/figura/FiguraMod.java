@@ -2,6 +2,8 @@ package net.blancworks.figura;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import net.blancworks.figura.config.ConfigManager;
+import net.blancworks.figura.config.ConfigManager.*;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
@@ -109,7 +111,7 @@ public class FiguraMod implements ClientModInitializer {
     public void onInitializeClient() {
         FiguraLuaManager.initialize();
         PlayerTrustManager.init();
-        Config.initialize();
+        ConfigManager.initialize();
 
         try {
             SSLFixer.main();
@@ -126,11 +128,11 @@ public class FiguraMod implements ClientModInitializer {
             @Override
             public void setBoundKey(InputUtil.Key boundKey) {
                 super.setBoundKey(boundKey);
-                Config.entries.get("actionWheel").value = boundKey.getCode();
-                Config.saveConfig();
+                Config.ACTION_WHEEL_BUTTON.value = boundKey.getCode();
+                ConfigManager.saveConfig();
         }};
 
-        actionWheel.setBoundKey(InputUtil.Type.KEYSYM.createFromCode(((int) Config.entries.get("actionWheel").value)));
+        actionWheel.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.ACTION_WHEEL_BUTTON.value));
         KeyBindingRegistryImpl.registerKeyBinding(actionWheel);
 
         //Set up network
@@ -184,8 +186,19 @@ public class FiguraMod implements ClientModInitializer {
             e.printStackTrace();
         }
     }
-    
+
     public static Path getModContentDirectory() {
+        String userPath = (String) Config.MODEL_FOLDER_PATH.value;
+        Path p = userPath.isEmpty() ? getDefaultDirectory() : Path.of(userPath);
+        try {
+            Files.createDirectories(p);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return p;
+    }
+
+    public static Path getDefaultDirectory() {
         Path p = FabricLoader.getInstance().getGameDir().normalize().resolve("figura");
         try {
             Files.createDirectories(p);

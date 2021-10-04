@@ -1,6 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.blancworks.figura.gui.NewFiguraGuiScreen;
 import net.minecraft.client.gui.screen.GameMenuScreen;
@@ -33,7 +34,7 @@ public class GameMenuScreenMixin extends Screen {
         int x = 5;
         int y = 5;
 
-        int config = (int) Config.entries.get("buttonLocation").value;
+        int config = (int) Config.FIGURA_BUTTON_LOCATION.value;
         switch (config) {
             //top right
             case 1:
@@ -57,7 +58,7 @@ public class GameMenuScreenMixin extends Screen {
 
         if (config != 4) {
             try {
-                if (Config.modmenuButton()) {
+                if (ConfigManager.modmenuButton()) {
                     y -= 12;
                 }
             } catch (Exception ignored) {}

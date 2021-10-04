@@ -3,6 +3,7 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.assets.FiguraAsset;
+import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -117,6 +118,7 @@ public class CustomModel extends FiguraAsset {
         int prevCount = playerData.model.leftToRender;
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
 
+        //CustomModelPart.applyHiddenTransforms = false;
         for (CustomModelPart part : playerData.model.allParts) {
             if (arm == model.rightArm)
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.RightArm;
@@ -125,8 +127,40 @@ public class CustomModel extends FiguraAsset {
 
             playerData.model.leftToRender = part.render(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
         }
+        //CustomModelPart.applyHiddenTransforms = true;
 
         playerData.model.leftToRender = prevCount;
+    }
+
+    public boolean renderSkull(PlayerData data, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        if (!data.model.skullParts.isEmpty()) {
+            for (CustomModelPart modelPart : data.model.skullParts) {
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+
+                if (data.model.leftToRender == 0)
+                    break;
+            }
+
+            return true;
+        }
+        else {
+            CustomModelPart.applyHiddenTransforms = false;
+            for (CustomModelPart modelPart : data.model.allParts) {
+                CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+
+                if (data.model.leftToRender == 0)
+                    break;
+            }
+            CustomModelPart.applyHiddenTransforms = true;
+
+            if (data.script != null) {
+                VanillaModelPartCustomization customization = data.script.allCustomizations.get(VanillaModelAPI.VANILLA_HEAD);
+                return customization != null && customization.visible != null && !customization.visible;
+            }
+        }
+
+        return false;
     }
 
     public void writeNbt(NbtCompound nbt) {

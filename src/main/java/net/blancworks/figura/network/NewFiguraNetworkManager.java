@@ -2,10 +2,8 @@ package net.blancworks.figura.network;
 
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketFactory;
-import net.blancworks.figura.Config;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.LocalPlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.*;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.messages.MessageRegistry;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
@@ -16,7 +14,7 @@ import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarHashMessa
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarMessageSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
@@ -27,7 +25,7 @@ import net.minecraft.text.Text;
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -117,9 +115,9 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public void tickNetwork() {
-        if ((boolean) Config.entries.get("useLocalServer").value != lastNetworkState && currWebSocket != null) {
+        if ((boolean) Config.USE_LOCAL_SERVER.value != lastNetworkState && currWebSocket != null) {
             currWebSocket.disconnect();
-            lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
+            lastNetworkState = (boolean) Config.USE_LOCAL_SERVER.value;
         }
 
         if (jwtToken == null)
@@ -187,7 +185,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 data.isLocalAvatar = false;
 
                 //get nbt
-                CompoundTag nbt = new CompoundTag();
+                NbtCompound nbt = new NbtCompound();
                 if (data.modelData != null && !data.modelData.isEmpty())
                     nbt = data.modelData;
                 else
@@ -282,14 +280,14 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     //Minecraft authentication server URL
     public String authServerURL() {
-        if ((boolean) Config.entries.get("useLocalServer").value)
+        if ((boolean) Config.USE_LOCAL_SERVER.value)
             return "localhost";
         return "figuranew.blancworks.org";
     }
 
     //Main server for distributing files URL
     public String mainServerURL() {
-        if ((boolean) Config.entries.get("useLocalServer").value)
+        if ((boolean) Config.USE_LOCAL_SERVER.value)
             return "http://localhost:6050";
         return "https://figuranew.blancworks.org";
     }
@@ -299,8 +297,8 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //Ensures there is a connection open with the server, if there was not before.
     public CompletableFuture<Void> ensureConnection() {
 
-        if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value || socketFactory == null) {
-            localLastCheck = (boolean) Config.entries.get("useLocalServer").value;
+        if (localLastCheck != (boolean) Config.USE_LOCAL_SERVER.value || socketFactory == null) {
+            localLastCheck = (boolean) Config.USE_LOCAL_SERVER.value;
 
             socketFactory = new WebSocketFactory();
 
@@ -322,7 +320,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         if (currWebSocket == null || !currWebSocket.isOpen()) {
             try {
-                lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
+                lastNetworkState = (boolean) Config.USE_LOCAL_SERVER.value;
                 return openNewConnection();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -397,10 +395,10 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             connectionStatus = 2;
 
             String address = authServerURL();
-            InetAddress inetAddress = InetAddress.getByName(address);
+            InetSocketAddress inetAddress = new InetSocketAddress(address, 25565);
 
             //Create new connection
-            ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
+            ClientConnection connection = ClientConnection.connect(inetAddress, true);
 
             CompletableFuture<Void> disconnectedFuture = new CompletableFuture<>();
 

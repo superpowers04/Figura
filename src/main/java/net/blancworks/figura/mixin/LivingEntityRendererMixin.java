@@ -1,6 +1,6 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -29,7 +29,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
         else if (!MinecraftClient.isHudEnabled()) {
             cir.setReturnValue(false);
         }
-        else if ((Boolean) Config.entries.get("ownNameTag").value && livingEntity == MinecraftClient.getInstance().player) {
+        else if ((boolean) Config.RENDER_OWN_NAMEPLATE.value && livingEntity == MinecraftClient.getInstance().player) {
             cir.setReturnValue(true);
         }
     }

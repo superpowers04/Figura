@@ -2,7 +2,7 @@ package net.blancworks.figura.network;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -429,14 +429,14 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     //figura.blancworks.org for proper online use.
     //TODO - Add support for a server list later for people who want to have their own avatar servers
     private String getServerAddress() {
-        if ((boolean) Config.entries.get("useLocalServer").value) {
+        if ((boolean) Config.USE_LOCAL_SERVER.value) {
             return "localhost:5001";
         }
         return "figura.blancworks.org";
     }
 
     private String getMinecraftAuthServerAddress() {
-        if ((boolean) Config.entries.get("useLocalServer").value) {
+        if ((boolean) Config.USE_LOCAL_SERVER.value) {
             return "localhost";
         }
         return "mc.blancworks.org";

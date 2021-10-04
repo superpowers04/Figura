@@ -1,20 +1,22 @@
-package net.blancworks.figura.gui.widgets;
+package net.blancworks.figura.config;
 
-import net.blancworks.figura.Config;
-import net.blancworks.figura.Config.ConfigEntry;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.gui.FiguraConfigScreen;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.*;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.MathHelper;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +25,7 @@ import java.util.function.Predicate;
 public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> {
 
     //screen
-    private final FiguraConfigScreen parent;
+    private final ConfigScreen parent;
 
     //focused binding
     public KeyBinding focusedBinding;
@@ -32,76 +34,34 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     public static final Predicate<String> ANY = s -> true;
     public static final Predicate<String> INT = s -> s.matches("^[\\-+]?[0-9]*$");
     public static final Predicate<String> FLOAT = s -> s.matches("[\\-+]?[0-9]*(\\.[0-9]+)?") || s.endsWith(".") || s.isEmpty();
+    public static final Predicate<String> HEX_COLOR = s -> s.matches("^[#]?[0-9a-fA-F]{0,6}$");
+    public static final Predicate<String> FOLDER_PATH = s -> s.isBlank() || Path.of(s.trim()).toFile().isDirectory();
 
-    public ConfigListWidget(FiguraConfigScreen parent, MinecraftClient client) {
+    public enum EntryType {
+        CATEGORY,
+        BOOLEAN,
+        ENUM,
+        INPUT,
+        KEYBIND
+    }
+
+    public ConfigListWidget(ConfigScreen parent, MinecraftClient client) {
         super(client, parent.width + 45, parent.height, 43, parent.height - 32, 20);
         this.parent = parent;
+    }
 
-        //category title
-        this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.nametag")));
+    public void addEntry(EntryType type, Object... data) {
+        Entry entry;
+        switch (type) {
+            case CATEGORY -> entry = new CategoryEntry((Text) data[0]);
+            case BOOLEAN -> entry = new BooleanEntry((Text) data[0], (Text) data[1], (Config) data[2]);
+            case ENUM -> entry = new EnumEntry((Text) data[0], (Text) data[1], (Config) data[2], (List<Text>) data[3]);
+            case INPUT -> entry = new InputEntry((Text) data[0], (Text) data[1], (Config) data[2], (Predicate<String>) data[3]);
+            case KEYBIND -> entry = new KeyBindEntry((Text) data[0], (Text) data[1], (Config) data[2], (KeyBinding) data[3]);
+            default -> entry = null;
+        }
 
-        //entries
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.previewnametag"), new TranslatableText("gui.figura.config.tooltip.previewnametag"), Config.entries.get("previewNameTag")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.nametagmods"), new TranslatableText("gui.figura.config.tooltip.nametagmods"), Config.entries.get("nameTagMods")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.showbadges"), new TranslatableText("gui.figura.config.tooltip.showbadges"), Config.entries.get("showBadges")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.chatmods"), new TranslatableText("gui.figura.config.tooltip.chatmods"), Config.entries.get("chatMods")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.listmods"), new TranslatableText("gui.figura.config.tooltip.listmods"), Config.entries.get("listMods")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(
-                new TranslatableText("gui.figura.config.nametagicon"),
-                new TranslatableText("gui.figura.config.tooltip.nametagicon", new LiteralText("△").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT))),
-                Config.entries.get("nameTagIcon"))
-        );
-
-        //category title
-        this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.misc")));
-
-        //entries
-        List<Text> buttonLocationEntries = Arrays.asList(
-                new TranslatableText("gui.figura.config.buttonlocation.topleft"),
-                new TranslatableText("gui.figura.config.buttonlocation.topright"),
-                new TranslatableText("gui.figura.config.buttonlocation.bottomleft"),
-                new TranslatableText("gui.figura.config.buttonlocation.bottomright"),
-                new TranslatableText("gui.figura.config.buttonlocation.icon")
-        );
-        this.addEntry(new EnumEntry(new TranslatableText("gui.figura.config.buttonlocation"), new TranslatableText("gui.figura.config.tooltip.buttonlocation"), Config.entries.get("buttonLocation"), buttonLocationEntries));
-
-        List<Text> scriptLogEntries = Arrays.asList(
-                new TranslatableText("gui.figura.config.scriptlog.console_chat"),
-                new TranslatableText("gui.figura.config.scriptlog.console"),
-                new TranslatableText("gui.figura.config.scriptlog.chat")
-        );
-        this.addEntry(new EnumEntry(new TranslatableText("gui.figura.config.scriptlog"), new TranslatableText("gui.figura.config.tooltip.scriptlog"), Config.entries.get("scriptLog"), scriptLogEntries));
-
-
-        //category title
-        this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.actionwheel")));
-
-        //entries
-        this.addEntry(new KeyBindEntry(new TranslatableText("key.figura.actionwheel"), new TranslatableText("key.figura.tooltip.actionwheel"), Config.entries.get("actionWheel"), FiguraMod.actionWheel));
-
-        List<Text> actionWheelEntries = Arrays.asList(
-                new TranslatableText("gui.figura.config.actionwheelpos.mouse"),
-                new TranslatableText("gui.figura.config.actionwheelpos.top"),
-                new TranslatableText("gui.figura.config.actionwheelpos.bottom"),
-                new TranslatableText("gui.figura.config.actionwheelpos.center")
-        );
-        this.addEntry(new EnumEntry(new TranslatableText("gui.figura.config.actionwheelpos"), new TranslatableText("gui.figura.config.tooltip.actionwheelpos"), Config.entries.get("actionWheelPos"), actionWheelEntries));
-
-
-        //category title
-        this.addEntry(new ConfigListWidget.CategoryEntry(new TranslatableText("gui.figura.config.dev").formatted(Formatting.RED)));
-
-        //entries
-        //this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.usenewnetwork"), new TranslatableText("gui.figura.config.tooltip.usenewnetwork"), Config.entries.get("useNewNetwork")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.uselocalserver"), new TranslatableText("gui.figura.config.tooltip.uselocalserver"), Config.entries.get("useLocalServer")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.formatscript"), new TranslatableText("gui.figura.config.tooltip.formatscript"), Config.entries.get("formatScript")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.logothers"), new TranslatableText("gui.figura.config.tooltip.logothers"), Config.entries.get("logOthers")));
-        this.addEntry(new ConfigListWidget.BooleanEntry(
-                new TranslatableText("gui.figura.config.partshitbox"),
-                new TranslatableText("gui.figura.config.tooltip.partshitbox", new TranslatableText("gui.figura.config.tooltip.partshitbox.cubes").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xff72b7))), new TranslatableText("gui.figura.config.tooltip.partshitbox.groups").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xaff2ff)))),
-                Config.entries.get("partsHitBox")
-        ));
-        this.addEntry(new ConfigListWidget.BooleanEntry(new TranslatableText("gui.figura.config.ownnametag"), new TranslatableText("gui.figura.config.tooltip.ownnametag"), Config.entries.get("ownNameTag")));
+        this.addEntry(entry);
     }
 
     @Override
@@ -117,8 +77,10 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         this.children().forEach(entry -> {
-            if (entry instanceof InputEntry) {
-                ((InputEntry) entry).field.setTextFieldFocused(((InputEntry) entry).field.isMouseOver(mouseX, mouseY));
+            if (entry instanceof InputEntry inputEntry) {
+                inputEntry.field.setTextFieldFocused(inputEntry.field.isMouseOver(mouseX, mouseY));
+                if (inputEntry.field.isFocused())
+                    inputEntry.field.setSelectionEnd(0);
             }
         });
         return super.mouseClicked(mouseX, mouseY, button);
@@ -137,7 +99,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
             Text text = this.text;
             int textWidth = ConfigListWidget.this.client.textRenderer.getWidth(this.text);
-            float xPos = (float)(ConfigListWidget.this.client.currentScreen.width / 2 - textWidth / 2);
+            float xPos = (float) (ConfigListWidget.this.client.currentScreen.width / 2 - textWidth / 2);
             int yPos = y + entryHeight;
             textRenderer.draw(matrices, text, xPos, (float)(yPos - 9 - 1), 16777215);
         }
@@ -150,11 +112,16 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         public List<? extends Element> children() {
             return Collections.emptyList();
         }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
+            return Collections.emptyList();
+        }
     }
 
     public class BooleanEntry extends Entry {
         //entry
-        private final ConfigEntry<Boolean> config;
+        private final Config config;
 
         //values
         private final Text display;
@@ -165,14 +132,14 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         private final ButtonWidget toggle;
         private final ButtonWidget reset;
 
-        public BooleanEntry(Text display, Text tooltip, ConfigEntry<Boolean> config) {
+        public BooleanEntry(Text display, Text tooltip, Config config) {
             this.display = display;
             this.tooltip = tooltip;
             this.config = config;
-            this.initValue = config.value;
+            this.initValue = (boolean) config.value;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> config.configValue = !config.configValue);
+            this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> config.configValue = !(boolean) config.configValue);
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
@@ -193,11 +160,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             //toggle button
             this.toggle.x = x + 165;
             this.toggle.y = y;
-            this.toggle.setMessage(new TranslatableText("gui." + (this.config.configValue ? "yes" : "no")));
+            this.toggle.setMessage(new TranslatableText("gui." + ((boolean) this.config.configValue ? "yes" : "no")));
 
             //if setting is changed
-            if (this.config.configValue != this.initValue)
-                this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(Formatting.AQUA));
+            if ((boolean) this.config.configValue != this.initValue)
+                this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(ConfigManager.ACCENT_COLOR));
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
 
@@ -216,6 +183,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
+        public List<? extends Selectable> selectableChildren() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             return this.toggle.mouseClicked(mouseX, mouseY, button) || this.reset.mouseClicked(mouseX, mouseY, button);
         }
@@ -228,7 +200,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
     public class EnumEntry extends Entry {
         //entry
-        private final ConfigEntry<Integer> config;
+        private final Config config;
 
         //values
         private final Text display;
@@ -240,15 +212,15 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         private final ButtonWidget toggle;
         private final ButtonWidget reset;
 
-        public EnumEntry(Text display, Text tooltip, ConfigEntry<Integer> config, List<Text> states) {
+        public EnumEntry(Text display, Text tooltip, Config config, List<Text> states) {
             this.display = display;
             this.tooltip = tooltip;
             this.config = config;
-            this.initValue = config.value;
+            this.initValue = (int) config.value;
             this.states = states;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> config.configValue = (config.configValue + 1) % states.size());
+            this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> config.configValue = (int) config.configValue + 1);
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
@@ -269,11 +241,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             //toggle button
             this.toggle.x = x + 165;
             this.toggle.y = y;
-            this.toggle.setMessage(states.get(this.config.configValue));
+            this.toggle.setMessage(states.get((int) this.config.configValue % states.size()));
 
             //if setting is changed
-            if (this.config.configValue != this.initValue)
-                this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(Formatting.AQUA));
+            if ((int) this.config.configValue != this.initValue)
+                this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(ConfigManager.ACCENT_COLOR));
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
 
@@ -292,6 +264,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
+        public List<? extends Selectable> selectableChildren() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             return this.toggle.mouseClicked(mouseX, mouseY, button) || this.reset.mouseClicked(mouseX, mouseY, button);
         }
@@ -304,7 +281,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
     public class InputEntry extends Entry {
         //entry
-        private final ConfigEntry config;
+        private final Config config;
 
         //values
         private final Text display;
@@ -315,17 +292,25 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         private final TextFieldWidget field;
         private final ButtonWidget reset;
 
-        public InputEntry(Text display, Text tooltip, ConfigEntry config, Predicate<String> validator) {
+        private final Predicate<String> validator;
+
+        public InputEntry(Text display, Text tooltip, Config config, Predicate<String> validator) {
             this.display = display;
             this.tooltip = tooltip;
             this.config = config;
             this.initValue = config.value;
+            this.validator = validator;
 
             //field
             this.field = new TextFieldWidget(ConfigListWidget.this.client.textRenderer, 0, 0, 70, 16, new LiteralText(config.configValue + ""));
-            this.field.setChangedListener((fieldText) -> config.configValue = fieldText);
+            this.field.setChangedListener((fieldText) -> {
+                // Only write config value if it's valid
+                if (validator.test(fieldText))
+                    config.configValue = fieldText;
+            });
+            this.field.setMaxLength(1000);
             this.field.setText(config.configValue + "");
-            this.field.setTextPredicate(validator);
+            this.field.setCursorToStart();
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {
@@ -347,33 +332,50 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.reset.render(matrices, mouseX, mouseY, tickDelta);
 
             //text field
-            this.field.x = x + 167;
             this.field.y = y + 2;
+
+            //focused size
+            int extraWidth = 0;
+            if (this.field.isFocused() && !field.getText().isBlank())
+                extraWidth = MathHelper.clamp(textRenderer.getWidth(field.getText()) - 50, 0, 167);
+
+            //set size
+            this.field.setWidth(70 + extraWidth);
+            this.field.x = x + 167 - extraWidth;
+
+            //render overlay text
+            if (isMouseOver(mouseX, mouseY) && mouseX < x + textRenderer.getWidth(this.display.getString())) {
+                matrices.push();
+                matrices.translate(0, 0, 599);
+                parent.renderTooltip(matrices, this.tooltip, mouseX, mouseY);
+                matrices.pop();
+            }
 
             //if setting is changed
             if (!this.config.configValue.equals(this.initValue + ""))
                 try {
                     this.config.defaultValue.getClass().getConstructor(new Class[] {String.class}).newInstance(this.config.configValue);
-                    this.field.setEditableColor(Formatting.AQUA.getColorValue());
+                    this.field.setEditableColor(ConfigManager.ACCENT_COLOR.getColorValue());
                 } catch (Exception e) {
                     this.field.setEditableColor(Formatting.RED.getColorValue());
                 }
             else
                 this.field.setEditableColor(Formatting.WHITE.getColorValue());
 
-            this.field.render(matrices, mouseX, mouseY, tickDelta);
-
-            //overlay text
-            if (isMouseOver(mouseX, mouseY) && mouseX < x + 165) {
-                matrices.push();
-                matrices.translate(0, 0, 599);
-                parent.renderTooltip(matrices, this.tooltip, mouseX, mouseY);
-                matrices.pop();
+            if (!validator.test(field.getText())) {
+                this.field.setEditableColor(Formatting.RED.getColorValue());
             }
+
+            this.field.render(matrices, mouseX, mouseY, tickDelta);
         }
 
         @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.field, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.field, this.reset);
         }
 
@@ -398,7 +400,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
     public class KeyBindEntry extends Entry {
         //entry
-        private final ConfigEntry<Integer> config;
+        private final Config config;
 
         //values
         private final Text display;
@@ -409,7 +411,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         private final ButtonWidget toggle;
         private final ButtonWidget reset;
 
-        public KeyBindEntry(Text display, Text tooltip, ConfigEntry<Integer> config, KeyBinding binding) {
+        public KeyBindEntry(Text display, Text tooltip, Config config, KeyBinding binding) {
             this.display = display;
             this.tooltip = tooltip;
             this.config = config;
@@ -443,7 +445,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.toggle.setMessage(this.binding.getBoundKeyLocalizedText());
 
             if (focusedBinding == this.binding) {
-                this.toggle.setMessage((new LiteralText("> ")).append(this.toggle.getMessage().shallowCopy().formatted(Formatting.AQUA)).append(" <").formatted(Formatting.AQUA));
+                this.toggle.setMessage((new LiteralText("> ")).append(this.toggle.getMessage().shallowCopy().formatted(ConfigManager.ACCENT_COLOR)).append(" <").formatted(ConfigManager.ACCENT_COLOR));
             }
             else if (!this.binding.isUnbound()) {
                 for (KeyBinding key : MinecraftClient.getInstance().options.keysAll) {
@@ -467,6 +469,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
+            return Arrays.asList(this.toggle, this.reset);
+        }
+
+        @Override
+        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

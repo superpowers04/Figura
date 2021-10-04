@@ -4,11 +4,9 @@ import com.mojang.authlib.GameProfile;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.block.SkullBlock;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.SkullBlockEntityModel;
@@ -29,7 +27,7 @@ public abstract class SkullBlockEntityRendererMixin {
     @Inject(method = "renderSkull", at = @At(value = "HEAD"), cancellable = true)
     private static void renderSkull(Direction direction, float yaw, float animationProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, SkullBlockEntityModel model, RenderLayer renderLayer, CallbackInfo ci) {
         PlayerData data = FiguraMod.currentData;
-        if (data == null || data.model == null || data.model.skullParts.isEmpty() || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        if (data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
             return;
 
         matrices.push();
@@ -43,14 +41,9 @@ public abstract class SkullBlockEntityRendererMixin {
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(yaw));
 
         //render skull :3
-        for (CustomModelPart modelPart : data.model.skullParts) {
-            data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+        if (data.model.renderSkull(data, matrices, vertexConsumers, light))
+            ci.cancel();
 
-            if (data.model.leftToRender == 0)
-                break;
-        }
-
-        ci.cancel();
         matrices.pop();
     }
 

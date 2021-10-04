@@ -1,6 +1,6 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
@@ -24,7 +24,7 @@ public class PlayerListHudMixin {
     private void getPlayerName(PlayerListEntry entry, CallbackInfoReturnable<Text> cir) {
         Text text = cir.getReturnValue();
 
-        if ((boolean) Config.entries.get("listMods").value) {
+        if ((boolean) Config.LIST_NAMEPLATE_MODS.value) {
             UUID uuid = entry.getProfile().getId();
             String playerName = entry.getProfile().getName();
 
