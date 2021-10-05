@@ -5,7 +5,8 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import org.luaj.vm2.Lua;
+import net.minecraft.util.math.Vec3f;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -35,8 +36,7 @@ public class VectorAPI {
             set("of", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    arg.checktable();
-                    return LuaVector.of((LuaTable)arg);
+                    return LuaVector.of(arg.checktable());
                 }
             });
 
@@ -45,8 +45,7 @@ public class VectorAPI {
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
                     LuaVector a = LuaVector.checkOrNew(arg1);
                     LuaVector b = LuaVector.checkOrNew(arg2);
-                    arg3.checknumber();
-                    return lerp(a, b, arg3.tofloat());
+                    return lerp(a, b, arg3.checknumber().tofloat());
                 }
             });
 
@@ -98,6 +97,14 @@ public class VectorAPI {
                 }
             });
 
+            set("quaternionRotation", new ThreeArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                    return quaternionRotation(LuaVector.checkOrNew(arg1), arg2.checkjstring(), arg3.checknumber().tofloat());
+                }
+            });
+
+
             set("asTable", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -141,6 +148,23 @@ public class VectorAPI {
         c = (c << 8) + (int) (rgb.y() * 255);
         c = (c << 8) + (int) (rgb.z() * 255);
         return c;
+    }
+
+    public static LuaValue quaternionRotation(LuaVector vector, String mode, float angle) {
+        Vec3f vecMode;
+        switch (mode) {
+            case "POSITIVE_X" -> vecMode = Vec3f.POSITIVE_X;
+            case "NEGATIVE_X" -> vecMode = Vec3f.NEGATIVE_X;
+            case "POSITIVE_Y" -> vecMode = Vec3f.POSITIVE_Y;
+            case "NEGATIVE_Y" -> vecMode = Vec3f.NEGATIVE_Y;
+            case "POSITIVE_Z" -> vecMode = Vec3f.POSITIVE_Z;
+            case "NEGATIVE_Z" -> vecMode = Vec3f.NEGATIVE_Z;
+            default -> throw new LuaError("Rotation mode not found");
+        }
+
+        Vec3f xyz = vector.asV3f();
+        xyz.rotate(vecMode.getDegreesQuaternion(angle));
+        return LuaVector.of(xyz);
     }
 
     public static LuaTable toTable(LuaVector vector) {

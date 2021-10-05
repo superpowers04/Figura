@@ -530,9 +530,9 @@ public class CustomModelPart {
                         }});
                         case Camera -> {
                             Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
-                            Vec3f euler = rot.method_35828();
-                            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
+                            Vec3f euler = rot.toEulerXyzDegrees();
                             matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
+                            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
                             matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
                         }
                     }

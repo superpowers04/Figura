@@ -3,6 +3,7 @@ package net.blancworks.figura.gui;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.LocalPlayerData;
+import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.config.ConfigScreen;
@@ -56,22 +57,27 @@ public class FiguraGuiScreen extends Screen {
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
 
+    public static final List<Style> textColors = List.of(
+            Style.EMPTY.withColor(Formatting.WHITE),
+            Style.EMPTY.withColor(Formatting.RED),
+            Style.EMPTY.withColor(Formatting.YELLOW),
+            Style.EMPTY.withColor(Formatting.GREEN)
+    );
+
     public static final List<Text> deleteTooltip = List.of(
-        new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))),
-        new TranslatableText("gui.figura.button.tooltip.deleteavatartwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red")))
+        new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(textColors.get(1)),
+        new TranslatableText("gui.figura.button.tooltip.deleteavatartwo").setStyle(textColors.get(1))
     );
 
     public static final TranslatableText uploadTooltip = new TranslatableText("gui.figura.button.tooltip.upload");
     public static final List<Text> uploadLocalTooltip = List.of(
-        new TranslatableText("gui.figura.button.tooltip.uploadlocal").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))),
-        new TranslatableText("gui.figura.button.tooltip.uploadlocaltwo").setStyle(Style.EMPTY.withColor(TextColor.parse("red")))
+        new TranslatableText("gui.figura.button.tooltip.uploadlocal").setStyle(textColors.get(1)),
+        new TranslatableText("gui.figura.button.tooltip.uploadlocaltwo").setStyle(textColors.get(1))
     );
 
-    public static final List<Style> textColors = List.of(
-        Style.EMPTY.withColor(Formatting.WHITE),
-        Style.EMPTY.withColor(Formatting.RED),
-        Style.EMPTY.withColor(Formatting.YELLOW),
-        Style.EMPTY.withColor(Formatting.GREEN)
+    public static final List<Text> noConnectionTooltip = List.of(
+            new TranslatableText("gui.figura.button.tooltip.noconnection").setStyle(textColors.get(1)),
+            new TranslatableText("gui.figura.button.tooltip.noconnectiontwo").setStyle(textColors.get(1))
     );
 
     public static final Text statusDividerText = new LiteralText(" | ").setStyle(textColors.get(0));
@@ -109,6 +115,7 @@ public class FiguraGuiScreen extends Screen {
     private int textureStatus = 0;
     private int modelSizeStatus = 0;
     private int scriptStatus = 0;
+    private int connectionStatus = 0;
 
     private TextFieldWidget searchBox;
     private int paneY;
@@ -325,7 +332,7 @@ public class FiguraGuiScreen extends Screen {
 
         //backend, script, texture, model
         int currX = this.width;
-        drawTexture(matrices, currX -= 16, 88, 10 * NewFiguraNetworkManager.connectionStatus, 0, 10, 10, 40, 10);
+        drawTexture(matrices, currX -= 16, 88, 10 * connectionStatus, 0, 10, 10, 40, 10);
         drawTexture(matrices, currX -= 18, 88, 10 * scriptStatus, 0, 10, 10, 40, 10);
         drawTexture(matrices, currX -= 18, 88, 10 * textureStatus, 0, 10, 10, 40, 10);
         drawTexture(matrices, currX - 18, 88, 10 * modelSizeStatus, 0, 10, 10, 40, 10);
@@ -338,7 +345,7 @@ public class FiguraGuiScreen extends Screen {
             if (fileSizeText != null)
                 drawTextWithShadow(matrices, this.textRenderer, fileSizeText, this.width - this.textRenderer.getWidth(fileSizeText) - 8, currY += 12, 0xFFFFFF);
             if (modelComplexityText != null)
-                drawTextWithShadow(matrices, this.textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY += 12, 0xFFFFFF);
+                drawTextWithShadow(matrices, this.textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY + 12, 0xFFFFFF);
 
             //mod version
             drawCenteredText(matrices, client.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)), this.width / 2, this.height - 12, Formatting.DARK_GRAY.getColorValue());
@@ -347,7 +354,9 @@ public class FiguraGuiScreen extends Screen {
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
 
-        uploadButton.active = PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.isLocalAvatar;
+        boolean hasBackend = connectionStatus == 3;
+
+        uploadButton.active = PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.isLocalAvatar && hasBackend;
 
         boolean wasUploadActive = uploadButton.active;
         uploadButton.active = true;
@@ -358,7 +367,7 @@ public class FiguraGuiScreen extends Screen {
             if (wasUploadActive)
                 renderTooltip(matrices, uploadTooltip, mouseX, mouseY);
             else
-                renderTooltip(matrices, uploadLocalTooltip, mouseX, mouseY);
+                renderTooltip(matrices, hasBackend ? uploadLocalTooltip : noConnectionTooltip, mouseX, mouseY);
 
             matrices.pop();
         }
@@ -399,14 +408,11 @@ public class FiguraGuiScreen extends Screen {
             if (mouseOver) {
                 matrices.push();
                 matrices.translate(0, 0, 599);
-                renderTooltip(matrices, deleteTooltip, mouseX, mouseY);
+                renderTooltip(matrices, hasBackend ? deleteTooltip : noConnectionTooltip, mouseX, mouseY);
                 matrices.pop();
             }
         }
     }
-
-    private static final int FILESIZE_WARNING_THRESHOLD = 76800;
-    private static final int FILESIZE_LARGE_THRESHOLD = 102400;
 
     public void clickButton(String fileName) {
         PlayerDataManager.lastLoadedFileName = fileName;
@@ -455,12 +461,14 @@ public class FiguraGuiScreen extends Screen {
             scriptStatus = 0;
         }
 
+        connectionStatus = NewFiguraNetworkManager.connectionStatus;
+
         statusTooltip.set(0,
                 new LiteralText("").append(
                 modelStatusText.setStyle(textColors.get(modelSizeStatus))).append(statusDividerText)
                         .append(textureStatusText.setStyle(textColors.get(textureStatus))).append(statusDividerText)
                         .append(scriptStatusText.setStyle(textColors.get(scriptStatus))).append(statusDividerText)
-                        .append(backendStatusText.setStyle(textColors.get((int) NewFiguraNetworkManager.connectionStatus)))
+                        .append(backendStatusText.setStyle(textColors.get(connectionStatus)))
         );
     }
 
@@ -474,16 +482,16 @@ public class FiguraGuiScreen extends Screen {
 
         MutableText fsText = new TranslatableText("gui.figura.filesize", size);
 
-        if (fileSize >= FILESIZE_LARGE_THRESHOLD) {
-            fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("red")));
+        if (fileSize >= PlayerData.FILESIZE_LARGE_THRESHOLD) {
+            fsText.setStyle(textColors.get(1));
             modelSizeStatus = 1;
         }
-        else if (fileSize >= FILESIZE_WARNING_THRESHOLD) {
-            fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("orange")));
+        else if (fileSize >= PlayerData.FILESIZE_WARNING_THRESHOLD) {
+            fsText.setStyle(textColors.get(2));
             modelSizeStatus = 2;
         }
         else {
-            fsText.setStyle(fsText.getStyle().withColor(TextColor.parse("white")));
+            fsText.setStyle(textColors.get(0));
             modelSizeStatus = 3;
         }
 
@@ -678,7 +686,7 @@ public class FiguraGuiScreen extends Screen {
 
         if (keyCode == GLFW.GLFW_KEY_LEFT_SHIFT) {
             isHoldingShift = true;
-            deleteButton.active = true;
+            deleteButton.active = connectionStatus == 3;
         }
 
         return result;
