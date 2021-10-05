@@ -86,6 +86,11 @@ public class LocalPlayerData extends PlayerData {
         KeyBinding.updateKeysByCode();
         watchedFiles.clear();
 
+        if (fileName == null) {
+            packAvatarData();
+            return;
+        }
+
         //create root directory
         Path contentDirectory = getContentDirectory();
 
@@ -203,12 +208,7 @@ public class LocalPlayerData extends PlayerData {
             e.printStackTrace();
         }
 
-        //pack avatar on load
-        FiguraMod.doTask(() -> {
-            NbtCompound nbt = new NbtCompound();
-            this.modelData = this.writeNbt(nbt) ? nbt : null;
-            getFileSize();
-        });
+        packAvatarData();
     }
 
     public void loadModel(boolean model, HashMap<String, Path> paths, boolean isZip, ZipFile modelZip) {
@@ -428,5 +428,14 @@ public class LocalPlayerData extends PlayerData {
             loadModelFile(loadedName);
             isLocalAvatar = true;
         }
+    }
+
+    public void packAvatarData() {
+        //pack avatar on load
+        FiguraMod.doTask(() -> {
+            NbtCompound nbt = new NbtCompound();
+            this.modelData = this.writeNbt(nbt) ? nbt : null;
+            getFileSize();
+        });
     }
 }

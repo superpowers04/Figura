@@ -26,6 +26,7 @@
     "MinecraftClientMixin",
     "ModelPartMixin",
     "PlayerEntityMixin",
+    "PlayerEntityModelMixin",
     "PlayerEntityRendererMixin",
     "PlayerHeldItemFeatureRendererMixin",
     "PlayerListHudMixin",

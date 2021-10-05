@@ -4,6 +4,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
+import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.access.PlayerEntityRendererAccess;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
@@ -76,6 +77,9 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPants);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants);
+
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_CLOAK, ((PlayerEntityModelAccess) this.getModel()).getCloak());
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_EAR, ((PlayerEntityModelAccess) this.getModel()).getEar());
 
             if (data.script.customShadowSize != null) {
                 shadowRadius = data.script.customShadowSize;

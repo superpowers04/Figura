@@ -65,6 +65,9 @@ public class PlayerData {
 
     public boolean isLocalAvatar = true;
 
+    public static final int FILESIZE_WARNING_THRESHOLD = 76800;
+    public static final int FILESIZE_LARGE_THRESHOLD = 102400;
+
     public Identifier getTrustIdentifier() {
         if (trustIdentifier == null)
             trustIdentifier = new Identifier("players", playerId.toString());
