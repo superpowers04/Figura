@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.renderer;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.PlayerDataManager;
@@ -10,6 +11,7 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.renderer.RenderTask.*;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -22,6 +24,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
@@ -72,6 +75,22 @@ public class RendererAPI {
 
                     parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale));
 
+                    return NIL;
+                }
+            });
+
+            set("setUniform", new ThreeArgFunction() {
+                @Override
+                public LuaValue call(LuaValue layerName, LuaValue uniformName, LuaValue value) {
+                    try {
+                        RenderSystem.recordRenderCall(() -> {
+                            FiguraShader customShader = script.playerData.customVCP.getRenderLayer(layerName.checkjstring()).getShader();
+                            if (customShader != null)
+                                customShader.setUniformFromLua(uniformName, value);
+                        });
+                    } catch (Exception ignored) {
+                        ignored.printStackTrace();
+                    }
                     return NIL;
                 }
             });

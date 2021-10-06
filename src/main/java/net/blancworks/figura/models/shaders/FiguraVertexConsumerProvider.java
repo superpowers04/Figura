@@ -25,7 +25,7 @@ import java.util.function.Supplier;
 public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immediate {
 
     private static final ArrayList<String> defaultTextures;
-    private final Map<String, RenderLayer> stringLayerMap = new HashMap<>();
+    private final Map<String, FiguraRenderLayer> stringLayerMap = new HashMap<>();
 
     protected FiguraVertexConsumerProvider(BufferBuilder fallbackBuffer, Map<RenderLayer, BufferBuilder> layerBuilderMap) {
         super(fallbackBuffer, layerBuilderMap);
@@ -54,7 +54,7 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
         return getBuffer(renderLayer, backup);
     }
 
-    public RenderLayer getRenderLayer(String name) {
+    public FiguraRenderLayer getRenderLayer(String name) {
         return stringLayerMap.get(name);
     }
 
@@ -117,7 +117,8 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
                 //Create the shader
                 CompletableFuture<Shader> shader = new CompletableFuture<>();
-                if (vanillaShaderMap.containsKey(shaderStr)) {
+                boolean isVanillaShader = vanillaShaderMap.containsKey(shaderStr);
+                if (isVanillaShader) {
                     //The chosen shader is a vanilla shader, so get it from this map.
                     shader.complete(vanillaShaderMap.get(shaderStr).get());
                 } else {
@@ -275,7 +276,12 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                 };
 
                 //Now we have everything we need to actually construct the RenderLayer.
-                RenderLayer renderLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw);
+                FiguraRenderLayer renderLayer;
+                if (!isVanillaShader) //If not a vanilla shader, store the custom shader in the render layer
+                    renderLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw, shader);
+                else
+                    renderLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw, null);
+
                 BufferBuilder bufferBuilder = new BufferBuilder(renderLayer.getExpectedBufferSize());
 
                 //Put the render layer into the map
@@ -283,11 +289,6 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                 //Keep a reference to the render layer by name
                 playerData.customVCP.stringLayerMap.put(name, renderLayer);
             }
-
-            //Now, layerBufferBuildMap contains all of the RenderLayer and BufferBuilder objects we need.
-            //All we need to do now is put it into the avatar.
-
-
         } catch(Exception e) {
             e.printStackTrace();
         }
