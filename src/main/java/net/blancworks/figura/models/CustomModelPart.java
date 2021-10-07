@@ -9,6 +9,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.renderer.RenderTask;
+import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
@@ -530,7 +531,7 @@ public class CustomModelPart {
                         }});
                         case Camera -> {
                             Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
-                            Vec3f euler = rot.toEulerXyzDegrees();
+                            Vec3f euler = MathUtils.quaternionToEulerXYZ(rot);
                             matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
                             matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
                             matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
