@@ -1,8 +1,11 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
@@ -26,6 +29,11 @@ public class NewFiguraGuiScreen extends Screen {
         //hide hud
         this.hudHidden = this.client.options.hudHidden;
         this.client.options.hudHidden = true;
+
+        int x = this.width;
+        int y = this.height;
+        this.addDrawableChild(new ButtonWidget(x / 2 - 80, y / 2 - 25, 160, 20, new LiteralText("Simp for Zandra"), button -> {}));
+        this.addDrawableChild(new ButtonWidget(x / 2 - 80, y / 2 + 5, 160, 20, new LiteralText("Simp for Fran"), button -> {}));
     }
 
     @Override
