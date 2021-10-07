@@ -3,26 +3,31 @@ package net.blancworks.figura.gui;
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
+import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
+import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.*;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Quaternion;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.LuaError;
 
 import java.util.List;
+import java.util.Objects;
 
 public class ActionWheel extends DrawableHelper {
 
@@ -87,6 +92,9 @@ public class ActionWheel extends DrawableHelper {
                 int index = i < rightSegments ? i : i - rightSegments + 4;
                 renderOverlay(matrices, wheelPos, wheelSize, leftSegments, rightSegments, data, index);
             }
+
+            //render textures
+            renderTextures(matrices, leftSegments, rightSegments, itemOffset, itemRadius, data);
 
             //render text
             if (selectedSlot != -1) {
@@ -250,6 +258,54 @@ public class ActionWheel extends DrawableHelper {
         matrices.pop();
     }
 
+    public void renderTextures(MatrixStack matrices, int leftSegments, int rightSegments, Vec2f offset, int radius, PlayerData data) {
+        for (int i = 0; i < leftSegments + rightSegments; i++) {
+
+            int index;
+            float angle;
+            if (i < rightSegments) {
+                index = i;
+                angle = (float) Math.toRadians(180.0 / rightSegments * (index - ((rightSegments - 1) * 0.5)));
+            } else {
+                index = i - rightSegments + 4;
+                angle = (float) Math.toRadians(180.0 / leftSegments * (index - 4 - ((leftSegments - 1) * 0.5) + leftSegments));
+            }
+
+            //radius * cos/sin angle in rads + offset
+            Vec2f pos = new Vec2f(radius * MathHelper.cos(angle) + offset.x, radius * MathHelper.sin(angle) + offset.y);
+
+            //render textures
+            ActionWheelCustomization cust = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
+            if (cust != null && cust.texture != ActionWheelCustomization.TextureType.None && cust.uvOffset != null && cust.uvSize != null) {
+
+                //texture
+                Identifier textureId;
+                switch (cust.texture) {
+                    case Cape -> textureId = Objects.requireNonNullElse(data.playerListEntry.getCapeTexture(), FiguraTexture.DEFAULT_ID);
+                    case Elytra -> textureId = Objects.requireNonNullElse(data.playerListEntry.getElytraTexture(), new Identifier("minecraft", "textures/entity/elytra.png"));
+                    case Resource -> textureId = MinecraftClient.getInstance().getResourceManager().containsResource(cust.texturePath) ? cust.texturePath : MissingSprite.getMissingSpriteId();
+                    case Skin -> textureId = data.playerListEntry.getSkinTexture();
+                    case Custom -> textureId = data.texture != null ? data.texture.id : MissingSprite.getMissingSpriteId();
+                    default -> textureId = FiguraTexture.DEFAULT_ID;
+                }
+
+                RenderSystem.setShaderTexture(0, textureId);
+                RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+                matrices.push();
+                matrices.scale(1.5f, 1.5f, 1.5f);
+
+                Vec2f off = cust.uvOffset;
+                Vec2f len = cust.uvSize;
+                Vec2f siz = cust.textureSize;
+                Vec2f scl = cust.textureScale;
+
+                drawTexture(matrices, (int) (pos.x + 8 - (siz.x * scl.x) / 2), (int) (pos.y + 8 - (siz.y * scl.y) / 2), (int) (siz.x * scl.x), (int) (siz.y * scl.y), off.x, off.y, (int) (len.x), (int) (len.y), (int) (siz.x), (int) (siz.y));
+
+                matrices.pop();
+            }
+        }
+    }
+
     public void renderText(MatrixStack matrices, Vec2f pos, int size, float scale, PlayerData data) {
         //customization
         ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
@@ -314,25 +370,26 @@ public class ActionWheel extends DrawableHelper {
                 angle = (float) Math.toRadians(180.0 / leftSegments * (index - 4 - ((leftSegments - 1) * 0.5) + leftSegments));
             }
 
-            //get item - defaults to air
-            ItemStack item = Registry.ITEM.get(Identifier.tryParse("minecraft:air")).getDefaultStack();
-
-            ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
-
-            if (customization != null) {
-                if (selectedSlot == index && customization.hoverItem != null) {
-                    item = customization.hoverItem;
-                } else if (customization.item != null) {
-                    item = customization.item;
-                }
-            }
-
             //radius * cos/sin angle in rads + offset
             Vec2f pos = new Vec2f(radius * MathHelper.cos(angle) + offset.x, radius * MathHelper.sin(angle) + offset.y);
 
+            //get item - defaults to air
+            ItemStack item = Registry.ITEM.get(Identifier.tryParse("minecraft:air")).getDefaultStack();
+
+            ActionWheelCustomization cust = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
+            if (cust != null) {
+                if (cust.texture != ActionWheelCustomization.TextureType.None && cust.uvOffset != null && cust.uvSize != null)
+                    continue;
+
+                if (selectedSlot == index && cust.hoverItem != null) {
+                    item = cust.hoverItem;
+                } else if (cust.item != null) {
+                    item = cust.item;
+                }
+            }
+
             //render
             MatrixStack matrixStack = RenderSystem.getModelViewStack();
-
             matrixStack.push();
             matrixStack.scale(1.5f, 1.5f, 1.5f);
 
