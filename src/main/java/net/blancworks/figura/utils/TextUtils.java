@@ -46,4 +46,12 @@ public class TextUtils {
 
         return textList;
     }
+
+    public static void removeClickableObjects(MutableText text) {
+        text.setStyle(text.getStyle().withClickEvent(null));
+
+        for (Text child : text.getSiblings()) {
+            removeClickableObjects((MutableText) child);
+        }
+    }
 }

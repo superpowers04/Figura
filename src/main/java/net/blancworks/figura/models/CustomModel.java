@@ -133,11 +133,13 @@ public class CustomModel extends FiguraAsset {
     }
 
     public boolean renderSkull(PlayerData data, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        data.model.leftToRender = getMaxRenderAmount();
+
         if (!data.model.skullParts.isEmpty()) {
             for (CustomModelPart modelPart : data.model.skullParts) {
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
-                if (data.model.leftToRender == 0)
+                if (data.model.leftToRender <= 0)
                     break;
             }
 
@@ -149,7 +151,7 @@ public class CustomModel extends FiguraAsset {
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
-                if (data.model.leftToRender == 0)
+                if (data.model.leftToRender <= 0)
                     break;
             }
             CustomModelPart.applyHiddenTransforms = true;

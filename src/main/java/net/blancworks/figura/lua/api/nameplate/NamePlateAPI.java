@@ -256,6 +256,8 @@ public class NamePlateAPI {
                     if (jsonText == null)
                         throw new Exception("Error parsing JSON string - using deprecated method");
 
+                    TextUtils.removeClickableObjects(jsonText);
+
                     ((FiguraTextAccess) formattedText).figura$setText("");
                     formattedText.append(jsonText);
                 } catch (Exception ignored) {

@@ -75,6 +75,6 @@ public class GameMenuScreenMixin extends Screen {
             this.figura$newScreen = new NewFiguraGuiScreen(this);
 
         //Identifier iconnnnn = new Identifier("figura", "textures/gui/config_icon.png");
-        //addDrawableChild(new TexturedButtonWidget(this.width / 2 + 4 + 100 + 2, this.height / 4 + 96 + -16 + 24, 20, 20, 0, 0, 20, iconnnnn, 20, 40, btn -> this.client.openScreen(figura$newScreen)));
+        //addDrawableChild(new TexturedButtonWidget(this.width / 2 + 4 + 100 + 2, this.height / 4 + 96 + -16 + 24, 20, 20, 0, 0, 20, iconnnnn, 20, 40, btn -> this.client.setScreen(figura$newScreen)));
     }
 }

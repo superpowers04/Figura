@@ -19,18 +19,6 @@ import java.util.zip.ZipFile;
 
 public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, ModelFileListWidget.ModelFileListWidgetEntry> {
 
-    private final ModelFileListWidgetEntry clearAvatarEntry = new ModelFileListWidgetEntry(" ", this) {
-        @Override
-        public String getName() {
-            return null;
-        }
-
-        @Override
-        public Text getDisplayText() {
-            return new TranslatableText("models.figura.none").formatted(Formatting.ITALIC, Formatting.DARK_GRAY);
-        }
-    };
-
     public ModelFileListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget<?, ?> list, Screen parent, CustomListWidgetState<?> state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
     }
@@ -48,8 +36,18 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
         }
 
         //add empty entry
-        if (clearAvatarEntry != null)
-            addEntry(clearAvatarEntry);
+        if (searchTerm.equals(""))
+            addEntry(new ModelFileListWidgetEntry(" ", this) {
+                @Override
+                public String getName() {
+                    return null;
+                }
+
+                @Override
+                public Text getDisplayText() {
+                    return new TranslatableText("models.figura.none").formatted(Formatting.ITALIC, Formatting.DARK_GRAY);
+                }
+            });
 
         //add model_files avatars
         File[] files = contentDirectory.listFiles();
