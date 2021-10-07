@@ -147,7 +147,7 @@ public class CustomModelAPI {
                         if (size == null)
                             size = new Vec2f(0f, 0f);
 
-                        return LuaVector.of(new Vector4f(offset.x, offset.y, size.x - offset.x, size.y - offset.y));
+                        return new LuaVector(offset.x, offset.y, size.x - offset.x, size.y - offset.y);
                     } catch (Exception ignored) {
                         throw new LuaError("UV Type not found!");
                     }
@@ -308,6 +308,13 @@ public class CustomModelAPI {
                     }
 
                     return NIL;
+                }
+            });
+
+            ret.set("getTexture", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(targetPart.textureType.toString());
                 }
             });
 
