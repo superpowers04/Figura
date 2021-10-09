@@ -12,7 +12,7 @@ public class ShaderMixin {
     private String name;
 
     @ModifyArg(
-            method = "<init>()V",
+            method = "<init>(Lnet/minecraft/resource/ResourceFactory;Ljava/lang/String;Lnet/minecraft/client/render/VertexFormat;)V",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/Shader;loadProgram(Lnet/minecraft/resource/ResourceFactory;Lnet/minecraft/client/gl/Program$Type;Ljava/lang/String;)Lnet/minecraft/client/gl/Program;"),
             index = 2
     )
