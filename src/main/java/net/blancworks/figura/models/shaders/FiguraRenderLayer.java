@@ -3,12 +3,13 @@ package net.blancworks.figura.models.shaders;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
 
 /**
  * This class only exists because RenderLayer is abstract, and I need to instantiate them.
- * There are (as you can see) no other features.
+ * There are practically no other features.
  */
 
 public class FiguraRenderLayer extends RenderLayer {
@@ -21,8 +22,9 @@ public class FiguraRenderLayer extends RenderLayer {
         this.customShader = customShader;
     }
 
-    public FiguraShader getShader() {
+    @Nullable
+    public net.minecraft.client.render.Shader getShader() {
         if (customShader == null) return null;
-        return (FiguraShader) customShader.getNow(null);
+        return customShader.getNow(null);
     }
 }

@@ -72,7 +72,7 @@ public class FiguraShaderResourceFactory implements ResourceFactory {
             //This method's result only matters in the event of an exception occurring
             @Override
             public String getResourcePackName() {
-                return "*****FiguraShaderResourceFactory is broken, this shouldn't appear*****";
+                return "Custom Figura Render Layers";
             }
 
             @Override

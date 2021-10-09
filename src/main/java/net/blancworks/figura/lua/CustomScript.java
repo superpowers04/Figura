@@ -503,10 +503,7 @@ public class CustomScript extends FiguraAsset {
             if (outgoingPingQueue.size() > 0)
                 ((NewFiguraNetworkManager) FiguraMod.networkManager).sendPing(outgoingPingQueue);
         } catch (Exception error) {
-            loadError = true;
-            tickLuaEvent = null;
-            if (error instanceof LuaError)
-                logLuaError((LuaError) error);
+            stopScript(error);
         }
         tickInstructionCount = scriptGlobals.running.state.bytecodes;
     }
@@ -523,12 +520,21 @@ public class CustomScript extends FiguraAsset {
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
         } catch (Exception error) {
-            loadError = true;
-            renderLuaEvent = null;
-            if (error instanceof LuaError)
-                logLuaError((LuaError) error);
+            stopScript(error);
         }
         renderInstructionCount = scriptGlobals.running.state.bytecodes;
+    }
+
+    /**
+     * Stops the script from running, generally when an error is thrown.
+     * Accomplishes this by setting renderLuaEvent and tickLuaEvent to null, so they can't be called again.
+     */
+    public void stopScript(Exception error) {
+        loadError = true;
+        tickLuaEvent = null;
+        renderLuaEvent = null;
+        if (error instanceof LuaError)
+            logLuaError((LuaError) error);
     }
 
     //--Tasks--

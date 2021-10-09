@@ -245,20 +245,15 @@ public class CustomModelAPI {
             ret.set("setRenderLayer", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    try {
-                        String layerName = arg1.checkjstring();
+                    String layerName = arg1.checkjstring();
+                    if (partOwner.customVCP != null)
                         targetPart.customLayer = partOwner.customVCP.getRenderLayer(layerName);
-                    } catch (Exception badArgument) {
-                        //I'm not sure how to error in chat, so this is where I am right now
-                        FiguraMod.LOGGER.warn("Argument must be a string");
-                        targetPart.customLayer = null;
-                    }
+                    else
+                        partOwner.script.logLuaError(new LuaError("The player has no custom VCP!"));
                     return NIL;
                 }
             });
-
-
-
+            
             ret.set("setTexture", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {

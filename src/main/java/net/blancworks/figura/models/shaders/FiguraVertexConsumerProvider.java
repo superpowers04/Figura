@@ -4,12 +4,16 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.mixin.RenderPhaseInvoker;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.Program;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Pair;
 
@@ -137,7 +141,7 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                             Shader customShader = new FiguraShader(shaderFactory, shaderStr, vertexFormat);
                             shader.complete(customShader);
                         } catch (IOException e) {
-                            e.printStackTrace();
+                            CustomScript.sendChatMessage(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                             shader.complete(vanillaShaderMap.get("RENDERTYPE_ENTITY_TRANSLUCENT_SHADER").get());
                         }
                     });

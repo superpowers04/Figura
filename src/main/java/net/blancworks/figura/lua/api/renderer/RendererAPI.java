@@ -11,10 +11,12 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.renderer.RenderTask.*;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.command.argument.BlockStateArgumentType;
 import net.minecraft.item.ItemStack;
@@ -82,15 +84,28 @@ public class RendererAPI {
             set("setUniform", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue layerName, LuaValue uniformName, LuaValue value) {
-                    try {
-                        RenderSystem.recordRenderCall(() -> {
-                            FiguraShader customShader = script.playerData.customVCP.getRenderLayer(layerName.checkjstring()).getShader();
-                            if (customShader != null)
-                                customShader.setUniformFromLua(uniformName, value);
-                        });
-                    } catch (Exception ignored) {
-                        ignored.printStackTrace();
-                    }
+                    RenderSystem.recordRenderCall(() -> {
+                        try {
+                            Shader customShader;
+                            if (script.playerData.customVCP != null) {
+                                FiguraRenderLayer customLayer = script.playerData.customVCP.getRenderLayer(layerName.checkjstring());
+                                if (customLayer != null)
+                                    customShader = customLayer.getShader();
+                                else
+                                    throw new LuaError("There is no custom layer with that name!");
+                            } else
+                                throw new LuaError("The player has no custom VCP!");
+
+                            if (customShader == null)
+                                throw new LuaError("The shader is null. This should not happen ever, contact devnull#0759");
+                            if (customShader instanceof FiguraShader)
+                                ((FiguraShader) customShader).setUniformFromLua(uniformName, value);
+                            else
+                                throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Both are bad!");
+                        } catch (LuaError error) {
+                            script.stopScript(error);
+                        }
+                    });
                     return NIL;
                 }
             });
@@ -98,7 +113,6 @@ public class RendererAPI {
             set("renderBlock", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-
                     try {
                         BlockState state = BlockStateArgumentType.blockState().parse(new StringReader(args.arg(1).checkjstring())).getBlockState();
                         CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
