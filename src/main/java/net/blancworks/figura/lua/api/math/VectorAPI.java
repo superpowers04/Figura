@@ -3,12 +3,15 @@ package net.blancworks.figura.lua.api.math;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
+import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Quaternion;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 
 import java.awt.*;
 
@@ -34,8 +37,7 @@ public class VectorAPI {
             set("of", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    arg.checktable();
-                    return LuaVector.of((LuaTable)arg);
+                    return LuaVector.of(arg.checktable());
                 }
             });
 
@@ -44,8 +46,7 @@ public class VectorAPI {
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
                     LuaVector a = LuaVector.checkOrNew(arg1);
                     LuaVector b = LuaVector.checkOrNew(arg2);
-                    arg3.checknumber();
-                    return lerp(a, b, arg3.tofloat());
+                    return lerp(a, b, arg3.checknumber().tofloat());
                 }
             });
 
@@ -97,6 +98,14 @@ public class VectorAPI {
                 }
             });
 
+            set("rotateWithQuaternion", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    return rotateWithQuaternion(LuaVector.checkOrNew(arg1), LuaVector.checkOrNew(arg2));
+                }
+            });
+
+
             set("asTable", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -140,6 +149,15 @@ public class VectorAPI {
         c = (c << 8) + (int) (rgb.y() * 255);
         c = (c << 8) + (int) (rgb.z() * 255);
         return c;
+    }
+
+    public static LuaValue rotateWithQuaternion(LuaVector vector, LuaVector rotation) {
+        Quaternion quat = Quaternion.fromEulerXyzDegrees(vector.asV3f());
+        Quaternion rot = Quaternion.fromEulerXyzDegrees(rotation.asV3f());
+        quat.hamiltonProduct(rot);
+
+        //we cant use the quaternion to euler from the quaternion class because NaN and weird rotations
+        return LuaVector.of(MathUtils.quaternionToEulerXYZ(quat));
     }
 
     public static LuaTable toTable(LuaVector vector) {

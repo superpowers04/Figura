@@ -371,24 +371,27 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         }
         return Math.sqrt(s); // Square root of the sum of all values
     }
-    
+
     public double _dot(LuaValue vector) {
-        LuaVector other = check(vector);
-        return values[0] * other.values[0] +
-                        values[1] * other.values[1] +
-                        values[2] * other.values[2] +
-                        values[3] * other.values[3] +
-                        values[4] * other.values[4] +
-                        values[5] * other.values[5];
+        LuaVector vec = check(vector);
+        int n = Math.max(_size(), vec._size());
+        double s = 0d;
+        for (int i = 1; i <= n; i++) {
+            s += _get(i) * vec._get(i);
+        }
+        return s;
     }
-    
+
     public LuaVector _cross(LuaValue vector){
-        LuaVector other = check(vector);
-        return new LuaVector(
-                values[1] * other.values[2] - values[2] * other.values[1],     //y * o.z - z * o.y
-                values[2] * other.values[0] - values[0] * other.values[2],            //z * o.x - x * o.z
-                values[0] * other.values[1] - values[1] * other.values[0]             //x * o.y - y * o.x
-        );
+        LuaVector vec = check(vector);
+        int n = Math.max(_size(), vec._size());
+        float[] vals = new float[n];
+        for (int i = 0; i < n; i++) {
+            int j = ((i + 1) % n) + 1;
+            int k = ((i + 2) % n) + 1;
+            vals[i] = _get(j) * vec._get(k) - _get(k) * vec._get(j);
+        }
+        return new LuaVector(vals);
     }
 
     public double _angleTo(LuaValue vector){

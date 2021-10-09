@@ -1,6 +1,6 @@
 package net.blancworks.figura.utils;
 
-public enum ColorUtils {;
+public class ColorUtils {
     public static void split(int value, int[] array) {
         int len = array.length;
         for (int i = 0; i < len; i++) {

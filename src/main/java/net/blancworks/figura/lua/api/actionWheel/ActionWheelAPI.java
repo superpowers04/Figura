@@ -10,10 +10,14 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.LuaError;
+import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.ThreeArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ActionWheelAPI {
@@ -213,15 +217,91 @@ public class ActionWheelAPI {
                 }
             });
 
+            ret.set("getTexture", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(targetScript.getOrMakeActionWheelCustomization(accessor).texture.toString());
+                }
+            });
+
+            ret.set("setTexture", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    ActionWheelCustomization cust = targetScript.getOrMakeActionWheelCustomization(accessor);
+                    try {
+                        cust.texture = ActionWheelCustomization.TextureType.valueOf(arg1.checkjstring());
+
+                        if (cust.texture == ActionWheelCustomization.TextureType.Resource)
+                            cust.texturePath = new Identifier(arg2.checkjstring());
+                    } catch (Exception ignored) {
+                        cust.texture = ActionWheelCustomization.TextureType.None;
+                    }
+
+                    return NIL;
+                }
+            });
+
+            ret.set("getTextureScale", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaVector.of(targetScript.getOrMakeActionWheelCustomization(accessor).textureScale);
+                }
+            });
+
+            ret.set("setTextureScale", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    targetScript.getOrMakeActionWheelCustomization(accessor).textureScale = LuaVector.checkOrNew(arg1).asV2f();
+                    return NIL;
+                }
+            });
+
+            ret.set("getUV", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    ActionWheelCustomization cust = targetScript.getOrMakeActionWheelCustomization(accessor);
+
+                    Vec2f offset = cust.uvOffset;
+                    Vec2f size = cust.uvSize;
+                    Vec2f tex = cust.textureSize;
+
+                    if (offset == null)
+                        offset = new Vec2f(0f, 0f);
+
+                    if (size == null)
+                        size = new Vec2f(0f, 0f);
+
+                    if (tex == null)
+                        tex = new Vec2f(0f, 0f);
+
+                    return new LuaVector(offset.x, offset.y, size.x, size.y, tex.x, tex.y);
+                }
+            });
+
+            ret.set("setUV", new ThreeArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                    ActionWheelCustomization cust = targetScript.getOrMakeActionWheelCustomization(accessor);
+
+                    LuaVector offset = LuaVector.checkOrNew(arg1);
+                    LuaVector size = LuaVector.checkOrNew(arg2);
+
+                    cust.uvOffset = offset.asV2f();
+                    cust.uvSize = size.asV2f();
+
+                    if (!arg3.isnil()) {
+                        LuaVector tex = LuaVector.checkOrNew(arg3);
+                        cust.textureSize = tex.asV2f();
+                    }
+
+                    return NIL;
+                }
+            });
+
             ret.set("clear", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    targetScript.getOrMakeActionWheelCustomization(accessor).function = null;
-                    targetScript.getOrMakeActionWheelCustomization(accessor).item = null;
-                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = null;
-                    targetScript.getOrMakeActionWheelCustomization(accessor).color = null;
-                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverColor = null;
-                    targetScript.getOrMakeActionWheelCustomization(accessor).title = null;
+                    targetScript.actionWheelCustomizations.put(accessor, new ActionWheelCustomization());
                     return NIL;
                 }
             });

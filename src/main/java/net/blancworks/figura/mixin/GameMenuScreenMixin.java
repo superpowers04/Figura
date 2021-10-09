@@ -1,6 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.blancworks.figura.gui.NewFiguraGuiScreen;
 import net.minecraft.client.gui.screen.GameMenuScreen;
@@ -33,7 +34,7 @@ public class GameMenuScreenMixin extends Screen {
         int x = 5;
         int y = 5;
 
-        int config = (int) Config.entries.get("buttonLocation").value;
+        int config = (int) Config.FIGURA_BUTTON_LOCATION.value;
         switch (config) {
             //top right
             case 1 -> x = this.width - 64 - 5;
@@ -53,7 +54,7 @@ public class GameMenuScreenMixin extends Screen {
 
         if (config != 4) {
             try {
-                if (Config.modmenuButton()) {
+                if (ConfigManager.modmenuButton()) {
                     y -= 12;
                 }
             } catch (Exception ignored) {}
@@ -70,6 +71,6 @@ public class GameMenuScreenMixin extends Screen {
             this.figura$newScreen = new NewFiguraGuiScreen(this);
 
         //Identifier iconnnnn = new Identifier("figura", "textures/gui/config_icon.png");
-        //addDrawableChild(new TexturedButtonWidget(this.width / 2 + 4 + 100 + 2, this.height / 4 + 96 + -16 + 24, 20, 20, 0, 0, 20, iconnnnn, 20, 40, btn -> this.client.openScreen(figura$newScreen)));
+        //addDrawableChild(new TexturedButtonWidget(this.width / 2 + 4 + 100 + 2, this.height / 4 + 96 + -16 + 24, 20, 20, 0, 0, 20, iconnnnn, 20, 40, btn -> this.client.setScreen(figura$newScreen)));
     }
 }

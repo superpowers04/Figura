@@ -3,6 +3,7 @@ package net.blancworks.figura.network;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import net.blancworks.figura.*;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.messages.MessageRegistry;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
@@ -43,7 +44,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     private static boolean lastNetworkState = false;
 
-    public static int connectionStatus = 0;
+    public static byte connectionStatus = 0;
 
     //----- WEBSOCKETS -----
 
@@ -114,12 +115,13 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     @Override
     public void tickNetwork() {
-        connectionStatus = 1;
-
-        if ((boolean) Config.entries.get("useLocalServer").value != lastNetworkState && currWebSocket != null) {
+        if ((boolean) Config.USE_LOCAL_SERVER.value != lastNetworkState && currWebSocket != null) {
             currWebSocket.disconnect();
-            lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
+            lastNetworkState = (boolean) Config.USE_LOCAL_SERVER.value;
         }
+
+        if (jwtToken == null)
+            connectionStatus = 1;
 
         if (authConnection != null && !authConnection.isOpen())
             authConnection.handleDisconnection();
@@ -148,7 +150,6 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             tokenReauthCooldown--;
         else if (tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME) {
             tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
-            connectionStatus = 2;
 
             //Auth user ASAP
             doTask(() -> authUser(true));
@@ -279,14 +280,14 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
     //Minecraft authentication server URL
     public String authServerURL() {
-        if ((boolean) Config.entries.get("useLocalServer").value)
+        if ((boolean) Config.USE_LOCAL_SERVER.value)
             return "localhost";
         return "figuranew.blancworks.org";
     }
 
     //Main server for distributing files URL
     public String mainServerURL() {
-        if ((boolean) Config.entries.get("useLocalServer").value)
+        if ((boolean) Config.USE_LOCAL_SERVER.value)
             return "http://localhost:6050";
         return "https://figuranew.blancworks.org";
     }
@@ -296,8 +297,8 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //Ensures there is a connection open with the server, if there was not before.
     public CompletableFuture<Void> ensureConnection() {
 
-        if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value || socketFactory == null) {
-            localLastCheck = (boolean) Config.entries.get("useLocalServer").value;
+        if (localLastCheck != (boolean) Config.USE_LOCAL_SERVER.value || socketFactory == null) {
+            localLastCheck = (boolean) Config.USE_LOCAL_SERVER.value;
 
             socketFactory = new WebSocketFactory();
 
@@ -319,7 +320,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         if (currWebSocket == null || !currWebSocket.isOpen()) {
             try {
-                lastNetworkState = (boolean) Config.entries.get("useLocalServer").value;
+                lastNetworkState = (boolean) Config.USE_LOCAL_SERVER.value;
                 return openNewConnection();
             } catch (Exception e) {
                 e.printStackTrace();
@@ -337,6 +338,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 String connectionString = String.format("%s/connect/", mainServerURL());
 
                 FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
+                connectionStatus = 2;
 
                 WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
                 newSocket.setPingInterval(15 * 1000);
@@ -353,6 +355,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
                 return messageHandler.initializedFuture;
             } catch (Exception e) {
+                connectionStatus = 1;
                 e.printStackTrace();
                 return CompletableFuture.completedFuture(null);
             }
@@ -389,6 +392,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         try {
             FiguraMod.LOGGER.info("Authenticating with Figura server");
+            connectionStatus = 2;
 
             String address = authServerURL();
             InetSocketAddress inetAddress = new InetSocketAddress(address, 25565);
@@ -430,6 +434,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             return disconnectedFuture;
 
         } catch (Exception e) {
+            connectionStatus = 1;
             e.printStackTrace();
             return CompletableFuture.completedFuture(null);
         }

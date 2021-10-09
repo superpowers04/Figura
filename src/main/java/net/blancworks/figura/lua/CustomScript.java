@@ -4,7 +4,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -63,6 +63,7 @@ public class CustomScript extends FiguraAsset {
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
     public int worldRenderInstructionCount = 0;
+    public int damageInstructionCount = 0;
     public int pingSent = 0;
     public int pingReceived = 0;
 
@@ -166,6 +167,20 @@ public class CustomScript extends FiguraAsset {
         scriptGlobals.set("loadfile", LuaValue.NIL);
         scriptGlobals.set("require", LuaValue.NIL);
 
+        //math funnies :3
+        scriptGlobals.get("math").set("lerp", new ThreeArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                return LuaNumber.valueOf(MathHelper.lerp(arg3.checknumber().tofloat(), arg1.checknumber().tofloat(), arg2.checknumber().tofloat()));
+            }
+        });
+        scriptGlobals.get("math").set("clamp", new ThreeArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                return LuaNumber.valueOf(MathHelper.clamp(arg1.checknumber().tofloat(), arg2.checknumber().tofloat(), arg3.checknumber().tofloat()));
+            }
+        });
+
         //Sets up the global values for the API and such in the script.
         setupGlobals();
         //Sets up events!
@@ -182,9 +197,9 @@ public class CustomScript extends FiguraAsset {
                     loadError = true;
                     String error = "Script overran resource limits";
 
-                    if (data == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
+                    if (data == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
-                        if (data != null && (boolean) Config.entries.get("logOthers").value) message.append(data.playerName.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
+                        if (data != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(data.playerName.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
                         message.append(new LiteralText(">> ").formatted(Formatting.BLUE)).append(error).formatted(Formatting.RED);
 
                         sendChatMessage(message);
@@ -300,6 +315,24 @@ public class CustomScript extends FiguraAsset {
         });
     }
 
+    public void onDamage(float amount) {
+        if (!isDone || !hasPlayer || playerData.lastEntity == null)
+            return;
+
+        queueTask(() -> {
+            setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+            try {
+                allEvents.get("onDamage").call(LuaNumber.valueOf(amount));
+            } catch (Exception error) {
+                if (error instanceof LuaError)
+                    logLuaError((LuaError) error);
+                else
+                    error.printStackTrace();
+            }
+            damageInstructionCount = scriptGlobals.running.state.bytecodes;
+        });
+    }
+
     //Sets up and creates all the LuaEvents for this script
     public void setupEvents() {
         //Foreach event
@@ -319,9 +352,9 @@ public class CustomScript extends FiguraAsset {
             @Override
             public LuaValue call(LuaValue arg) {
                 try {
-                    if (playerData == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
+                    if (playerData == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
-                        if ((boolean) Config.entries.get("logOthers").value) message.append(playerData.playerName.copy()).append(" ");
+                        if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
                         message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
 
                         Text log;
@@ -340,7 +373,7 @@ public class CustomScript extends FiguraAsset {
 
                         message.append(log);
 
-                        int config = (int) Config.entries.get("scriptLog").value;
+                        int config = (int) Config.SCRIPT_LOG_LOCATION.value;
                         if (config != 2) {
                             FiguraMod.LOGGER.info(message.getString());
                         }
@@ -364,12 +397,12 @@ public class CustomScript extends FiguraAsset {
                 try {
                     LuaTable table = arg.checktable();
 
-                    if (playerData == PlayerDataManager.localPlayer || (boolean) Config.entries.get("logOthers").value) {
+                    if (playerData == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
-                        if ((boolean) Config.entries.get("logOthers").value) message.append(playerData.playerName.copy()).append(" ");
+                        if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
                         message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
 
-                        int config = (int) Config.entries.get("scriptLog").value;
+                        int config = (int) Config.SCRIPT_LOG_LOCATION.value;
                         if (config != 2) {
                             FiguraMod.LOGGER.info(message.getString());
                         }
@@ -552,7 +585,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public String cleanScriptSource(String s) {
-        if (!(boolean) Config.entries.get("formatScript").value)
+        if (!(boolean) Config.FORMAT_SCRIPT_ON_UPLOAD.value)
             return s;
 
         StringBuilder ret = new StringBuilder();
@@ -655,7 +688,7 @@ public class CustomScript extends FiguraAsset {
 
     public void logLuaError(LuaError error) {
         //Never even log errors for other players, only the local player.
-        if (playerData != PlayerDataManager.localPlayer && !(boolean) Config.entries.get("logOthers").value) {
+        if (playerData != PlayerDataManager.localPlayer && !(boolean) Config.LOG_OTHERS_SCRIPT.value) {
             return;
         }
 
@@ -665,7 +698,7 @@ public class CustomScript extends FiguraAsset {
         String[] messageParts = msg.split("\n");
 
         MutableText message = LOG_PREFIX.shallowCopy();
-        if (playerData != null && (boolean) Config.entries.get("logOthers").value) message.append(playerData.playerName.copy()).append(" ");
+        if (playerData != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
         message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
         sendChatMessage(message);
 
@@ -709,7 +742,7 @@ public class CustomScript extends FiguraAsset {
         String spacing = "  ";
         depthString = spacing.substring(2) + depthString;
 
-        int config = (int) Config.entries.get("scriptLog").value;
+        int config = (int) Config.SCRIPT_LOG_LOCATION.value;
         if (config != 2) {
             FiguraMod.LOGGER.info(depthString + "{");
         }

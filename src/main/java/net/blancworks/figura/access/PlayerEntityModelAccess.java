@@ -1,5 +1,8 @@
 package net.blancworks.figura.access;
 
+import net.minecraft.client.model.ModelPart;
+
 public interface PlayerEntityModelAccess {
-    void figura$setAnglesToPrev();
+    ModelPart getCloak();
+    ModelPart getEar();
 }

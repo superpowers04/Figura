@@ -21,10 +21,6 @@
 
   "gui.figura.dropconfirm": "Do you want to add the following models to Figura?",
 
-  "gui.figura.script.none": "none",
-  "gui.figura.script.ok": "OK",
-  "gui.figura.script.error": "ERROR",
-
   "gui.figura.button.trustmenu": "Trust Menu",
   "gui.figura.button.configmenu": "Settings",
   "gui.figura.button.back": "Back",
@@ -40,6 +36,8 @@
   "gui.figura.button.tooltip.upload": "Click to upload and show your avatar in multiplayer",
   "gui.figura.button.tooltip.uploadlocal": "Avatar is already uploaded!",
   "gui.figura.button.tooltip.uploadlocaltwo": "You must select a Local Avatar before uploading!",
+  "gui.figura.button.tooltip.noconnection": "Unable to upload/delete avatar!",
+  "gui.figura.button.tooltip.noconnectiontwo": "Not connected to the backend!",
   "gui.figura.button.tooltip.reloadavatar": "Click to clear you avatar locally and redownload it",
   "gui.figura.button.tooltip.deleteavatar": "Hold LEFT SHIFT and click to CLEAR YOUR AVATAR ONLINE",
   "gui.figura.button.tooltip.deleteavatartwo": "Doing so will clear your avatar for everyone else, too",
@@ -101,6 +99,9 @@
   "gui.figura.config.formatscript": "Format Script",
   "gui.figura.config.tooltip.formatscript": "Format script when uploading your avatar",
 
+  "gui.figura.config.path": "Model Directory",
+  "gui.figura.config.tooltip.path": "The path where model files and cached avatars go. Leave blank to use your Minecraft directory",
+
   "gui.figura.config.partshitbox": "Render Parts Pivot",
   "gui.figura.config.tooltip.partshitbox": "Render the Pivots from %d and %d when the hitbox debug rendering is enabled",
   "gui.figura.config.tooltip.partshitbox.cubes": "cubes",
@@ -141,5 +142,7 @@
   "gui.figura.actionwheel.nofunction": "unbound function!",
 
   "key.figura.actionwheel": "Figura Action Wheel",
-  "key.figura.tooltip.actionwheel": "Figura Action Wheel"
+  "key.figura.tooltip.actionwheel": "Figura Action Wheel",
+
+  "models.figura.none": "-none-"
 }

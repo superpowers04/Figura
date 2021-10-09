@@ -28,23 +28,20 @@ import java.util.ArrayList;
 @Mixin(ElytraFeatureRenderer.class)
 public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends EntityModel<T>> extends FeatureRenderer<T, M> {
 
-    private ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
-
-    @Shadow @Final private ElytraEntityModel<T> elytra;
-
     public ElytraFeatureRendererMixin(FeatureRendererContext<T, M> context) {
         super(context);
     }
 
+    @Shadow @Final private ElytraEntityModel<T> elytra;
+    private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
+
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
         PlayerData data = FiguraMod.currentData;
-        
-        if(data != null) {
-            if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
-                figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess) elytra).getLeftWing());
-                figura$applyPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING, ((ElytraEntityModelAccess) elytra).getRightWing());
-            }
+
+        if (data != null && data.playerId.compareTo(livingEntity.getUuid()) == 0 && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+            figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess) elytra).getLeftWing());
+            figura$applyPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING, ((ElytraEntityModelAccess) elytra).getRightWing());
         }
     }
 
@@ -55,7 +52,7 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
 
     @Shadow
     @Override
-    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) { }
+    public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {}
 
     public void figura$applyPartCustomization(String id, ModelPart part) {
         PlayerData data = FiguraMod.currentData;

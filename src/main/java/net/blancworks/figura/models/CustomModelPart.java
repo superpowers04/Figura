@@ -3,12 +3,14 @@ package net.blancworks.figura.models;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.renderer.RenderTask;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
+import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.*;
@@ -34,13 +36,22 @@ public class CustomModelPart {
     public Vec3f pivot = new Vec3f();
     public Vec3f pos = new Vec3f();
     public Vec3f rot = new Vec3f();
-    public Vec3f scale = new Vec3f(1, 1, 1);
-    public Vec3f color = new Vec3f(1, 1, 1);
+    public Vec3f scale = new Vec3f(1f, 1f, 1f);
+    public Vec3f color = new Vec3f(1f, 1f, 1f);
 
-    //Offsets
-    public float uOffset = 0;
-    public float vOffset = 0;
+    //uv stuff
+    public Map<UV, uvData> UVCustomizations = Map.of(
+            UV.NORTH, new uvData(),
+            UV.SOUTH, new uvData(),
+            UV.EAST, new uvData(),
+            UV.WEST, new uvData(),
+            UV.UP, new uvData(),
+            UV.DOWN, new uvData()
+    );
+    public Vec2f texSize;
+    public Vec2f uvOffset = new Vec2f(0f, 0f);
 
+    //model properties
     public boolean visible = true;
     public boolean isHidden = false;
 
@@ -62,7 +73,7 @@ public class CustomModelPart {
 
     public boolean extraTex = true;
 
-    public float alpha = 1.0f;
+    public float alpha = 1f;
 
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
@@ -77,7 +88,8 @@ public class CustomModelPart {
     //Extra special rendering for this part
     public ArrayList<RenderTask> renderTasks = new ArrayList<>();
 
-    public static boolean canRenderHitBox;
+    public static boolean canRenderHitBox = false;
+    public static boolean applyHiddenTransforms = true;
     public static ParentType renderOnly = null;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
@@ -87,31 +99,25 @@ public class CustomModelPart {
             return 0;
 
         //hit boxes :3
-        canRenderHitBox = (boolean) Config.entries.get("partsHitBox").value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
-
-        //prepare mimic rotations
-        try {
-            PlayerEntityModel<?> model = data.vanillaModel;
-            if (this.isMimicMode && parentType != ParentType.None) {
-                switch (this.parentType) {
-                    case Head -> this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
-                    case Torso -> this.rot = new Vec3f(model.body.pitch, model.body.yaw, model.body.roll);
-                    case LeftArm -> this.rot = new Vec3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
-                    case LeftLeg -> this.rot = new Vec3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
-                    case RightArm -> this.rot = new Vec3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
-                    case RightLeg -> this.rot = new Vec3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
-                }
-
-                float multiply = MathHelper.DEGREES_PER_RADIAN;
-                this.rot.multiplyComponentwise(multiply, multiply, multiply);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
         //lets render boys!!
-        //textures
-        int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), this.extraTex);
+
+        //main texture
+        Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
+        int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction);
+
+        //extra textures
+        if (this.extraTex) {
+            for (FiguraTexture figuraTexture : FiguraMod.currentData.extraTextures) {
+                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
+
+                if (renderLayerGetter != null) {
+                    renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0,0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter);
+                }
+            }
+        }
+
         draw(vcp);
 
         //shaders
@@ -129,7 +135,7 @@ public class CustomModelPart {
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRenderChild, Identifier texture, boolean renderExtraTex) {
+    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction) {
         //do not render invisible parts
         if (!this.visible || this.isHidden)
             return leftToRender;
@@ -137,12 +143,24 @@ public class CustomModelPart {
         matrices.push();
         transformStack.push();
 
-        applyRenderingData(matrices, transformStack);
-        updateModelMatrices(transformStack);
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, transformStack);
+
+            applyTransforms(matrices);
+            applyTransforms(transformStack);
+
+            updateModelMatrices(transformStack);
+        } else if (canRender) {
+            applyTransforms(matrices);
+            applyTransforms(transformStack);
+        }
+
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
 
         //uv -> color -> alpha
-        u += this.uOffset;
-        v += this.vOffset;
+        u += this.uvOffset.x;
+        v += this.uvOffset.y;
 
         Vec3f color = this.color.copy();
         color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
@@ -154,9 +172,7 @@ public class CustomModelPart {
             texture = getTexture();
 
         //render!
-        if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
-            canRenderChild = true;
-
+        if (canRender) {
             //render using main texture
             VertexConsumer consumer;
             if (layer instanceof FiguraRenderLayer) {
@@ -166,33 +182,11 @@ public class CustomModelPart {
                     consumer = vcp.getBuffer(customLayer);
                     layer = customLayer;
                 } else {
-                    consumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(texture));
+                    consumer = vcp.getBuffer(layerFunction.apply(texture));
                 }
             }
 
             renderCube(leftToRender, matrices, consumer, light, overlay, u, v, color, alpha);
-
-            //render using extra textures
-            if (renderExtraTex) {
-                for (FiguraTexture figuraTexture : FiguraMod.currentData.extraTextures) {
-                    Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
-
-                    if (renderLayerGetter != null) {
-                        VertexConsumer extraTexture;
-                        if (layer instanceof FiguraRenderLayer) {
-                            extraTexture = vcp.getBuffer(layer);
-                        } else {
-                            if (customLayer != null) {
-                                extraTexture = vcp.getBuffer(customLayer);
-                                layer = customLayer;
-                            } else {
-                                extraTexture = vcp.getBuffer(renderLayerGetter.apply(figuraTexture.id));
-                            }
-                        }
-                        renderCube(leftToRender, matrices, extraTexture, light, overlay, u, v, color, alpha);
-                    }
-                }
-            }
         }
 
         for (CustomModelPart child : this.children) {
@@ -204,7 +198,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRenderChild, texture, renderExtraTex && child.extraTex);
+            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction);
         }
 
         matrices.pop();
@@ -213,32 +207,26 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    private Pair<VertexConsumer,RenderLayer> chooseBuffer(VertexConsumerProvider vcp, RenderLayer passThrough, RenderLayer main) {
-        VertexConsumer consumer;
-        if (passThrough != null) {
-            consumer = vcp.getBuffer(passThrough);
-        } else {
-            if (customLayer != null) {
-                consumer = vcp.getBuffer(customLayer);
-            } else {
-                consumer = vcp.getBuffer(main);
-            }
-        }
-        passThrough = customLayer;
-        return new Pair<>(consumer, passThrough);
-    }
-
-    public int renderShaders(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRenderChild, byte shadersToRender) {
+    public int renderShaders(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, byte shadersToRender) {
         //do not render invisible parts
         if (!this.visible || this.isHidden)
             return leftToRender;
 
         matrices.push();
-        applyRenderingData(matrices, new MatrixStack());
+
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, new MatrixStack());
+            applyTransforms(matrices);
+        } else if (canRender) {
+            applyTransforms(matrices);
+        }
+
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
 
         //uv -> color -> alpha -> shaders
-        u += this.uOffset;
-        v += this.vOffset;
+        u += this.uvOffset.x;
+        v += this.uvOffset.y;
 
         Vec3f color = this.color.copy();
         color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
@@ -250,10 +238,7 @@ public class CustomModelPart {
             shaders = (byte) (shaders | this.shaderType.id);
 
         //render!
-        if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
-            canRenderChild = true;
-
-            //shaders
+        if (canRender) {
             if (ShaderType.EndPortal.isShader(shaders))
                 renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEndGateway()), light, overlay, u, v, color, alpha);
             if (ShaderType.Glint.isShader(shaders))
@@ -269,7 +254,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderShaders(leftToRender, matrices, vcp, light, overlay, u, v, color, alpha, canRenderChild, shaders);
+            leftToRender = child.renderShaders(leftToRender, matrices, vcp, light, overlay, u, v, color, alpha, canRender, shaders);
         }
 
         matrices.pop();
@@ -277,21 +262,26 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    public int renderExtraParts(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRenderChild) {
+    public int renderExtraParts(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRender) {
         //do not render invisible parts
         if (!this.visible || this.isHidden)
             return leftToRender;
 
         matrices.push();
-        applyRenderingData(matrices, new MatrixStack());
+
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(matrices, new MatrixStack());
+            applyTransforms(matrices);
+        } else if (canRender) {
+            applyTransforms(matrices);
+        }
+
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
 
         //render!
-        if (renderOnly == null || this.parentType == renderOnly || canRenderChild) {
-            canRenderChild = true;
-
-            //render extras
+        if (canRender)
             leftToRender = renderExtras(leftToRender, matrices, vcp, light);
-        }
 
         for (CustomModelPart child : this.children) {
             if (leftToRender <= 0)
@@ -302,7 +292,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderExtraParts(leftToRender, matrices, vcp, light, canRenderChild);
+            leftToRender = child.renderExtraParts(leftToRender, matrices, vcp, light, canRender);
         }
 
         matrices.pop();
@@ -430,124 +420,6 @@ public class CustomModelPart {
         return complexity;
     }
 
-    public void applyRenderingData(MatrixStack matrices, MatrixStack transformStack) {
-        try {
-            PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
-            if (!this.isMimicMode && parentType != ParentType.None && parentType != ParentType.Model) {
-                switch (parentType) {
-                    case Head -> {
-                        model.head.rotate(matrices);
-                        model.head.rotate(transformStack);
-                    }
-                    case Torso -> {
-                        model.body.rotate(matrices);
-                        model.body.rotate(transformStack);
-                    }
-                    case LeftArm -> {
-                        model.leftArm.rotate(matrices);
-                        model.leftArm.rotate(transformStack);
-                    }
-                    case LeftLeg -> {
-                        model.leftLeg.rotate(matrices);
-                        model.leftLeg.rotate(transformStack);
-                    }
-                    case RightArm -> {
-                        model.rightArm.rotate(matrices);
-                        model.rightArm.rotate(transformStack);
-                    }
-                    case RightLeg -> {
-                        model.rightLeg.rotate(matrices);
-                        model.rightLeg.rotate(transformStack);
-                    }
-                    case LeftItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsItem(matrices);
-                        applyTransformsAsItem(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsItem(matrices);
-                        applyTransformsAsItem(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        applyTransformsAsElytraOrParrot(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        applyTransformsAsElytraOrParrot(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        applyTransformsAsElytraOrParrot(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        applyTransformsAsElytraOrParrot(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsSpyglass(matrices);
-                        applyTransformsAsSpyglass(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsSpyglass(matrices);
-                        applyTransformsAsSpyglass(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case Camera -> {
-                        Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
-                        Vec3f euler = rot.method_35828();
-                        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
-                        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
-                        matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        applyTransforms(matrices);
-        applyTransforms(transformStack);
-    }
-
     public void updateModelMatrices(MatrixStack stack) {
         lastModelMatrix = stack.peek().getModel().copy();
         lastNormalMatrix = stack.peek().getNormal().copy();
@@ -556,6 +428,139 @@ public class CustomModelPart {
         lastModelMatrixInverse.invert();
         lastNormalMatrixInverse = lastNormalMatrix.copy();
         lastNormalMatrixInverse.invert();
+    }
+
+    public void applyVanillaTransforms(MatrixStack matrices, MatrixStack transformStack) {
+        if (parentType != ParentType.None && parentType != ParentType.Model) {
+            try {
+                PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
+
+                //mimic rotations
+                if (this.isMimicMode) {
+                    switch (this.parentType) {
+                        case Head -> this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
+                        case Torso -> this.rot = new Vec3f(model.body.pitch, model.body.yaw, model.body.roll);
+                        case LeftArm -> this.rot = new Vec3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
+                        case LeftLeg -> this.rot = new Vec3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
+                        case RightArm -> this.rot = new Vec3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
+                        case RightLeg -> this.rot = new Vec3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
+                    }
+
+                    float multiply = MathHelper.DEGREES_PER_RADIAN;
+                    this.rot.multiplyComponentwise(multiply, multiply, multiply);
+                }
+                //custom rotations
+                else {
+                    switch (this.parentType) {
+                        case Head -> {
+                            model.head.rotate(matrices);
+                            model.head.rotate(transformStack);
+                        }
+                        case Torso -> {
+                            model.body.rotate(matrices);
+                            model.body.rotate(transformStack);
+                        }
+                        case LeftArm -> {
+                            model.leftArm.rotate(matrices);
+                            model.leftArm.rotate(transformStack);
+                        }
+                        case LeftLeg -> {
+                            model.leftLeg.rotate(matrices);
+                            model.leftLeg.rotate(transformStack);
+                        }
+                        case RightArm -> {
+                            model.rightArm.rotate(matrices);
+                            model.rightArm.rotate(transformStack);
+                        }
+                        case RightLeg -> {
+                            model.rightLeg.rotate(matrices);
+                            model.rightLeg.rotate(transformStack);
+                        }
+                        case LeftItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsItem(matrices);
+                            applyTransformsAsItem(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        case RightItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsItem(matrices);
+                            applyTransformsAsItem(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        case LeftElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        case RightElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        case LeftParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        case RightParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsElytraOrParrot(matrices);
+                            applyTransformsAsElytraOrParrot(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        case LeftSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsSpyglass(matrices);
+                            applyTransformsAsSpyglass(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        case RightSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
+                            matrices.push();
+                            applyTransformsAsSpyglass(matrices);
+                            applyTransformsAsSpyglass(transformStack);
+                            stackReference = matrices.peek();
+                            part = CustomModelPart.this;
+                            visible = true;
+                            matrices.pop();
+                        }});
+                        case Camera -> {
+                            Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
+                            Vec3f euler = MathUtils.quaternionToEulerXYZ(rot);
+                            matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
+                            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
+                            matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void applyTransforms(MatrixStack stack) {
@@ -610,16 +615,15 @@ public class CustomModelPart {
     //Re-builds the mesh data for a custom model part.
     public void rebuild() {}
 
-    public void addVertex(Vec3f vert, float u, float v, Vec3f normal) {
-        this.vertexData.add(vert.getX() / 16.0f);
-        this.vertexData.add(vert.getY() / 16.0f);
-        this.vertexData.add(vert.getZ() / 16.0f);
-        this.vertexData.add(u);
-        this.vertexData.add(v);
-        this.vertexData.add(-normal.getX());
-        this.vertexData.add(-normal.getY());
-        this.vertexData.add(-normal.getZ());
-        this.vertexCount++;
+    public void addVertex(Vec3f vert, float u, float v, Vec3f normal, FloatList vertexData) {
+        vertexData.add(vert.getX() / 16.0f);
+        vertexData.add(vert.getY() / 16.0f);
+        vertexData.add(vert.getZ() / 16.0f);
+        vertexData.add(u);
+        vertexData.add(v);
+        vertexData.add(-normal.getX());
+        vertexData.add(-normal.getY());
+        vertexData.add(-normal.getZ());
     }
 
     public void readNbt(NbtCompound partNbt) {
@@ -646,7 +650,9 @@ public class CustomModelPart {
         if (partNbt.contains("ptype")) {
             try {
                 this.parentType = ParentType.valueOf(partNbt.get("ptype").asString());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                this.parentType = ParentType.Model;
+            }
         }
         if (partNbt.contains("mmc")) {
             this.isMimicMode = ((NbtByte) partNbt.get("mmc")).byteValue() == 1;
@@ -663,7 +669,9 @@ public class CustomModelPart {
         if (partNbt.contains("stype")) {
             try {
                 this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+                this.shaderType = ShaderType.None;
+            }
         }
 
         if (partNbt.contains("chld")) {
@@ -733,7 +741,7 @@ public class CustomModelPart {
     }
 
     public boolean isParentSpecial() {
-        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra;
+        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra || parentType == ParentType.Skull;
     }
 
     public void applyTrueOffset(Vec3f offset) {}
@@ -755,10 +763,11 @@ public class CustomModelPart {
         LeftParrotOrigin, //Left origin position of the shoulder parrot
         RightParrotOrigin, //Right origin position of the shoulder parrot
         LeftElytra, //Left position of the elytra model
-        RightElytra, //Right position of the elytra model,
+        RightElytra, //Right position of the elytra model
         LeftSpyglass, //Left position of the spyglass model
         RightSpyglass, //Right position of the spyglass model
-        Camera //paparazzi
+        Camera, //paparazzi
+        Skull
     }
 
     public enum RotationType {
@@ -796,6 +805,38 @@ public class CustomModelPart {
         Cape,
         Elytra,
         Resource
+    }
+
+    public enum UV {
+        ALL,
+        NORTH,
+        SOUTH,
+        WEST,
+        EAST,
+        UP,
+        DOWN
+    }
+
+    public static class uvData {
+        public Vec2f uvOffset, uvSize;
+
+        public void setUVOffset(Vec2f uvOffset) {
+            this.uvOffset = uvOffset;
+        }
+
+        public void setUVSize(Vec2f uvSize) {
+            this.uvSize = uvSize;
+        }
+    }
+
+    public void applyUVMods(LuaVector v) {
+        if (v != null) texSize = new Vec2f(v.x(), v.y());
+        rebuild();
+
+        children.forEach(child -> {
+            child.UVCustomizations = UVCustomizations;
+            child.applyUVMods(v);
+        });
     }
 
     //---------MODEL PART TYPES---------
@@ -842,7 +883,7 @@ public class CustomModelPart {
 
     private static Vec3f vec3fFromNbt(@Nullable NbtList nbt) {
         if (nbt == null || nbt.getHeldType() != NbtType.FLOAT)
-            return new Vec3f(0.f, 0.f, 0.f);
+            return new Vec3f(0f, 0f, 0f);
         return new Vec3f(nbt.getFloat(0), nbt.getFloat(1), nbt.getFloat(2));
     }
 

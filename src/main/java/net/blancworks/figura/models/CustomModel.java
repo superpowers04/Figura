@@ -3,18 +3,21 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.assets.FiguraAsset;
+import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -30,8 +33,9 @@ public class CustomModel extends FiguraAsset {
     public ArrayList<CustomModelPart> leftElytraParts = new ArrayList<>();
     public ArrayList<CustomModelPart> rightElytraParts = new ArrayList<>();
     public ArrayList<CustomModelPart> worldParts = new ArrayList<>();
+    public ArrayList<CustomModelPart> skullParts = new ArrayList<>();
 
-    public float texWidth = 64, texHeight = 64;
+    public Vec2f defaultTextureSize = new Vec2f(0f, 0f);
 
     public int leftToRender = 0;
     public int lastComplexity = 0;
@@ -64,11 +68,11 @@ public class CustomModel extends FiguraAsset {
         return tc != null ? tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) : 0;
     }
 
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        render(player_model, matrices, new MatrixStack(), vcp, light, overlay, alpha);
+    public void render(EntityModel<?> entity_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        render(entity_model, matrices, new MatrixStack(), vcp, light, overlay, alpha);
     }
 
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, MatrixStack transformStack,  VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+    public void render(EntityModel<?> entity_model, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         leftToRender = getMaxRenderAmount();
         int maxRender = leftToRender;
 
@@ -84,7 +88,9 @@ public class CustomModel extends FiguraAsset {
             matrices.push();
 
             try {
-                player_model.setVisible(false);
+                if (entity_model instanceof PlayerEntityModel player_model) {
+                    player_model.setVisible(false);
+                }
 
                 //By default, use blockbench rotation.
                 part.rotationType = CustomModelPart.RotationType.BlockBench;
@@ -112,6 +118,7 @@ public class CustomModel extends FiguraAsset {
         int prevCount = playerData.model.leftToRender;
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
 
+        //CustomModelPart.applyHiddenTransforms = false;
         for (CustomModelPart part : playerData.model.allParts) {
             if (arm == model.rightArm)
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.RightArm;
@@ -120,8 +127,42 @@ public class CustomModel extends FiguraAsset {
 
             playerData.model.leftToRender = part.render(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
         }
+        //CustomModelPart.applyHiddenTransforms = true;
 
         playerData.model.leftToRender = prevCount;
+    }
+
+    public boolean renderSkull(PlayerData data, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        data.model.leftToRender = getMaxRenderAmount();
+
+        if (!data.model.skullParts.isEmpty()) {
+            for (CustomModelPart modelPart : data.model.skullParts) {
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+
+                if (data.model.leftToRender <= 0)
+                    break;
+            }
+
+            return true;
+        }
+        else {
+            CustomModelPart.applyHiddenTransforms = false;
+            for (CustomModelPart modelPart : data.model.allParts) {
+                CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+
+                if (data.model.leftToRender <= 0)
+                    break;
+            }
+            CustomModelPart.applyHiddenTransforms = true;
+
+            if (data.script != null) {
+                VanillaModelPartCustomization customization = data.script.allCustomizations.get(VanillaModelAPI.VANILLA_HEAD);
+                return customization != null && customization.visible != null && !customization.visible;
+            }
+        }
+
+        return false;
     }
 
     public void writeNbt(NbtCompound nbt) {
@@ -161,6 +202,7 @@ public class CustomModel extends FiguraAsset {
         leftElytraParts.clear();
         rightElytraParts.clear();
         worldParts.clear();
+        skullParts.clear();
 
         for (CustomModelPart part : allParts) {
             sortPart(part);
@@ -168,12 +210,11 @@ public class CustomModel extends FiguraAsset {
     }
 
     public void sortPart(CustomModelPart part) {
-        if (part.parentType == CustomModelPart.ParentType.LeftElytra) {
-            leftElytraParts.add(part);
-        } else if (part.parentType == CustomModelPart.ParentType.RightElytra) {
-            rightElytraParts.add(part);
-        } else if (part.parentType == CustomModelPart.ParentType.WORLD) {
-            worldParts.add(part);
+        switch(part.parentType) {
+            case LeftElytra -> leftElytraParts.add(part);
+            case RightElytra -> rightElytraParts.add(part);
+            case WORLD -> worldParts.add(part);
+            case Skull -> skullParts.add(part);
         }
 
         for (CustomModelPart child : part.children) {

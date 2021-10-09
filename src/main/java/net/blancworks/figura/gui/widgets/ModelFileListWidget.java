@@ -9,6 +9,8 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import org.apache.commons.io.FilenameUtils;
 
 import java.io.File;
@@ -17,7 +19,7 @@ import java.util.zip.ZipFile;
 
 public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, ModelFileListWidget.ModelFileListWidgetEntry> {
 
-    public ModelFileListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
+    public ModelFileListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget<?, ?> list, Screen parent, CustomListWidgetState<?> state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
     }
 
@@ -33,6 +35,21 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
             e.printStackTrace();
         }
 
+        //add empty entry
+        if (searchTerm.equals(""))
+            addEntry(new ModelFileListWidgetEntry(" ", this) {
+                @Override
+                public String getName() {
+                    return null;
+                }
+
+                @Override
+                public Text getDisplayText() {
+                    return new TranslatableText("models.figura.none").formatted(Formatting.ITALIC, Formatting.DARK_GRAY);
+                }
+            });
+
+        //add model_files avatars
         File[] files = contentDirectory.listFiles();
         if (files == null) return;
 
@@ -79,14 +96,17 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
         super.select(entry);
 
         FiguraGuiScreen parent = (FiguraGuiScreen) getParent();
-
-        parent.clickButton(entry.getEntryObject().toString());
+        parent.clickButton(entry.getName());
     }
 
-    public class ModelFileListWidgetEntry extends CustomListEntry {
+    public static class ModelFileListWidgetEntry extends CustomListEntry {
 
-        public ModelFileListWidgetEntry(String obj, CustomListWidget list) {
+        public ModelFileListWidgetEntry(String obj, CustomListWidget<?, ?> list) {
             super(obj, list);
+        }
+
+        public String getName() {
+            return getIdentifier();
         }
 
         @Override

@@ -1,6 +1,7 @@
 package net.blancworks.figura.lua.api.model;
 
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
@@ -35,6 +36,9 @@ public class VanillaModelAPI {
     public static final String VANILLA_LEFT_PANTS = "LEFT_PANTS_LEG";
     public static final String VANILLA_RIGHT_PANTS = "RIGHT_PANTS_LEG";
 
+    //extra parts
+    public static final String VANILLA_CLOAK = "CAPE";
+    public static final String VANILLA_EAR = "EAR";
 
     public static Identifier getID() {
         return new Identifier("default", "vanilla_model");
@@ -61,6 +65,9 @@ public class VanillaModelAPI {
 
             set(VANILLA_LEFT_PANTS, getTableForPart(() -> getCurrModel.get().leftPants, VANILLA_LEFT_PANTS, script));
             set(VANILLA_RIGHT_PANTS, getTableForPart(() -> getCurrModel.get().rightPants, VANILLA_RIGHT_PANTS, script));
+
+            set(VANILLA_CLOAK, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getCloak(), VANILLA_CLOAK, script));
+            set(VANILLA_EAR, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getEar(), VANILLA_EAR, script));
         }});
     }
 
