@@ -1,8 +1,8 @@
 package net.blancworks.figura.models.shaders;
 
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
+import net.minecraft.nbt.NbtCompound;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.CompletableFuture;
@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class FiguraRenderLayer extends RenderLayer {
 
-    //Set at the end of the parse() method in FiguraVertexConsumerProvider
+    //Set at the end of the parse method in FiguraVertexConsumerProvider
     private CompletableFuture<net.minecraft.client.render.Shader> customShader;
 
     public FiguraRenderLayer(String name, VertexFormat vertexFormat, VertexFormat.DrawMode drawMode, int expectedSize, boolean crumbling, boolean translucent, Runnable preDraw, Runnable postDraw, CompletableFuture<net.minecraft.client.render.Shader> customShader) {
@@ -24,7 +24,8 @@ public class FiguraRenderLayer extends RenderLayer {
 
     @Nullable
     public net.minecraft.client.render.Shader getShader() {
-        if (customShader == null) return null;
+        if (customShader == null)
+            return null;
         return customShader.getNow(null);
     }
 }

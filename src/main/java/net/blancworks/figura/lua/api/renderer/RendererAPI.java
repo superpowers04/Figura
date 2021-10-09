@@ -101,7 +101,7 @@ public class RendererAPI {
                             if (customShader instanceof FiguraShader)
                                 ((FiguraShader) customShader).setUniformFromLua(uniformName, value);
                             else
-                                throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Both are bad!");
+                                throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
                         } catch (LuaError error) {
                             script.stopScript(error);
                         }

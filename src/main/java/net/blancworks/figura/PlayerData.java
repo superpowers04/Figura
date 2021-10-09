@@ -126,6 +126,13 @@ public class PlayerData {
             nbt.put("script", scriptNbt);
         }
 
+        //Put Render Layers.
+        if (customVCP != null) {
+            NbtCompound vcpNbt = new NbtCompound();
+            customVCP.writeNbt(vcpNbt);
+            nbt.put("customVCP", vcpNbt);
+        }
+
         if (!extraTextures.isEmpty()) {
             NbtList texList = new NbtList();
 
@@ -152,6 +159,7 @@ public class PlayerData {
         model = null;
         texture = null;
         script = null;
+        customVCP = null;
 
         extraTextures.clear();
 
@@ -198,6 +206,18 @@ public class PlayerData {
                 if (scriptNbt != null) FiguraMod.doTask(() -> {
                     script = new CustomScript();
                     script.fromNBT(this, scriptNbt);
+                });
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            if (nbt.contains("customVCP")) {
+                NbtCompound vcpNbt = nbt.getCompound("customVCP");
+
+                if (vcpNbt != null) FiguraMod.doTask(() -> {
+                    FiguraVertexConsumerProvider.parseFromNbt(this, vcpNbt);
                 });
             }
         } catch (Exception e) {

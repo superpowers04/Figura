@@ -359,7 +359,7 @@ public class LocalPlayerData extends PlayerData {
             InputStream finalInputStream = inputStream;
             if (inputStream != null) {
                 FiguraMod.doTask(() -> {
-                    FiguraVertexConsumerProvider.parse(this, finalInputStream, avatarFolder);
+                    FiguraVertexConsumerProvider.parseLocal(this, finalInputStream, avatarFolder);
                     try {
                         finalInputStream.close();
                     } catch (IOException e) {

@@ -6,23 +6,23 @@ import net.minecraft.resource.metadata.ResourceMetadataReader;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-/**
- * A custom ResourceFactory for use with the Shader constructor.
- * It ignores namespaces, and instead gets its values from figura files.
- * This is specifically designed to work with the Shader constructor, as such it is incredibly janky and just overall bad.
- */
+public class FiguraNbtShaderResourceFactory implements ResourceFactory {
 
-public class FiguraShaderResourceFactory implements ResourceFactory {
+    private String jsonString;
+    private String vertexString;
+    private String fragmentString;
 
-    public Path rootPath;
-
-    public FiguraShaderResourceFactory(Path root) {
-        rootPath = root;
+    public FiguraNbtShaderResourceFactory(String json, String vert, String frag) {
+        jsonString = json;
+        vertexString = vert;
+        fragmentString = frag;
     }
 
     @Override
@@ -38,21 +38,16 @@ public class FiguraShaderResourceFactory implements ResourceFactory {
 
             @Override
             public InputStream getInputStream() {
-                try {
-                    //this.stream = DefaultResourcePack.this.open(ResourceType.CLIENT_RESOURCES, identifier);
-                    String str = identifier.getPath();
-                    //str currently looks something like:
-                    //"shaders/core/IMPORTANT_INFO.json" or "shaders/core/IMPORTANT_INFO.vsh"
-                    //We want to prune away the "shaders/core" at the front.
-                    str = str.substring(13); //"IMPORTANT_INFO.fileExtension"
-
-                    Path resourcePath = rootPath.resolve(str);
-                    stream = Files.newInputStream(resourcePath);
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (identifier.getPath().endsWith(".json")) {
+                    stream = new ByteArrayInputStream(jsonString.getBytes(StandardCharsets.UTF_8));
+                } else if (identifier.getPath().endsWith(".vsh")) {
+                    stream = new ByteArrayInputStream(vertexString.getBytes(StandardCharsets.UTF_8));
+                } else if (identifier.getPath().endsWith(".fsh")) {
+                    stream = new ByteArrayInputStream(fragmentString.getBytes(StandardCharsets.UTF_8));
+                } else {
+                    System.out.println("Issue with NBT handling. FiguraNbtShaderResourceFactory.java");
+                    stream = new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8));
                 }
-
                 return stream;
             }
 

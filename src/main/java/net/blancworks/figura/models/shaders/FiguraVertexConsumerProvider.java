@@ -1,28 +1,40 @@
 package net.blancworks.figura.models.shaders;
 
+import com.google.gson.JsonObject;
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.mixin.RenderPhaseInvoker;
+import net.blancworks.figura.mixin.RenderPhaseInvokerMixin;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.Program;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
+import net.minecraft.resource.Resource;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
 import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.JsonHelper;
 import net.minecraft.util.Pair;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -30,6 +42,7 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
     private static final ArrayList<String> defaultTextures;
     private final Map<String, FiguraRenderLayer> stringLayerMap = new HashMap<>();
+    private final NbtList nbtData = new NbtList();
 
     protected FiguraVertexConsumerProvider(BufferBuilder fallbackBuffer, Map<RenderLayer, BufferBuilder> layerBuilderMap) {
         super(fallbackBuffer, layerBuilderMap);
@@ -69,14 +82,11 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
      * @param rootPath The path to the folder containing model.bbmodel
      */
 
-    public static void parse(PlayerData playerData, InputStream inputStream, Path rootPath) {
+    public static void parseLocal(PlayerData playerData, InputStream inputStream, Path rootPath) {
         try {
+
             Map<RenderLayer, BufferBuilder> layerBufferBuilderMap = new HashMap<>();
-
-            playerData.customVCP = new FiguraVertexConsumerProvider(new BufferBuilder(256), layerBufferBuilderMap);
-
-//            Reader reader = Files.newBufferedReader(renderLayersFile.toPath());
-//            Map jsonData = FiguraMod.GSON.fromJson(reader, Map.class);
+            FiguraVertexConsumerProvider newVcp = new FiguraVertexConsumerProvider(new BufferBuilder(256), layerBufferBuilderMap);
 
             Reader reader = new InputStreamReader(inputStream);
             Map jsonData = FiguraMod.GSON.fromJson(reader, Map.class);
@@ -86,6 +96,9 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
             //Get arraylist of renderLayers, iterate over them all
             ArrayList<Map> renderLayers = (ArrayList<Map>) jsonData.get("render_layers");
             for (Map layer : renderLayers) {
+
+                NbtCompound layerCompound = new NbtCompound();
+
                 //Get basic information about the renderLayer
                 String name = layer.getOrDefault("name", "layerName").toString();
                 VertexFormat vertexFormat = vertexFormatMap.get(layer.getOrDefault("vertexFormat", "POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL").toString());
@@ -119,26 +132,56 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                 String transparencyStr = parameters.getOrDefault("transparency", "NO_TRANSPARENCY").toString();
                 String texturingModeStr = parameters.getOrDefault("texturing", "DEFAULT_TEXTURING").toString();
 
+                //Put the information we just gathered from json into the nbt tag:
+                layerCompound.putString("name", name);
+                layerCompound.putString("vertexFormat", layer.getOrDefault("vertexFormat", "POSITION_COLOR_TEXTURE_OVERLAY_LIGHT_NORMAL").toString());
+                layerCompound.putString("drawMode", layer.getOrDefault("drawMode", "QUADS").toString());
+                layerCompound.putInt("expectedBufferSize", expectedBufferSize);
+                layerCompound.putBoolean("hasCrumbling", hasCrumbling);
+                layerCompound.putBoolean("translucent", translucent);
+                NbtCompound nbtParams = new NbtCompound();
+                NbtList nbtTextures = new NbtList();
+                for (String s : textures)
+                    nbtTextures.add(nbtTextures.size(), NbtString.of(s));
+                nbtParams.put("textures", nbtTextures);
+                nbtParams.putBoolean("lightmap", enableLightmap);
+                nbtParams.putBoolean("overlay", enableOverlay);
+                nbtParams.putBoolean("cull", enableCull);
+                nbtParams.putString("depthTest", depthTestStr);
+                nbtParams.putString("writeMaskState", writeMaskStateStr);
+                nbtParams.putDouble("lineWidth", lineWidth);
+                nbtParams.putString("layering", layeringModeStr);
+                nbtParams.putString("target", targetStr);
+                nbtParams.putString("transparency", transparencyStr);
+                nbtParams.putString("texturing", texturingModeStr);
+
                 //Create the shader
                 CompletableFuture<Shader> shader = new CompletableFuture<>();
                 boolean isVanillaShader = vanillaShaderMap.containsKey(shaderStr);
+                FiguraLocalShaderResourceFactory localShaderFactory = null;
                 if (isVanillaShader) {
                     //The chosen shader is a vanilla shader, so get it from this map.
                     shader.complete(vanillaShaderMap.get(shaderStr).get());
                 } else {
                     //This shader is not a vanilla shader, so create a new one.
-                    FiguraShaderResourceFactory shaderFactory = new FiguraShaderResourceFactory(rootPath);
+                    localShaderFactory = new FiguraLocalShaderResourceFactory(rootPath);
+                    FiguraLocalShaderResourceFactory finalShaderFactory = localShaderFactory; //For lambda
                     RenderSystem.recordRenderCall(() -> {
                         try {
+                            //Append the UUID of the player to the front of the shader string,
+                            //so that two players using shaders with the same name can have different shaders.
+                            String playerShaderStr = playerData.playerId.toString()+"-"+shaderStr;
+
                             //Remove shader from the cache, so it can be changed
                             //Without this, problems arise when:
                             //Saving the file, since the cached version remains
                             //If you load two avatars that have a shader with the same name, the two will use
                             //The same shader.
                             //These following two lines are to prevent this behavior.
-                            Program.Type.VERTEX.getProgramCache().put(shaderStr, null);
-                            Program.Type.FRAGMENT.getProgramCache().put(shaderStr, null);
-                            Shader customShader = new FiguraShader(shaderFactory, shaderStr, vertexFormat);
+                            Program.Type.VERTEX.getProgramCache().put(playerShaderStr, null);
+                            Program.Type.FRAGMENT.getProgramCache().put(playerShaderStr, null);
+
+                            Shader customShader = new FiguraShader(finalShaderFactory, playerShaderStr, vertexFormat);
                             shader.complete(customShader);
                         } catch (IOException e) {
                             CustomScript.sendChatMessage(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
@@ -147,156 +190,287 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                     });
                 }
 
+                //Put the shader information into the parameters nbt tag
+                if (isVanillaShader) {
+                    nbtParams.putString("vanillaShader", shaderStr);
+                } else {
+                    NbtCompound shaderNbt = new NbtCompound();
+                    //Get the shader's json file
+                    Identifier jsonIdentifier = new Identifier("shaders/core/uuiduuid-uuid-uuid-uuid-uuiduuiduuid-" + shaderStr + ".json");
+                    Resource jsonResource = localShaderFactory.getResource(jsonIdentifier);
+                    JsonObject jsonObject = JsonHelper.deserialize(new InputStreamReader(jsonResource.getInputStream(), StandardCharsets.UTF_8));
+                    //Get paths to the vertex and fragment shaders
+                    String vshPath = "shaders/core/uuiduuid-uuid-uuid-uuid-uuiduuiduuid-" + JsonHelper.getString(jsonObject, "vertex") + ".vsh";
+                    String fshPath = "shaders/core/uuiduuid-uuid-uuid-uuid-uuiduuiduuid-" + JsonHelper.getString(jsonObject, "fragment") + ".fsh";
+                    //Get input streams for each of the 3 files
+                    Resource vshResource = localShaderFactory.getResource(new Identifier(vshPath));
+                    Resource fshResource = localShaderFactory.getResource(new Identifier(fshPath));
+                    InputStream jsonStream = jsonResource.getInputStream();
+                    InputStream vshStream = vshResource.getInputStream();
+                    InputStream fshStream = fshResource.getInputStream();
+                    //Get strings for each of the 3 files
+                    String jsonString = new String(jsonStream.readAllBytes(), StandardCharsets.UTF_8);
+                    String vshString = new String(vshStream.readAllBytes(), StandardCharsets.UTF_8);
+                    String fshString = new String(fshStream.readAllBytes(), StandardCharsets.UTF_8);
+
+                    //Close resources
+                    IOUtils.closeQuietly(jsonResource);
+                    IOUtils.closeQuietly(vshResource);
+                    IOUtils.closeQuietly(fshResource);
+
+                    //Put nbt
+                    shaderNbt.putString("name", shaderStr);
+                    shaderNbt.putString("json", jsonString);
+                    shaderNbt.putString("vertex", vshString);
+                    shaderNbt.putString("fragment", fshString);
+                    nbtParams.put("shader", shaderNbt);
+                }
+
+                //Put the finalized parameters into the nbt layer
+                layerCompound.put("parameters", nbtParams);
+                //Insert this new layer into the nbt data
+                newVcp.nbtData.addElement(newVcp.nbtData.size(), layerCompound);
+
                 //preDraw: setup all the render system environment variables for this layer.
-                Runnable preDraw = () -> {
-                    //Set the shader
-                    try {
-                        Shader shaderToSet = shader.getNow(null);
-                        if (shaderToSet != null)
-                            RenderSystem.setShader(() -> shaderToSet);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-
-                    //Set textures using the provided strings
-                    RenderSystem.enableTexture();
-                    for (int i = 0; i < textures.size(); i++) {
-                        String textureStr = textures.get(i);
-                        if (textureStr.equals("MY_TEXTURE")) {
-                            RenderSystem.setShaderTexture(i, playerData.texture.id);
-                        } else if (!textureStr.equals("SKIP")) { //If there is no texture, then don't set the shader texture
-                            RenderSystem.setShaderTexture(i, new Identifier(textureStr));
-                        }
-                    }
-
-                    //Enable lightmap if requested
-                    if (enableLightmap) {
-                        MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().enable();
-                    }
-                    //Enable overlay if requested
-                    if (enableOverlay) {
-                        MinecraftClient.getInstance().gameRenderer.getOverlayTexture().setupOverlayColor();
-                    }
-                    //Disable culling if requested
-                    if (!enableCull) {
-                        RenderSystem.disableCull();
-                    }
-                    //Set depth test flags using chosen depth test mode
-                    int depthTestFlags = depthTestsMap.get(depthTestStr);
-                    if (depthTestFlags != 519) {
-                        RenderSystem.enableDepthTest();
-                        RenderSystem.depthFunc(depthTestFlags);
-                    }
-                    //Setup write mask using chosen mode
-                    boolean color = writeMaskStatesMap.get(writeMaskStateStr).getLeft();
-                    boolean depth = writeMaskStatesMap.get(writeMaskStateStr).getRight();
-                    if (!depth) {
-                        RenderSystem.depthMask(false);
-                    }
-                    if (!color) {
-                        RenderSystem.colorMask(false, false, false,false);
-                    }
-                    //Setup line width
-                    if (lineWidth != 1.0) {
-                        if (lineWidth < 0) {
-                            RenderSystem.lineWidth(Math.max(2.5F, (float)MinecraftClient.getInstance().getWindow().getFramebufferWidth() / 1920.0F * 2.5F));
-                        } else {
-                            RenderSystem.lineWidth(lineWidth.floatValue());
-                        }
-                    }
-                    //Setup layering mode
-                    layeringModesMap.get(layeringModeStr).getLeft().run();
-                    //Setup target
-                    if (!targetStr.equals("MAIN_TARGET")) {
-                        Pair<Boolean, Supplier<Framebuffer>> targetEntry = targetsMap.get(targetStr);
-                        if (!targetEntry.getLeft() || MinecraftClient.isFabulousGraphicsOrBetter()) {
-                            targetEntry.getRight().get().beginWrite(false);
-                        }
-                    }
-
-                    //Setup transparency mode
-                    transparencyModesMap.get(transparencyStr).run();
-                    //Setup texturing mode
-                    texturingModesMap.get(texturingModeStr).run();
-                };
+                Runnable preDraw = getPreDraw(playerData, shader, textures, enableLightmap, enableOverlay, enableCull,
+                        depthTestStr, writeMaskStateStr, lineWidth, layeringModeStr, targetStr, transparencyStr, texturingModeStr);
 
                 //post draw: Reset environment variables back to defaults.
-                Runnable postDraw = () -> {
-
-                    //Disable lightmap if it was enabled
-                    if (enableLightmap) {
-                        MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().disable();
-                    }
-
-                    //Disable overlay if it was enabled
-                    if (enableOverlay) {
-                        MinecraftClient.getInstance().gameRenderer.getOverlayTexture().teardownOverlayColor();
-                    }
-
-                    //Re-enable culling if it was disabled
-                    if (!enableCull) {
-                        RenderSystem.enableCull();
-                    }
-
-                    //Reset depth test
-                    int depthTestFlags = depthTestsMap.get(depthTestStr);
-                    if (depthTestFlags != 519) {
-                        RenderSystem.disableDepthTest();
-                        RenderSystem.depthFunc(515);
-                    }
-
-                    //Reset Write mask
-                    boolean color = writeMaskStatesMap.get(writeMaskStateStr).getLeft();
-                    boolean depth = writeMaskStatesMap.get(writeMaskStateStr).getRight();
-                    if (!depth) {
-                        RenderSystem.depthMask(true);
-                    }
-                    if (!color) {
-                        RenderSystem.colorMask(true, true, true,true);
-                    }
-
-                    //Reset line width
-                    if (lineWidth != 1.0) {
-                        RenderSystem.lineWidth(1.0F);
-                    }
-
-                    //Reset layering mode
-                    layeringModesMap.get(layeringModeStr).getRight().run();
-
-                    //Reset target
-                    if (!targetStr.equals("MAIN_TARGET")) {
-                        boolean requiresFabulous = targetsMap.get(targetStr).getLeft();
-                        if (!requiresFabulous || MinecraftClient.isFabulousGraphicsOrBetter()) {
-                            MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
-                        }
-                    }
-
-                    //Reset transparency
-                    RenderSystem.disableBlend();
-                    RenderSystem.defaultBlendFunc();
-
-                    //Reset Texturing mode (glint)
-                    RenderSystem.resetTextureMatrix();
-                };
+                Runnable postDraw = getPostDraw(enableLightmap, enableOverlay, enableCull, depthTestStr, writeMaskStateStr,
+                        lineWidth, layeringModeStr, targetStr);
 
                 //Now we have everything we need to actually construct the RenderLayer.
-                FiguraRenderLayer renderLayer;
-                if (!isVanillaShader) //If not a vanilla shader, store the custom shader in the render layer
-                    renderLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw, shader);
-                else
-                    renderLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw, null);
+                FiguraRenderLayer renderLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw, shader);
 
                 BufferBuilder bufferBuilder = new BufferBuilder(renderLayer.getExpectedBufferSize());
 
                 //Put the render layer into the map
                 layerBufferBuilderMap.put(renderLayer, bufferBuilder);
                 //Keep a reference to the render layer by name
-                playerData.customVCP.stringLayerMap.put(name, renderLayer);
+                newVcp.stringLayerMap.put(name, renderLayer);
             }
+
+            playerData.customVCP = newVcp;
         } catch(Exception e) {
             e.printStackTrace();
         }
+        FiguraMod.LOGGER.info("Local Renderlayer Loading Finished");
+    }
 
+    //Split these into their own methods, so we can call them when we want to load from nbt
+    private static Runnable getPreDraw(PlayerData playerData, CompletableFuture<Shader> shader, ArrayList<String> textures,
+                                       boolean enableLightmap, boolean enableOverlay, boolean enableCull, String depthTestStr,
+                                       String writeMaskStateStr, Double lineWidth, String layeringModeStr, String targetStr,
+                                       String transparencyStr, String texturingModeStr) {
+        return () -> {
+            //Set the shader
+            try {
+                Shader shaderToSet = shader.getNow(null);
+                if (shaderToSet != null)
+                    RenderSystem.setShader(() -> shaderToSet);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            //Set textures using the provided strings
+            RenderSystem.enableTexture();
+            for (int i = 0; i < textures.size(); i++) {
+                String textureStr = textures.get(i);
+                if (textureStr.equals("MY_TEXTURE")) {
+                    RenderSystem.setShaderTexture(i, playerData.texture.id);
+                } else if (!textureStr.equals("SKIP")) { //If there is no texture, then don't set the shader texture
+                    RenderSystem.setShaderTexture(i, new Identifier(textureStr));
+                }
+            }
+
+            //Enable lightmap if requested
+            if (enableLightmap) {
+                MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().enable();
+            }
+            //Enable overlay if requested
+            if (enableOverlay) {
+                MinecraftClient.getInstance().gameRenderer.getOverlayTexture().setupOverlayColor();
+            }
+            //Disable culling if requested
+            if (!enableCull) {
+                RenderSystem.disableCull();
+            }
+            //Set depth test flags using chosen depth test mode
+            int depthTestFlags = depthTestsMap.get(depthTestStr);
+            if (depthTestFlags != 519) {
+                RenderSystem.enableDepthTest();
+                RenderSystem.depthFunc(depthTestFlags);
+            }
+            //Setup write mask using chosen mode
+            boolean color = writeMaskStatesMap.get(writeMaskStateStr).getLeft();
+            boolean depth = writeMaskStatesMap.get(writeMaskStateStr).getRight();
+            if (!depth) {
+                RenderSystem.depthMask(false);
+            }
+            if (!color) {
+                RenderSystem.colorMask(false, false, false,false);
+            }
+            //Setup line width
+            if (lineWidth != 1.0) {
+                if (lineWidth < 0) {
+                    RenderSystem.lineWidth(Math.max(2.5F, (float)MinecraftClient.getInstance().getWindow().getFramebufferWidth() / 1920.0F * 2.5F));
+                } else {
+                    RenderSystem.lineWidth(lineWidth.floatValue());
+                }
+            }
+            //Setup layering mode
+            layeringModesMap.get(layeringModeStr).getLeft().run();
+            //Setup target
+            if (!targetStr.equals("MAIN_TARGET")) {
+                Pair<Boolean, Supplier<Framebuffer>> targetEntry = targetsMap.get(targetStr);
+                if (!targetEntry.getLeft() || MinecraftClient.isFabulousGraphicsOrBetter()) {
+                    targetEntry.getRight().get().beginWrite(false);
+                }
+            }
+
+            //Setup transparency mode
+            transparencyModesMap.get(transparencyStr).run();
+            //Setup texturing mode
+            texturingModesMap.get(texturingModeStr).run();
+        };
+    }
+
+    private static Runnable getPostDraw(boolean enableLightmap, boolean enableOverlay, boolean enableCull, String depthTestStr,
+                                        String writeMaskStateStr, Double lineWidth, String layeringModeStr, String targetStr) {
+        return () -> {
+
+            //Disable lightmap if it was enabled
+            if (enableLightmap) {
+                MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().disable();
+            }
+
+            //Disable overlay if it was enabled
+            if (enableOverlay) {
+                MinecraftClient.getInstance().gameRenderer.getOverlayTexture().teardownOverlayColor();
+            }
+
+            //Re-enable culling if it was disabled
+            if (!enableCull) {
+                RenderSystem.enableCull();
+            }
+
+            //Reset depth test
+            int depthTestFlags = depthTestsMap.get(depthTestStr);
+            if (depthTestFlags != 519) {
+                RenderSystem.disableDepthTest();
+                RenderSystem.depthFunc(515);
+            }
+
+            //Reset Write mask
+            boolean color = writeMaskStatesMap.get(writeMaskStateStr).getLeft();
+            boolean depth = writeMaskStatesMap.get(writeMaskStateStr).getRight();
+            if (!depth) {
+                RenderSystem.depthMask(true);
+            }
+            if (!color) {
+                RenderSystem.colorMask(true, true, true,true);
+            }
+
+            //Reset line width
+            if (lineWidth != 1.0) {
+                RenderSystem.lineWidth(1.0F);
+            }
+
+            //Reset layering mode
+            layeringModesMap.get(layeringModeStr).getRight().run();
+
+            //Reset target
+            if (!targetStr.equals("MAIN_TARGET")) {
+                boolean requiresFabulous = targetsMap.get(targetStr).getLeft();
+                if (!requiresFabulous || MinecraftClient.isFabulousGraphicsOrBetter()) {
+                    MinecraftClient.getInstance().getFramebuffer().beginWrite(false);
+                }
+            }
+
+            //Reset transparency
+            RenderSystem.disableBlend();
+            RenderSystem.defaultBlendFunc();
+
+            //Reset Texturing mode (glint)
+            RenderSystem.resetTextureMatrix();
+        };
+    }
+
+    /**
+     * Writes the data for the render layers into the provided tag
+     */
+    public void writeNbt(NbtCompound tag) {
+        tag.put("layers", nbtData);
+    }
+
+    public static void parseFromNbt(PlayerData playerData, NbtCompound vcpNbt) {
+        NbtList layers = vcpNbt.getList("layers", NbtElement.COMPOUND_TYPE);
+
+        Map<RenderLayer, BufferBuilder> layerBufferBuilderMap = new HashMap<>();
+        FiguraVertexConsumerProvider newVcp = new FiguraVertexConsumerProvider(new BufferBuilder(256), layerBufferBuilderMap);
+        layers.forEach((layer) -> {
+            NbtCompound layerCompound = (NbtCompound) layer;
+            String name = layerCompound.getString("name");
+            VertexFormat vertexFormat = vertexFormatMap.get(layerCompound.getString("vertexFormat"));
+            VertexFormat.DrawMode drawMode = drawModeMap.get(layerCompound.getString("drawMode"));
+            int expectedBufferSize = layerCompound.getInt("expectedBufferSize");
+            boolean hasCrumbling = layerCompound.getBoolean("hasCrumbling");
+            boolean translucent = layerCompound.getBoolean("translucent");
+            NbtCompound nbtParams = layerCompound.getCompound("parameters");
+
+            NbtList nbtTextures = nbtParams.getList("textures", NbtElement.STRING_TYPE);
+            ArrayList<String> textures = new ArrayList<>();
+            for(NbtElement nbtStr : nbtTextures)
+                textures.add(((NbtString) nbtStr).asString());
+            boolean enableLightmap = nbtParams.getBoolean("lightmap");
+            boolean enableOverlay = nbtParams.getBoolean("overlay");
+            boolean enableCull = nbtParams.getBoolean("cull");
+            String depthTestStr = nbtParams.getString("depthTest");
+            String writeMaskStateStr = nbtParams.getString("writeMaskState");
+            Double lineWidth = nbtParams.getDouble("lineWidth");
+            String layeringModeStr = nbtParams.getString("layering");
+            String targetStr = nbtParams.getString("target");
+            String transparencyStr = nbtParams.getString("transparency");
+            String texturingModeStr = nbtParams.getString("texturing");
+
+            CompletableFuture<Shader> shader = new CompletableFuture<>();
+            if (nbtParams.contains("vanillaShader")) {
+                shader.complete(vanillaShaderMap.get(nbtParams.getString("vanillaShader")).get());
+            } else {
+                NbtCompound shaderNbt = nbtParams.getCompound("shader");
+                String shaderJson = shaderNbt.getString("json");
+                String shaderVert = shaderNbt.getString("vertex");
+                String shaderFrag = shaderNbt.getString("fragment");
+                String shaderStr = shaderNbt.getString("name");
+                FiguraNbtShaderResourceFactory nbtShaderFactory = new FiguraNbtShaderResourceFactory(shaderJson, shaderVert, shaderFrag);
+                RenderSystem.recordRenderCall(() -> {
+                    try {
+                        String playerShaderStr = playerData.playerId.toString()+"-"+shaderStr;
+                        Program.Type.VERTEX.getProgramCache().put(playerShaderStr, null);
+                        Program.Type.FRAGMENT.getProgramCache().put(playerShaderStr, null);
+                        Shader customShader = new FiguraShader(nbtShaderFactory, playerShaderStr, vertexFormat);
+                        shader.complete(customShader);
+                    } catch (IOException e) {
+                        shader.complete(vanillaShaderMap.get("RENDERTYPE_ENTITY_TRANSLUCENT_SHADER").get());
+                    }
+                });
+            }
+
+            //preDraw: setup all the render system environment variables for this layer.
+            Runnable preDraw = getPreDraw(playerData, shader, textures, enableLightmap, enableOverlay, enableCull,
+                    depthTestStr, writeMaskStateStr, lineWidth, layeringModeStr, targetStr, transparencyStr, texturingModeStr);
+            //post draw: Reset environment variables back to defaults.
+            Runnable postDraw = getPostDraw(enableLightmap, enableOverlay, enableCull, depthTestStr, writeMaskStateStr,
+                    lineWidth, layeringModeStr, targetStr);
+
+            FiguraRenderLayer renderLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw, shader);
+            BufferBuilder bufferBuilder = new BufferBuilder(renderLayer.getExpectedBufferSize());
+            layerBufferBuilderMap.put(renderLayer, bufferBuilder);
+            newVcp.stringLayerMap.put(name, renderLayer);
+        });
+
+        playerData.customVCP = newVcp;
+        FiguraMod.LOGGER.info("External Renderlayer Loading Finished");
     }
 
     /**
@@ -477,8 +651,8 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
         //Texturing modes
         texturingModesMap = new HashMap<>();
         texturingModesMap.put("DEFAULT_TEXTURING", () -> {}); //Do nothing
-        texturingModesMap.put("GLINT_TEXTURING", () -> RenderPhaseInvoker.setupGlintTexturing(8.0F));
-        texturingModesMap.put("ENTITY_GLINT_TEXTURING", () -> RenderPhaseInvoker.setupGlintTexturing(0.16F));
+        texturingModesMap.put("GLINT_TEXTURING", () -> RenderPhaseInvokerMixin.setupGlintTexturing(8.0F));
+        texturingModesMap.put("ENTITY_GLINT_TEXTURING", () -> RenderPhaseInvokerMixin.setupGlintTexturing(0.16F));
 
     }
 }

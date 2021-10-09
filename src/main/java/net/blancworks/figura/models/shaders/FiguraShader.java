@@ -24,7 +24,7 @@ public class FiguraShader extends Shader {
     public void setUniformFromLua(LuaValue name, LuaValue value) throws LuaError {
         GlUniform uniform = getUniform(name.checkjstring());
         if (uniform == null) {
-            throw new LuaError("No uniform with that name exists!");
+            throw new LuaError("No uniform with name " + name.checkjstring() + " exists!");
         } else {
             try {
                 value.checknotnil();

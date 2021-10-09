@@ -31,6 +31,8 @@
     "PlayerHeldItemFeatureRendererMixin",
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
+    "RenderPhaseInvokerMixin",
+    "ShaderMixin",
     "ShoulderParrotFeatureRendererMixin",
     "SkullBlockEntityRendererMixin",
     "SoundManagerMixin",
