@@ -25,15 +25,16 @@ public class ConfigManager {
     public static final String MOD_NAME = "figura";
 
     //mod config version
+    //change this only if you edit old configs
     public static final int CONFIG_VERSION = 1;
     private static final Map<Config, String> V0_CONFIG = new HashMap<>() {{
         put(Config.PREVIEW_NAMEPLATE, "previewNameTag");
         put(Config.FIGURA_BUTTON_LOCATION, "buttonLocation");
         put(Config.USE_LOCAL_SERVER, "useLocalServer");
         put(Config.SCRIPT_LOG_LOCATION, "scriptLog");
-        put(Config.LIST_NAMEPLATE_MODS, "listMods");
-        put(Config.CHAT_NAMEPLATE_MODS, "chatMods");
-        put(Config.ENTITY_NAMEPLATE_MODS, "nameTagMods");
+        put(Config.PLAYERLIST_MODIFICATIONS, "listMods");
+        put(Config.CHAT_MODIFICATIONS, "chatMods");
+        put(Config.NAMEPLATE_MODIFICATIONS, "nameTagMods");
         put(Config.BADGE_AS_ICONS, "nameTagIcon");
         put(Config.BADGES, "showBadges");
         put(Config.RENDER_OWN_NAMEPLATE, "ownNameTag");
@@ -44,15 +45,15 @@ public class ConfigManager {
         put(Config.RENDER_DEBUG_PARTS_PIVOT, "partsHitBox");
     }};
 
+    //configs!!
     public enum Config {
-        //configs!!
         PREVIEW_NAMEPLATE(true),
         FIGURA_BUTTON_LOCATION(4, 5),
         USE_LOCAL_SERVER(false),
         SCRIPT_LOG_LOCATION(0, 3),
-        LIST_NAMEPLATE_MODS(true),
-        CHAT_NAMEPLATE_MODS(true),
-        ENTITY_NAMEPLATE_MODS(true),
+        PLAYERLIST_MODIFICATIONS(true),
+        CHAT_MODIFICATIONS(true),
+        NAMEPLATE_MODIFICATIONS(true),
         BADGE_AS_ICONS(true),
         BADGES(true),
         RENDER_OWN_NAMEPLATE(false),
@@ -142,7 +143,6 @@ public class ConfigManager {
             FiguraMod.LOGGER.warn("Failed to load config file! Generating a new one...");
             e.printStackTrace();
             setDefaults();
-            saveConfig();
         }
     }
 
@@ -173,7 +173,7 @@ public class ConfigManager {
         }
     }
 
-    public static void copyConfig() {
+    public static void applyConfig() {
         for(Config config : Config.values()) {
             config.setValue(String.valueOf(config.configValue));
         }
@@ -198,20 +198,17 @@ public class ConfigManager {
         if (version == 0)
             versionMap = V0_CONFIG;
 
-        if (versionMap == null || versionMap.isEmpty())
+        if (versionMap == null)
             return;
 
-        for (Config config : Config.values()) {
-            if (versionMap.get(config) == null)
-                continue;
-
-            JsonElement object = json.get(versionMap.get(config));
+        for (Map.Entry<Config, String> config : versionMap.entrySet()) {
+            JsonElement object = json.get(config.getValue());
 
             if (object == null)
                 continue;
 
             String jsonValue = object.getAsString();
-            config.setValue(jsonValue);
+            Config.valueOf(config.getKey().toString()).setValue(jsonValue);
         }
     }
 

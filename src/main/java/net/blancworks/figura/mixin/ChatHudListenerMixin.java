@@ -28,7 +28,7 @@ public class ChatHudListenerMixin {
 
     @Inject(method = "onChatMessage", at = @At("HEAD"))
     private void onChatMessage(MessageType type, Text message, UUID senderUuid, CallbackInfo ci) {
-        if (!(boolean) Config.CHAT_NAMEPLATE_MODS.value)
+        if (!(boolean) Config.CHAT_MODIFICATIONS.value)
             return;
 
         String playerName = "";

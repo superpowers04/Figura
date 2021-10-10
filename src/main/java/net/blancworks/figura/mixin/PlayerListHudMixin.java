@@ -23,7 +23,6 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -42,7 +41,7 @@ public class PlayerListHudMixin {
     private void getPlayerName(PlayerListEntry entry, CallbackInfoReturnable<Text> cir) {
         Text text = cir.getReturnValue();
 
-        if ((boolean) Config.LIST_NAMEPLATE_MODS.value) {
+        if ((boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
             UUID uuid = entry.getProfile().getId();
             String playerName = entry.getProfile().getName();
 
@@ -82,7 +81,7 @@ public class PlayerListHudMixin {
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V"), method = "render")
     private void render(MatrixStack matrices, int x, int y, int width, int height, float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-        if (playerEntity != null && PlayerDataManager.hasPlayerData(playerEntity.getUuid())) {
+        if (playerEntity != null && PlayerDataManager.hasPlayerData(playerEntity.getUuid()) && (boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
             PlayerData data = PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
             if ((data != null && data.model != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))) {
                 FiguraMod.currentData = data;

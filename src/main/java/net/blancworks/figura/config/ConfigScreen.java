@@ -37,7 +37,7 @@ public class ConfigScreen extends Screen {
         }));
 
         this.addDrawableChild(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
-            ConfigManager.copyConfig();
+            ConfigManager.applyConfig();
             ConfigManager.saveConfig();
             this.client.setScreen(parentScreen);
         }));
@@ -51,7 +51,7 @@ public class ConfigScreen extends Screen {
 
     @Override
     public void onClose() {
-        ConfigManager.copyConfig();
+        ConfigManager.applyConfig();
         ConfigManager.saveConfig();
         this.client.setScreen(parentScreen);
     }
@@ -104,9 +104,9 @@ public class ConfigScreen extends Screen {
         configListWidget.addEntry(EntryType.CATEGORY, new TranslatableText("gui.figura.config.nametag"));
 
         configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.previewnametag"), new TranslatableText("gui.figura.config.tooltip.previewnametag"), Config.PREVIEW_NAMEPLATE);
-        configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.nametagmods"), new TranslatableText("gui.figura.config.tooltip.nametagmods"), Config.ENTITY_NAMEPLATE_MODS);
-        configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.chatmods"), new TranslatableText("gui.figura.config.tooltip.chatmods"), Config.CHAT_NAMEPLATE_MODS);
-        configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.listmods"), new TranslatableText("gui.figura.config.tooltip.listmods"), Config.LIST_NAMEPLATE_MODS);
+        configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.nametagmods"), new TranslatableText("gui.figura.config.tooltip.nametagmods"), Config.NAMEPLATE_MODIFICATIONS);
+        configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.chatmods"), new TranslatableText("gui.figura.config.tooltip.chatmods"), Config.CHAT_MODIFICATIONS);
+        configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.listmods"), new TranslatableText("gui.figura.config.tooltip.listmods"), Config.PLAYERLIST_MODIFICATIONS);
         configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.showbadges"), new TranslatableText("gui.figura.config.tooltip.showbadges"), Config.BADGES);
         configListWidget.addEntry(EntryType.BOOLEAN,
                 new TranslatableText("gui.figura.config.nametagicon"),
