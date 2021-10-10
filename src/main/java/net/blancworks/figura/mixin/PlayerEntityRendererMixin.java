@@ -92,9 +92,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
 
         if (data != null) {
-            //ikr this is not the right place, but no need to create a new mixin only for this
-            if (data.script != null)
-                data.script.onWorldRender(MinecraftClient.getInstance().getTickDelta());
 
             if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_OFFSCREEN_RENDERING))
                 return true;
