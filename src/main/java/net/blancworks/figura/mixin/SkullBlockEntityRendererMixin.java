@@ -40,8 +40,11 @@ public abstract class SkullBlockEntityRendererMixin {
 
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(yaw));
 
+        VertexConsumerProvider vcp = FiguraMod.immediate;
+        if (vcp == null) vcp = vertexConsumers;
+
         //render skull :3
-        if (data.model.renderSkull(data, matrices, vertexConsumers, light))
+        if (data.model.renderSkull(data, matrices, vcp, light))
             ci.cancel();
 
         matrices.pop();
