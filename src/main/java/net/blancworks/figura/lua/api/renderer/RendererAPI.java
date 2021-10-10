@@ -63,6 +63,25 @@ public class RendererAPI {
                 }
             });
 
+            set("isCameraBackwards", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    if (PlayerDataManager.localPlayer != script.playerData)
+                        return LuaBoolean.FALSE;
+
+                    return MinecraftClient.getInstance().options.getPerspective().isFrontView() ? LuaBoolean.TRUE : LuaBoolean.FALSE;
+                }
+            });
+
+            set("getCameraPos", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    //Yes, this IS intended to also be called for non-local players.
+                    //This might be exploitable? idk
+                    return LuaVector.of(MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+                }
+            });
+
             set("renderItem", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {

@@ -4,9 +4,12 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
 import net.blancworks.figura.utils.MathUtils;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Matrix3f;
 import net.minecraft.util.math.Quaternion;
+import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -90,6 +93,14 @@ public class VectorAPI {
                 }
             });
 
+            set("worldToCameraPos", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    return toCameraSpace(vec);
+                }
+            });
+
             set("getVector", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -166,6 +177,16 @@ public class VectorAPI {
             tbl.insert(i, vector.get(i));
         }
         return tbl;
+    }
+
+    public static LuaValue toCameraSpace(LuaVector vec) {
+        Matrix3f transformMatrix = new Matrix3f(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
+        transformMatrix.invert();
+        Vec3f target = new Vec3f(vec.x(), vec.y(), vec.z());
+        target.subtract(new Vec3f(MinecraftClient.getInstance().gameRenderer.getCamera().getPos()));
+        target.transform(transformMatrix);
+        target.set(-target.getX(), target.getY(), target.getZ());
+        return LuaVector.of(target);
     }
 
     private static final LuaVector[] MODEL_SPACE_FACTORS = new LuaVector[7];

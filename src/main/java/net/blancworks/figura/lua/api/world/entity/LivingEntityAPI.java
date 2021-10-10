@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -28,10 +29,11 @@ public class LivingEntityAPI {
         public LuaTable getTable() {
             LuaTable superTable = super.getTable();
 
-            superTable.set("getBodyYaw", new ZeroArgFunction() {
+            superTable.set("getBodyYaw", new OneArgFunction() {
                 @Override
-                public LuaValue call() {
-                    return LuaNumber.valueOf(targetEntity.get().bodyYaw);
+                public LuaValue call(LuaValue arg) {
+                    if (arg == LuaValue.NIL) arg = LuaValue.valueOf(1);
+                    return LuaNumber.valueOf(MathHelper.lerp(arg.tofloat(), targetEntity.get().prevBodyYaw, targetEntity.get().bodyYaw));
                 }
             });
             
