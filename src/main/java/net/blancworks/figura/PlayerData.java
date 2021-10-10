@@ -200,12 +200,11 @@ public class PlayerData {
         }
 
         try {
-            if (nbt.contains("script")) {
-                NbtCompound scriptNbt = (NbtCompound) nbt.get("script");
+            if (nbt.contains("customVCP")) {
+                NbtCompound vcpNbt = nbt.getCompound("customVCP");
 
-                if (scriptNbt != null) FiguraMod.doTask(() -> {
-                    script = new CustomScript();
-                    script.fromNBT(this, scriptNbt);
+                if (vcpNbt != null) FiguraMod.doTask(() -> {
+                    FiguraVertexConsumerProvider.parseFromNbt(this, vcpNbt);
                 });
             }
         } catch (Exception e) {
@@ -213,11 +212,12 @@ public class PlayerData {
         }
 
         try {
-            if (nbt.contains("customVCP")) {
-                NbtCompound vcpNbt = nbt.getCompound("customVCP");
+            if (nbt.contains("script")) {
+                NbtCompound scriptNbt = (NbtCompound) nbt.get("script");
 
-                if (vcpNbt != null) FiguraMod.doTask(() -> {
-                    FiguraVertexConsumerProvider.parseFromNbt(this, vcpNbt);
+                if (scriptNbt != null) FiguraMod.doTask(() -> {
+                    script = new CustomScript();
+                    script.fromNBT(this, scriptNbt);
                 });
             }
         } catch (Exception e) {

@@ -200,11 +200,11 @@ public class LocalPlayerData extends PlayerData {
         //try to load main texture
         if ((data & 4) == 4) loadTexture(avatarPaths.get("texture"), isZip, modelZip);
 
-        //try to load script
-        if ((data & 8) == 8) loadScript(avatarPaths.get("script"), isZip, modelZip);
-
         //try to load render_layers
         if ((data & 16) == 16) loadRenderLayers(avatarPaths.get("render_layers"), isZip, modelZip, file.toPath());
+
+        //try to load script
+        if ((data & 8) == 8) loadScript(avatarPaths.get("script"), isZip, modelZip);
 
         //try to load extra textures
         loadExtraTextures(file, isZip, modelZip);
