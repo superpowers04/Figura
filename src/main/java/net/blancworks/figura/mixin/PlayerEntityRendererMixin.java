@@ -133,6 +133,9 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPants);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants);
+
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_CLOAK, ((PlayerEntityModelAccess) this.getModel()).getCloak());
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_EAR, ((PlayerEntityModelAccess) this.getModel()).getEar());
     }
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
@@ -143,7 +146,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         //check for data and trust settings
         PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
-        if (!(boolean) Config.ENTITY_NAMEPLATE_MODS.value || currentData == null || playerName.equals("") || !currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
+        if (!(boolean) Config.NAMEPLATE_MODIFICATIONS.value || currentData == null || playerName.equals("") || !currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
             return;
 
         //cancel callback info

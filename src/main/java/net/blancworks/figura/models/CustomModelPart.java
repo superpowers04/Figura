@@ -3,7 +3,6 @@ package net.blancworks.figura.models;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
-import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -93,9 +92,6 @@ public class CustomModelPart {
         //no texture to render
         if ((data.texture == null || !data.texture.isDone) && data.playerListEntry == null)
             return 0;
-
-        //hit boxes :3
-        canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
         //lets render boys!!
 

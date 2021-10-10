@@ -6,7 +6,6 @@ import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
-import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.network.IFiguraNetwork;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
@@ -22,17 +21,17 @@ import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -50,8 +49,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class FiguraMod implements ClientModInitializer {
 
-    public static final Gson GSON = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BlockbenchModelDeserializer())
-            .setPrettyPrinting().create();
+    public static final Gson GSON = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BlockbenchModelDeserializer()).setPrettyPrinting().create();
 
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -60,7 +58,7 @@ public class FiguraMod implements ClientModInitializer {
     public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 
     public static final boolean IS_CHEESE = LocalDate.now().getDayOfMonth() == 1 && LocalDate.now().getMonthValue() == 4;
-    public static CompoundTag cheese;
+    public static NbtCompound cheese;
 
     public static KeyBinding actionWheel;
 
@@ -149,15 +147,8 @@ public class FiguraMod implements ClientModInitializer {
         KeyBindingRegistryImpl.registerKeyBinding(actionWheel);
 
         //Set up network
-        //oldNetworkManager = new FiguraNetworkManager();
         newNetworkManager = new NewFiguraNetworkManager();
         networkManager = newNetworkManager;
-
-        /*if ((boolean) Config.entries.get("useNewNetwork").value) {
-            networkManager = newNetworkManager;
-        } else {
-            networkManager = oldNetworkManager;
-        }*/
 
         //Register fabric events
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
@@ -172,7 +163,7 @@ public class FiguraMod implements ClientModInitializer {
             }
 
             @Override
-            public void apply(ResourceManager manager) {
+            public void reload(ResourceManager manager) {
                 PlayerDataManager.reloadAllTextures();
 
                 try {
@@ -245,42 +236,34 @@ public class FiguraMod implements ClientModInitializer {
 
 
     private static void renderFirstPersonWorldParts(WorldRenderContext context) {
-        try {
-            if (!context.camera().isThirdPerson()) {
-                PlayerData data = PlayerDataManager.localPlayer;
+        if (context.camera().isThirdPerson())
+            return;
 
-                if (data != null && data.lastEntity != null) {
+        PlayerData data = PlayerDataManager.localPlayer;
 
-                    FiguraMod.currentData = data;
+        if (data != null && data.lastEntity != null) {
+            FiguraMod.currentData = data;
 
-                    context.matrixStack().push();
-                    context.matrixStack().translate(-context.camera().getPos().x, -context.camera().getPos().y, -context.camera().getPos().z);
-                    context.matrixStack().scale(-1, -1, 1);
+            context.matrixStack().push();
 
-                    try {
+            try {
+                if (data.model != null) {
+                    int prevCount = data.model.leftToRender;
+                    data.model.leftToRender = Integer.MAX_VALUE - 100;
 
-                        if (data.model != null) {
-                            int prevCount = data.model.leftToRender;
-                            data.model.leftToRender = Integer.MAX_VALUE - 100;
-
-                            if (FiguraMod.vertexConsumerProvider != null) {
-                                for (CustomModelPart part : data.model.worldParts) {
-                                    part.render(data, context.matrixStack(), new MatrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1.0f);
-                                }
-                            }
-
-                            data.model.leftToRender = prevCount;
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
+                    if (FiguraMod.vertexConsumerProvider != null) {
+                        Vec3d camera = context.camera().getPos();
+                        data.model.renderWorldParts(data, camera.x, camera.y, camera.z, context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1f);
                     }
 
-                    context.matrixStack().pop();
-                    FiguraMod.clearRenderingData();
+                    data.model.leftToRender = prevCount;
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+
+            context.matrixStack().pop();
+            FiguraMod.clearRenderingData();
         }
     }
 

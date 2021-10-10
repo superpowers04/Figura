@@ -35,7 +35,18 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     public static final Predicate<String> INT = s -> s.matches("^[\\-+]?[0-9]*$");
     public static final Predicate<String> FLOAT = s -> s.matches("[\\-+]?[0-9]*(\\.[0-9]+)?") || s.endsWith(".") || s.isEmpty();
     public static final Predicate<String> HEX_COLOR = s -> s.matches("^[#]?[0-9a-fA-F]{0,6}$");
-    public static final Predicate<String> FOLDER_PATH = s -> s.isBlank() || Path.of(s.trim()).toFile().isDirectory();
+
+    public static final Predicate<String> FOLDER_PATH = s -> {
+        if (!s.isBlank()) {
+            try {
+                return Path.of(s.trim()).toFile().isDirectory();
+            } catch (Exception ignored) {
+                return false;
+            }
+        }
+
+        return true;
+    };
 
     public enum EntryType {
         CATEGORY,
