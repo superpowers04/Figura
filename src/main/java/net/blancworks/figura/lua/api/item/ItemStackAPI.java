@@ -139,6 +139,13 @@ public class ItemStackAPI {
                 }
             });
 
+            set("isFood", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(stack.isFood());
+                }
+            });
+
         }});
     }
 

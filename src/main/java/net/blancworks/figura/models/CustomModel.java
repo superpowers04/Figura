@@ -3,10 +3,12 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.assets.FiguraAsset;
+import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -81,7 +83,6 @@ public class CustomModel extends FiguraAsset {
         }
 
         for (CustomModelPart part : allParts) {
-
             if (part.isParentSpecial() || !part.visible || part.isHidden)
                 continue;
 
@@ -99,9 +100,13 @@ public class CustomModel extends FiguraAsset {
                 if (owner.lastEntity != null && owner.lastEntity.isSpectator())
                     CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
 
-                leftToRender = part.render(owner, matrices, transformStack, vcp, light, overlay, alpha);
+                //hitboxes :p
+                CustomModelPart.canRenderHitBox = (boolean) ConfigManager.Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
+                leftToRender = part.render(owner, matrices, transformStack, vcp, light, overlay, alpha);
                 lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
+
+                CustomModelPart.canRenderHitBox = false;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -163,6 +168,19 @@ public class CustomModel extends FiguraAsset {
         }
 
         return false;
+    }
+
+    public void renderWorldParts(PlayerData data, double cameraX, double cameraY, double cameraZ, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, float alpha) {
+        matrices.translate(-cameraX, -cameraY, -cameraZ);
+        matrices.scale(-1, -1, 1);
+
+        CustomModelPart.canRenderHitBox = (boolean) ConfigManager.Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+
+        for (CustomModelPart part : data.model.worldParts) {
+            data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
+        }
+
+        CustomModelPart.canRenderHitBox = false;
     }
 
     public void writeNbt(NbtCompound nbt) {
