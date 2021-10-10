@@ -3,7 +3,7 @@ package net.blancworks.figura;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.blancworks.figura.config.ConfigManager;
-import net.blancworks.figura.config.ConfigManager.*;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
@@ -82,6 +82,7 @@ public class FiguraMod implements ClientModInitializer {
     public static AbstractClientPlayerEntity currentPlayer;
     public static PlayerData currentData;
     public static VertexConsumerProvider vertexConsumerProvider;
+    public static VertexConsumerProvider.Immediate immediate;
     public static float deltaTime;
 
     private static final boolean USE_DEBUG_MODEL = true;
@@ -97,8 +98,20 @@ public class FiguraMod implements ClientModInitializer {
         currentPlayer = player;
         currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
         currentData.vanillaModel = mdl;
-        FiguraMod.vertexConsumerProvider = vertexConsumerProvider;
+        setVertexConsumerProvider(vertexConsumerProvider);
         deltaTime = dt;
+    }
+
+    public static void setVertexConsumerProvider(VertexConsumerProvider vcp) {
+        FiguraMod.vertexConsumerProvider = vcp;
+
+        if (vcp.getClass().getName().equals("net.minecraft.client.render.VertexConsumerProvider$Immediate")) {
+            FiguraMod.immediate = (VertexConsumerProvider.Immediate) vcp;
+        }
+    }
+
+    public static VertexConsumerProvider tryGetImmediate() {
+        return immediate == null ? vertexConsumerProvider : immediate;
     }
 
     public static void clearRenderingData() {
