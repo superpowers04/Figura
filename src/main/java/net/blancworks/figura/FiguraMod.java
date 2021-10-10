@@ -105,7 +105,7 @@ public class FiguraMod implements ClientModInitializer {
     public static void setVertexConsumerProvider(VertexConsumerProvider vcp) {
         FiguraMod.vertexConsumerProvider = vcp;
 
-        if (vcp.getClass().getName().equals("net.minecraft.client.render.VertexConsumerProvider$Immediate")) {
+        if (vcp.getClass() == VertexConsumerProvider.Immediate.class) {
             FiguraMod.immediate = (VertexConsumerProvider.Immediate) vcp;
         }
     }
