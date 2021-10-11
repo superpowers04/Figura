@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Function;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * A custom ResourceFactory for use with the Shader constructor.
@@ -19,10 +22,30 @@ import java.nio.file.Path;
 
 public class FiguraLocalShaderResourceFactory implements ResourceFactory {
 
-    public Path rootPath;
+    private Function<String, InputStream> inputStreamFunction;
 
     public FiguraLocalShaderResourceFactory(Path root) {
-        rootPath = root;
+        inputStreamFunction = (str) -> {
+            Path resourcePath = root.resolve(str);
+            try {
+                return Files.newInputStream(resourcePath);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        };
+    }
+
+    public FiguraLocalShaderResourceFactory(ZipFile zip) {
+        inputStreamFunction = (str) -> {
+            ZipEntry entry = zip.getEntry(str);
+            try {
+                return zip.getInputStream(entry);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        };
     }
 
     @Override
@@ -47,8 +70,7 @@ public class FiguraLocalShaderResourceFactory implements ResourceFactory {
                     //We want to prune away the stuff at the front, leaving only IMPORTANT_INFO.fileExtension.
                     str = str.substring("shaders/core/UUIDUUID-UUID-UUID-UUID-UUIDUUIDUUID-".length());
 
-                    Path resourcePath = rootPath.resolve(str);
-                    stream = Files.newInputStream(resourcePath);
+                    stream = inputStreamFunction.apply(str);
 
                 } catch (Exception e) {
                     e.printStackTrace();

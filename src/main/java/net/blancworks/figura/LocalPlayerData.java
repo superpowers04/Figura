@@ -211,7 +211,7 @@ public class LocalPlayerData extends PlayerData {
 
         //Close ZIP stream.
         try {
-            if (isZip)
+            if (isZip && (data & 16) != 16)
                 modelZip.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -350,25 +350,40 @@ public class LocalPlayerData extends PlayerData {
         try {
             if (isZip) {
                 ZipEntry fileEntry = modelZip.getEntry("render_layers.json");
-                if (fileEntry != null)
-                    inputStream = modelZip.getInputStream(fileEntry);
+                inputStream = modelZip.getInputStream(fileEntry);
             } else if (Files.exists(renderLayersPath)) {
                 inputStream = new FileInputStream(renderLayersPath.toFile());
             }
 
-            InputStream finalInputStream = inputStream;
             if (inputStream != null) {
+                //Make a copy of the input stream so we can read it asynchronously
+                ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
+                inputStream.transferTo(byteArrayStream);
+                InputStream finalInputStream = new ByteArrayInputStream(byteArrayStream.toByteArray());
                 FiguraMod.doTask(() -> {
-                    FiguraVertexConsumerProvider.parseLocal(this, finalInputStream, avatarFolder);
+                    if (isZip)
+                        FiguraVertexConsumerProvider.parseLocal(this, finalInputStream, modelZip);
+                    else
+                        FiguraVertexConsumerProvider.parseLocal(this, finalInputStream, avatarFolder);
                     try {
+                        //Close the copy of the input stream
                         finalInputStream.close();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 });
-            }
+            } else
+                FiguraMod.LOGGER.warn("InputStream was null when loading render layers.");
         } catch (Exception e) {
             e.printStackTrace();
+        }
+        //Close the original input stream regardless of what it was (zip or filestream)
+        if (inputStream != null) {
+            try {
+                inputStream.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 

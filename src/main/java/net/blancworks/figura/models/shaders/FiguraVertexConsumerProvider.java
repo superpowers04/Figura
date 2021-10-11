@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
+import java.util.zip.ZipFile;
 
 public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immediate {
 
@@ -79,10 +80,10 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
      * Loads all renderLayers for this avatar and attaches a new FiguraVertexConsumerProvider to the avatar.
      * @param playerData The figura player data this VCP is attached to
      * @param inputStream An input stream containing data for all custom render layers.
-     * @param rootPath The path to the folder containing model.bbmodel
+     * @param root Can be either a Path or a ZipFile. Represents the file containing the avatar.
      */
 
-    public static void parseLocal(PlayerData playerData, InputStream inputStream, Path rootPath) {
+    public static void parseLocal(PlayerData playerData, InputStream inputStream, Object root) {
         try {
 
             Map<RenderLayer, BufferBuilder> layerBufferBuilderMap = new HashMap<>();
@@ -164,7 +165,12 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                     shader.complete(vanillaShaderMap.get(shaderStr).get());
                 } else {
                     //This shader is not a vanilla shader, so create a new one.
-                    localShaderFactory = new FiguraLocalShaderResourceFactory(rootPath);
+                    if (root instanceof ZipFile)
+                        localShaderFactory = new FiguraLocalShaderResourceFactory((ZipFile) root);
+                    else if (root instanceof Path)
+                        localShaderFactory = new FiguraLocalShaderResourceFactory((Path) root);
+                    else
+                        throw new IllegalArgumentException();
                     FiguraLocalShaderResourceFactory finalShaderFactory = localShaderFactory; //For lambda
                     RenderSystem.recordRenderCall(() -> {
                         try {
@@ -183,6 +189,8 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
 
                             Shader customShader = new FiguraShader(finalShaderFactory, playerShaderStr, vertexFormat);
                             shader.complete(customShader);
+                            if (root instanceof ZipFile)
+                                ((ZipFile) root).close();
                         } catch (IOException e) {
                             CustomScript.sendChatMessage(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                             shader.complete(vanillaShaderMap.get("RENDERTYPE_ENTITY_TRANSLUCENT_SHADER").get());
