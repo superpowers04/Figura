@@ -308,8 +308,8 @@ public class CustomModelPartCuboid extends CustomModelPart {
     }
 
     @Override
-    public String getPartType() {
-        return "cub";
+    public PartType getPartType() {
+        return PartType.CUBE;
     }
 
     public Vec3f v3fFromNbtList(NbtList list) {

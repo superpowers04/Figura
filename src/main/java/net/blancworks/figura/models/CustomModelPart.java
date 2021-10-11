@@ -362,7 +362,7 @@ public class CustomModelPart {
     public void renderHitBox(MatrixStack matrices, VertexConsumer vertices) {
         Vec3f color;
         float boxSize;
-        if (this.getPartType().equals("cub")) {
+        if (this.getPartType() == PartType.CUBE) {
             color = new Vec3f(1f, 0.45f, 0.72f); //0xff72b7 aka fran_pink
             boxSize = 1 / 48f;
         }
@@ -712,9 +712,9 @@ public class CustomModelPart {
         }
     }
 
-    public String getPartType() {
-        //Default part type is N/A
-        return "na";
+    public PartType getPartType() {
+        //Default part type is group
+        return PartType.GROUP;
     }
 
     public boolean isParentSpecial() {
@@ -794,6 +794,17 @@ public class CustomModelPart {
         DOWN
     }
 
+    public enum PartType {
+        GROUP("na"),
+        CUBE("cub"),
+        MESH("msh");
+
+        public final String val;
+        PartType(String value) {
+            this.val = value;
+        }
+    }
+
     public static class uvData {
         public Vec2f uvOffset, uvSize;
 
@@ -850,7 +861,7 @@ public class CustomModelPart {
      * @param part the model part
      */
     public static void writeToNbt(NbtCompound nbt, CustomModelPart part) {
-        String partType = part.getPartType();
+        String partType = part.getPartType().val;
         if (!MODEL_PART_TYPES.containsKey(partType))
             return;
 
