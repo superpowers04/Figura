@@ -1,6 +1,7 @@
 package net.blancworks.figura.mixin;
 
 import com.mojang.authlib.GameProfile;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -8,12 +9,14 @@ import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.hud.PlayerListHud;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.scoreboard.Scoreboard;
@@ -23,7 +26,6 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -88,20 +90,28 @@ public class PlayerListHudMixin {
                 FiguraMod.currentData = data;
                 FiguraMod.currentPlayer = (AbstractClientPlayerEntity) playerEntity;
 
-                MatrixStack stack = new MatrixStack();
+                Window w = MinecraftClient.getInstance().getWindow();
+                final double guiScale = w.getScaleFactor();
 
+                RenderSystem.enableScissor((int)(x*guiScale), w.getHeight()-(int)((regionHeight+y)*guiScale), (int)(regionWidth*guiScale), (int)(regionHeight*guiScale));
+                RenderSystem.disableDepthTest();
+                DiffuseLighting.disableGuiDepthLighting();
+
+                MatrixStack stack = new MatrixStack();
                 stack.push();
 
-                stack.translate(x + 4, y + 8, 0);
+                stack.translate(x+4, y+8, 0);
                 stack.scale(-16,16,16);
                 stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
 
-                DiffuseLighting.disableGuiDepthLighting();
-
                 data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 15728864);
-                DiffuseLighting.enableGuiDepthLighting();
 
                 stack.pop();
+
+                RenderSystem.disableScissor();
+                RenderSystem.enableDepthTest();
+                DiffuseLighting.enableGuiDepthLighting();
+
                 return;
             }
         }
