@@ -27,7 +27,7 @@ public class ConfigManager {
     //mod config version
     //change this only if you edit old configs
     public static final int CONFIG_VERSION = 1;
-    private static final Map<Config, String> V0_CONFIG = new HashMap<>() {{
+    private static final Map<Config, String> V0_CONFIG = new HashMap<Config, String>() {{
         put(Config.PREVIEW_NAMEPLATE, "previewNameTag");
         put(Config.FIGURA_BUTTON_LOCATION, "buttonLocation");
         put(Config.USE_LOCAL_SERVER, "useLocalServer");

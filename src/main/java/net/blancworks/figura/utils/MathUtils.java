@@ -1,12 +1,12 @@
 package net.blancworks.figura.utils;
 
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.Quaternion;
-import net.minecraft.util.math.Vec3f;
 
 public class MathUtils {
 
     //yoinked from wikipedia
-    public static Vec3f quaternionToEulerXYZ(Quaternion q) {
+    public static Vector3f quaternionToEulerXYZ(Quaternion q) {
         double pitch, yaw, roll;
 
         float x = q.getX();
@@ -31,6 +31,6 @@ public class MathUtils {
         double cosy_cosp = 1 - 2 * (y * y + z * z);
         yaw = Math.atan2(siny_cosp, cosy_cosp);
 
-        return new Vec3f((float) Math.toDegrees(roll), (float) Math.toDegrees(pitch), (float) Math.toDegrees(yaw));
+        return new Vector3f((float) Math.toDegrees(roll), (float) Math.toDegrees(pitch), (float) Math.toDegrees(yaw));
     }
 }

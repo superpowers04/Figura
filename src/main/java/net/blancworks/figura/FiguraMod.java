@@ -21,12 +21,12 @@ import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
@@ -37,6 +37,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,7 +59,7 @@ public class FiguraMod implements ClientModInitializer {
     public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 
     public static final boolean IS_CHEESE = LocalDate.now().getDayOfMonth() == 1 && LocalDate.now().getMonthValue() == 4;
-    public static NbtCompound cheese;
+    public static CompoundTag cheese;
 
     public static KeyBinding actionWheel;
 
@@ -163,7 +164,7 @@ public class FiguraMod implements ClientModInitializer {
             }
 
             @Override
-            public void reload(ResourceManager manager) {
+            public void apply(ResourceManager manager) {
                 PlayerDataManager.reloadAllTextures();
 
                 try {
@@ -193,7 +194,7 @@ public class FiguraMod implements ClientModInitializer {
 
     public static Path getModContentDirectory() {
         String userPath = (String) Config.MODEL_FOLDER_PATH.value;
-        Path p = userPath.isEmpty() ? getDefaultDirectory() : Path.of(userPath);
+        Path p = userPath.isEmpty() ? getDefaultDirectory() : new File(userPath).toPath();
         try {
             Files.createDirectories(p);
         } catch (Exception e) {

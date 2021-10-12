@@ -15,10 +15,10 @@ import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.ModelWithArms;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.Arm;
-import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -85,13 +85,13 @@ public class HeldItemFeatureRendererMixin<T extends LivingEntity, M extends Enti
                         matrices.translate(figura$customization.pos.getX() / 16.0f, figura$customization.pos.getY() / 16.0f, figura$customization.pos.getZ() / 16.0f);
 
                     if (figura$customization.rot != null) {
-                        matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(figura$customization.rot.getZ()));
-                        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(figura$customization.rot.getY()));
-                        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(figura$customization.rot.getX()));
+                        matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(figura$customization.rot.getZ()));
+                        matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(figura$customization.rot.getY()));
+                        matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(figura$customization.rot.getX()));
                     }
 
                     if (figura$customization.scale != null) {
-                        Vec3f scale = figura$customization.scale;
+                        Vector3f scale = figura$customization.scale;
                         matrices.scale(scale.getX(), scale.getY(), scale.getZ());
                     }
                 }

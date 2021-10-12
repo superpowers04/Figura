@@ -1,10 +1,10 @@
 package net.blancworks.figura.lua.api.actionWheel;
 
 import net.blancworks.figura.models.FiguraTexture;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3f;
-import net.minecraft.item.ItemStack;
 import org.luaj.vm2.LuaFunction;
 
 public class ActionWheelCustomization {
@@ -13,8 +13,8 @@ public class ActionWheelCustomization {
     public ItemStack item;
     public ItemStack hoverItem;
 
-    public Vec3f color;
-    public Vec3f hoverColor;
+    public Vector3f color;
+    public Vector3f hoverColor;
 
     public String title;
 

@@ -4,6 +4,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
 import net.blancworks.figura.utils.MathUtils;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Quaternion;
@@ -152,9 +153,12 @@ public class VectorAPI {
     }
 
     public static LuaValue rotateWithQuaternion(LuaVector vector, LuaVector rotation) {
-        Quaternion quat = Quaternion.fromEulerXyzDegrees(vector.asV3f());
-        Quaternion rot = Quaternion.fromEulerXyzDegrees(rotation.asV3f());
-        quat.hamiltonProduct(rot);
+        Vector3f vec = vector.asV3f();
+        Vector3f rot = rotation.asV3f();
+
+        Quaternion quat = new Quaternion(vec.getX(), vec.getY(), vec.getZ(), true);
+        Quaternion quatRot = new Quaternion(rot.getX(), rot.getY(), rot.getZ(), true);
+        quat.hamiltonProduct(quatRot);
 
         //we cant use the quaternion to euler from the quaternion class because NaN and weird rotations
         return LuaVector.of(MathUtils.quaternionToEulerXYZ(quat));

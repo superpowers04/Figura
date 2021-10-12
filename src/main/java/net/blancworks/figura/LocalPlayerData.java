@@ -7,8 +7,8 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.minecraft.client.option.KeyBinding;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.client.options.KeyBinding;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
 
@@ -31,7 +31,7 @@ public class LocalPlayerData extends PlayerData {
     private final Map<String, WatchKey> watchKeys = new Object2ObjectOpenHashMap<>();
     private final Set<String> watchedFiles = new HashSet<>();
     public static WatchService ws;
-    public NbtCompound modelData;
+    public CompoundTag modelData;
 
     static {
         try {
@@ -433,7 +433,7 @@ public class LocalPlayerData extends PlayerData {
     public void packAvatarData() {
         //pack avatar on load
         FiguraMod.doTask(() -> {
-            NbtCompound nbt = new NbtCompound();
+            CompoundTag nbt = new CompoundTag();
             this.modelData = this.writeNbt(nbt) ? nbt : null;
             getFileSize();
         });

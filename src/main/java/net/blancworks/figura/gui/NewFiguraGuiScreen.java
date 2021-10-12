@@ -1,6 +1,5 @@
 package net.blancworks.figura.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
@@ -32,14 +31,14 @@ public class NewFiguraGuiScreen extends Screen {
 
         int x = this.width;
         int y = this.height;
-        this.addDrawableChild(new ButtonWidget(x / 2 - 80, y / 2 - 25, 160, 20, new LiteralText("Simp for Zandra"), button -> {}));
-        this.addDrawableChild(new ButtonWidget(x / 2 - 80, y / 2 + 5, 160, 20, new LiteralText("Simp for Fran"), button -> {}));
+        this.addButton(new ButtonWidget(x / 2 - 80, y / 2 - 25, 160, 20, new LiteralText("Simp for Zandra"), button -> {}));
+        this.addButton(new ButtonWidget(x / 2 - 80, y / 2 + 5, 160, 20, new LiteralText("Simp for Fran"), button -> {}));
     }
 
     @Override
     public void onClose() {
         this.client.options.hudHidden = this.hudHidden;
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     @Override
@@ -51,7 +50,7 @@ public class NewFiguraGuiScreen extends Screen {
         Vec2f offset = new Vec2f(Math.max(30f, 5f), screen.y / 2.0f - 90);
 
         //texture
-        RenderSystem.setShaderTexture(0, BOOK_TEXTURE);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(BOOK_TEXTURE);
 
         //middle
         matrices.push();

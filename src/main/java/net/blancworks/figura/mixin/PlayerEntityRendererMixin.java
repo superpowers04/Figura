@@ -19,11 +19,12 @@ import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRendererFactory;
+import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
@@ -32,7 +33,6 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix4f;
-import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -47,8 +47,8 @@ import java.util.UUID;
 @Mixin(PlayerEntityRenderer.class)
 public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> implements PlayerEntityRendererAccess {
 
-    public PlayerEntityRendererMixin(EntityRendererFactory.Context ctx, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) {
-        super(ctx, model, shadowRadius);
+    public PlayerEntityRendererMixin(EntityRenderDispatcher dispatcher, PlayerEntityModel<AbstractClientPlayerEntity> model, float shadowRadius) {
+        super(dispatcher, model, shadowRadius);
     }
 
     @Shadow protected abstract void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i);
@@ -65,18 +65,18 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         PlayerData data = FiguraMod.currentData;
         if (data != null && data.script != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().body);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().torso);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, this.getModel().rightArm);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, this.getModel().leftLeg);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, this.getModel().rightLeg);
 
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().hat);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().helmet);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, this.getModel().jacket);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, this.getModel().leftSleeve);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPants);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
 
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_CLOAK, ((PlayerEntityModelAccess) this.getModel()).getCloak());
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_EAR, ((PlayerEntityModelAccess) this.getModel()).getEar());
@@ -121,18 +121,18 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         FiguraMod.setRenderingData(player, vertexConsumers, this.getModel(), MinecraftClient.getInstance().getTickDelta());
 
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().body);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().torso);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, this.getModel().rightArm);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, this.getModel().leftLeg);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, this.getModel().rightLeg);
 
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().hat);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().helmet);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, this.getModel().jacket);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, this.getModel().leftSleeve);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPants);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPantLeg);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPantLeg);
 
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_CLOAK, ((PlayerEntityModelAccess) this.getModel()).getCloak());
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_EAR, ((PlayerEntityModelAccess) this.getModel()).getEar());
@@ -176,8 +176,8 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         //nameplate transformations
         float spacing = entity.getHeight() + 0.5F;
-        Vec3f translation = new Vec3f(0.0f, spacing, 0.0f);
-        Vec3f scale = new Vec3f(1.0f, 1.0f, 1.0f);
+        Vector3f translation = new Vector3f(0.0f, spacing, 0.0f);
+        Vector3f scale = new Vector3f(1.0f, 1.0f, 1.0f);
         boolean enabled = true;
 
         //apply main nameplate transformations
@@ -237,7 +237,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         int backgroundColor = (int) (MinecraftClient.getInstance().options.getTextBackgroundOpacity(0.25F) * 255.0F) << 24;
 
-        TextRenderer textRenderer = Objects.requireNonNull(this.getTextRenderer());
+        TextRenderer textRenderer = Objects.requireNonNull(this.getFontRenderer());
         float textWidth = (float) (-textRenderer.getWidth(text) / 2);
 
         //render

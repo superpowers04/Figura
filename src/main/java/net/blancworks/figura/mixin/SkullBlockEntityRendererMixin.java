@@ -9,12 +9,11 @@ import net.minecraft.block.SkullBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.block.entity.SkullBlockEntityModel;
 import net.minecraft.client.render.block.entity.SkullBlockEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -24,8 +23,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SkullBlockEntityRenderer.class)
 public abstract class SkullBlockEntityRendererMixin {
 
-    @Inject(method = "renderSkull", at = @At(value = "HEAD"), cancellable = true)
-    private static void renderSkull(Direction direction, float yaw, float animationProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, SkullBlockEntityModel model, RenderLayer renderLayer, CallbackInfo ci) {
+    @Inject(method = "render(Lnet/minecraft/util/math/Direction;FLnet/minecraft/block/SkullBlock$SkullType;Lcom/mojang/authlib/GameProfile;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "HEAD"), cancellable = true)
+    private static void renderSkull(Direction direction, float yaw, SkullBlock.SkullType skullType, GameProfile gameProfile, float animationProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         PlayerData data = FiguraMod.currentData;
         if (data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
             return;
@@ -38,7 +37,7 @@ public abstract class SkullBlockEntityRendererMixin {
         }
         matrices.scale(-1.0F, -1.0F, 1.0F);
 
-        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(yaw));
+        matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(yaw));
 
         VertexConsumerProvider vcp = FiguraMod.immediate;
         if (vcp == null) vcp = vertexConsumers;
@@ -50,7 +49,7 @@ public abstract class SkullBlockEntityRendererMixin {
         matrices.pop();
     }
 
-    @Inject(method = "getRenderLayer", at = @At(value = "HEAD"))
+    @Inject(method = "method_3578", at = @At(value = "HEAD"))
     private static void getRenderLayer(SkullBlock.SkullType type, GameProfile profile, CallbackInfoReturnable<RenderLayer> cir) {
         PlayerEntity player = null;
         if (profile != null && profile.getId() != null && MinecraftClient.getInstance().world != null)

@@ -5,13 +5,10 @@ import net.blancworks.figura.config.ConfigListWidget.EntryType;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 
 import java.util.Arrays;
@@ -31,19 +28,19 @@ public class ConfigScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 154, this.height - 29, 150, 20, new TranslatableText("gui.cancel"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width / 2 - 154, this.height - 29, 150, 20, new TranslatableText("gui.cancel"), (buttonWidgetx) -> {
             ConfigManager.discardConfig();
-            this.client.setScreen(parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
             ConfigManager.applyConfig();
             ConfigManager.saveConfig();
-            this.client.setScreen(parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
         this.configListWidget = new ConfigListWidget(this, this.client);
-        this.addSelectableChild(this.configListWidget);
+        this.children.add(this.configListWidget);
 
         //generate configs...
         generateConfig(configListWidget);
@@ -53,7 +50,7 @@ public class ConfigScreen extends Screen {
     public void onClose() {
         ConfigManager.applyConfig();
         ConfigManager.saveConfig();
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     @Override
@@ -161,7 +158,7 @@ public class ConfigScreen extends Screen {
         configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.logothers"), new TranslatableText("gui.figura.config.tooltip.logothers"), Config.LOG_OTHERS_SCRIPT);
         configListWidget.addEntry(EntryType.BOOLEAN,
                 new TranslatableText("gui.figura.config.partshitbox"),
-                new TranslatableText("gui.figura.config.tooltip.partshitbox", new TranslatableText("gui.figura.config.tooltip.partshitbox.cubes").setStyle(Style.EMPTY.withColor(0xff72b7)), new TranslatableText("gui.figura.config.tooltip.partshitbox.groups").setStyle(Style.EMPTY.withColor(0xaff2ff))),
+                new TranslatableText("gui.figura.config.tooltip.partshitbox", new TranslatableText("gui.figura.config.tooltip.partshitbox.cubes").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xff72b7))), new TranslatableText("gui.figura.config.tooltip.partshitbox.groups").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xaff2ff)))),
                 Config.RENDER_DEBUG_PARTS_PIVOT
         );
         configListWidget.addEntry(EntryType.BOOLEAN, new TranslatableText("gui.figura.config.ownnametag"), new TranslatableText("gui.figura.config.tooltip.ownnametag"), Config.RENDER_OWN_NAMEPLATE);

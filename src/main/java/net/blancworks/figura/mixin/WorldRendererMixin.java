@@ -3,9 +3,6 @@ package net.blancworks.figura.mixin;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.config.ConfigManager;
-import net.blancworks.figura.models.CustomModelPart;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -41,7 +38,8 @@ public class WorldRendererMixin {
 
     @Inject(at = @At("HEAD"), method = "renderEntity")
     private void renderEntity(Entity entity, double cameraX, double cameraY, double cameraZ, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, CallbackInfo ci) {
-        if (entity instanceof AbstractClientPlayerEntity ent) {
+        if (entity instanceof AbstractClientPlayerEntity) {
+            AbstractClientPlayerEntity ent = (AbstractClientPlayerEntity) entity;
             matrices.push();
 
             try {

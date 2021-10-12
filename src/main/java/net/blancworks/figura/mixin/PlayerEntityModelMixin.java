@@ -15,41 +15,41 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(PlayerEntityModel.class)
 public class PlayerEntityModelMixin implements PlayerEntityModelAccess {
 
-    @Shadow @Final private ModelPart cloak;
-    @Shadow @Final private ModelPart ear;
+    @Shadow @Final private ModelPart cape;
+    @Shadow @Final private ModelPart ears;
 
     private boolean prevCloakVisible = false;
     private boolean prevEarVisible = false;
 
     @Override
     public ModelPart getCloak() {
-        return this.cloak;
+        return this.cape;
     }
 
     @Override
     public ModelPart getEar() {
-        return this.ear;
+        return this.ears;
     }
 
     @Inject(at = @At("HEAD"), method = "renderCape")
     public void onRenderCape(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, CallbackInfo ci) {
-        prevCloakVisible = cloak.visible;
-        cloak.visible = true;
+        prevCloakVisible = cape.visible;
+        cape.visible = true;
     }
 
     @Inject(at = @At("RETURN"), method = "renderCape")
     public void posRenderCape(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, CallbackInfo ci) {
-        cloak.visible = prevCloakVisible;
+        cape.visible = prevCloakVisible;
     }
 
     @Inject(at = @At("HEAD"), method = "renderEars")
     public void onRenderEars(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, CallbackInfo ci) {
-        prevEarVisible = ear.visible;
-        ear.visible = true;
+        prevEarVisible = ears.visible;
+        ears.visible = true;
     }
 
     @Inject(at = @At("RETURN"), method = "renderEars")
     public void posRenderEars(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, CallbackInfo ci) {
-        ear.visible = prevEarVisible;
+        ears.visible = prevEarVisible;
     }
 }
