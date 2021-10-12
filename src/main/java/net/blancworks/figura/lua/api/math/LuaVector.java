@@ -440,8 +440,8 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return values.length;
     }
 
-    public Float _get(int index) {
-        if (index > 6 || index < 1) {
+    public Float _get(Integer index) {
+        if (index == null || index > 6 || index < 1) {
             return null;
         }
         if (index <= _size()) {
@@ -451,8 +451,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public Float _get(String name) {
-        Integer i = _getIndex(name);
-        return i == null ? null : _get(i);
+        return _get(_getIndex(name));
     }
 
     public Integer _getIndex(String name) {
