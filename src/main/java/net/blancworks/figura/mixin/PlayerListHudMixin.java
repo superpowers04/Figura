@@ -40,6 +40,8 @@ import java.util.UUID;
 @Mixin(PlayerListHud.class)
 public class PlayerListHudMixin {
 
+    @Unique private PlayerEntity playerEntity;
+
     @Inject(at = @At("RETURN"), method = "getPlayerName", cancellable = true)
     private void getPlayerName(PlayerListEntry entry, CallbackInfoReturnable<Text> cir) {
         Text text = cir.getReturnValue();
@@ -75,10 +77,8 @@ public class PlayerListHudMixin {
         cir.setReturnValue(text);
     }
 
-    @Unique private PlayerEntity playerEntity;
-
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V", shift = At.Shift.BEFORE), method = "render", locals = LocalCapture.CAPTURE_FAILHARD)
-    private void render(MatrixStack matrices, int scaledWindowWidth, Scoreboard scoreboard, ScoreboardObjective objective, CallbackInfo ci, ClientPlayNetworkHandler clientPlayNetworkHandler, List list, int i, int j, int l, int m, int n, boolean bl, int q, int r, int s, int t, int u, List list2, List list3, int w, int x, int y, int z, int aa, int ab, PlayerListEntry playerListEntry2, GameProfile gameProfile, PlayerEntity playerEntity, boolean bl2, int ae, int af) {
+    private void render(MatrixStack matrices, int scaledWindowWidth, Scoreboard scoreboard, ScoreboardObjective objective, CallbackInfo ci, ClientPlayNetworkHandler clientPlayNetworkHandler, List<?> list, int i, int j, int l, int m, int n, boolean bl, int q, int r, int s, int t, int u, List<?> list2, List<?> list3, int w, int x, int y, int z, int aa, int ab, PlayerListEntry playerListEntry2, GameProfile gameProfile, PlayerEntity playerEntity, boolean bl2, int ae, int af) {
         this.playerEntity = playerEntity;
     }
 
@@ -93,23 +93,21 @@ public class PlayerListHudMixin {
                 Window w = MinecraftClient.getInstance().getWindow();
                 final double guiScale = w.getScaleFactor();
 
-                RenderSystem.enableScissor((int)(x*guiScale), w.getHeight()-(int)((regionHeight+y)*guiScale), (int)(regionWidth*guiScale), (int)(regionHeight*guiScale));
-                RenderSystem.disableDepthTest();
-                DiffuseLighting.disableGuiDepthLighting();
+                RenderSystem.enableScissor((int) (x * guiScale), w.getHeight() - (int) ((regionHeight + y) * guiScale), (int) (regionWidth * guiScale), (int) (regionHeight * guiScale));
+                DiffuseLighting.method_34742();
 
                 MatrixStack stack = new MatrixStack();
                 stack.push();
 
-                stack.translate(x+4, y+8, 0);
-                stack.scale(-16,16,16);
+                stack.translate(x + 4, y + 8, 0);
+                stack.scale(-16, 16, 16);
                 stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
 
-                data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 15728864);
+                data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 0xF000E0);
 
                 stack.pop();
 
                 RenderSystem.disableScissor();
-                RenderSystem.enableDepthTest();
                 DiffuseLighting.enableGuiDepthLighting();
 
                 return;
