@@ -13,6 +13,7 @@ import net.blancworks.figura.lua.api.renderer.RenderTask.*;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
+import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -103,6 +104,8 @@ public class RendererAPI {
             set("setUniform", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue layerName, LuaValue uniformName, LuaValue value) {
+                    if (!script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS))
+                        return NIL;
                     RenderSystem.recordRenderCall(() -> {
                         try {
                             Shader customShader;

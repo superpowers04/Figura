@@ -200,12 +200,17 @@ public class PlayerData {
         }
 
         try {
-            if (nbt.contains("customVCP")) {
-                NbtCompound vcpNbt = nbt.getCompound("customVCP");
+            if (getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS)) {
+                if (nbt.contains("customVCP")) {
+                    NbtCompound vcpNbt = nbt.getCompound("customVCP");
 
-                if (vcpNbt != null) FiguraMod.doTask(() -> {
-                    FiguraVertexConsumerProvider.parseFromNbt(this, vcpNbt);
-                });
+                    if (vcpNbt != null) FiguraMod.doTask(() -> {
+                        FiguraVertexConsumerProvider.parseFromNbt(this, vcpNbt);
+                        FiguraMod.LOGGER.info("Render Layer Parsing Finished");
+                    });
+                }
+            } else {
+                FiguraMod.LOGGER.info("Blocked Custom Render Layer");
             }
         } catch (Exception e) {
             e.printStackTrace();

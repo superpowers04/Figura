@@ -10,6 +10,7 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.shaders.FiguraShader;
+import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
@@ -318,6 +319,8 @@ public class CustomModelAPI {
             ret.set("setRenderLayer", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
+                    if (!partOwner.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS))
+                        return NIL;
                     String layerName = arg1.checkjstring();
                     if (partOwner.customVCP != null)
                         targetPart.customLayer = partOwner.customVCP.getRenderLayer(layerName);

@@ -192,7 +192,8 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                             if (root instanceof ZipFile)
                                 ((ZipFile) root).close();
                         } catch (IOException e) {
-                            CustomScript.sendChatMessage(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+                            if (playerData.isLocalAvatar)
+                                CustomScript.sendChatMessage(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                             shader.complete(vanillaShaderMap.get("RENDERTYPE_ENTITY_TRANSLUCENT_SHADER").get());
                         }
                     });

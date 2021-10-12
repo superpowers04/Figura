@@ -39,10 +39,10 @@ public class PlayerTrustManager {
     public static final Identifier ALLOW_VANILLA_MOD_ID = new Identifier("setting", "allowvanillaedit");
     public static final Identifier ALLOW_NAMEPLATE_MOD_ID = new Identifier("setting", "allownameplateedit");
     public static final Identifier ALLOW_OFFSCREEN_RENDERING = new Identifier("setting", "allowoffscreenrendering");
+    public static final Identifier ALLOW_CUSTOM_RENDERLAYERS = new Identifier("setting", "allowcustomrenderlayers");
     public static final Identifier MAX_PARTICLES_ID = new Identifier("setting", "maxparticles");
     public static final Identifier MAX_SOUND_EFFECTS_ID = new Identifier("setting", "maxsfx");
 
-    
     public static Map<Identifier, TrustContainer> allContainers = new Object2ObjectOpenHashMap<>();
     public static List<Identifier> allGroups = new ArrayList<>();
     public static List<Identifier> defaultGroups = new ArrayList<>();
@@ -127,6 +127,10 @@ public class PlayerTrustManager {
         }});
 
         registerPermissionSetting(new PermissionBooleanSetting(ALLOW_OFFSCREEN_RENDERING) {{
+            value = true;
+        }});
+
+        registerPermissionSetting(new PermissionBooleanSetting(ALLOW_CUSTOM_RENDERLAYERS) {{
             value = true;
         }});
     }
