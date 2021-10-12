@@ -128,7 +128,7 @@ public class CustomModelPartMesh extends CustomModelPart {
         this.vertexCount = partNbt.getInt("vc");
     }
 
-    public String getPartType() {
-        return "msh";
+    public PartType getPartType() {
+        return PartType.MESH;
     }
 }

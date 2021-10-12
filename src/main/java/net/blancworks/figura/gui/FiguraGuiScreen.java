@@ -319,9 +319,13 @@ public class FiguraGuiScreen extends Screen {
         else {
             RenderSystem.setShaderTexture(0, scalableBoxTexture);
             drawTexture(matrices, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
-        }
 
+            //render expand button 3:
+            this.expandButton.render(matrices, mouseX, mouseY, delta);
+        }
         drawEntity(modelX, modelY, (int) (modelSize + scaledValue), angleX, angleY, client.player);
+
+        if (expand) return;
 
         //draw search box and file list
         modelFileList.render(matrices, mouseX, mouseY, delta);
@@ -338,18 +342,16 @@ public class FiguraGuiScreen extends Screen {
         drawTexture(matrices, currX - 18, 88, 10 * modelSizeStatus, 0, 10, 10, 40, 10);
 
         //draw text
-        if (!expand) {
-            int currY = 90;
-            if (nameText != null)
-                drawTextWithShadow(matrices, this.textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 0xFFFFFF);
-            if (fileSizeText != null)
-                drawTextWithShadow(matrices, this.textRenderer, fileSizeText, this.width - this.textRenderer.getWidth(fileSizeText) - 8, currY += 12, 0xFFFFFF);
-            if (modelComplexityText != null)
-                drawTextWithShadow(matrices, this.textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY + 12, 0xFFFFFF);
+        int currY = 90;
+        if (nameText != null)
+            drawTextWithShadow(matrices, this.textRenderer, nameText, this.width - this.textRenderer.getWidth(nameText) - 8, currY += 12, 0xFFFFFF);
+        if (fileSizeText != null)
+            drawTextWithShadow(matrices, this.textRenderer, fileSizeText, this.width - this.textRenderer.getWidth(fileSizeText) - 8, currY += 12, 0xFFFFFF);
+        if (modelComplexityText != null)
+            drawTextWithShadow(matrices, this.textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY + 12, 0xFFFFFF);
 
-            //mod version
-            drawCenteredText(matrices, client.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)), this.width / 2, this.height - 12, Formatting.DARK_GRAY.getColorValue());
-        }
+        //mod version
+        drawCenteredText(matrices, client.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)), this.width / 2, this.height - 12, Formatting.DARK_GRAY.getColorValue());
 
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
@@ -502,28 +504,9 @@ public class FiguraGuiScreen extends Screen {
 
     public void updateExpand() {
         if (expand) {
-            this.children().forEach(button -> {
-                if (button instanceof ButtonWidget)
-                    ((ButtonWidget) button).visible = false;
-            });
-
-            expandButton.visible = true;
             expandButton.setPos(5, 5);
-
-            searchBox.visible = false;
-            modelFileList.updateSize(0, 0, this.height, 0);
         } else {
-            this.children().forEach(button -> {
-                if (button instanceof ButtonWidget)
-                    ((ButtonWidget) button).visible = true;
-            });
-
             expandButton.setPos(this.width / 2 - modelBgSize / 2, this.height / 2 - modelBgSize / 2 - 15);
-
-            searchBox.visible = true;
-            modelFileList.updateSize(paneWidth, this.height, paneY + 19, this.height - 36);
-            modelFileList.setLeftPos(5);
-
             scaledValue  = 0.0F;
         }
 

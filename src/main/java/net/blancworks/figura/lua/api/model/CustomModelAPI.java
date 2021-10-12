@@ -432,6 +432,20 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("getType", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(targetPart.getPartType().toString());
+                }
+            });
+
+            ret.set("getName", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(targetPart.name);
+                }
+            });
+
             ret.set("part", LuaValue.userdataOf(targetPart));
 
             return ret;

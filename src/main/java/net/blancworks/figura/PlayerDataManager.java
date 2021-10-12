@@ -36,8 +36,12 @@ public final class PlayerDataManager {
     }
 
     public static PlayerData getDataForPlayer(UUID id) {
-        if (TO_CLEAR.remove(id))
-            LOADED_PLAYER_DATA.remove(id);
+        try {
+            if (TO_CLEAR.remove(id))
+                LOADED_PLAYER_DATA.remove(id);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         if (MinecraftClient.getInstance().player != null && id == MinecraftClient.getInstance().player.getUuid()) {
             if (didInitLocalPlayer)
@@ -73,8 +77,7 @@ public final class PlayerDataManager {
             getPlayerAvatarFromServerOrCache(id, getData);
 
             LOADED_PLAYER_DATA.put(id, getData);
-        }
-        else {
+        } else {
             getData = LOADED_PLAYER_DATA.get(id);
         }
 
