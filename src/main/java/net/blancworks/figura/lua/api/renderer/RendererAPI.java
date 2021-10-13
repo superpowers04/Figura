@@ -118,12 +118,12 @@ public class RendererAPI {
                             } else
                                 throw new LuaError("The player has no custom VCP!");
 
-                            if (customShader == null)
-                                throw new LuaError("The shader is null. This should not happen ever, contact devnull#0759");
-                            if (customShader instanceof FiguraShader)
-                                ((FiguraShader) customShader).setUniformFromLua(uniformName, value);
-                            else
-                                throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
+                            if (customShader != null) {
+                                if (customShader instanceof FiguraShader)
+                                    ((FiguraShader) customShader).setUniformFromLua(uniformName, value);
+                                else
+                                    throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
+                            }
                         } catch (LuaError error) {
                             script.stopScript(error);
                         }
