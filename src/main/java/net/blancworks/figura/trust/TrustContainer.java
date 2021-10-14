@@ -20,16 +20,15 @@ public class TrustContainer {
 
     public Text nameText;
 
-    private Identifier parentIdentifier = null;
-    private Identifier identifier;
+    private Identifier parentIdentifier;
+    private final Identifier identifier;
     //The set of permissions contained/modified by this trust container.
-    public HashMap<Identifier, PermissionSetting> permissionSet = new HashMap<Identifier, PermissionSetting>();
+    public HashMap<Identifier, PermissionSetting<?>> permissionSet = new HashMap<>();
 
     //--UI Related--
     public boolean isHidden = false;
     public boolean displayChildren = true;
     public boolean isLocked = false;
-
 
     public TrustContainer(Identifier id, Text nameText) {
         this(id, nameText, null);
@@ -47,7 +46,7 @@ public class TrustContainer {
      * Use the helper functions for types instead of this function.
     **/
     @Deprecated
-    public PermissionSetting getSetting(Identifier id) {
+    public PermissionSetting<?> getSetting(Identifier id) {
         if (permissionSet.containsKey(id))
             return permissionSet.get(id).getCopy();
 
@@ -57,7 +56,7 @@ public class TrustContainer {
         TrustContainer parent = PlayerTrustManager.getContainer(parentIdentifier);
 
         if (parent != null && parent != this) {
-            PermissionSetting ps = parent.getSetting(id);
+            PermissionSetting<?> ps = parent.getSetting(id);
             return ps.getCopy();
         }
 
@@ -78,11 +77,11 @@ public class TrustContainer {
         return identifier;
     }
 
-    public void setSetting(PermissionSetting setting) {
+    public void setSetting(PermissionSetting<?> setting) {
         if (isLocked)
             return;
 
-        PermissionSetting currSetting = getSetting(setting.id);
+        PermissionSetting<?> currSetting = getSetting(setting.id);
 
         if (currSetting != null && currSetting.isDifferent(setting))
             permissionSet.put(setting.id, setting);
@@ -99,8 +98,7 @@ public class TrustContainer {
         if (isLocked)
             return;
 
-        if (permissionSet.containsKey(id))
-            permissionSet.remove(id);
+        permissionSet.remove(id);
     }
 
     public void fromNbt(CompoundTag tag) {
@@ -122,14 +120,15 @@ public class TrustContainer {
 
         CompoundTag permTag = (CompoundTag) tag.get("perms");
 
-        for (Map.Entry<Identifier, PermissionSetting> settingEntry : PlayerTrustManager.permissionSettings.entrySet()) {
-            if (permTag.contains(settingEntry.getKey().getPath())) {
-                PermissionSetting newSetting = settingEntry.getValue().getCopy();
-                newSetting.fromNBT(permTag);
-                permissionSet.put(newSetting.id, newSetting);
+        if (permTag != null) {
+            for (Map.Entry<Identifier, PermissionSetting<?>> settingEntry : PlayerTrustManager.permissionSettings.entrySet()) {
+                if (permTag.contains(settingEntry.getKey().getPath())) {
+                    PermissionSetting<?> newSetting = settingEntry.getValue().getCopy();
+                    newSetting.fromNBT(permTag);
+                    permissionSet.put(newSetting.id, newSetting);
+                }
             }
         }
-
     }
 
     public void toNbt(CompoundTag tag) {
@@ -144,44 +143,41 @@ public class TrustContainer {
 
         CompoundTag permissions = new CompoundTag();
 
-        for (Map.Entry<Identifier, PermissionSetting> entry : permissionSet.entrySet()) {
-            
+        for (Map.Entry<Identifier, PermissionSetting<?>> entry : permissionSet.entrySet()) {
             entry.getValue().toNBT(permissions);
         }
 
         tag.put("perms", permissions);
     }
-    
-    
 
     //---Helper functions---
 
     public float getFloatSetting(Identifier id){
-        PermissionSetting setting = getSetting(id);
-        
+        PermissionSetting<?> setting = getSetting(id);
+
         if(setting instanceof PermissionFloatSetting){
             return ((PermissionFloatSetting) setting).value;
         }
-        
+
         return 0;
     }
     
-    public int getIntSetting(Identifier id){
-        return (int)getFloatSetting(id);
+    public int getIntSetting(Identifier id) {
+        return (int) getFloatSetting(id);
     }
-    
-    public boolean getBoolSetting(Identifier id){
-        PermissionSetting setting = getSetting(id);
 
-        if(setting instanceof PermissionBooleanSetting){
+    public boolean getBoolSetting(Identifier id){
+        PermissionSetting<?> setting = getSetting(id);
+
+        if (setting instanceof PermissionBooleanSetting) {
             return ((PermissionBooleanSetting) setting).value;
         }
 
         return false;
     }
-    
+
     public String getStringSetting(Identifier id){
-        PermissionSetting setting = getSetting(id);
+        PermissionSetting<?> setting = getSetting(id);
 
         if(setting instanceof PermissionStringSetting){
             return ((PermissionStringSetting) setting).value;

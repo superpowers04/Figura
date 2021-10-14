@@ -128,7 +128,7 @@ public class CustomModelAPI {
                 }
             });
 
-            ret.set("getRebuiltUV", new OneArgFunction() {
+            ret.set("getUVData", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     try {
@@ -138,23 +138,19 @@ public class CustomModelAPI {
                             throw new LuaError("Cannot get UV data for ALL faces at once");
 
                         CustomModelPart.uvData data = targetPart.UVCustomizations.get(uv);
+                        if (data == null) return NIL;
+
                         Vec2f offset = data.uvOffset;
                         Vec2f size = data.uvSize;
 
-                        if (offset == null)
-                            offset = new Vec2f(0f, 0f);
-
-                        if (size == null)
-                            size = new Vec2f(0f, 0f);
-
                         return new LuaVector(offset.x, offset.y, size.x - offset.x, size.y - offset.y);
                     } catch (Exception ignored) {
-                        throw new LuaError("UV Type not found!");
+                        throw new LuaError("UV Face not found!");
                     }
                 }
             });
 
-            ret.set("rebuildUV", new TwoArgFunction() {
+            ret.set("setUVData", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     try {
@@ -165,19 +161,32 @@ public class CustomModelAPI {
                         Vec2f size = new Vec2f(vec.z() + vec.x(), vec.w() + vec.y());
 
                         if (uv == CustomModelPart.UV.ALL) {
-                            targetPart.UVCustomizations.forEach((key, value) -> {
-                                value.setUVOffset(offset);
-                                value.setUVSize(size);
-                            });
+                            CustomModelPart.UV[] uvs = CustomModelPart.UV.values();
+
+                            for (CustomModelPart.UV uvPart : uvs) {
+                                CustomModelPart.uvData data = targetPart.UVCustomizations.get(uvPart);
+                                if (data == null) {
+                                    data = new CustomModelPart.uvData();
+                                    targetPart.UVCustomizations.put(uvPart, data);
+                                }
+
+                                data.setUVOffset(offset);
+                                data.setUVSize(size);
+                            }
                         } else {
                             CustomModelPart.uvData data = targetPart.UVCustomizations.get(uv);
+                            if (data == null) {
+                                data = new CustomModelPart.uvData();
+                                targetPart.UVCustomizations.put(uv, data);
+                            }
+
                             data.setUVOffset(offset);
                             data.setUVSize(size);
                         }
 
                         targetPart.applyUVMods(null);
                     } catch (Exception ignored) {
-                        throw new LuaError("UV Type not found!");
+                        throw new LuaError("UV Face not found!");
                     }
                     return NIL;
                 }

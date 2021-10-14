@@ -215,24 +215,8 @@ public class ConfigManager {
     //returns true if modmenu shifts other buttons on the game menu screen
     public static boolean modmenuButton() {
         if (FabricLoader.getInstance().isModLoaded("modmenu")) {
-            File file = new File(FabricLoader.getInstance().getConfigDir().resolve("modmenu.json").toString());
-
-            try {
-                if (file.exists()) {
-                    BufferedReader br = new BufferedReader(new FileReader(file));
-                    JsonObject json = new JsonParser().parse(br).getAsJsonObject();
-
-                    String config = json.get("mods_button_style").getAsString();
-
-                    br.close();
-
-                    if (!config.equals("shrink") && !config.equals("icon")) {
-                        return true;
-                    }
-                }
-            } catch (Exception e) {
-                return false;
-            }
+            String buttonStyle = com.terraformersmc.modmenu.config.ModMenuConfig.MODS_BUTTON_STYLE.getValue().toString();
+            return !buttonStyle.equals("SHRINK") && !buttonStyle.equals("ICON");
         }
 
         return false;
