@@ -4,11 +4,11 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.assets.FiguraAsset;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
@@ -149,7 +149,7 @@ public class CustomScript extends FiguraAsset {
         if (data == PlayerDataManager.localPlayer && (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.loadedName != null))
             scriptName = PlayerDataManager.localPlayer.loadedName;
 
-        //Load up the default libraries we wanna include.0
+        //Load up the default libraries we want to include.
         scriptGlobals.load(new JseBaseLib());
         scriptGlobals.load(new PackageLib());
         scriptGlobals.load(new Bit32Lib());
@@ -185,6 +185,9 @@ public class CustomScript extends FiguraAsset {
         setupGlobals();
         //Sets up events!
         setupEvents();
+
+        //then yeet the package library
+        scriptGlobals.set("package", LuaValue.NIL);
 
         try {
             //Load the script source, name defaults to "main" for scripts for other players.
@@ -288,6 +291,23 @@ public class CustomScript extends FiguraAsset {
         queueTask(() -> {
             try {
                 allEvents.get("onCommand").call(LuaString.valueOf(message));
+            } catch (Exception error) {
+                if (error instanceof LuaError)
+                    logLuaError((LuaError) error);
+                else
+                    error.printStackTrace();
+            }
+        });
+    }
+
+    public void runActionWheelFunction(LuaFunction function) {
+        if (!isDone || !hasPlayer || playerData.lastEntity == null)
+            return;
+
+        queueTask(() -> {
+            setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+            try {
+                function.call();
             } catch (Exception error) {
                 if (error instanceof LuaError)
                     logLuaError((LuaError) error);

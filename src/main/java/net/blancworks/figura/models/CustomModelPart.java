@@ -21,6 +21,7 @@ import net.minecraft.util.math.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -37,14 +38,7 @@ public class CustomModelPart {
     public Vec3f color = new Vec3f(1f, 1f, 1f);
 
     //uv stuff
-    public Map<UV, uvData> UVCustomizations = Map.of(
-            UV.NORTH, new uvData(),
-            UV.SOUTH, new uvData(),
-            UV.EAST, new uvData(),
-            UV.WEST, new uvData(),
-            UV.UP, new uvData(),
-            UV.DOWN, new uvData()
-    );
+    public Map<UV, uvData> UVCustomizations = new HashMap<>();
     public Vec2f texSize;
     public Vec2f uvOffset = new Vec2f(0f, 0f);
 
@@ -639,18 +633,6 @@ public class CustomModelPart {
             this.isHidden = partNbt.getBoolean("vsb");
         }
 
-        if (partNbt.contains("alp")) {
-            this.alpha = partNbt.getFloat("alp");
-        }
-
-        if (partNbt.contains("stype")) {
-            try {
-                this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
-            } catch (Exception ignored) {
-                this.shaderType = ShaderType.None;
-            }
-        }
-
         if (partNbt.contains("chld")) {
             NbtList childrenNbt = (NbtList) partNbt.get("chld");
             if (childrenNbt == null || childrenNbt.getHeldType() != NbtType.COMPOUND)
@@ -688,14 +670,6 @@ public class CustomModelPart {
 
         if (this.isHidden) {
             partNbt.put("vsb", NbtByte.of(true));
-        }
-
-        if (this.alpha != 1.0f) {
-            partNbt.put("alp", NbtFloat.of(this.alpha));
-        }
-
-        if (this.shaderType != ShaderType.None) {
-            partNbt.put("stype", NbtString.of(this.shaderType.toString()));
         }
 
         //Parse children.

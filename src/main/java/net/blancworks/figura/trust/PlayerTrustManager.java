@@ -12,9 +12,9 @@ import net.fabricmc.fabric.api.util.NbtType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -42,11 +42,10 @@ public class PlayerTrustManager {
     public static final Identifier MAX_PARTICLES_ID = new Identifier("setting", "maxparticles");
     public static final Identifier MAX_SOUND_EFFECTS_ID = new Identifier("setting", "maxsfx");
 
-    
     public static Map<Identifier, TrustContainer> allContainers = new Object2ObjectOpenHashMap<>();
     public static List<Identifier> allGroups = new ArrayList<>();
     public static List<Identifier> defaultGroups = new ArrayList<>();
-    public static Map<Identifier, PermissionSetting> permissionSettings = new Object2ObjectOpenHashMap<>();
+    public static Map<Identifier, PermissionSetting<?>> permissionSettings = new Object2ObjectOpenHashMap<>();
     public static List<Identifier> permissionDisplayOrder = new ArrayList<>();
 
     //Loads all the default groups from the json config file.
@@ -207,7 +206,7 @@ public class PlayerTrustManager {
 
                 Identifier settingID = new Identifier("setting", entry.getKey().toLowerCase(Locale.ENGLISH));
                 if (permissionSettings.containsKey(settingID)) {
-                    PermissionSetting newSetting = permissionSettings.get(settingID).getCopy();
+                    PermissionSetting<?> newSetting = permissionSettings.get(settingID).getCopy();
                     newSetting.fromJson(entry.getValue());
                     tc.permissionSet.put(newSetting.id, newSetting);
                 }
@@ -217,7 +216,7 @@ public class PlayerTrustManager {
         }
     }
 
-    public static void registerPermissionSetting(PermissionSetting baseSetting) {
+    public static void registerPermissionSetting(PermissionSetting<?> baseSetting) {
         permissionSettings.put(baseSetting.id, baseSetting);
         permissionDisplayOrder.add(baseSetting.id);
     }
@@ -242,38 +241,65 @@ public class PlayerTrustManager {
     }
 
     public static void readNbt(NbtCompound nbt) {
-        NbtList list = (NbtList) nbt.get("containers");
-        if (list == null || list.getHeldType() != NbtType.COMPOUND)
-            return;
+        NbtList containersList = (NbtList) nbt.get("containers");
+        if (containersList != null && containersList.getHeldType() == NbtType.COMPOUND) {
+            for (NbtElement element : containersList) {
+                NbtCompound nbtCompound = (NbtCompound) element;
 
-        for (NbtElement element : list) {
-            NbtCompound nbtCompound = (NbtCompound) element;
+                String idString = nbtCompound.getString("id");
+                Identifier id = Identifier.tryParse(idString);
 
-            String idString = nbtCompound.getString("id");
-            Identifier id = Identifier.tryParse(idString);
+                if (allContainers.containsKey(id)) {
+                    TrustContainer targetContainer = allContainers.get(id);
+                    targetContainer.fromNbt(nbtCompound);
+                }
+            }
+        }
 
-            if (allContainers.containsKey(id)) {
-                TrustContainer targetContainer = allContainers.get(id);
+        NbtList playersList = (NbtList) nbt.get("players");
+        if (playersList != null && playersList.getHeldType() == NbtType.COMPOUND) {
+            for (NbtElement element : playersList) {
+                NbtCompound nbtCompound = (NbtCompound) element;
 
-                targetContainer.fromNbt(nbtCompound);
+                String idString = nbtCompound.getString("id");
+                Identifier id = Identifier.tryParse(idString);
+
+                if (allContainers.containsKey(id)) {
+                    TrustContainer targetContainer = allContainers.get(id);
+                    targetContainer.fromNbt(nbtCompound);
+                } else if (id != null) {
+                    TrustContainer newContainer = new TrustContainer(id, Text.of(id.getPath()));
+
+                    String pidString = nbtCompound.getString("pid");
+                    Identifier pid = Identifier.tryParse(pidString);
+
+                    if (allContainers.containsKey(pid)) {
+                        newContainer.setParent(pid);
+                        allContainers.put(id, newContainer);
+                    }
+                }
             }
         }
     }
 
     public static void writeNbt(NbtCompound nbt) {
         NbtList containerList = new NbtList();
+        NbtList playerList = new NbtList();
 
         for (Map.Entry<Identifier, TrustContainer> entry : allContainers.entrySet()) {
-            if (entry.getKey().equals(new Identifier("players", MinecraftClient.getInstance().player.getUuid().toString()))) {
-                continue;
-            }
-
             NbtCompound containerNbt = new NbtCompound();
             entry.getValue().toNbt(containerNbt);
-            containerList.add(containerNbt);
+
+            if (entry.getKey().getNamespace().equals("players")) {
+                if (!entry.getKey().getPath().equals(MinecraftClient.getInstance().player.getUuid().toString()))
+                    playerList.add(containerNbt);
+            }
+            else
+                containerList.add(containerNbt);
         }
 
         nbt.put("containers", containerList);
+        nbt.put("players", playerList);
     }
 
     public static void saveToDisk() {
@@ -281,8 +307,7 @@ public class PlayerTrustManager {
             NbtCompound targetTag = new NbtCompound();
             writeNbt(targetTag);
 
-            Path targetPath = FabricLoader.getInstance().getGameDir().resolve("figura");
-            Files.createDirectories(targetPath);
+            Path targetPath = FiguraMod.getModContentDirectory();
             targetPath = targetPath.resolve("trustSettings.nbt");
 
             if (!Files.exists(targetPath))
@@ -299,7 +324,7 @@ public class PlayerTrustManager {
 
     public static void loadFromDisk() {
         try {
-            Path targetPath = FabricLoader.getInstance().getGameDir().resolve("figura").resolve("trustSettings.nbt");
+            Path targetPath = FiguraMod.getModContentDirectory().resolve("trustSettings.nbt");
 
             if (!Files.exists(targetPath))
                 return;
@@ -312,5 +337,4 @@ public class PlayerTrustManager {
             e.printStackTrace();
         }
     }
-
 }

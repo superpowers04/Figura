@@ -37,8 +37,9 @@ public class VanillaModelAPI {
     public static final String VANILLA_RIGHT_PANTS = "RIGHT_PANTS_LEG";
 
     //extra parts
-    public static final String VANILLA_CLOAK = "CAPE";
-    public static final String VANILLA_EAR = "EAR";
+    public static final String VANILLA_CAPE = "CAPE";
+    public static final String VANILLA_LEFT_EAR = "LEFT_EAR";
+    public static final String VANILLA_RIGHT_EAR = "RIGHT_EAR";
 
     public static Identifier getID() {
         return new Identifier("default", "vanilla_model");
@@ -66,8 +67,9 @@ public class VanillaModelAPI {
             set(VANILLA_LEFT_PANTS, getTableForPart(() -> getCurrModel.get().leftPants, VANILLA_LEFT_PANTS, script));
             set(VANILLA_RIGHT_PANTS, getTableForPart(() -> getCurrModel.get().rightPants, VANILLA_RIGHT_PANTS, script));
 
-            set(VANILLA_CLOAK, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getCloak(), VANILLA_CLOAK, script));
-            set(VANILLA_EAR, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getEar(), VANILLA_EAR, script));
+            set(VANILLA_CAPE, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getCloak(), VANILLA_CAPE, script));
+            set(VANILLA_LEFT_EAR, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getEar(), VANILLA_LEFT_EAR, script));
+            set(VANILLA_RIGHT_EAR, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getEar(), VANILLA_RIGHT_EAR, script));
         }});
     }
 
@@ -76,13 +78,13 @@ public class VanillaModelAPI {
     }
 
     public static class ModelPartTable extends ScriptLocalAPITable {
-        Supplier<ModelPart> targetPart;
+        public Supplier<ModelPart> targetPart;
 
         public float pivotX, pivotY, pivotZ;
         public float pitch, yaw, roll;
         public boolean visible;
 
-        String accessor;
+        public String accessor;
 
         public ModelPartTable(Supplier<ModelPart> part, String accessor, CustomScript script) {
             super(script);
@@ -224,4 +226,7 @@ public class VanillaModelAPI {
         }
     }
 
+    public static boolean isPartSpecial(String part) {
+        return part.equals(VANILLA_CAPE) || part.equals(VANILLA_LEFT_EAR) || part.equals(VANILLA_RIGHT_EAR);
+    }
 }
