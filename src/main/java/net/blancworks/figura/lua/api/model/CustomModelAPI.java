@@ -319,7 +319,7 @@ public class CustomModelAPI {
             ret.set("setRenderLayer", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    if (!partOwner.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS))
+                    if (!partOwner.canRenderCustomLayers())
                         return NIL;
                     String layerName = arg1.checkjstring();
                     if (partOwner.customVCP != null)

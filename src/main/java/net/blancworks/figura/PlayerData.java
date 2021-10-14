@@ -7,6 +7,8 @@ import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.coderbot.iris.Iris;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
@@ -306,6 +308,22 @@ public class PlayerData {
 
     public TrustContainer getTrustContainer() {
         return PlayerTrustManager.getContainer(getTrustIdentifier());
+    }
+
+    public boolean canRenderCustomLayers() {
+        if (FabricLoader.getInstance().isModLoaded("iris")) {
+            return IrisStateChecker.irisShadersEnabled();
+        }
+        return getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS);
+    }
+
+    /**
+     * Class Loader jank to have a soft dependency for iris
+     */
+    private static class IrisStateChecker {
+        public static boolean irisShadersEnabled() {
+            return Iris.getCurrentPack().isEmpty();
+        }
     }
 
     //Saves this playerdata to the cache.

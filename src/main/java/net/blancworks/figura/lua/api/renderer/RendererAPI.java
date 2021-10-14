@@ -104,7 +104,7 @@ public class RendererAPI {
             set("setUniform", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue layerName, LuaValue uniformName, LuaValue value) {
-                    if (!script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS))
+                    if (!script.playerData.canRenderCustomLayers())
                         return NIL;
                     RenderSystem.recordRenderCall(() -> {
                         try {
