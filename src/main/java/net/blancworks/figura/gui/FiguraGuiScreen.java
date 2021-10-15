@@ -452,7 +452,7 @@ public class FiguraGuiScreen extends Screen {
                 modelSizeStatus = 0;
             }
 
-            scriptStatus = PlayerDataManager.localPlayer.script != null ? PlayerDataManager.localPlayer.script.loadError ? 1 : 3 : 0;
+            scriptStatus = PlayerDataManager.localPlayer.script != null ? PlayerDataManager.localPlayer.script.scriptError ? 1 : 3 : 0;
             textureStatus = PlayerDataManager.localPlayer.texture != null ? 3 : 0;
         } else {
             nameText = null;
