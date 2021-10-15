@@ -43,7 +43,7 @@ public class CustomScript extends FiguraAsset {
 
     public PlayerData playerData;
     public String source;
-    public boolean loadError = false;
+    public boolean scriptError = false;
     public String scriptName = "main";
 
     //Global script values
@@ -197,7 +197,7 @@ public class CustomScript extends FiguraAsset {
                 public LuaValue call() {
                     // A simple lua error may be caught by the script, but a
                     // Java Error will pass through to top and stop the script.
-                    loadError = true;
+                    scriptError = true;
                     String error = "Script overran resource limits";
 
                     if (data == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
@@ -219,7 +219,7 @@ public class CustomScript extends FiguraAsset {
                             if (data != null) data.lastEntity = null;
                             chunk.call();
                         } catch (Exception error) {
-                            loadError = true;
+                            scriptError = true;
                             if (error instanceof LuaError)
                                 logLuaError((LuaError) error);
                             else
@@ -231,10 +231,12 @@ public class CustomScript extends FiguraAsset {
                         FiguraMod.LOGGER.info("Script Loading Finished");
                     }
             );
-        } catch (LuaError e) {
-            logLuaError(e);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception error) {
+            scriptError = true;
+            if (error instanceof LuaError)
+                logLuaError((LuaError) error);
+            else
+                error.printStackTrace();
         }
     }
 
@@ -275,6 +277,7 @@ public class CustomScript extends FiguraAsset {
                 try {
                     allEvents.get("player_init").call();
                 } catch (Exception error) {
+                    scriptError = true;
                     if (error instanceof LuaError)
                         logLuaError((LuaError) error);
                     else
@@ -285,13 +288,14 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onFiguraChatCommand(String message) {
-        if (!isDone || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
             return;
 
         queueTask(() -> {
             try {
                 allEvents.get("onCommand").call(LuaString.valueOf(message));
             } catch (Exception error) {
+                scriptError = true;
                 if (error instanceof LuaError)
                     logLuaError((LuaError) error);
                 else
@@ -301,7 +305,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void runActionWheelFunction(LuaFunction function) {
-        if (!isDone || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
             return;
 
         queueTask(() -> {
@@ -309,6 +313,7 @@ public class CustomScript extends FiguraAsset {
             try {
                 function.call();
             } catch (Exception error) {
+                scriptError = true;
                 if (error instanceof LuaError)
                     logLuaError((LuaError) error);
                 else
@@ -318,7 +323,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onWorldRender(float deltaTime) {
-        if (!isDone || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
             return;
 
         queueTask(() -> {
@@ -326,6 +331,7 @@ public class CustomScript extends FiguraAsset {
             try {
                 allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
             } catch (Exception error) {
+                scriptError = true;
                 if (error instanceof LuaError)
                     logLuaError((LuaError) error);
                 else
@@ -336,7 +342,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onDamage(float amount) {
-        if (!isDone || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
             return;
 
         queueTask(() -> {
@@ -344,6 +350,7 @@ public class CustomScript extends FiguraAsset {
             try {
                 allEvents.get("onDamage").call(LuaNumber.valueOf(amount));
             } catch (Exception error) {
+                scriptError = true;
                 if (error instanceof LuaError)
                     logLuaError((LuaError) error);
                 else
@@ -457,7 +464,7 @@ public class CustomScript extends FiguraAsset {
             @Override
             public LuaValue call(LuaValue table, LuaValue key, LuaValue value) {
                 if (table != scriptGlobals) {
-                    loadError = true;
+                    scriptError = true;
                     error("Can't use global table metatable on other tables!");
                 }
 
@@ -521,21 +528,20 @@ public class CustomScript extends FiguraAsset {
                 return;
             lastTickFunction = queueTask(this::onTick);
         }
-
     }
 
     //Called whenever the game renders a new frame with this avatar in view
     public void render(float deltaTime) {
         //Don't render if the script is doing something else still
         //Prevents threading memory errors and also ensures that "long" ticks and events and such are penalized.
-        if (tickLuaEvent == null || currTask == null || !currTask.isDone())
+        if (renderLuaEvent == null || scriptError || currTask == null || !currTask.isDone() || !isDone || !hasPlayer || playerData.lastEntity == null)
             return;
 
         onRender(deltaTime);
     }
 
     public void onTick() {
-        if (!isDone || tickLuaEvent == null || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || tickLuaEvent == null || scriptError || !hasPlayer || playerData.lastEntity == null)
             return;
 
         setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
@@ -556,7 +562,7 @@ public class CustomScript extends FiguraAsset {
             if (outgoingPingQueue.size() > 0)
                 ((NewFiguraNetworkManager) FiguraMod.networkManager).sendPing(outgoingPingQueue);
         } catch (Exception error) {
-            loadError = true;
+            scriptError = true;
             tickLuaEvent = null;
             if (error instanceof LuaError)
                 logLuaError((LuaError) error);
@@ -565,9 +571,6 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onRender(float deltaTime) {
-        if (!isDone || renderLuaEvent == null || !hasPlayer || playerData.lastEntity == null)
-            return;
-
         for (CustomModelPart part : this.playerData.model.allParts) {
             CustomModelPart.clearExtraRendering(part);
         }
@@ -576,7 +579,7 @@ public class CustomScript extends FiguraAsset {
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
         } catch (Exception error) {
-            loadError = true;
+            scriptError = true;
             renderLuaEvent = null;
             if (error instanceof LuaError)
                 logLuaError((LuaError) error);
@@ -702,11 +705,9 @@ public class CustomScript extends FiguraAsset {
 
     public void logLuaError(LuaError error) {
         //Never even log errors for other players, only the local player.
-        if (playerData != PlayerDataManager.localPlayer && !(boolean) Config.LOG_OTHERS_SCRIPT.value) {
+        if (playerData != PlayerDataManager.localPlayer && !(boolean) Config.LOG_OTHERS_SCRIPT.value)
             return;
-        }
 
-        loadError = true;
         String msg = error.getMessage();
         msg = msg.replace("\t", "   ");
         String[] messageParts = msg.split("\n");
@@ -747,8 +748,8 @@ public class CustomScript extends FiguraAsset {
                     location = "'" + src + "'" + ext;
                 }
             }
-        }
-        catch (Exception ignored) {}
+        } catch (Exception ignored) {}
+
         sendChatMessage(new LiteralText("script:\n   " + location).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
     }
 
@@ -882,9 +883,11 @@ public class CustomScript extends FiguraAsset {
 
             incomingPingQueue.add(p);
         } catch (Exception error) {
-            loadError = true;
+            scriptError = true;
             if (error instanceof LuaError)
                 logLuaError((LuaError) error);
+            else
+                error.printStackTrace();
         }
     }
 
