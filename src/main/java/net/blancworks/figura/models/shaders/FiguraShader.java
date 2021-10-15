@@ -1,5 +1,6 @@
 package net.blancworks.figura.models.shaders;
 
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.client.gl.GlUniform;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.VertexFormat;
@@ -32,9 +33,14 @@ public class FiguraShader extends Shader {
                     case 0 -> { //int
                         uniform.set(value.checkint());
                     }
-                    case 4 -> { //float
-                        value.checknumber("Value in setUniform() must be a number for a float uniform.");
-                        uniform.set(value.tofloat());
+                    case 4,5,6,7 -> { //float
+                        if (value.isnumber()) {
+                            uniform.set(value.tofloat());
+                        } else {
+                            LuaVector v = LuaVector.checkOrNew(value);
+                            uniform.setForDataType(v.x(), v.y(), v.z(), v.w());
+                        }
+
                     }
                     case 8 -> { //2x2 matrix
                         value.checktable();
