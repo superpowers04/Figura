@@ -292,6 +292,7 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
+            setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
             try {
                 allEvents.get("onCommand").call(LuaString.valueOf(message));
             } catch (Exception error) {
