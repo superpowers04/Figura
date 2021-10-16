@@ -13,7 +13,6 @@ import net.blancworks.figura.lua.api.renderer.RenderTask.*;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
-import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -125,7 +124,7 @@ public class RendererAPI {
                                     throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
                             }
                         } catch (LuaError error) {
-                            script.stopScript(error);
+                            script.handleError(error, CustomScript.ScriptLocation.ALL);
                         }
                     });
                     return NIL;
