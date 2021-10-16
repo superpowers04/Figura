@@ -16,6 +16,7 @@ import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
+import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -190,7 +191,7 @@ public class FiguraGuiScreen extends Screen {
         this.addSelectableChild(this.modelFileList);
         this.addSelectableChild(this.searchBox);
 
-        int width = Math.min((this.width / 2) - 10 - 128, 128);
+        int width = Math.min(this.width - (this.width / 2 + modelBgSize / 2 + 38), 140);
 
         //open folder
         this.addDrawableChild(new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.openfolder"), (buttonWidgetx) -> {
@@ -205,16 +206,16 @@ public class FiguraGuiScreen extends Screen {
         }));
 
         //back button
-        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.setScreen(parentScreen)));
+        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.setScreen(parentScreen)));
 
         //trust button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.setScreen(trustScreen)));
+        this.addDrawableChild(new ButtonWidget(this.width - width - 5, 15, width, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.setScreen(trustScreen)));
 
         //config button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.configmenu"), (buttonWidgetx) -> this.client.setScreen(configScreen)));
+        this.addDrawableChild(new ButtonWidget(this.width - width - 5, 40, width, 20, new TranslatableText("gui.figura.button.configmenu"), (buttonWidgetx) -> this.client.setScreen(configScreen)));
 
         //help button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 65, 140, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - width - 5, 65, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
             if (bl) {
                 Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
             }
@@ -223,7 +224,7 @@ public class FiguraGuiScreen extends Screen {
 
         //keybinds button
         keybindsButton = new TexturedButtonWidget(
-                this.width - 140 - 5 - 25, 15,
+                this.width - width - 30, 15,
                 20, 20,
                 0, 0, 20,
                 keybindsTexture, 40, 40,
@@ -268,7 +269,7 @@ public class FiguraGuiScreen extends Screen {
 
         //expand button
         expandButton = new TexturedButtonWidget(
-                this.width / 2 - modelBgSize / 2, this.height / 2 - modelBgSize / 2 - 15,
+                Math.max(this.width / 2 - modelBgSize / 2, paneWidth + 5), this.height / 2 - modelBgSize / 2 - 15,
                 15, 15,
                 0, 0, 15,
                 expandTexture, 15, 30,
@@ -451,7 +452,7 @@ public class FiguraGuiScreen extends Screen {
                 modelSizeStatus = 0;
             }
 
-            scriptStatus = PlayerDataManager.localPlayer.script != null ? PlayerDataManager.localPlayer.script.loadError ? 1 : 3 : 0;
+            scriptStatus = PlayerDataManager.localPlayer.script != null ? PlayerDataManager.localPlayer.script.scriptError ? 1 : 3 : 0;
             textureStatus = PlayerDataManager.localPlayer.texture != null ? 3 : 0;
         } else {
             nameText = null;
@@ -504,10 +505,27 @@ public class FiguraGuiScreen extends Screen {
 
     public void updateExpand() {
         if (expand) {
+            this.children().forEach(child -> {
+                if (child instanceof ClickableWidget widget)
+                    widget.visible = false;
+            });
+
             expandButton.setPos(5, 5);
+            expandButton.visible = true;
+
+            modelFileList.updateSize(0, 0, this.height, 0);
         } else {
-            expandButton.setPos(this.width / 2 - modelBgSize / 2, this.height / 2 - modelBgSize / 2 - 15);
-            scaledValue  = 0.0F;
+            this.children().forEach(child -> {
+                if (child instanceof ClickableWidget widget)
+                    widget.visible = true;
+            });
+
+            expandButton.setPos(Math.max(this.width / 2 - modelBgSize / 2, paneWidth + 5), this.height / 2 - modelBgSize / 2 - 15);
+
+            modelFileList.updateSize(paneWidth, this.height, paneY + 19, this.height - 36);
+            modelFileList.setLeftPos(5);
+
+            scaledValue  = 0f;
         }
 
         modelX = this.width / 2;

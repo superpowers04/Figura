@@ -53,11 +53,8 @@ public class GameMenuScreenMixin extends Screen {
         }
 
         if (config != 4) {
-            try {
-                if (ConfigManager.modmenuButton()) {
-                    y -= 12;
-                }
-            } catch (Exception ignored) {}
+            if (ConfigManager.modmenuButton())
+                y += 12;
 
             addDrawableChild(new ButtonWidget(x, y, 64, 20, new LiteralText("Figura"),
                     btn -> this.client.setScreen(figura$screen)));

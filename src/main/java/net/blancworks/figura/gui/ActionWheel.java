@@ -407,15 +407,7 @@ public class ActionWheel extends DrawableHelper {
                 ActionWheelCustomization customization = currentData.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
 
                 if (customization != null && customization.function != null) {
-                    try {
-                        customization.function.call();
-                    } catch (Exception error) {
-                        if (error instanceof LuaError) {
-                            currentData.script.logLuaError((LuaError) error);
-                        } else {
-                            error.printStackTrace();
-                        }
-                    }
+                    currentData.script.runActionWheelFunction(customization.function);
                 }
             }
 

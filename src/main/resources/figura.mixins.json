@@ -6,11 +6,13 @@
   "client": [
     "ArmorFeatureRendererMixin",
     "CameraMixin",
+    "CapeFeatureRendererMixin",
     "ChatHudListenerMixin",
     "ChatHudMixin",
     "ChatScreenAccessorMixin",
     "ClientLoginNetworkHandlerMixin",
     "ClientPlayerEntityMixin",
+    "Deadmau5FeatureRendererMixin",
     "DebugHudMixin",
     "ElytraEntityModelMixin",
     "ElytraFeatureRendererMixin",

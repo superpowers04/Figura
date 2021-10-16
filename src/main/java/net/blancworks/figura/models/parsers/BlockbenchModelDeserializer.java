@@ -88,7 +88,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         JsonArray outliner = root.get("outliner").getAsJsonArray();
         JsonArray textures = root.get("textures").getAsJsonArray();
 
-        if(meta.has("model_format") && meta.get("model_format").getAsString().equals("skin"))
+        if (meta.has("model_format") && meta.get("model_format").getAsString().equals("skin"))
             overrideAsPlayerModel = true;
 
         retModel.defaultTextureSize = new Vec2f(resolution.get("width").getAsFloat(), resolution.get("height").getAsFloat());
@@ -101,7 +101,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             UUID id = entry.getKey();
             JsonObject obj = entry.getValue();
 
-            parsedParts.put(id, parseElement(obj, retModel));
+            CustomModelPart part = parseElement(obj, retModel);
+            if (part != null)
+                parsedParts.put(id, part);
         }
 
         for (JsonElement element : outliner) {
@@ -112,8 +114,11 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 //If the element is a string, it's an element, so just add it to the children.
                 String s = element.getAsString();
 
-                if (s != null)
-                    retModel.allParts.add(parsedParts.get(UUID.fromString(s)));
+                if (s != null) {
+                    CustomModelPart part = parsedParts.get(UUID.fromString(s));
+                    if (part != null)
+                        retModel.allParts.add(part);
+                }
             }
         }
 
@@ -160,7 +165,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     }
                 }
                 //Check for player model parts.
-                if(overrideAsPlayerModel){
+                if (overrideAsPlayerModel) {
                     for (Map.Entry<String, PlayerSkinRemap> entry : PLAYER_SKIN_REMAPS.entrySet()) {
                         if (groupPart.name.contains(entry.getKey())) {
                             groupPart.parentType = entry.getValue().parentType;
@@ -192,9 +197,8 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
                 if (s != null) {
                     CustomModelPart part = allParts.get(UUID.fromString(s));
-                    groupPart.children.add(part);
-                    
-                    if(part != null){
+                    if (part != null) {
+                        groupPart.children.add(part);
                         part.applyTrueOffset(playerModelOffset.copy());
                     }
                 }
@@ -210,6 +214,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
     }
 
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
+        if (elementObject.has("type") && elementObject.get("type").getAsString().equals("mesh"))
+            return null;
+
         CustomModelPartCuboid elementPart = new CustomModelPartCuboid();
 
         if (elementObject.has("name")) {

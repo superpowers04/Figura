@@ -148,7 +148,7 @@ public class MetaAPI {
             set("getScriptStatus", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.loadError ? 2 : 4);
+                    return LuaValue.valueOf(script.scriptError ? 2 : 4);
                 }
             });
 

@@ -94,7 +94,7 @@ public class PlayerListHudMixin {
                 final double guiScale = w.getScaleFactor();
 
                 RenderSystem.enableScissor((int) (x * guiScale), w.getHeight() - (int) ((regionHeight + y) * guiScale), (int) (regionWidth * guiScale), (int) (regionHeight * guiScale));
-                DiffuseLighting.method_34742();
+                DiffuseLighting.disableGuiDepthLighting();
 
                 MatrixStack stack = new MatrixStack();
                 stack.push();
