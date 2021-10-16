@@ -15,8 +15,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.widget.AbstractButtonWidget;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.ClickableWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -27,8 +27,9 @@ import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Quaternion;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.client.util.math.Vector3f;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
@@ -58,25 +59,25 @@ public class FiguraGuiScreen extends Screen {
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
 
-    public static final List<Style> textColors = List.of(
+    public static final List<Style> textColors = Arrays.asList(
             Style.EMPTY.withColor(Formatting.WHITE),
             Style.EMPTY.withColor(Formatting.RED),
             Style.EMPTY.withColor(Formatting.YELLOW),
             Style.EMPTY.withColor(Formatting.GREEN)
     );
 
-    public static final List<Text> deleteTooltip = List.of(
-        new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(textColors.get(1)),
-        new TranslatableText("gui.figura.button.tooltip.deleteavatartwo").setStyle(textColors.get(1))
+    public static final List<Text> deleteTooltip = Arrays.asList(
+            new TranslatableText("gui.figura.button.tooltip.deleteavatar").setStyle(textColors.get(1)),
+            new TranslatableText("gui.figura.button.tooltip.deleteavatartwo").setStyle(textColors.get(1))
     );
 
     public static final TranslatableText uploadTooltip = new TranslatableText("gui.figura.button.tooltip.upload");
-    public static final List<Text> uploadLocalTooltip = List.of(
-        new TranslatableText("gui.figura.button.tooltip.uploadlocal").setStyle(textColors.get(1)),
-        new TranslatableText("gui.figura.button.tooltip.uploadlocaltwo").setStyle(textColors.get(1))
+    public static final List<Text> uploadLocalTooltip = Arrays.asList(
+            new TranslatableText("gui.figura.button.tooltip.uploadlocal").setStyle(textColors.get(1)),
+            new TranslatableText("gui.figura.button.tooltip.uploadlocaltwo").setStyle(textColors.get(1))
     );
 
-    public static final List<Text> noConnectionTooltip = List.of(
+    public static final List<Text> noConnectionTooltip = Arrays.asList(
             new TranslatableText("gui.figura.button.tooltip.noconnection").setStyle(textColors.get(1)),
             new TranslatableText("gui.figura.button.tooltip.noconnectiontwo").setStyle(textColors.get(1))
     );
@@ -93,11 +94,11 @@ public class FiguraGuiScreen extends Screen {
                     .append(scriptStatusText).append(statusDividerText)
                     .append(backendStatusText),
 
-                    new LiteralText(""),
-                    new TranslatableText("gui.figura.button.tooltip.status").setStyle(textColors.get(0)),
-                    new TranslatableText("gui.figura.button.tooltip.statustwo").setStyle(textColors.get(1)),
-                    new TranslatableText("gui.figura.button.tooltip.statusthree").setStyle(textColors.get(2)),
-                    new TranslatableText("gui.figura.button.tooltip.statusfour").setStyle(textColors.get(3))
+            new LiteralText(""),
+            new TranslatableText("gui.figura.button.tooltip.status").setStyle(textColors.get(0)),
+            new TranslatableText("gui.figura.button.tooltip.statustwo").setStyle(textColors.get(1)),
+            new TranslatableText("gui.figura.button.tooltip.statusthree").setStyle(textColors.get(2)),
+            new TranslatableText("gui.figura.button.tooltip.statusfour").setStyle(textColors.get(3))
     ));
 
     public static final TranslatableText reloadTooltip = new TranslatableText("gui.figura.button.tooltip.reloadavatar");
@@ -188,13 +189,13 @@ public class FiguraGuiScreen extends Screen {
         this.searchBox.setChangedListener((string_1) -> modelFileList.filter(string_1, false));
         this.modelFileList = new ModelFileListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, this.modelFileList, this, modelFileListState);
         this.modelFileList.setLeftPos(5);
-        this.addSelectableChild(this.modelFileList);
-        this.addSelectableChild(this.searchBox);
+        this.addChild(this.modelFileList);
+        this.addChild(this.searchBox);
 
         int width = Math.min(this.width - (this.width / 2 + modelBgSize / 2 + 38), 140);
 
         //open folder
-        this.addDrawableChild(new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.openfolder"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.openfolder"), (buttonWidgetx) -> {
             Path modelDir = LocalPlayerData.getContentDirectory();
             try {
                 if (!Files.exists(modelDir))
@@ -206,20 +207,20 @@ public class FiguraGuiScreen extends Screen {
         }));
 
         //back button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.setScreen(parentScreen)));
+        this.addButton(new ButtonWidget(this.width - 140 - 5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.openScreen(parentScreen)));
 
         //trust button
-        this.addDrawableChild(new ButtonWidget(this.width - width - 5, 15, width, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.setScreen(trustScreen)));
+        this.addButton(new ButtonWidget(this.width - width - 5, 15, width, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.openScreen(trustScreen)));
 
         //config button
-        this.addDrawableChild(new ButtonWidget(this.width - width - 5, 40, width, 20, new TranslatableText("gui.figura.button.configmenu"), (buttonWidgetx) -> this.client.setScreen(configScreen)));
+        this.addButton(new ButtonWidget(this.width - width - 5, 40, width, 20, new TranslatableText("gui.figura.button.configmenu"), (buttonWidgetx) -> this.client.openScreen(configScreen)));
 
         //help button
-        this.addDrawableChild(new ButtonWidget(this.width - width - 5, 65, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
+        this.addButton(new ButtonWidget(this.width - width - 5, 65, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
             if (bl) {
                 Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
             }
-            this.client.setScreen(this);
+            this.client.openScreen(this);
         }, "https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel", true))));
 
         //keybinds button
@@ -228,9 +229,9 @@ public class FiguraGuiScreen extends Screen {
                 20, 20,
                 0, 0, 20,
                 keybindsTexture, 40, 40,
-                (bx) -> this.client.setScreen(keyBindsScreen)
+                (bx) -> this.client.openScreen(keyBindsScreen)
         );
-        this.addDrawableChild(keybindsButton);
+        this.addButton(keybindsButton);
         keybindsButton.active = false;
 
         //delete button
@@ -244,7 +245,7 @@ public class FiguraGuiScreen extends Screen {
                         FiguraMod.networkManager.deleteAvatar();
                 }
         );
-        this.addDrawableChild(deleteButton);
+        this.addButton(deleteButton);
         deleteButton.active = false;
 
         //upload button
@@ -253,9 +254,9 @@ public class FiguraGuiScreen extends Screen {
                 25, 25,
                 0, 0, 25,
                 uploadTexture, 50, 50,
-                (bx) -> FiguraMod.networkManager.postAvatar().thenRun(()->System.out.println("UPLOADED AVATAR"))
+                (bx) -> FiguraMod.networkManager.postAvatar().thenRun(() -> System.out.println("UPLOADED AVATAR"))
         );
-        this.addDrawableChild(uploadButton);
+        this.addButton(uploadButton);
 
         //reload local button
         reloadButton = new TexturedButtonWidget(
@@ -265,7 +266,7 @@ public class FiguraGuiScreen extends Screen {
                 reloadTexture, 25, 50,
                 (bx) -> PlayerDataManager.clearLocalPlayer()
         );
-        this.addDrawableChild(reloadButton);
+        this.addButton(reloadButton);
 
         //expand button
         expandButton = new TexturedButtonWidget(
@@ -278,7 +279,7 @@ public class FiguraGuiScreen extends Screen {
                     updateExpand();
                 }
         );
-        this.addDrawableChild(expandButton);
+        this.addButton(expandButton);
 
         updateAvatarData();
         updateExpand();
@@ -286,7 +287,7 @@ public class FiguraGuiScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     int tickCount = 0;
@@ -314,11 +315,10 @@ public class FiguraGuiScreen extends Screen {
 
         //draw player preview
         if (!expand) {
-            RenderSystem.setShaderTexture(0, playerBackgroundTexture);
+            MinecraftClient.getInstance().getTextureManager().bindTexture(playerBackgroundTexture);
             drawTexture(matrices, this.width / 2 - modelBgSize / 2, this.height / 2 - modelBgSize / 2, 0, 0, modelBgSize, modelBgSize, modelBgSize, modelBgSize);
-        }
-        else {
-            RenderSystem.setShaderTexture(0, scalableBoxTexture);
+        } else {
+            MinecraftClient.getInstance().getTextureManager().bindTexture(scalableBoxTexture);
             drawTexture(matrices, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
 
             //render expand button 3:
@@ -333,7 +333,7 @@ public class FiguraGuiScreen extends Screen {
         searchBox.render(matrices, mouseX, mouseY, delta);
 
         //draw status indicators
-        RenderSystem.setShaderTexture(0, statusIndicatorTexture);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(statusIndicatorTexture);
 
         //backend, script, texture, model
         int currX = this.width;
@@ -376,7 +376,7 @@ public class FiguraGuiScreen extends Screen {
         }
         uploadButton.active = wasUploadActive;
 
-        if (reloadButton.isMouseOver(mouseX, mouseY)){
+        if (reloadButton.isMouseOver(mouseX, mouseY)) {
             matrices.push();
             matrices.translate(0, 0, 599);
             renderTooltip(matrices, reloadTooltip, mouseX, mouseY);
@@ -446,8 +446,7 @@ public class FiguraGuiScreen extends Screen {
             if (PlayerDataManager.localPlayer.model != null) {
                 modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
                 FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
-            }
-            else {
+            } else {
                 modelComplexityText = new TranslatableText("gui.figura.complexity", 0);
                 modelSizeStatus = 0;
             }
@@ -468,7 +467,7 @@ public class FiguraGuiScreen extends Screen {
 
         statusTooltip.set(0,
                 new LiteralText("").append(
-                modelStatusText.setStyle(textColors.get(modelSizeStatus))).append(statusDividerText)
+                                modelStatusText.setStyle(textColors.get(modelSizeStatus))).append(statusDividerText)
                         .append(textureStatusText.setStyle(textColors.get(textureStatus))).append(statusDividerText)
                         .append(scriptStatusText.setStyle(textColors.get(scriptStatus))).append(statusDividerText)
                         .append(backendStatusText.setStyle(textColors.get(connectionStatus)))
@@ -488,12 +487,10 @@ public class FiguraGuiScreen extends Screen {
         if (fileSize >= PlayerData.FILESIZE_LARGE_THRESHOLD) {
             fsText.setStyle(textColors.get(1));
             modelSizeStatus = 1;
-        }
-        else if (fileSize >= PlayerData.FILESIZE_WARNING_THRESHOLD) {
+        } else if (fileSize >= PlayerData.FILESIZE_WARNING_THRESHOLD) {
             fsText.setStyle(textColors.get(2));
             modelSizeStatus = 2;
-        }
-        else {
+        } else {
             fsText.setStyle(textColors.get(0));
             modelSizeStatus = 3;
         }
@@ -506,8 +503,8 @@ public class FiguraGuiScreen extends Screen {
     public void updateExpand() {
         if (expand) {
             this.children().forEach(child -> {
-                if (child instanceof ClickableWidget widget)
-                    widget.visible = false;
+                if (child instanceof AbstractButtonWidget)
+                    ((AbstractButtonWidget) child).visible = false;
             });
 
             expandButton.setPos(5, 5);
@@ -516,8 +513,8 @@ public class FiguraGuiScreen extends Screen {
             modelFileList.updateSize(0, 0, this.height, 0);
         } else {
             this.children().forEach(child -> {
-                if (child instanceof ClickableWidget widget)
-                    widget.visible = true;
+                if (child instanceof AbstractButtonWidget)
+                    ((AbstractButtonWidget) child).visible = true;
             });
 
             expandButton.setPos(Math.max(this.width / 2 - modelBgSize / 2, paneWidth + 5), this.height / 2 - modelBgSize / 2 - 15);
@@ -525,7 +522,7 @@ public class FiguraGuiScreen extends Screen {
             modelFileList.updateSize(paneWidth, this.height, paneY + 19, this.height - 36);
             modelFileList.setLeftPos(5);
 
-            scaledValue  = 0f;
+            scaledValue = 0f;
         }
 
         modelX = this.width / 2;
@@ -698,7 +695,7 @@ public class FiguraGuiScreen extends Screen {
         super.filesDragged(paths);
 
         String string = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
-        this.client.setScreen(new ConfirmScreen((bl) -> {
+        this.client.openScreen(new ConfirmScreen((bl) -> {
             Path destPath = LocalPlayerData.getContentDirectory();
             if (bl) {
                 paths.forEach((path2) -> {
@@ -726,37 +723,38 @@ public class FiguraGuiScreen extends Screen {
 
                 });
             }
-            this.client.setScreen(this);
+            this.client.openScreen(this);
         }, new TranslatableText("gui.figura.dropconfirm"), new LiteralText(string)));
     }
 
     public static void drawEntity(int x, int y, int size, float rotationX, float rotationY, LivingEntity entity) {
-        MatrixStack matrixStack = RenderSystem.getModelViewStack();
-        matrixStack.push();
-        matrixStack.translate(x, y, 1500.0D);
-        matrixStack.scale(1.0F, 1.0F, -1.0F);
-        RenderSystem.applyModelViewMatrix();
-        MatrixStack matrixStack2 = new MatrixStack();
-        matrixStack2.translate(0.0D, 0.0D, 1000.0D);
-        matrixStack2.scale((float) size, (float) size, (float) size);
-        Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
-        Quaternion quaternion2 = Vec3f.POSITIVE_X.getDegreesQuaternion(rotationX);
+        RenderSystem.pushMatrix();
+        RenderSystem.translatef((float) x, (float) y, 1500.0F);
+        RenderSystem.scalef(1.0F, 1.0F, -1.0F);
+        MatrixStack matrixStack = new MatrixStack();
+        matrixStack.translate(0.0D, 0.0D, 1000.0D);
+        matrixStack.scale((float) size, (float) size, (float) size);
+        Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180.0F);
+        Quaternion quaternion2 = Vector3f.POSITIVE_X.getDegreesQuaternion(rotationX);
         quaternion.hamiltonProduct(quaternion2);
-        matrixStack2.multiply(quaternion);
+        matrixStack.multiply(quaternion);
         float h = entity.bodyYaw;
-        float i = entity.getYaw();
-        float j = entity.getPitch();
+        float i = entity.yaw;
+        float j = entity.pitch;
         float k = entity.prevHeadYaw;
         float l = entity.headYaw;
         boolean invisible = entity.isInvisible();
         entity.bodyYaw = 180.0F - rotationY;
-        entity.setYaw(180.0F - rotationY);
-        entity.setPitch(0.0F);
-        entity.headYaw = entity.getYaw();
-        entity.prevHeadYaw = entity.getYaw();
+        entity.yaw = 180.0F - rotationY;
+        entity.pitch = 0.0F;
+        entity.headYaw = entity.yaw;
+        entity.prevHeadYaw = entity.yaw;
         entity.setInvisible(false);
         showOwnNametag = (boolean) Config.PREVIEW_NAMEPLATE.value;
-        DiffuseLighting.method_34742();
+        Matrix4f light = new Matrix4f();
+        light.loadIdentity();
+        light.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(180f));
+        DiffuseLighting.method_27869(light);
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
         entityRenderDispatcher.setRotation(quaternion2);
@@ -765,19 +763,18 @@ public class FiguraGuiScreen extends Screen {
         int box = modelBgSize * guiScale;
         if (!expand)
             RenderSystem.enableScissor(x * guiScale - box / 2, y * guiScale - box / 2, box, box);
-        RenderSystem.runAsFancy(() -> entityRenderDispatcher.render(entity, 0.0D, -1.0D, 0.0D, 0.0F, 1.0F, matrixStack2, immediate, 15728880));
+        RenderSystem.runAsFancy(() -> entityRenderDispatcher.render(entity, 0.0D, -1.0D, 0.0D, 0.0F, 1.0F, matrixStack, immediate, 15728880));
         RenderSystem.disableScissor();
         immediate.draw();
         entityRenderDispatcher.setRenderShadows(true);
         entity.bodyYaw = h;
-        entity.setYaw(i);
-        entity.setPitch(j);
+        entity.yaw = i;
+        entity.pitch = j;
         entity.prevHeadYaw = k;
         entity.headYaw = l;
         entity.setInvisible(invisible);
         showOwnNametag = false;
-        matrixStack.pop();
-        RenderSystem.applyModelViewMatrix();
+        RenderSystem.popMatrix();
         DiffuseLighting.enableGuiDepthLighting();
     }
 }

@@ -24,7 +24,7 @@ import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.client.util.math.Vector3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -101,7 +101,7 @@ public class PlayerListHudMixin {
 
                 stack.translate(x + 4, y + 8, 0);
                 stack.scale(-16, 16, 16);
-                stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
+                stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180));
 
                 data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 0xF000E0);
 
