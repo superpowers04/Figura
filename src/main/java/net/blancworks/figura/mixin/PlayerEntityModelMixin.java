@@ -11,16 +11,16 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(PlayerEntityModel.class)
 public class PlayerEntityModelMixin implements PlayerEntityModelAccess {
 
-    @Shadow @Final private ModelPart cape;
-    @Shadow @Final private ModelPart ears;
+    @Shadow @Final private ModelPart cloak;
+    @Shadow @Final private ModelPart ear;
 
     @Override
     public ModelPart getCloak() {
-        return this.cape;
+        return this.cloak;
     }
 
     @Override
     public ModelPart getEar() {
-        return this.ears;
+        return this.ear;
     }
 }

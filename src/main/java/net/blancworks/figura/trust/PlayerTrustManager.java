@@ -11,10 +11,10 @@ import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
@@ -39,6 +39,7 @@ public class PlayerTrustManager {
     public static final Identifier ALLOW_VANILLA_MOD_ID = new Identifier("setting", "allowvanillaedit");
     public static final Identifier ALLOW_NAMEPLATE_MOD_ID = new Identifier("setting", "allownameplateedit");
     public static final Identifier ALLOW_OFFSCREEN_RENDERING = new Identifier("setting", "allowoffscreenrendering");
+    public static final Identifier ALLOW_CUSTOM_RENDERLAYERS = new Identifier("setting", "allowcustomrenderlayers");
     public static final Identifier MAX_PARTICLES_ID = new Identifier("setting", "maxparticles");
     public static final Identifier MAX_SOUND_EFFECTS_ID = new Identifier("setting", "maxsfx");
 
@@ -126,6 +127,10 @@ public class PlayerTrustManager {
         }});
 
         registerPermissionSetting(new PermissionBooleanSetting(ALLOW_OFFSCREEN_RENDERING) {{
+            value = true;
+        }});
+
+        registerPermissionSetting(new PermissionBooleanSetting(ALLOW_CUSTOM_RENDERLAYERS) {{
             value = true;
         }});
     }
@@ -240,11 +245,11 @@ public class PlayerTrustManager {
         return null;
     }
 
-    public static void readNbt(CompoundTag nbt) {
-        ListTag containersList = (ListTag) nbt.get("containers");
-        if (containersList != null && containersList.getElementType() == NbtType.COMPOUND) {
-            for (Tag element : containersList) {
-                CompoundTag nbtCompound = (CompoundTag) element;
+    public static void readNbt(NbtCompound nbt) {
+        NbtList containersList = (NbtList) nbt.get("containers");
+        if (containersList != null && containersList.getHeldType() == NbtType.COMPOUND) {
+            for (NbtElement element : containersList) {
+                NbtCompound nbtCompound = (NbtCompound) element;
 
                 String idString = nbtCompound.getString("id");
                 Identifier id = Identifier.tryParse(idString);
@@ -256,10 +261,10 @@ public class PlayerTrustManager {
             }
         }
 
-        ListTag playersList = (ListTag) nbt.get("players");
-        if (playersList != null && playersList.getElementType() == NbtType.COMPOUND) {
-            for (Tag element : playersList) {
-                CompoundTag nbtCompound = (CompoundTag) element;
+        NbtList playersList = (NbtList) nbt.get("players");
+        if (playersList != null && playersList.getHeldType() == NbtType.COMPOUND) {
+            for (NbtElement element : playersList) {
+                NbtCompound nbtCompound = (NbtCompound) element;
 
                 String idString = nbtCompound.getString("id");
                 Identifier id = Identifier.tryParse(idString);
@@ -282,12 +287,12 @@ public class PlayerTrustManager {
         }
     }
 
-    public static void writeNbt(CompoundTag nbt) {
-        ListTag containerList = new ListTag();
-        ListTag playerList = new ListTag();
+    public static void writeNbt(NbtCompound nbt) {
+        NbtList containerList = new NbtList();
+        NbtList playerList = new NbtList();
 
         for (Map.Entry<Identifier, TrustContainer> entry : allContainers.entrySet()) {
-            CompoundTag containerNbt = new CompoundTag();
+            NbtCompound containerNbt = new NbtCompound();
             entry.getValue().toNbt(containerNbt);
 
             if (entry.getKey().getNamespace().equals("players")) {
@@ -304,7 +309,7 @@ public class PlayerTrustManager {
 
     public static void saveToDisk() {
         try {
-            CompoundTag targetTag = new CompoundTag();
+            NbtCompound targetTag = new NbtCompound();
             writeNbt(targetTag);
 
             Path targetPath = FiguraMod.getModContentDirectory();
@@ -330,7 +335,7 @@ public class PlayerTrustManager {
                 return;
 
             FileInputStream fis = new FileInputStream(targetPath.toFile());
-            CompoundTag getTag = NbtIo.readCompressed(fis);
+            NbtCompound getTag = NbtIo.readCompressed(fis);
             readNbt(getTag);
             fis.close();
         } catch (Exception e) {

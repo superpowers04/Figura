@@ -14,7 +14,7 @@ import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -89,13 +89,13 @@ public class CapeFeatureRendererMixin extends FeatureRenderer<AbstractClientPlay
                         matrices.translate(customization.pos.getX() / 16f, customization.pos.getY() / 16f, customization.pos.getZ() / 16f);
 
                     if (customization.rot != null) {
-                        matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(customization.rot.getZ()));
-                        matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(customization.rot.getY()));
-                        matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(customization.rot.getX()));
+                        matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(customization.rot.getZ()));
+                        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(customization.rot.getY()));
+                        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(customization.rot.getX()));
                     }
 
                     if (customization.scale != null) {
-                        Vector3f scale = customization.scale;
+                        Vec3f scale = customization.scale;
                         matrices.scale(scale.getX(), scale.getY(), scale.getZ());
                     }
                 }
