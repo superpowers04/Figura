@@ -55,11 +55,11 @@ dependencies {
 	include group: 'org.luaj', name: 'luaj-jse', version: '3.0.1'
 
 	// OBJ Loader
-	implementation group: 'de.javagl', name: 'obj', version: '0.3.0'
+	/*implementation group: 'de.javagl', name: 'obj', version: '0.3.0'
 	include group: 'de.javagl', name: 'obj', version: '0.3.0'
 
 	//SpruceUI
-	/*modImplementation "com.github.lambdaurora:spruceui:${project.spruceui_version}"
+	modImplementation "com.github.lambdaurora:spruceui:${project.spruceui_version}"
 	include "com.github.lambdaurora:spruceui:${project.spruceui_version}"
 	
 	//LambDynamicLights

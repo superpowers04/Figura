@@ -26,8 +26,8 @@ public class CustomModelPartCuboid extends CustomModelPart {
         float inflate = 0;
         if (cuboidProperties.contains("inf")) inflate = cuboidProperties.getFloat("inf");
 
-        Vec3f from = v3fFromNbtList((NbtList) cuboidProperties.get("f"));
-        Vec3f to = v3fFromNbtList((NbtList) cuboidProperties.get("t"));
+        Vec3f from = vec3fFromNbt((NbtList) cuboidProperties.get("f"));
+        Vec3f to = vec3fFromNbt((NbtList) cuboidProperties.get("t"));
         Vec3f mid = new Vec3f(
                 MathHelper.lerp(0.5f, from.getX(), to.getX()),
                 MathHelper.lerp(0.5f, from.getY(), to.getY()),
@@ -294,9 +294,9 @@ public class CustomModelPartCuboid extends CustomModelPart {
     public void applyTrueOffset(Vec3f offset) {
         super.applyTrueOffset(offset);
 
-        Vec3f from = v3fFromNbtList((NbtList) cuboidProperties.get("f"));
-        Vec3f to = v3fFromNbtList((NbtList) cuboidProperties.get("t"));
-        
+        Vec3f from = vec3fFromNbt((NbtList) cuboidProperties.get("f"));
+        Vec3f to = vec3fFromNbt((NbtList) cuboidProperties.get("t"));
+
         from.add(offset);
         to.add(offset);
 
@@ -346,14 +346,6 @@ public class CustomModelPartCuboid extends CustomModelPart {
     @Override
     public PartType getPartType() {
         return PartType.CUBE;
-    }
-
-    public Vec3f v3fFromNbtList(NbtList list) {
-        return new Vec3f(list.getFloat(0), list.getFloat(1), list.getFloat(2));
-    }
-
-    public Vector4f v4fFromNbtList(NbtList list) {
-        return new Vector4f(list.getFloat(0), list.getFloat(1), list.getFloat(2), list.getFloat(3));
     }
 
     public static List<Vec2f> rotateUV(Vector4f v, float rotation) {

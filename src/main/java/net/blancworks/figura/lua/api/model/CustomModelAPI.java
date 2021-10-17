@@ -293,13 +293,6 @@ public class CustomModelAPI {
                 }
             });
 
-            ret.set("getHidden", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaBoolean.valueOf(targetPart.isHidden);
-                }
-            });
-
             ret.set("getShader", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {

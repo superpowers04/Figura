@@ -1,130 +1,83 @@
 package net.blancworks.figura.models;
 
-import de.javagl.obj.FloatTuple;
-import de.javagl.obj.Obj;
-import de.javagl.obj.ObjFace;
-import de.javagl.obj.ObjReader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.*;
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import it.unimi.dsi.fastutil.floats.FloatList;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.Set;
 
 
 public class CustomModelPartMesh extends CustomModelPart {
-    public boolean isReady = false;
     public NbtCompound meshProperties;
 
-    /*
-    public static CustomModelPartMesh loadFromObj(Path path) {
-        CustomModelPartMesh newPart = new CustomModelPartMesh();
+    @Override
+    public void rebuild() {
+        FloatList vertexData = new FloatArrayList();
+        int vertexCount = 0;
 
-        MinecraftClient.getInstance().execute(() -> {
-            try {
-                newPart.parseObj(path);
-            } catch (Exception e) {
-                e.printStackTrace();
+        Vec2f texSize = this.texSize;
+        if (texSize == null)
+            texSize = new Vec2f(meshProperties.getFloat("tw"), meshProperties.getFloat("th"));
+
+        NbtCompound verticesNbt = (NbtCompound) meshProperties.get("vertices");
+        NbtCompound facesNbt = (NbtCompound) meshProperties.get("faces");
+
+        if (facesNbt == null)
+            return;
+
+        Set<String> faces = facesNbt.getKeys();
+
+        for (String faceName : faces) {
+            NbtCompound face = facesNbt.getCompound(faceName);
+
+            NbtList verticesList = face.getList("vertices", NbtElement.STRING_TYPE);
+            NbtCompound uvList = face.getCompound("uvs");
+
+            int size = verticesList.size();
+            for (int i = size - 1; i >= 0; i--) {
+                String vertexName = verticesList.getString(i);
+
+                Vec2f uv = v2fFromNbtList((NbtList) uvList.get(vertexName));
+                Vec3f vertex = vec3fFromNbt((NbtList) verticesNbt.get(vertexName));
+
+                Vec3f previous = vec3fFromNbt((NbtList) verticesNbt.get(verticesList.getString((i - 1 + size) % size)));
+                Vec3f next = vec3fFromNbt((NbtList) verticesNbt.get(verticesList.getString((i + 1) % size)));
+
+                //normal = (previousVertex - currentVertex).cross(nextVertex - currentVertex)
+                Vec3f normal = previous.copy();
+                normal.subtract(vertex);
+
+                Vec3f normalTwo = next.copy();
+                normalTwo.subtract(vertex);
+
+                normal.cross(normalTwo);
+                normal.normalize();
+
+                addVertex(vertex, uv.x / texSize.x, uv.y / texSize.y, normal, vertexData);
             }
-        });
-
-        return newPart;
-    }
-
-    public void parseObj(Path path) throws Exception {
-        this.isReady = false;
-        vertexData.clear();
-
-        InputStream fileStream = new FileInputStream(path.toString());
-        Obj objectFile = ObjReader.read(fileStream);
-        fileStream.close();
-
-        int triCount = objectFile.getNumFaces();
-
-        for (int i = 0; i < triCount; i++) {
-            ObjFace face = objectFile.getFace(i);
-            int vertCount = face.getNumVertices();
-
-            if (vertCount == 4) {
-                for (int j = vertCount - 1; j >= 0; j--) {
-                    FloatTuple vertex = objectFile.getVertex(face.getVertexIndex(j));
-                    vertexData.add(vertex.getX());
-                    vertexData.add(-vertex.getY());
-                    vertexData.add(vertex.getZ());
-
-                    FloatTuple uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
-                    vertexData.add(uv.getX());
-                    vertexData.add(1 - uv.getY());
-
-                    FloatTuple normal = objectFile.getNormal(face.getNormalIndex(j));
-                    vertexData.add(normal.getX());
-                    vertexData.add(-normal.getY());
-                    vertexData.add(normal.getZ());
-
-                    vertexCount++;
-                }
-            } else if (vertCount == 3) {
-                for (int j = vertCount - 1; j >= 0; j--) {
-                    FloatTuple vertex = objectFile.getVertex(face.getVertexIndex(j));
-                    vertexData.add(vertex.getX());
-                    vertexData.add(-vertex.getY());
-                    vertexData.add(vertex.getZ());
-
-                    FloatTuple uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
-                    vertexData.add(uv.getX());
-                    vertexData.add(1 - uv.getY());
-
-                    FloatTuple normal = objectFile.getNormal(face.getNormalIndex(j));
-                    vertexData.add(normal.getX());
-                    vertexData.add(-normal.getY());
-                    vertexData.add(normal.getZ());
-
-                    if (j == vertCount - 1) {
-                        vertex = objectFile.getVertex(face.getVertexIndex(j));
-                        vertexData.add(vertex.getX());
-                        vertexData.add(-vertex.getY());
-                        vertexData.add(vertex.getZ());
-
-                        uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
-                        vertexData.add(uv.getX());
-                        vertexData.add(1 - uv.getY());
-
-                        normal = objectFile.getNormal(face.getNormalIndex(j));
-                        vertexData.add(normal.getX());
-                        vertexData.add(-normal.getY());
-                        vertexData.add(normal.getZ());
-                    }
-                    
-                    vertexCount++;
-                }
-            }
-
+            vertexCount += size;
         }
 
-        this.isReady = true;
+        this.vertexData = vertexData;
+        this.vertexCount = vertexCount;
     }
-    */
+
     @Override
     public void writeNbt(NbtCompound partNbt) {
         super.writeNbt(partNbt);
-        /*
-        NbtList geometryData = new NbtList();
-
-        for (int i = 0; i < this.vertexData.size(); i++) {
-            geometryData.add(NbtFloat.of(this.vertexData.getFloat(i)));
-        }
-        partNbt.put("vc", NbtInt.of(this.vertexCount));
-        partNbt.put("geo", geometryData);
-         */
         partNbt.put("geo", meshProperties.copy());
     }
 
     @Override
     public void readNbt(NbtCompound partNbt) {
         super.readNbt(partNbt);
-        NbtCompound geometryData = (NbtCompound) partNbt.get("geo");
+
+        //TODO: WIP
+        /*NbtCompound geometryData = (NbtCompound) partNbt.get("geo");
         NbtCompound vertexData = (NbtCompound) geometryData.get("vertices");
 
         ArrayList<Vec3f> vertexList = new ArrayList<>();
@@ -134,8 +87,7 @@ public class CustomModelPartMesh extends CustomModelPart {
             float y = curVertex.getFloat(1);
             float z = curVertex.getFloat(2);
             vertexList.add(new Vec3f(x, y, z));
-        });
-
+        });*/
     }
 
     public PartType getPartType() {
