@@ -3,21 +3,19 @@ package net.blancworks.figura.models.parsers;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.blancworks.figura.models.CustomModelPartMesh;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.nbt.*;
 import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
+import net.minecraft.nbt.*;
 
 import java.lang.reflect.Type;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel> {
 
@@ -58,9 +56,9 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
     static class PlayerSkinRemap {
         public CustomModelPart.ParentType parentType;
-        public Vector3f offset;
+        public Vec3f offset;
 
-        public PlayerSkinRemap(CustomModelPart.ParentType parentType, Vector3f offset) {
+        public PlayerSkinRemap(CustomModelPart.ParentType parentType, Vec3f offset) {
             this.parentType = parentType;
             this.offset = offset;
         }
@@ -68,12 +66,12 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
     private static final Map<String, PlayerSkinRemap> PLAYER_SKIN_REMAPS =
             new ImmutableMap.Builder<String, PlayerSkinRemap>()
-                    .put("Head", new PlayerSkinRemap(CustomModelPart.ParentType.Head, new Vector3f(0, -24, 0)))
-                    .put("Body", new PlayerSkinRemap(CustomModelPart.ParentType.Torso, new Vector3f(0, -24, 0)))
-                    .put("RightArm", new PlayerSkinRemap(CustomModelPart.ParentType.RightArm, new Vector3f(-5, -22, 0)))
-                    .put("LeftArm", new PlayerSkinRemap(CustomModelPart.ParentType.LeftArm, new Vector3f(5, -22, 0)))
-                    .put("RightLeg", new PlayerSkinRemap(CustomModelPart.ParentType.RightLeg, new Vector3f(-2, -12, 0)))
-                    .put("LeftLeg", new PlayerSkinRemap(CustomModelPart.ParentType.LeftLeg, new Vector3f(2, -12, 0)))
+                    .put("Head", new PlayerSkinRemap(CustomModelPart.ParentType.Head, new Vec3f(0, -24, 0)))
+                    .put("Body", new PlayerSkinRemap(CustomModelPart.ParentType.Torso, new Vec3f(0, -24, 0)))
+                    .put("RightArm", new PlayerSkinRemap(CustomModelPart.ParentType.RightArm, new Vec3f(-5, -22, 0)))
+                    .put("LeftArm", new PlayerSkinRemap(CustomModelPart.ParentType.LeftArm, new Vec3f(5, -22, 0)))
+                    .put("RightLeg", new PlayerSkinRemap(CustomModelPart.ParentType.RightLeg, new Vec3f(-2, -12, 0)))
+                    .put("LeftLeg", new PlayerSkinRemap(CustomModelPart.ParentType.LeftLeg, new Vec3f(2, -12, 0)))
                     .build();
     
     @Override
@@ -109,7 +107,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         for (JsonElement element : outliner) {
             if (element.isJsonObject()) {
                 //If the element is a json object, it's a group, so parse the group.
-                buildGroup(element.getAsJsonObject(), retModel, parsedParts, null, new Vector3f());
+                buildGroup(element.getAsJsonObject(), retModel, parsedParts, null, new Vec3f());
             } else {
                 //If the element is a string, it's an element, so just add it to the children.
                 String s = element.getAsString();
@@ -129,21 +127,11 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
     }
 
     //Builds out a group from a JsonObject that specifies the group in the outline.
-    public void buildGroup(JsonObject group, CustomModel target, Map<UUID, CustomModelPart> allParts, CustomModelPart parent, Vector3f playerModelOffset) {
+    public void buildGroup(JsonObject group, CustomModel target, Map<UUID, CustomModelPart> allParts, CustomModelPart parent, Vec3f playerModelOffset) {
         CustomModelPart groupPart = new CustomModelPart();
         
         if (group.has("name")) {
             groupPart.name = group.get("name").getAsString();
-
-            if (groupPart.name.startsWith("MESH_")) {
-                Path meshFilePath = LocalPlayerData.getContentDirectory().resolve(groupPart.name.substring(5) + ".obj");
-
-                if (Files.exists(meshFilePath)) {
-                    groupPart = CustomModelPartMesh.loadFromObj(meshFilePath);
-                    groupPart.name = group.get("name").getAsString();
-                }
-            }
-
             groupPart.parentType = CustomModelPart.ParentType.Model;
             //Find parent type.
 
@@ -178,7 +166,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }
         if (group.has("visibility")) groupPart.isHidden = !group.get("visibility").getAsBoolean();
         if (group.has("origin")) {
-            Vector3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
+            Vec3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
             groupPart.pivot = playerModelOffset.copy();
             groupPart.pivot.add(corrected);
@@ -213,78 +201,138 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }
     }
 
-    public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
-        if (elementObject.has("type") && elementObject.get("type").getAsString().equals("mesh"))
-            return null;
 
-        CustomModelPartCuboid elementPart = new CustomModelPartCuboid();
+
+    public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
+        boolean isMeshPart = elementObject.has("type") && elementObject.get("type").getAsString().equals("mesh");
+         CustomModelPart elementPart = isMeshPart ? new CustomModelPartMesh() : new CustomModelPartCuboid();
 
         if (elementObject.has("name")) {
             elementPart.name = elementObject.get("name").getAsString();
         }
         if (elementObject.has("visibility")) elementPart.isHidden = !elementObject.get("visibility").getAsBoolean();
 
-        Vector3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
-        Vector3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
+
         if (elementObject.has("origin")) {
-            Vector3f corrected = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
+            Vec3f corrected = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
             elementPart.pivot = corrected;
         }
         if (elementObject.has("rotation")) {
-            Vector3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
+            Vec3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), corrected.getZ());
 
             elementPart.rot = corrected;
         }
 
         elementPart.texSize = target.defaultTextureSize;
-
         JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
 
-        CompoundTag cuboidPropertiesTag = new CompoundTag();
+        if (elementPart instanceof CustomModelPartMesh meshPart) {
+            JsonObject verticesObject = elementObject.get("vertices").getAsJsonObject();
+            NbtCompound meshPropertiesTag = new NbtCompound();
+            NbtCompound verticesTag = new NbtCompound();
 
-        if (elementObject.has("inflate"))
-            cuboidPropertiesTag.put("inf", FloatTag.of(elementObject.get("inflate").getAsFloat()));
+            meshPropertiesTag.put("vc", NbtInt.of(verticesObject.entrySet().size()));
 
-        cuboidPropertiesTag.put("f", new ListTag() {{
-            add(FloatTag.of(from.getX()));
-            add(FloatTag.of(from.getY()));
-            add(FloatTag.of(from.getZ()));
-        }});
+            // Build vertex_id -> vertex table
+            verticesObject.entrySet().forEach(entry -> {
+                String vertexName = entry.getKey();
+                Vec3f vertexPos = this.v3fFromJArray(entry.getValue().getAsJsonArray());
 
-        cuboidPropertiesTag.put("t", new ListTag() {{
-            add(FloatTag.of(to.getX()));
-            add(FloatTag.of(to.getY()));
-            add(FloatTag.of(to.getZ()));
-        }});
+                NbtList vertexData = new NbtList();
+                vertexData.add(NbtFloat.of(vertexPos.getX()));
+                vertexData.add(NbtFloat.of(vertexPos.getY()));
+                vertexData.add(NbtFloat.of(vertexPos.getZ()));
+                verticesTag.put(vertexName, vertexData);
+            });
+            meshPropertiesTag.put("vertices", verticesTag);
 
-        cuboidPropertiesTag.put("tw", FloatTag.of(target.defaultTextureSize.x));
-        cuboidPropertiesTag.put("th", FloatTag.of(target.defaultTextureSize.y));
+            // Create faces data
+            NbtCompound facesTag = new NbtCompound();
 
-        cuboidPropertiesTag.put("n", getNbtElementFromJsonElement(facesObject.get("north")));
-        cuboidPropertiesTag.put("s", getNbtElementFromJsonElement(facesObject.get("south")));
-        cuboidPropertiesTag.put("e", getNbtElementFromJsonElement(facesObject.get("east")));
-        cuboidPropertiesTag.put("w", getNbtElementFromJsonElement(facesObject.get("west")));
-        cuboidPropertiesTag.put("u", getNbtElementFromJsonElement(facesObject.get("up")));
-        cuboidPropertiesTag.put("d", getNbtElementFromJsonElement(facesObject.get("down")));
+            facesObject.entrySet().forEach(entry -> {
+                String faceName = entry.getKey();
+                JsonObject faceObject = entry.getValue().getAsJsonObject();
 
-        elementPart.cuboidProperties = cuboidPropertiesTag;
+                NbtCompound curFaceTag = new NbtCompound();
+
+                // Build vertex -> uv table
+                NbtCompound uvs = new NbtCompound();
+                faceObject.getAsJsonObject("uv").entrySet().forEach(uvEntry -> {
+                    String vertexName = uvEntry.getKey();
+                    JsonArray uvEntries = uvEntry.getValue().getAsJsonArray();
+
+                    NbtList uvList = new NbtList();
+                    uvList.add(NbtFloat.of(uvEntries.get(0).getAsFloat()));
+                    uvList.add(NbtFloat.of(uvEntries.get(1).getAsFloat()));
+                    uvs.put(vertexName, uvList);
+                });
+
+                // Build array of all named vertices used for this face
+                NbtList vertices = new NbtList();
+                faceObject.getAsJsonArray("vertices").forEach(element -> {
+                    vertices.add(NbtString.of(element.getAsString()));
+                });
+
+                curFaceTag.put("uvs", uvs);
+                curFaceTag.put("vertices", vertices);
+                facesTag.put(faceName, curFaceTag);
+            });
+            meshPropertiesTag.put("faces", facesTag);
+
+            meshPart.meshProperties = meshPropertiesTag;
+
+        } else {
+            CustomModelPartCuboid cuboidPart = (CustomModelPartCuboid) elementPart;
+            NbtCompound cuboidPropertiesTag = new NbtCompound();
+
+            if (elementObject.has("inflate"))
+                cuboidPropertiesTag.put("inf", NbtFloat.of(elementObject.get("inflate").getAsFloat()));
+
+            Vec3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
+            Vec3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
+
+            cuboidPropertiesTag.put("f", new NbtList() {{
+                add(NbtFloat.of(from.getX()));
+                add(NbtFloat.of(from.getY()));
+                add(NbtFloat.of(from.getZ()));
+            }});
+
+            cuboidPropertiesTag.put("t", new NbtList() {{
+                add(NbtFloat.of(to.getX()));
+                add(NbtFloat.of(to.getY()));
+                add(NbtFloat.of(to.getZ()));
+            }});
+
+            cuboidPropertiesTag.put("tw", NbtFloat.of(target.defaultTextureSize.x));
+            cuboidPropertiesTag.put("th", NbtFloat.of(target.defaultTextureSize.y));
+
+            cuboidPropertiesTag.put("n", getNbtElementFromJsonElement(facesObject.get("north")));
+            cuboidPropertiesTag.put("s", getNbtElementFromJsonElement(facesObject.get("south")));
+            cuboidPropertiesTag.put("e", getNbtElementFromJsonElement(facesObject.get("east")));
+            cuboidPropertiesTag.put("w", getNbtElementFromJsonElement(facesObject.get("west")));
+            cuboidPropertiesTag.put("u", getNbtElementFromJsonElement(facesObject.get("up")));
+            cuboidPropertiesTag.put("d", getNbtElementFromJsonElement(facesObject.get("down")));
+
+            cuboidPart.cuboidProperties = cuboidPropertiesTag;
+        }
+
         elementPart.rebuild();
 
         return elementPart;
     }
 
-    public Vector3f v3fFromJArray(JsonArray array) {
-        return new Vector3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat());
+    public Vec3f v3fFromJArray(JsonArray array) {
+        return new Vec3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat());
     }
 
     public Vector4f v4fFromJArray(JsonArray array) {
         return new Vector4f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat(), array.get(3).getAsFloat());
     }
 
-    public CompoundTag jsonObjectToNbt(JsonObject obj) {
-        return new CompoundTag() {{
+    public NbtCompound jsonObjectToNbt(JsonObject obj) {
+        return new NbtCompound() {{
             for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
                 JsonElement element = entry.getValue();
 
@@ -297,15 +345,15 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }};
     }
 
-    public ListTag jsonArrayToNbtList(JsonArray array) {
-        return new ListTag() {{
+    public NbtList jsonArrayToNbtList(JsonArray array) {
+        return new NbtList() {{
             for (JsonElement element : array) {
                 add(getNbtElementFromJsonElement(element));
             }
         }};
     }
 
-    public Tag getNbtElementFromJsonElement(JsonElement element) {
+    public NbtElement getNbtElementFromJsonElement(JsonElement element) {
         if (element instanceof JsonArray)
             return this.jsonArrayToNbtList(element.getAsJsonArray());
         else if (element instanceof JsonObject)
@@ -313,11 +361,11 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         else if (element instanceof JsonPrimitive) {
             JsonPrimitive primitive = element.getAsJsonPrimitive();
             if (primitive.isBoolean())
-                return ByteTag.of(primitive.getAsBoolean());
+                return NbtByte.of(primitive.getAsBoolean());
             if (primitive.isNumber())
-                return FloatTag.of(primitive.getAsNumber().floatValue());
+                return NbtFloat.of(primitive.getAsNumber().floatValue());
             if (primitive.isString())
-                return StringTag.of(primitive.getAsString());
+                return NbtString.of(primitive.getAsString());
         }
         return null;
     }
