@@ -5,19 +5,20 @@ import de.javagl.obj.Obj;
 import de.javagl.obj.ObjFace;
 import de.javagl.obj.ObjReader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtFloat;
-import net.minecraft.nbt.NbtInt;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.*;
+import net.minecraft.util.math.Vec3f;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Path;
+import java.util.ArrayList;
 
 
 public class CustomModelPartMesh extends CustomModelPart {
     public boolean isReady = false;
-    
+    public NbtCompound meshProperties;
+
+    /*
     public static CustomModelPartMesh loadFromObj(Path path) {
         CustomModelPartMesh newPart = new CustomModelPartMesh();
 
@@ -104,10 +105,11 @@ public class CustomModelPartMesh extends CustomModelPart {
 
         this.isReady = true;
     }
-
+    */
     @Override
     public void writeNbt(NbtCompound partNbt) {
         super.writeNbt(partNbt);
+        /*
         NbtList geometryData = new NbtList();
 
         for (int i = 0; i < this.vertexData.size(); i++) {
@@ -115,17 +117,25 @@ public class CustomModelPartMesh extends CustomModelPart {
         }
         partNbt.put("vc", NbtInt.of(this.vertexCount));
         partNbt.put("geo", geometryData);
+         */
+        partNbt.put("geo", meshProperties.copy());
     }
 
     @Override
     public void readNbt(NbtCompound partNbt) {
         super.readNbt(partNbt);
-        NbtList geometryData = (NbtList) partNbt.get("geo");
+        NbtCompound geometryData = (NbtCompound) partNbt.get("geo");
+        NbtCompound vertexData = (NbtCompound) geometryData.get("vertices");
 
-        for (int i = 0; i < geometryData.size(); i++) {
-            this.vertexData.add(geometryData.getFloat(i));
-        }
-        this.vertexCount = partNbt.getInt("vc");
+        ArrayList<Vec3f> vertexList = new ArrayList<>();
+        vertexData.getKeys().forEach(key -> {
+            NbtList curVertex = vertexData.getList(key, NbtElement.LIST_TYPE);
+            float x = curVertex.getFloat(0);
+            float y = curVertex.getFloat(1);
+            float z = curVertex.getFloat(2);
+            vertexList.add(new Vec3f(x, y, z));
+        });
+
     }
 
     public PartType getPartType() {
