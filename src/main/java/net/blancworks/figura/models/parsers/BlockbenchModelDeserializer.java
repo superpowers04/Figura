@@ -231,25 +231,24 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             JsonObject verticesObject = elementObject.get("vertices").getAsJsonObject();
             NbtCompound meshPropertiesTag = new NbtCompound();
 
-            meshPropertiesTag.put("vc", NbtInt.of(verticesObject.entrySet().size()));
+            //uhnm, texture size
+            meshPropertiesTag.put("tw", NbtFloat.of(target.defaultTextureSize.x));
+            meshPropertiesTag.put("th", NbtFloat.of(target.defaultTextureSize.y));
 
             /*
                 Create a list of named vertices
                 List entry format: String name, float x, float y, float z
              */
-            NbtList verticesList = new NbtList();
+            NbtCompound verticesList = new NbtCompound();
 
             verticesObject.entrySet().forEach(entry -> {
-                String vertexName = entry.getKey();
-                Vec3f vertexPos = this.v3fFromJArray(entry.getValue().getAsJsonArray());
+                Vec3f pos = this.v3fFromJArray(entry.getValue().getAsJsonArray());
+                NbtList vertexPos = new NbtList();
+                vertexPos.add(NbtFloat.of(-pos.getX()));
+                vertexPos.add(NbtFloat.of(-pos.getY()));
+                vertexPos.add(NbtFloat.of(pos.getZ()));
 
-                NbtCompound vertexData = new NbtCompound();
-                vertexData.put("x", NbtFloat.of(vertexPos.getX()));
-                vertexData.put("y", NbtFloat.of(vertexPos.getY()));
-                vertexData.put("z", NbtFloat.of(vertexPos.getZ()));
-                vertexData.put("name", NbtString.of(vertexName));
-
-                verticesList.add(vertexData);
+                verticesList.put(entry.getKey(), vertexPos);
             });
             meshPropertiesTag.put("vertices", verticesList);
 
