@@ -8,8 +8,6 @@ import net.minecraft.nbt.NbtList;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 
-import java.util.Set;
-
 
 public class CustomModelPartMesh extends CustomModelPart {
     public NbtCompound meshProperties;
@@ -23,31 +21,28 @@ public class CustomModelPartMesh extends CustomModelPart {
         if (texSize == null)
             texSize = new Vec2f(meshProperties.getFloat("tw"), meshProperties.getFloat("th"));
 
-        NbtCompound verticesNbt = (NbtCompound) meshProperties.get("vertices");
-        NbtCompound facesNbt = (NbtCompound) meshProperties.get("faces");
+        NbtCompound verticesNbt = meshProperties.getCompound("vertices");
+        NbtList facesNbt = meshProperties.getList("faces", NbtElement.COMPOUND_TYPE);
 
-        if (facesNbt == null)
+        if (facesNbt == null || facesNbt.size() == 0 || verticesNbt == null || verticesNbt.getSize() == 0)
             return;
 
-        Set<String> faces = facesNbt.getKeys();
+        for (NbtElement faceData : facesNbt) {
+            NbtList vertices = ((NbtCompound) faceData).getList("vertices", NbtElement.STRING_TYPE);
+            NbtCompound uvs = ((NbtCompound) faceData).getCompound("uvs");
 
-        for (String faceName : faces) {
-            NbtCompound face = facesNbt.getCompound(faceName);
+            if (uvs == null) continue;
 
-            NbtList verticesList = face.getList("vertices", NbtElement.STRING_TYPE);
-            NbtCompound uvList = face.getCompound("uvs");
+            int size = vertices.size();
+            for (int i = 0; i <= size; i++) {
+                String vertexName = vertices.getString(i % size);
 
-            int size = verticesList.size();
-            for (int i = size - 1; i >= 0; i--) {
-                String vertexName = verticesList.getString(i);
+                Vec2f uv = v2fFromNbtList(uvs.getList(vertexName, NbtElement.FLOAT_TYPE));
+                Vec3f vertex = vec3fFromNbt(verticesNbt.getList(vertexName, NbtElement.FLOAT_TYPE));
 
-                Vec2f uv = v2fFromNbtList((NbtList) uvList.get(vertexName));
-                Vec3f vertex = vec3fFromNbt((NbtList) verticesNbt.get(vertexName));
+                Vec3f previous = vec3fFromNbt(verticesNbt.getList(vertices.getString((i - 1 + size) % size), NbtElement.FLOAT_TYPE));
+                Vec3f next = vec3fFromNbt(verticesNbt.getList(vertices.getString((i + 1) % size), NbtElement.FLOAT_TYPE));
 
-                Vec3f previous = vec3fFromNbt((NbtList) verticesNbt.get(verticesList.getString((i - 1 + size) % size)));
-                Vec3f next = vec3fFromNbt((NbtList) verticesNbt.get(verticesList.getString((i + 1) % size)));
-
-                //normal = (previousVertex - currentVertex).cross(nextVertex - currentVertex)
                 Vec3f normal = previous.copy();
                 normal.subtract(vertex);
 
@@ -59,7 +54,8 @@ public class CustomModelPartMesh extends CustomModelPart {
 
                 addVertex(vertex, uv.x / texSize.x, uv.y / texSize.y, normal, vertexData);
             }
-            vertexCount += size;
+
+            vertexCount += size + 1;
         }
 
         this.vertexData = vertexData;
@@ -75,19 +71,7 @@ public class CustomModelPartMesh extends CustomModelPart {
     @Override
     public void readNbt(NbtCompound partNbt) {
         super.readNbt(partNbt);
-
-        //TODO: WIP
-        /*NbtCompound geometryData = (NbtCompound) partNbt.get("geo");
-        NbtCompound vertexData = (NbtCompound) geometryData.get("vertices");
-
-        ArrayList<Vec3f> vertexList = new ArrayList<>();
-        vertexData.getKeys().forEach(key -> {
-            NbtList curVertex = vertexData.getList(key, NbtElement.LIST_TYPE);
-            float x = curVertex.getFloat(0);
-            float y = curVertex.getFloat(1);
-            float z = curVertex.getFloat(2);
-            vertexList.add(new Vec3f(x, y, z));
-        });*/
+        this.meshProperties = partNbt.getCompound("geo");
     }
 
     public PartType getPartType() {
