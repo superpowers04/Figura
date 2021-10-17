@@ -7,15 +7,14 @@ import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartCuboid;
 import net.blancworks.figura.models.CustomModelPartMesh;
+import net.minecraft.nbt.*;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.math.Vector4f;
-import net.minecraft.nbt.*;
 
 import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Consumer;
 
 public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel> {
 
@@ -128,8 +127,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
     //Builds out a group from a JsonObject that specifies the group in the outline.
     public void buildGroup(JsonObject group, CustomModel target, Map<UUID, CustomModelPart> allParts, CustomModelPart parent, Vec3f playerModelOffset) {
+        if (group.has("visibility") && !group.get("visibility").getAsBoolean()) return;
+
         CustomModelPart groupPart = new CustomModelPart();
-        
+
         if (group.has("name")) {
             groupPart.name = group.get("name").getAsString();
             groupPart.parentType = CustomModelPart.ParentType.Model;
@@ -164,7 +165,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 }
             }
         }
-        if (group.has("visibility")) groupPart.isHidden = !group.get("visibility").getAsBoolean();
         if (group.has("origin")) {
             Vec3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
@@ -201,23 +201,22 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }
     }
 
-
-
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
+        if (elementObject.has("visibility") && !elementObject.get("visibility").getAsBoolean()) return null;
+
         boolean isMeshPart = elementObject.has("type") && elementObject.get("type").getAsString().equals("mesh");
-         CustomModelPart elementPart = isMeshPart ? new CustomModelPartMesh() : new CustomModelPartCuboid();
+        CustomModelPart elementPart = isMeshPart ? new CustomModelPartMesh() : new CustomModelPartCuboid();
 
         if (elementObject.has("name")) {
             elementPart.name = elementObject.get("name").getAsString();
         }
-        if (elementObject.has("visibility")) elementPart.isHidden = !elementObject.get("visibility").getAsBoolean();
-
 
         if (elementObject.has("origin")) {
             Vec3f corrected = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
             elementPart.pivot = corrected;
         }
+
         if (elementObject.has("rotation")) {
             Vec3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
             corrected.set(corrected.getX(), corrected.getY(), corrected.getZ());
@@ -233,22 +232,23 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             NbtCompound meshPropertiesTag = new NbtCompound();
             NbtCompound verticesTag = new NbtCompound();
 
-            meshPropertiesTag.put("vc", NbtInt.of(verticesObject.entrySet().size()));
-
             // Build vertex_id -> vertex table
             verticesObject.entrySet().forEach(entry -> {
                 String vertexName = entry.getKey();
                 Vec3f vertexPos = this.v3fFromJArray(entry.getValue().getAsJsonArray());
 
                 NbtList vertexData = new NbtList();
-                vertexData.add(NbtFloat.of(vertexPos.getX()));
-                vertexData.add(NbtFloat.of(vertexPos.getY()));
+                vertexData.add(NbtFloat.of(-vertexPos.getX()));
+                vertexData.add(NbtFloat.of(-vertexPos.getY()));
                 vertexData.add(NbtFloat.of(vertexPos.getZ()));
                 verticesTag.put(vertexName, vertexData);
             });
             meshPropertiesTag.put("vertices", verticesTag);
 
             // Create faces data
+            meshPropertiesTag.put("tw", NbtFloat.of(target.defaultTextureSize.x));
+            meshPropertiesTag.put("th", NbtFloat.of(target.defaultTextureSize.y));
+
             NbtCompound facesTag = new NbtCompound();
 
             facesObject.entrySet().forEach(entry -> {

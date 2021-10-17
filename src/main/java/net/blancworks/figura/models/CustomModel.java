@@ -83,7 +83,7 @@ public class CustomModel extends FiguraAsset {
         }
 
         for (CustomModelPart part : allParts) {
-            if (part.isParentSpecial() || !part.visible || part.isHidden)
+            if (part.isParentSpecial() || !part.visible)
                 continue;
 
             matrices.push();

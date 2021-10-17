@@ -46,7 +46,6 @@ public class CustomModelPart {
 
     //model properties
     public boolean visible = true;
-    public boolean isHidden = false;
 
     public ParentType parentType = ParentType.None;
     public boolean isMimicMode = false;
@@ -127,7 +126,7 @@ public class CustomModelPart {
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
     public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction) {
         //do not render invisible parts
-        if (!this.visible || this.isHidden)
+        if (!this.visible)
             return leftToRender;
 
         matrices.push();
@@ -199,7 +198,7 @@ public class CustomModelPart {
 
     public int renderShaders(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, byte shadersToRender) {
         //do not render invisible parts
-        if (!this.visible || this.isHidden)
+        if (!this.visible)
             return leftToRender;
 
         matrices.push();
@@ -254,7 +253,7 @@ public class CustomModelPart {
 
     public int renderExtraParts(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRender) {
         //do not render invisible parts
-        if (!this.visible || this.isHidden)
+        if (!this.visible)
             return leftToRender;
 
         matrices.push();
@@ -396,7 +395,7 @@ public class CustomModelPart {
 
     public int getComplexity() {
         //don't render filtered parts
-        if (!this.visible || this.isParentSpecial() || this.isHidden) {
+        if (!this.visible || this.isParentSpecial()) {
             return 0;
         }
 
@@ -648,8 +647,9 @@ public class CustomModelPart {
             this.isMimicMode = ((NbtByte) partNbt.get("mmc")).byteValue() == 1;
         }
 
+        //compat with older versions
         if (partNbt.contains("vsb")) {
-            this.isHidden = partNbt.getBoolean("vsb");
+            this.visible = partNbt.getBoolean("vsb");
         }
 
         if (partNbt.contains("chld")) {
@@ -686,10 +686,6 @@ public class CustomModelPart {
             partNbt.put("ptype", NbtString.of(this.parentType.toString()));
         }
         partNbt.put("mmc", NbtByte.of(this.isMimicMode));
-
-        if (this.isHidden) {
-            partNbt.put("vsb", NbtByte.of(true));
-        }
 
         //Parse children.
         if (this.children.size() > 0) {
@@ -862,17 +858,25 @@ public class CustomModelPart {
         part.writeNbt(nbt);
     }
 
-    private static Vec3f vec3fFromNbt(@Nullable NbtList nbt) {
+    public static Vec3f vec3fFromNbt(@Nullable NbtList nbt) {
         if (nbt == null || nbt.getHeldType() != NbtType.FLOAT)
             return new Vec3f(0f, 0f, 0f);
         return new Vec3f(nbt.getFloat(0), nbt.getFloat(1), nbt.getFloat(2));
     }
 
-    private static NbtList vec3fToNbt(Vec3f vec) {
+    public static NbtList vec3fToNbt(Vec3f vec) {
         NbtList nbt = new NbtList();
         nbt.add(NbtFloat.of(vec.getX()));
         nbt.add(NbtFloat.of(vec.getY()));
         nbt.add(NbtFloat.of(vec.getZ()));
         return nbt;
+    }
+
+    public static Vector4f v4fFromNbtList(NbtList list) {
+        return new Vector4f(list.getFloat(0), list.getFloat(1), list.getFloat(2), list.getFloat(3));
+    }
+
+    public static Vec2f v2fFromNbtList(NbtList list) {
+        return new Vec2f(list.getFloat(0), list.getFloat(1));
     }
 }
