@@ -230,26 +230,34 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         if (elementPart instanceof CustomModelPartMesh meshPart) {
             JsonObject verticesObject = elementObject.get("vertices").getAsJsonObject();
             NbtCompound meshPropertiesTag = new NbtCompound();
-            NbtCompound verticesTag = new NbtCompound();
 
-            // Build vertex_id -> vertex table
+            meshPropertiesTag.put("vc", NbtInt.of(verticesObject.entrySet().size()));
+
+            /*
+                Create a list of named vertices
+                List entry format: String name, float x, float y, float z
+             */
+            NbtList verticesList = new NbtList();
+
             verticesObject.entrySet().forEach(entry -> {
                 String vertexName = entry.getKey();
                 Vec3f vertexPos = this.v3fFromJArray(entry.getValue().getAsJsonArray());
 
-                NbtList vertexData = new NbtList();
-                vertexData.add(NbtFloat.of(-vertexPos.getX()));
-                vertexData.add(NbtFloat.of(-vertexPos.getY()));
-                vertexData.add(NbtFloat.of(vertexPos.getZ()));
-                verticesTag.put(vertexName, vertexData);
+                NbtCompound vertexData = new NbtCompound();
+                vertexData.put("x", NbtFloat.of(vertexPos.getX()));
+                vertexData.put("y", NbtFloat.of(vertexPos.getY()));
+                vertexData.put("z", NbtFloat.of(vertexPos.getZ()));
+                vertexData.put("name", NbtString.of(vertexName));
+
+                verticesList.add(vertexData);
             });
-            meshPropertiesTag.put("vertices", verticesTag);
+            meshPropertiesTag.put("vertices", verticesList);
 
-            // Create faces data
-            meshPropertiesTag.put("tw", NbtFloat.of(target.defaultTextureSize.x));
-            meshPropertiesTag.put("th", NbtFloat.of(target.defaultTextureSize.y));
-
-            NbtCompound facesTag = new NbtCompound();
+            /*
+                Create data for each face of the mesh
+                List entry format: String name, HashMap<String,Vec2f> uvs, List<Vec3f> vertices
+             */
+            NbtList meshFacesList = new NbtList();
 
             facesObject.entrySet().forEach(entry -> {
                 String faceName = entry.getKey();
@@ -277,9 +285,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
                 curFaceTag.put("uvs", uvs);
                 curFaceTag.put("vertices", vertices);
-                facesTag.put(faceName, curFaceTag);
+                curFaceTag.put("name", NbtString.of(faceName));
+                meshFacesList.add(curFaceTag);
             });
-            meshPropertiesTag.put("faces", facesTag);
+            meshPropertiesTag.put("faces", meshFacesList);
 
             meshPart.meshProperties = meshPropertiesTag;
 
