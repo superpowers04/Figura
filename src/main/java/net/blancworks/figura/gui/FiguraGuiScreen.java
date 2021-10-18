@@ -418,6 +418,12 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public void clickButton(String fileName) {
+        if (fileName == null) {
+            FiguraMod.clearRenderingData();
+            PlayerDataManager.clearLocalPlayer();
+            return;
+        }
+
         PlayerDataManager.lastLoadedFileName = fileName;
         PlayerDataManager.localPlayer.isLocalAvatar = true;
         PlayerDataManager.localPlayer.loadModelFile(fileName);

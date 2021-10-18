@@ -21,7 +21,6 @@ import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.*;
@@ -220,7 +219,7 @@ public class CustomScript extends FiguraAsset {
                             if (data != null) data.lastEntity = null;
                             chunk.call();
                         } catch (Exception error) {
-                            handleError(error, ScriptLocation.NONE);
+                            handleError(error);
                         }
 
                         isDone = true;
@@ -229,7 +228,7 @@ public class CustomScript extends FiguraAsset {
                     }
             );
         } catch (Exception error) {
-            handleError(error, ScriptLocation.NONE);
+            handleError(error);
         }
     }
 
@@ -270,7 +269,7 @@ public class CustomScript extends FiguraAsset {
                 try {
                     allEvents.get("player_init").call();
                 } catch (Exception error) {
-                    handleError(error, ScriptLocation.NONE);
+                    handleError(error);
                 }
             });
         }
@@ -285,7 +284,7 @@ public class CustomScript extends FiguraAsset {
             try {
                 allEvents.get("onCommand").call(LuaString.valueOf(message));
             } catch (Exception error) {
-                handleError(error, ScriptLocation.NONE);
+                handleError(error);
             }
         });
     }
@@ -299,7 +298,7 @@ public class CustomScript extends FiguraAsset {
             try {
                 function.call();
             } catch (Exception error) {
-                handleError(error, ScriptLocation.NONE);
+                handleError(error);
             }
         });
     }
@@ -313,7 +312,7 @@ public class CustomScript extends FiguraAsset {
             try {
                 allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
             } catch (Exception error) {
-                handleError(error, ScriptLocation.NONE);
+                handleError(error);
             }
             worldRenderInstructionCount = scriptGlobals.running.state.bytecodes;
         });
@@ -328,7 +327,7 @@ public class CustomScript extends FiguraAsset {
             try {
                 allEvents.get("onDamage").call(LuaNumber.valueOf(amount));
             } catch (Exception error) {
-                handleError(error, ScriptLocation.NONE);
+                handleError(error);
             }
             damageInstructionCount = scriptGlobals.running.state.bytecodes;
         });
@@ -536,7 +535,7 @@ public class CustomScript extends FiguraAsset {
             if (outgoingPingQueue.size() > 0)
                 ((NewFiguraNetworkManager) FiguraMod.networkManager).sendPing(outgoingPingQueue);
         } catch (Exception error) {
-            handleError(error, ScriptLocation.TICK);
+            handleError(error);
         }
         tickInstructionCount = scriptGlobals.running.state.bytecodes;
     }
@@ -550,19 +549,18 @@ public class CustomScript extends FiguraAsset {
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
         } catch (Exception error) {
-            handleError(error, ScriptLocation.RENDER);
+            handleError(error);
         }
         renderInstructionCount = scriptGlobals.running.state.bytecodes;
     }
 
-    public void handleError(Exception error, ScriptLocation location) {
+    public void handleError(Exception error) {
         scriptError = true;
-        if (location == ScriptLocation.TICK || location == ScriptLocation.ALL)
-            tickLuaEvent = null;
-        if (location == ScriptLocation.RENDER || location == ScriptLocation.ALL)
-            renderLuaEvent = null;
-        if (error instanceof LuaError)
-            logLuaError((LuaError) error);
+
+        tickLuaEvent = null;
+        renderLuaEvent = null;
+        if (error instanceof LuaError err)
+            logLuaError(err);
         else
             error.printStackTrace();
     }
@@ -863,7 +861,7 @@ public class CustomScript extends FiguraAsset {
 
             incomingPingQueue.add(p);
         } catch (Exception error) {
-            handleError(error, ScriptLocation.NONE);
+            handleError(error);
         }
     }
 
@@ -871,13 +869,5 @@ public class CustomScript extends FiguraAsset {
         public short functionID;
         public LuaFunction function;
         public LuaValue args;
-    }
-
-    //Which part of the script to stop when you call stopScript;
-    public enum ScriptLocation {
-        TICK,
-        RENDER,
-        NONE,
-        ALL
     }
 }

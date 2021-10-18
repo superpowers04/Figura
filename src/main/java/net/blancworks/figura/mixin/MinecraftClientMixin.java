@@ -6,6 +6,10 @@ import net.blancworks.figura.gui.ActionWheel;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -17,6 +21,8 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MinecraftClientMixin {
 
     @Shadow @Final public Mouse mouse;
+    @Shadow @Nullable public Entity targetedEntity;
+    @Shadow @Nullable public ClientPlayerEntity player;
     public boolean actionWheelActive = false;
 
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
@@ -38,6 +44,21 @@ public class MinecraftClientMixin {
             ActionWheel.play();
             this.mouse.lockCursor();
             actionWheelActive = false;
+        }
+
+        if (FiguraMod.reloadAvatar.wasPressed()) {
+            if (this.targetedEntity instanceof PlayerEntity player) {
+                PlayerDataManager.clearPlayer(player.getUuid());
+            }
+            else if (PlayerDataManager.localPlayer != null) {
+                if (PlayerDataManager.localPlayer.loadedName != null) {
+                    PlayerDataManager.localPlayer.reloadAvatar();
+                }
+                else {
+                    PlayerDataManager.clearLocalPlayer();
+                }
+            }
+            FiguraMod.sendToast("Figura:", "gui.figura.toast.avatar.reload.title");
         }
     }
 

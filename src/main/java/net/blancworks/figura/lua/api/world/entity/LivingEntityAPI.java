@@ -32,8 +32,12 @@ public class LivingEntityAPI {
             superTable.set("getBodyYaw", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (arg == LuaValue.NIL) arg = LuaValue.valueOf(1);
-                    return LuaNumber.valueOf(MathHelper.lerp(arg.tofloat(), targetEntity.get().prevBodyYaw, targetEntity.get().bodyYaw));
+                    float bodyYaw = targetEntity.get().bodyYaw;
+
+                    if (!arg.isnil())
+                        bodyYaw = MathHelper.lerp(arg.tofloat(), targetEntity.get().prevBodyYaw, bodyYaw);
+
+                    return LuaNumber.valueOf(bodyYaw);
                 }
             });
             

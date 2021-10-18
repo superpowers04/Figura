@@ -124,7 +124,7 @@ public class RendererAPI {
                                     throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
                             }
                         } catch (LuaError error) {
-                            script.handleError(error, CustomScript.ScriptLocation.ALL);
+                            script.handleError(error);
                         }
                     });
                     return NIL;

@@ -284,7 +284,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
 
                 curFaceTag.put("uvs", uvs);
                 curFaceTag.put("vertices", vertices);
-                curFaceTag.put("name", NbtString.of(faceName));
                 meshFacesList.add(curFaceTag);
             });
             meshPropertiesTag.put("faces", meshFacesList);

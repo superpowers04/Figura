@@ -43,18 +43,26 @@ public class EntityAPI {
                 set("getPos", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
-                        Entity e = targetEntity.get();
-                        if (arg == LuaValue.NIL) arg = LuaValue.valueOf(1);
-                        return LuaVector.of(e.getLerpedPos(arg.tofloat()));
+                        if (!arg.isnil())
+                            return LuaVector.of(targetEntity.get().getLerpedPos(arg.tofloat()));
+
+                        return LuaVector.of(targetEntity.get().getPos());
                     }
                 });
 
                 set("getRot", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
-                        if (arg == LuaValue.NIL) arg = LuaValue.valueOf(1);
-                        float pitch = MathHelper.lerp(arg.tofloat(), targetEntity.get().prevPitch, targetEntity.get().getPitch());
-                        float yaw = MathHelper.lerp(arg.tofloat(), targetEntity.get().prevYaw, targetEntity.get().getYaw());
+                        Entity e = targetEntity.get();
+
+                        float pitch = e.getPitch();
+                        float yaw = e.getYaw();
+
+                        if (!arg.isnil()) {
+                            pitch = MathHelper.lerp(arg.tofloat(), e.prevPitch, pitch);
+                            yaw = MathHelper.lerp(arg.tofloat(), e.prevYaw, yaw);
+                        }
+
                         return new LuaVector(pitch, yaw);
                     }
                 });

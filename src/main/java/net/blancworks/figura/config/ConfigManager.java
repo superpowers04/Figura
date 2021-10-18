@@ -62,7 +62,8 @@ public class ConfigManager {
         FORMAT_SCRIPT_ON_UPLOAD(true),
         ACTION_WHEEL_TITLE_POS(0, 4),
         RENDER_DEBUG_PARTS_PIVOT(true),
-        MODEL_FOLDER_PATH("");
+        MODEL_FOLDER_PATH(""),
+        RELOAD_AVATAR_BUTTON(GLFW.GLFW_KEY_R);
 
         //config data
         public Object value;
