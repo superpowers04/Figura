@@ -10,11 +10,12 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.*;
@@ -39,18 +40,22 @@ public class EntityAPI {
 
             return new LuaTable() {{
 
-                set("getPos", new ZeroArgFunction() {
+                set("getPos", new OneArgFunction() {
                     @Override
-                    public LuaValue call() {
+                    public LuaValue call(LuaValue arg) {
                         Entity e = targetEntity.get();
-                        return LuaVector.of(e.getPos());
+                        if (arg == LuaValue.NIL) arg = LuaValue.valueOf(1);
+                        return LuaVector.of(e.getLerpedPos(arg.tofloat()));
                     }
                 });
 
-                set("getRot", new ZeroArgFunction() {
+                set("getRot", new OneArgFunction() {
                     @Override
-                    public LuaValue call() {
-                        return new LuaVector(targetEntity.get().pitch, targetEntity.get().yaw);
+                    public LuaValue call(LuaValue arg) {
+                        if (arg == LuaValue.NIL) arg = LuaValue.valueOf(1);
+                        float pitch = MathHelper.lerp(arg.tofloat(), targetEntity.get().prevPitch, targetEntity.get().getPitch());
+                        float yaw = MathHelper.lerp(arg.tofloat(), targetEntity.get().prevYaw, targetEntity.get().getYaw());
+                        return new LuaVector(pitch, yaw);
                     }
                 });
 
@@ -92,7 +97,7 @@ public class EntityAPI {
                 set("getFrozenTicks", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaNumber.valueOf(0);
+                        return LuaNumber.valueOf(targetEntity.get().getFrozenTicks());
                     }
                 });
 
@@ -265,15 +270,15 @@ public class EntityAPI {
 
                         String[] path = pathArg.split("\\.");
 
-                        CompoundTag tag = new CompoundTag();
-                        targetEntity.get().toTag(tag);
+                        NbtCompound tag = new NbtCompound();
+                        targetEntity.get().writeNbt(tag);
 
-                        Tag current = tag;
+                        NbtElement current = tag;
                         for (String key : path) {
                             if (current == null)
                                 current = tag.get(key);
-                            else if (current instanceof CompoundTag)
-                                current = ((CompoundTag)current).get(key);
+                            else if (current instanceof NbtCompound)
+                                current = ((NbtCompound)current).get(key);
                             else current = null;
                         }
 

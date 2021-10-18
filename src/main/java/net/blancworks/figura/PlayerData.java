@@ -3,12 +3,16 @@ package net.blancworks.figura;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.coderbot.iris.Iris;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.TextureManager;
@@ -46,6 +50,15 @@ public class PlayerData {
     public FiguraTexture texture;
     //The custom script for the model.
     public CustomScript script;
+    //The custom VCP for the model.
+    public FiguraVertexConsumerProvider customVCP;
+
+    public VertexConsumerProvider getVCP() {
+        if (customVCP != null)
+            return customVCP;
+        return MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+    }
+
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel<?> vanillaModel;
 
@@ -116,6 +129,13 @@ public class PlayerData {
             nbt.put("script", scriptNbt);
         }
 
+        //Put Render Layers.
+        if (customVCP != null) {
+            NbtCompound vcpNbt = new NbtCompound();
+            customVCP.writeNbt(vcpNbt);
+            nbt.put("customVCP", vcpNbt);
+        }
+
         if (!extraTextures.isEmpty()) {
             ListTag texList = new ListTag();
 
@@ -142,6 +162,7 @@ public class PlayerData {
         model = null;
         texture = null;
         script = null;
+        customVCP = null;
 
         extraTextures.clear();
 
@@ -176,6 +197,23 @@ public class PlayerData {
                 texture.id = new Identifier("figura", playerId.toString());
                 getTextureManager().registerTexture(texture.id, texture);
                 FiguraMod.doTask(() -> texture.readNbt(textureNbt));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        try {
+            if (getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS)) {
+                if (nbt.contains("customVCP")) {
+                    NbtCompound vcpNbt = nbt.getCompound("customVCP");
+
+                    if (vcpNbt != null) FiguraMod.doTask(() -> {
+                        FiguraVertexConsumerProvider.parseFromNbt(this, vcpNbt);
+                        FiguraMod.LOGGER.info("Render Layer Parsing Finished");
+                    });
+                }
+            } else {
+                FiguraMod.LOGGER.info("Blocked Custom Render Layer");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -271,6 +309,22 @@ public class PlayerData {
 
     public TrustContainer getTrustContainer() {
         return PlayerTrustManager.getContainer(getTrustIdentifier());
+    }
+
+    public boolean canRenderCustomLayers() {
+        if (FabricLoader.getInstance().isModLoaded("iris")) {
+            return IrisStateChecker.irisShadersEnabled();
+        }
+        return getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS);
+    }
+
+    /**
+     * Class Loader jank to have a soft dependency for iris
+     */
+    private static class IrisStateChecker {
+        public static boolean irisShadersEnabled() {
+            return Iris.getCurrentPack().isEmpty();
+        }
     }
 
     //Saves this playerdata to the cache.
