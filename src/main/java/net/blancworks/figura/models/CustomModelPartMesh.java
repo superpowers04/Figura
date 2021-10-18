@@ -2,6 +2,7 @@ package net.blancworks.figura.models;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
@@ -81,6 +82,20 @@ public class CustomModelPartMesh extends CustomModelPart {
 
         this.vertexData = vertexData;
         this.vertexCount = vertexCount;
+    }
+
+    @Override
+    public void rotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+    }
+
+    @Override
+    public void vanillaRotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
     }
 
     @Override
