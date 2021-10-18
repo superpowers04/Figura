@@ -25,11 +25,13 @@ import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.toast.SystemToast;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.apache.logging.log4j.LogManager;
@@ -62,6 +64,7 @@ public class FiguraMod implements ClientModInitializer {
     public static CompoundTag cheese;
 
     public static KeyBinding actionWheel;
+    public static KeyBinding reloadAvatar;
 
     //Loading
 
@@ -96,7 +99,8 @@ public class FiguraMod implements ClientModInitializer {
     public static void setRenderingData(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel<?> mdl, float dt) {
         currentPlayer = player;
         currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
-        currentData.vanillaModel = mdl;
+        if (currentData != null)
+            currentData.vanillaModel = mdl;
         setVertexConsumerProvider(vertexConsumerProvider);
         deltaTime = dt;
     }
@@ -146,6 +150,22 @@ public class FiguraMod implements ClientModInitializer {
 
         actionWheel.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.ACTION_WHEEL_BUTTON.value));
         KeyBindingRegistryImpl.registerKeyBinding(actionWheel);
+
+        //reload avatar keybind
+        reloadAvatar = new KeyBinding(
+                "key.figura.reloadavatar",
+                GLFW.GLFW_KEY_R,
+                "key.categories.misc"
+        ){
+            @Override
+            public void setBoundKey(InputUtil.Key boundKey) {
+                super.setBoundKey(boundKey);
+                Config.RELOAD_AVATAR_BUTTON.value = boundKey.getCode();
+                ConfigManager.saveConfig();
+            }};
+
+        reloadAvatar.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.RELOAD_AVATAR_BUTTON.value));
+        KeyBindingRegistryImpl.registerKeyBinding(reloadAvatar);
 
         //Set up network
         newNetworkManager = new NewFiguraNetworkManager();
@@ -266,6 +286,14 @@ public class FiguraMod implements ClientModInitializer {
             context.matrixStack().pop();
             FiguraMod.clearRenderingData();
         }
+    }
+
+    public static void sendToast(String title, String message) {
+        MinecraftClient.getInstance().getToastManager().clear();
+        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
+                new TranslatableText(title),
+                new TranslatableText(message))
+        );
     }
 
     public final static List<UUID> special = Arrays.asList(

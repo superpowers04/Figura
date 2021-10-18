@@ -131,7 +131,7 @@ public class ConfigScreen extends Screen {
                 new TranslatableText("gui.figura.config.scriptlog.chat")
         );
         configListWidget.addEntry(EntryType.ENUM, new TranslatableText("gui.figura.config.scriptlog"), new TranslatableText("gui.figura.config.tooltip.scriptlog"), Config.SCRIPT_LOG_LOCATION, scriptLogEntries);
-
+        configListWidget.addEntry(EntryType.KEYBIND, new TranslatableText("key.figura.reloadavatar"), new TranslatableText("key.figura.tooltip.reloadavatar"), Config.RELOAD_AVATAR_BUTTON, FiguraMod.reloadAvatar);
 
         //category title
         configListWidget.addEntry(EntryType.CATEGORY, new TranslatableText("gui.figura.config.actionwheel"));
