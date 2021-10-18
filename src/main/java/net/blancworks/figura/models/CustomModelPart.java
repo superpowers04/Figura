@@ -538,15 +538,11 @@ public class CustomModelPart {
 
         stack.translate(-this.pivot.getX() / 16.0f, -this.pivot.getY() / 16.0f, -this.pivot.getZ() / 16.0f);
 
-        if (this.isMimicMode || this.rotationType == RotationType.Vanilla) {
-            stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-            stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(this.rot.getY()));
-            stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(this.rot.getX()));
-        } else if (this.rotationType == RotationType.BlockBench) {
-            stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-            stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-            stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
-        }
+        if (this.isMimicMode || this.rotationType == RotationType.Vanilla)
+            vanillaRotate(stack, this.rot);
+        else if (this.rotationType == RotationType.BlockBench)
+            rotate(stack, this.rot);
+
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
 
         stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
@@ -558,32 +554,38 @@ public class CustomModelPart {
         stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180.0F));
         //stack.translate(0, 0.125D, -0.625D);
         stack.translate(pivot.getX() / 16.0f, pivot.getZ() / 16.0f, pivot.getY() / 16.0f);
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        rotate(stack, this.rot);
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
     //TODO move these to the mixins, probably.
     public void applyTransformsAsElytraOrParrot(MatrixStack stack) {
         stack.translate(pivot.getX() / 16.0f, pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        rotate(stack, this.rot);
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
     //TODO move these to the mixins, probably. //OK GOT IT
     public void applyTransformsAsSpyglass(MatrixStack stack) {
         stack.translate(-pivot.getX() / 16.0f, -pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
+        rotate(stack, this.rot);
         stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
     }
 
     //Re-builds the mesh data for a custom model part.
     public void rebuild() {}
+
+    public void rotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
+    }
+
+    public void vanillaRotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
+    }
 
     public void addVertex(Vec3f vert, float u, float v, Vec3f normal, FloatList vertexData) {
         vertexData.add(vert.getX() / 16.0f);
