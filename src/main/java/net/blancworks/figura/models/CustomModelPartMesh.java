@@ -71,8 +71,8 @@ public class CustomModelPartMesh extends CustomModelPart {
 
                 normal.cross(normalTwo);
                 normal.normalize();
-                //normal.multiplyComponentwise(-1f, -1f, 1f);
 
+                vertex.subtract(this.pivot);
                 addVertex(vertex, uv.x / texSize.x, uv.y / texSize.y, normal, vertexData);
             }
 
@@ -86,20 +86,34 @@ public class CustomModelPartMesh extends CustomModelPart {
     @Override
     public void writeNbt(NbtCompound partNbt) {
         super.writeNbt(partNbt);
-        partNbt.put("geo", meshProperties.copy());
+        partNbt.put("props", meshProperties.copy());
     }
 
     @Override
     public void readNbt(NbtCompound partNbt) {
         super.readNbt(partNbt);
-        this.meshProperties = partNbt.getCompound("geo");
+        this.meshProperties = partNbt.getCompound("props");
     }
 
+    @Override
     public PartType getPartType() {
         return PartType.MESH;
     }
 
+    @Override
+    public void applyTrueOffset(Vec3f offset) {
+        super.applyTrueOffset(offset);
+
+        pivot.add(offset);
+        rebuild();
+    }
+
     private static boolean testOppositeSides(Vec3f linePoint1, Vec3f linePoint2, Vec3f point1, Vec3f point2) {
+        linePoint1 = linePoint1.copy();
+        linePoint2 = linePoint2.copy();
+        point1 = point1.copy();
+        point2 = point2.copy();
+
         linePoint2.subtract(linePoint1);
         point1.subtract(linePoint1);
         point2.subtract(linePoint1);
