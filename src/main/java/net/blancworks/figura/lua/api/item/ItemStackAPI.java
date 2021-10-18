@@ -5,6 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -128,6 +129,13 @@ public class ItemStackAPI {
                 public LuaValue call(LuaValue arg) {
                     setItemNbt(stack, arg.checkjstring());
                     return NIL;
+                }
+            });
+
+            set("isBlockItem", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(stack.getItem() instanceof BlockItem);
                 }
             });
 

@@ -15,6 +15,7 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.*;
@@ -39,18 +40,22 @@ public class EntityAPI {
 
             return new LuaTable() {{
 
-                set("getPos", new ZeroArgFunction() {
+                set("getPos", new OneArgFunction() {
                     @Override
-                    public LuaValue call() {
+                    public LuaValue call(LuaValue arg) {
                         Entity e = targetEntity.get();
-                        return LuaVector.of(e.getPos());
+                        if (arg == LuaValue.NIL) arg = LuaValue.valueOf(1);
+                        return LuaVector.of(e.getLerpedPos(arg.tofloat()));
                     }
                 });
 
-                set("getRot", new ZeroArgFunction() {
+                set("getRot", new OneArgFunction() {
                     @Override
-                    public LuaValue call() {
-                        return new LuaVector(targetEntity.get().getPitch(), targetEntity.get().getYaw());
+                    public LuaValue call(LuaValue arg) {
+                        if (arg == LuaValue.NIL) arg = LuaValue.valueOf(1);
+                        float pitch = MathHelper.lerp(arg.tofloat(), targetEntity.get().prevPitch, targetEntity.get().getPitch());
+                        float yaw = MathHelper.lerp(arg.tofloat(), targetEntity.get().prevYaw, targetEntity.get().getYaw());
+                        return new LuaVector(pitch, yaw);
                     }
                 });
 

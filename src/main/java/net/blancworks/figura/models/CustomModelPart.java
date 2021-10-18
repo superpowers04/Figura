@@ -8,6 +8,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.renderer.RenderTask;
+import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
@@ -17,6 +18,7 @@ import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.*;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Pair;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -56,6 +58,8 @@ public class CustomModelPart {
 
     //public RenderType renderType = RenderType.None;
 
+    public RenderLayer customLayer = null;
+
     public TextureType textureType = TextureType.Custom;
     public Identifier textureVanilla = FiguraTexture.DEFAULT_ID;
 
@@ -90,7 +94,7 @@ public class CustomModelPart {
 
         //main texture
         Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
-        int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction);
+        int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction);
 
         //extra textures
         if (this.extraTex) {
@@ -98,10 +102,11 @@ public class CustomModelPart {
                 Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
 
                 if (renderLayerGetter != null) {
-                    renderTextures(ret, matrices, transformStack, vcp, light, overlay, 0,0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter);
+                    renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0,0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter);
                 }
             }
         }
+
         draw(vcp);
 
         //shaders
@@ -119,7 +124,7 @@ public class CustomModelPart {
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction) {
+    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction) {
         //do not render invisible parts
         if (!this.visible)
             return leftToRender;
@@ -156,8 +161,22 @@ public class CustomModelPart {
             texture = getTexture();
 
         //render!
-        if (canRender)
-            renderCube(leftToRender, matrices, vcp.getBuffer(layerFunction.apply(texture)), light, overlay, u, v, color, alpha);
+        if (canRender) {
+            //render using main texture
+            VertexConsumer consumer;
+            if (layer instanceof FiguraRenderLayer) {
+                consumer = vcp.getBuffer(layer);
+            } else {
+                if (customLayer != null) {
+                    consumer = vcp.getBuffer(customLayer);
+                    layer = customLayer;
+                } else {
+                    consumer = vcp.getBuffer(layerFunction.apply(texture));
+                }
+            }
+
+            renderCube(leftToRender, matrices, consumer, light, overlay, u, v, color, alpha);
+        }
 
         for (CustomModelPart child : this.children) {
             if (leftToRender <= 0)
@@ -168,7 +187,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, light, overlay, u, v, color, alpha, canRender, texture, layerFunction);
+            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction);
         }
 
         matrices.pop();

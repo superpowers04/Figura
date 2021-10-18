@@ -8,7 +8,8 @@
     "maxsfx": 4 ,
     "allowVanillaEdit": false,
     "allowNameplateEdit": false,
-    "allowOffscreenRendering": false
+    "allowOffscreenRendering": false,
+    "allowCustomRenderLayers": false
   },
   "blocked": {
     "maxInitInstructions": 0,
@@ -20,6 +21,7 @@
     "allowVanillaEdit": false,
     "allowNameplateEdit": false,
     "allowOffscreenRendering": false,
+    "allowCustomRenderLayers": false,
     "parent": "base"
   },
   "untrusted": {
@@ -35,6 +37,7 @@
     "allowVanillaEdit": true,
     "allowNameplateEdit": true,
     "allowOffscreenRendering": true,
+    "allowCustomRenderLayers": true,
     "parent": "base"
   },
   "friend": {
@@ -47,6 +50,7 @@
     "allowVanillaEdit": true,
     "allowNameplateEdit": true,
     "allowOffscreenRendering": true,
+    "allowCustomRenderLayers": true,
     "parent": "base"
   },
   "local": {
@@ -59,6 +63,7 @@
     "allowVanillaEdit": true,
     "allowNameplateEdit": true,
     "allowOffscreenRendering": true,
+    "allowCustomRenderLayers": true,
     "parent": "base",
     "hidden": true
   }

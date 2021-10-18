@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.renderer;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.PlayerDataManager;
@@ -10,9 +11,12 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.renderer.RenderTask.*;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.models.shaders.FiguraRenderLayer;
+import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.command.argument.BlockStateArgumentType;
 import net.minecraft.item.ItemStack;
@@ -22,6 +26,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
@@ -58,6 +63,25 @@ public class RendererAPI {
                 }
             });
 
+            set("isCameraBackwards", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    if (PlayerDataManager.localPlayer != script.playerData)
+                        return LuaBoolean.FALSE;
+
+                    return MinecraftClient.getInstance().options.getPerspective().isFrontView() ? LuaBoolean.TRUE : LuaBoolean.FALSE;
+                }
+            });
+
+            set("getCameraPos", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    //Yes, this IS intended to also be called for non-local players.
+                    //This might be exploitable? idk
+                    return LuaVector.of(MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+                }
+            });
+
             set("renderItem", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
@@ -76,10 +100,40 @@ public class RendererAPI {
                 }
             });
 
+            set("setUniform", new ThreeArgFunction() {
+                @Override
+                public LuaValue call(LuaValue layerName, LuaValue uniformName, LuaValue value) {
+                    if (!script.playerData.canRenderCustomLayers())
+                        return NIL;
+                    RenderSystem.recordRenderCall(() -> {
+                        try {
+                            Shader customShader;
+                            if (script.playerData.customVCP != null) {
+                                FiguraRenderLayer customLayer = script.playerData.customVCP.getRenderLayer(layerName.checkjstring());
+                                if (customLayer != null)
+                                    customShader = customLayer.getShader();
+                                else
+                                    throw new LuaError("There is no custom layer with that name!");
+                            } else
+                                throw new LuaError("The player has no custom VCP!");
+
+                            if (customShader != null) {
+                                if (customShader instanceof FiguraShader)
+                                    ((FiguraShader) customShader).setUniformFromLua(uniformName, value);
+                                else
+                                    throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
+                            }
+                        } catch (LuaError error) {
+                            script.handleError(error, CustomScript.ScriptLocation.ALL);
+                        }
+                    });
+                    return NIL;
+                }
+            });
+
             set("renderBlock", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-
                     try {
                         BlockState state = BlockStateArgumentType.blockState().parse(new StringReader(args.arg(1).checkjstring())).getBlockState();
                         CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
