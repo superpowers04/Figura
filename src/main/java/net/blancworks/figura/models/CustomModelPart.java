@@ -18,7 +18,6 @@ import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.*;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,9 +32,9 @@ public class CustomModelPart {
     public String name = "NULL";
 
     //Transform data
-    public Vec3f pivot = new Vec3f();
-    public Vec3f pos = new Vec3f();
-    public Vec3f rot = new Vec3f();
+    public Vec3f pivot = Vec3f.ZERO;
+    public Vec3f pos = Vec3f.ZERO;
+    public Vec3f rot = Vec3f.ZERO;
     public Vec3f scale = new Vec3f(1f, 1f, 1f);
     public Vec3f color = new Vec3f(1f, 1f, 1f);
 
@@ -619,7 +618,10 @@ public class CustomModelPart {
 
     public void readNbt(NbtCompound partNbt) {
         //Name
-        this.name = partNbt.get("nm").asString();
+        if (partNbt.contains("nm"))
+            this.name = partNbt.get("nm").asString();
+        else
+            this.name = "NULL";
 
         if (partNbt.contains("pos")) {
             NbtList list = (NbtList) partNbt.get("pos");
@@ -669,25 +671,30 @@ public class CustomModelPart {
     }
 
     public void writeNbt(NbtCompound partNbt) {
-        partNbt.put("nm", NbtString.of(name));
-
-        if (!this.pos.equals(new Vec3f(0, 0, 0))) {
+        if (!name.equals("NULL")) {
+            partNbt.put("nm", NbtString.of(name));
+        }
+        if (!this.pos.equals(Vec3f.ZERO)) {
             partNbt.put("pos", vec3fToNbt(this.pos));
         }
-        if (!this.rot.equals(new Vec3f(0, 0, 0))) {
+        if (!this.rot.equals(Vec3f.ZERO)) {
             partNbt.put("rot", vec3fToNbt(this.rot));
+        }
+        if (!this.pivot.equals(Vec3f.ZERO)) {
+            partNbt.put("piv", vec3fToNbt(this.pivot));
         }
         if (!this.scale.equals(new Vec3f(1, 1, 1))) {
             partNbt.put("scl", vec3fToNbt(this.scale));
         }
-        if (!this.pivot.equals(new Vec3f(0, 0, 0))) {
-            partNbt.put("piv", vec3fToNbt(this.pivot));
-        }
-
         if (this.parentType != ParentType.None) {
             partNbt.put("ptype", NbtString.of(this.parentType.toString()));
         }
-        partNbt.put("mmc", NbtByte.of(this.isMimicMode));
+        if (this.isMimicMode) {
+            partNbt.put("mmc", NbtByte.of(true));
+        }
+        if (this.getPartType() != PartType.GROUP) {
+            partNbt.put("pt", NbtString.of(this.getPartType().val));
+        }
 
         //Parse children.
         if (this.children.size() > 0) {
@@ -831,9 +838,8 @@ public class CustomModelPart {
      * Gets a CustomModelPart from NBT, automatically reading the type from that NBT.
      */
     public static CustomModelPart fromNbt(NbtCompound nbt) {
-        if (!nbt.contains("pt"))
-            return null;
-        String partType = nbt.get("pt").asString();
+        NbtElement pt = nbt.get("pt");
+        String partType = pt == null ? "na" : pt.asString();
 
         if (!MODEL_PART_TYPES.containsKey(partType))
             return null;
@@ -856,7 +862,6 @@ public class CustomModelPart {
         if (!MODEL_PART_TYPES.containsKey(partType))
             return;
 
-        nbt.put("pt", NbtString.of(partType));
         part.writeNbt(nbt);
     }
 

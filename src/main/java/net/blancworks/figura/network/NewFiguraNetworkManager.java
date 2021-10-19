@@ -177,19 +177,12 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             if (currWebSocket != null && currWebSocket.isOpen()) {
                 LocalPlayerData data = PlayerDataManager.localPlayer;
 
-                //if not local, does not upload
-                if (!data.isLocalAvatar)
-                    return;
-
                 //mark as not local
                 data.isLocalAvatar = false;
 
                 //get nbt
                 NbtCompound nbt = new NbtCompound();
-                if (data.modelData != null && !data.modelData.isEmpty())
-                    nbt = data.modelData;
-                else
-                    data.writeNbt(nbt);
+                data.writeNbt(nbt);
 
                 try {
                     //Set up streams.

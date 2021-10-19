@@ -9,8 +9,6 @@ import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.minecraft.client.option.KeyBinding;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
@@ -32,7 +30,6 @@ public class LocalPlayerData extends PlayerData {
     private final Map<String, WatchKey> watchKeys = new Object2ObjectOpenHashMap<>();
     private final Set<String> watchedFiles = new HashSet<>();
     public static WatchService ws;
-    public NbtCompound modelData;
 
     static {
         try {
@@ -51,22 +48,6 @@ public class LocalPlayerData extends PlayerData {
         this.tickFileWatchers();
     }
 
-    @Override
-    public long getFileSize() {
-        if (modelData == null)
-            return super.getFileSize();
-
-        try {
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            DataOutputStream w = new DataOutputStream(out);
-
-            NbtIo.writeCompressed(modelData, w);
-            return w.size();
-        } catch (Exception ignored) {}
-
-        return 0;
-    }
-
     public static Path getContentDirectory() {
         return FiguraMod.getModContentDirectory().resolve("model_files");
     }
@@ -81,16 +62,15 @@ public class LocalPlayerData extends PlayerData {
         this.model = null;
         this.texture = null;
         this.script = null;
+        this.customVCP = null;
 
         extraTextures.clear();
 
         KeyBinding.updateKeysByCode();
         watchedFiles.clear();
 
-        if (fileName == null) {
-            packAvatarData();
+        if (fileName == null)
             return;
-        }
 
         //create root directory
         Path contentDirectory = getContentDirectory();
@@ -216,8 +196,6 @@ public class LocalPlayerData extends PlayerData {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        packAvatarData();
     }
 
     public void loadModel(boolean model, HashMap<String, Path> paths, boolean isZip, ZipFile modelZip) {
@@ -478,15 +456,6 @@ public class LocalPlayerData extends PlayerData {
         }
 
         if (doReload) reloadAvatar();
-    }
-
-    public void packAvatarData() {
-        //pack avatar on load
-        FiguraMod.doTask(() -> {
-            NbtCompound nbt = new NbtCompound();
-            this.modelData = this.writeNbt(nbt) ? nbt : null;
-            getFileSize();
-        });
     }
 
     public void reloadAvatar() {

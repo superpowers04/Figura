@@ -107,11 +107,8 @@ public class PlayerData {
         nbt.putUuid("id", playerId);
 
         //Put Model.
-        if (model != null) {
-            NbtCompound modelNbt = new NbtCompound();
-            model.writeNbt(modelNbt);
-            nbt.put("model", modelNbt);
-        }
+        if (model != null)
+            nbt.put("model", model.modelNbt);
 
         //Put Texture.
         if (texture != null) {
@@ -174,6 +171,7 @@ public class PlayerData {
                     try {
                         model = new CustomModel();
                         model.readNbt(modelNbt);
+                        model.modelNbt = modelNbt;
                         model.owner = this;
                         model.isDone = true;
                     } catch (Exception e) {
