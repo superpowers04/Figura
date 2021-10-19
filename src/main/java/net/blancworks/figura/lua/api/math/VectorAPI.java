@@ -6,10 +6,7 @@ import net.blancworks.figura.utils.ColorUtils;
 import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Matrix3f;
-import net.minecraft.util.math.Quaternion;
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.*;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -122,6 +119,22 @@ public class VectorAPI {
                 public LuaValue call(LuaValue arg) {
                     LuaVector vec = LuaVector.checkOrNew(arg);
                     return toTable(vec);
+                }
+            });
+
+            set("toQuaternion", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    Quaternion q = Quaternion.fromEulerXyzDegrees(LuaVector.checkOrNew(arg).asV3f());
+                    return LuaVector.of(new Vector4f(q.getX(), q.getY(), q.getZ(), q.getW()));
+                }
+            });
+
+            set("fromQuaternion", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    return LuaVector.of(MathUtils.quaternionToEulerXYZ(new Quaternion(vec.x(), vec.y(), vec.z(), vec.w())));
                 }
             });
         }});
