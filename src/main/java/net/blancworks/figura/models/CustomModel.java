@@ -15,8 +15,8 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
@@ -27,6 +27,7 @@ import java.util.HashMap;
 public class CustomModel extends FiguraAsset {
     public PlayerData owner;
     public ArrayList<CustomModelPart> allParts = new ArrayList<>();
+    public NbtCompound modelNbt = new NbtCompound();
 
     //Customized pivots for stuff like elytra, held items, that sort.
     public HashMap<Identifier, CustomModelPart> customParents = new HashMap<>();
@@ -89,8 +90,8 @@ public class CustomModel extends FiguraAsset {
             matrices.push();
 
             try {
-                if (entity_model instanceof PlayerEntityModel) {
-                    ((PlayerEntityModel<?>) entity_model).setVisible(false);
+                if (entity_model instanceof PlayerEntityModel player_model) {
+                    player_model.setVisible(false);
                 }
 
                 //By default, use blockbench rotation.
@@ -183,24 +184,12 @@ public class CustomModel extends FiguraAsset {
         CustomModelPart.canRenderHitBox = false;
     }
 
-    public void writeNbt(CompoundTag nbt) {
-        ListTag partList = new ListTag();
-
-        for (CustomModelPart part : allParts) {
-            CompoundTag partNbt = new CompoundTag();
-            CustomModelPart.writeToNbt(partNbt, part);
-            partList.add(partNbt);
-        }
-
-        nbt.put("parts", partList);
-    }
-
-    public void readNbt(CompoundTag tag) {
-        ListTag partList = (ListTag) tag.get("parts");
+    public void readNbt(NbtCompound tag) {
+        NbtList partList = (NbtList) tag.get("parts");
 
         if (partList != null) {
-            for (net.minecraft.nbt.Tag nbtElement : partList) {
-                CompoundTag partTag = (CompoundTag) nbtElement;
+            for (net.minecraft.nbt.NbtElement nbtElement : partList) {
+                NbtCompound partTag = (NbtCompound) nbtElement;
 
                 CustomModelPart part = CustomModelPart.fromNbt(partTag);
 
@@ -229,10 +218,10 @@ public class CustomModel extends FiguraAsset {
 
     public void sortPart(CustomModelPart part) {
         switch(part.parentType) {
-            case LeftElytra: leftElytraParts.add(part); break;
-            case RightElytra: rightElytraParts.add(part); break;
-            case WORLD: worldParts.add(part); break;
-            case Skull: skullParts.add(part); break;
+            case LeftElytra -> leftElytraParts.add(part);
+            case RightElytra -> rightElytraParts.add(part);
+            case WORLD -> worldParts.add(part);
+            case Skull -> skullParts.add(part);
         }
 
         for (CustomModelPart child : part.children) {

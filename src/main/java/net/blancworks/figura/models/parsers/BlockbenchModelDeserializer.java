@@ -119,6 +119,14 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             }
         }
 
+        NbtList partList = new NbtList();
+        retModel.allParts.forEach(part -> {
+            NbtCompound partNbt = new NbtCompound();
+            part.writeNbt(partNbt);
+            partList.add(partNbt);
+        });
+        retModel.modelNbt.put("parts", partList);
+
         //Reset this value.
         overrideAsPlayerModel = false;
         retModel.sortAllParts();
@@ -325,6 +333,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             cuboidPart.cuboidProperties = cuboidPropertiesTag;
         }
 
+        elementPart.writeNbt(new NbtCompound());
         elementPart.rebuild();
 
         return elementPart;
