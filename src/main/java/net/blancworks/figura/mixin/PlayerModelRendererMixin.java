@@ -10,6 +10,7 @@ import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.BipedEntityModel;
+import net.minecraft.client.render.entity.model.PiglinEntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
@@ -29,8 +30,7 @@ public class PlayerModelRendererMixin<T extends LivingEntity> extends BipedEntit
         super.render(matrices, vertices, light, overlay, red, green, blue, alpha);
 
         PlayerData playerData = FiguraMod.currentData;
-
-        if (playerData != null && playerData.model != null) {
+        if (!(((Object) this) instanceof PiglinEntityModel) && playerData != null && playerData.model != null) {
             matrices.push();
 
             MatrixStack transformStack = new MatrixStack();
