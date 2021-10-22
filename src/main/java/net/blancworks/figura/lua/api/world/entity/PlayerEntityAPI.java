@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua.api.world.entity;
 
+import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -123,10 +124,10 @@ public class PlayerEntityAPI {
             superTable.set("lastDamageSource", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    CustomScript script = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid()).script;
-                    if (script == null) return NIL;
+                    PlayerData data = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid());
+                    if (data == null || data.script == null) return NIL;
 
-                    DamageSource ds = script.lastDamageSource;
+                    DamageSource ds = data.script.lastDamageSource;
                     return ds == null ? NIL : LuaValue.valueOf(ds.name);
                 }
             });
@@ -136,10 +137,10 @@ public class PlayerEntityAPI {
                 public LuaValue call(LuaValue arg1) {
                     String key = arg1.checkjstring();
 
-                    CustomScript script = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid()).script;
-                    if (script == null) return NIL;
+                    PlayerData data = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid());
+                    if (data == null || data.script == null) return NIL;
 
-                    LuaValue val = script.SHARED_VALUES.get(key);
+                    LuaValue val = data.script.SHARED_VALUES.get(key);
                     return val == null ? NIL : val;
                 }
             });
