@@ -30,9 +30,10 @@ public class KeyBindAPI {
             set("newKey", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    String keyBindName = "figura_script_kb$" + arg1.checkjstring();
 
                     //remove old key with the same name
-                    script.keyBindings.removeIf(binding -> binding.getTranslationKey().equals(arg1.checkjstring()));
+                    script.keyBindings.removeIf(binding -> binding.getTranslationKey().equals(keyBindName));
 
                     //search for the binding
                     String keyString = arg2.checkjstring();
@@ -47,7 +48,7 @@ public class KeyBindAPI {
                     //only local can create valid keybinds
                     if (script.playerData != PlayerDataManager.localPlayer) {
                         keybind = new KeyBinding(
-                                arg1.checkjstring(),
+                                keyBindName,
                                 InputUtil.Type.KEYSYM,
                                 keys.get("NONE"),
                                 "figura$script_others"
@@ -56,7 +57,7 @@ public class KeyBindAPI {
                     }
                     else {
                         keybind = new KeyBinding(
-                                arg1.checkjstring(),
+                                keyBindName,
                                 keyString.startsWith("MOUSE") ? InputUtil.Type.MOUSE : InputUtil.Type.KEYSYM,
                                 key,
                                 "figura$script"

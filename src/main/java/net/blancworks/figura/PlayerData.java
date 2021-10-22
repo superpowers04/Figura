@@ -100,7 +100,7 @@ public class PlayerData {
      */
     public boolean writeNbt(NbtCompound nbt) {
         //You cannot save a model that is incomplete.
-        if (model == null && script == null)
+        if (!hasAvatar())
             return false;
 
         //Put ID.
@@ -343,5 +343,13 @@ public class PlayerData {
                 e.printStackTrace();
             }
         });
+    }
+
+    public boolean hasAvatar() {
+        return model != null || script != null;
+    }
+
+    public boolean isAvatarLoaded() {
+        return (model == null || model.isDone) && (script == null || script.isDone) && (texture == null || texture.isDone);
     }
 }

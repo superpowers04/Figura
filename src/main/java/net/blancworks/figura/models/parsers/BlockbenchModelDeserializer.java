@@ -181,21 +181,22 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         }
         if (group.has("rotation")) groupPart.rot = v3fFromJArray(group.get("rotation").getAsJsonArray());
 
-        JsonArray children = group.get("children").getAsJsonArray();
+        if (group.has("children")) {
+            JsonArray children = group.get("children").getAsJsonArray();
+            for (JsonElement child : children) {
+                if (child.isJsonObject()) {
+                    //If the element is a json object, it's a group, so parse the group.
+                    buildGroup(child.getAsJsonObject(), target, allParts, groupPart, playerModelOffset.copy());
+                } else {
+                    //If the element is a string, it's an element, so just add it to the children.
+                    String s = child.getAsString();
 
-        for (JsonElement child : children) {
-            if (child.isJsonObject()) {
-                //If the element is a json object, it's a group, so parse the group.
-                buildGroup(child.getAsJsonObject(), target, allParts, groupPart, playerModelOffset.copy());
-            } else {
-                //If the element is a string, it's an element, so just add it to the children.
-                String s = child.getAsString();
-
-                if (s != null) {
-                    CustomModelPart part = allParts.get(UUID.fromString(s));
-                    if (part != null) {
-                        groupPart.children.add(part);
-                        part.applyTrueOffset(playerModelOffset.copy());
+                    if (s != null) {
+                        CustomModelPart part = allParts.get(UUID.fromString(s));
+                        if (part != null) {
+                            groupPart.children.add(part);
+                            part.applyTrueOffset(playerModelOffset.copy());
+                        }
                     }
                 }
             }

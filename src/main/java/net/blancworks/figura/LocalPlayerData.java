@@ -4,6 +4,7 @@ package net.blancworks.figura;
 import com.google.common.io.CharStreams;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
@@ -58,6 +59,12 @@ public class LocalPlayerData extends PlayerData {
      * @param fileName - the file to load
      */
     public void loadModelFile(String fileName) {
+        //clear keybinds
+        if (this.script != null) {
+            script.keyBindings.forEach(keyBinding -> KeyBindingAccessorMixin.getKeysById().remove(keyBinding.getTranslationKey()));
+            KeyBinding.updateKeysByCode();
+        }
+
         //clear current data
         this.model = null;
         this.texture = null;
@@ -65,8 +72,6 @@ public class LocalPlayerData extends PlayerData {
         this.customVCP = null;
 
         extraTextures.clear();
-
-        KeyBinding.updateKeysByCode();
         watchedFiles.clear();
 
         if (fileName == null)

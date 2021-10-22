@@ -272,7 +272,7 @@ public class NamePlateAPI {
         String badges = " ";
 
         //the mark
-        if (currentData != null && (currentData.model != null || currentData.script != null)) {
+        if (currentData != null && currentData.hasAvatar()) {
             if (FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
             else if (currentData.model != null)
