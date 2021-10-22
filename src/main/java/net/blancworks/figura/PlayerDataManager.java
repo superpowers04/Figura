@@ -1,6 +1,7 @@
 package net.blancworks.figura;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.FiguraTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
@@ -170,11 +171,16 @@ public final class PlayerDataManager {
 
     public static void clearLocalPlayer() {
         if (localPlayer == null) return;
+
+        if (localPlayer.script != null) {
+            localPlayer.script.keyBindings.forEach(keyBinding -> KeyBindingAccessorMixin.getKeysById().remove(keyBinding.getTranslationKey()));
+            KeyBinding.updateKeysByCode();
+        }
+
         LOADED_PLAYER_DATA.remove(localPlayer.playerId);
         localPlayer = null;
         didInitLocalPlayer = false;
         lastLoadedFileName = null;
-        KeyBinding.updateKeysByCode();
     }
 
     private static int hashCheckCooldown = 0;

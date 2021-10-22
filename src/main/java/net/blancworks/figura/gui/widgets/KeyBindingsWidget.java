@@ -30,11 +30,6 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
     public KeyBindingsWidget(FiguraKeyBindsScreen parent, MinecraftClient client) {
         super(client, parent.width + 45, parent.height, 43, parent.height - 32, 20);
         this.parent = parent;
-
-        PlayerData data = PlayerDataManager.localPlayer;
-        if (data != null && data.script != null) {
-            data.script.keyBindings.forEach(binding -> this.addEntry(new KeyBindEntry(new LiteralText(binding.getTranslationKey()), binding)));
-        }
     }
 
     @Override
@@ -47,8 +42,16 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
         return super.getRowWidth() + 150;
     }
 
-    public class KeyBindEntry extends KeyBindingsWidget.Entry {
+    public void tick() {
+        this.children().clear();
 
+        PlayerData data = PlayerDataManager.localPlayer;
+        if (data != null && data.script != null) {
+            data.script.keyBindings.forEach(binding -> this.addEntry(new KeyBindEntry(new LiteralText(binding.getTranslationKey().split("\\$", 2)[1]), binding)));
+        }
+    }
+
+    public class KeyBindEntry extends KeyBindingsWidget.Entry {
         //values
         private final Text display;
         private final KeyBinding binding;

@@ -1,6 +1,8 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.LocalPlayerData;
+import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.minecraft.client.MinecraftClient;
@@ -47,18 +49,23 @@ public class MinecraftClientMixin {
         }
 
         if (FiguraMod.reloadAvatar.wasPressed()) {
+            LocalPlayerData localPlayer = PlayerDataManager.localPlayer;
             if (this.targetedEntity instanceof PlayerEntity player) {
-                PlayerDataManager.clearPlayer(player.getUuid());
-            }
-            else if (PlayerDataManager.localPlayer != null) {
-                if (PlayerDataManager.localPlayer.loadedName != null) {
-                    PlayerDataManager.localPlayer.reloadAvatar();
+                PlayerData data = PlayerDataManager.getDataForPlayer(player.getUuid());
+
+                if (data != null && data.hasAvatar() && data.isAvatarLoaded()) {
+                    PlayerDataManager.clearPlayer(player.getUuid());
+                    FiguraMod.sendToast("Figura:", "gui.figura.toast.avatar.reload.title");
                 }
-                else {
+            }
+            else if (localPlayer != null && localPlayer.hasAvatar() && localPlayer.isAvatarLoaded()) {
+                if (!localPlayer.isLocalAvatar)
                     PlayerDataManager.clearLocalPlayer();
-                }
+                else if (localPlayer.loadedName != null)
+                    localPlayer.reloadAvatar();
+
+                FiguraMod.sendToast("Figura:", "gui.figura.toast.avatar.reload.title");
             }
-            FiguraMod.sendToast("Figura:", "gui.figura.toast.avatar.reload.title");
         }
     }
 

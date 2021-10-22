@@ -446,7 +446,7 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public void updateAvatarData() {
-        if (PlayerDataManager.localPlayer != null && (PlayerDataManager.localPlayer.model != null || PlayerDataManager.localPlayer.script != null)) {
+        if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.hasAvatar()) {
             nameText = PlayerDataManager.lastLoadedFileName != null ? new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length()))) : null;
 
             if (PlayerDataManager.localPlayer.model != null) {

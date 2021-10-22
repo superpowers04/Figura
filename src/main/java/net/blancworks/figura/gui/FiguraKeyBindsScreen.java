@@ -34,6 +34,12 @@ public class FiguraKeyBindsScreen extends Screen {
     }
 
     @Override
+    public void tick() {
+        super.tick();
+        this.keyBindingsWidget.tick();
+    }
+
+    @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         //background
         this.renderBackgroundTexture(0);
