@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ArmorModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -45,9 +46,10 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
         String partID = partMap.get(equipmentSlot);
 
         if (partID != null) {
-            PlayerData data = FiguraMod.currentData;
+            PlayerData data = PlayerDataManager.getDataForPlayer(livingEntity.getUuid());
+            FiguraMod.currentData = data;
 
-            if (data != null && data.playerId.compareTo(livingEntity.getUuid()) == 0 && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+            if (data != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
                 figura$applyPartCustomization(partID, bipedEntityModel.head);
                 figura$applyPartCustomization(partID, bipedEntityModel.helmet);
                 figura$applyPartCustomization(partID, bipedEntityModel.torso);

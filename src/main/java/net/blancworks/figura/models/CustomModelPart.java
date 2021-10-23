@@ -93,16 +93,14 @@ public class CustomModelPart {
 
         //main texture
         Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
-        int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction);
+        int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction, false);
 
         //extra textures
-        if (this.extraTex) {
-            for (FiguraTexture figuraTexture : FiguraMod.currentData.extraTextures) {
-                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
+        for (FiguraTexture figuraTexture : FiguraMod.currentData.extraTextures) {
+            Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
 
-                if (renderLayerGetter != null) {
-                    renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0,0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter);
-                }
+            if (renderLayerGetter != null) {
+                renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0,0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true);
             }
         }
 
@@ -123,9 +121,9 @@ public class CustomModelPart {
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction) {
+    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction, boolean isExtraTex) {
         //do not render invisible parts
-        if (!this.visible)
+        if (!this.visible || (isExtraTex && !this.extraTex))
             return leftToRender;
 
         matrices.push();
@@ -161,19 +159,18 @@ public class CustomModelPart {
 
         //render!
         if (canRender) {
-            //render using main texture
+            //get vertex consumer
             VertexConsumer consumer;
             if (layer instanceof FiguraRenderLayer) {
                 consumer = vcp.getBuffer(layer);
+            } else if (customLayer != null) {
+                consumer = vcp.getBuffer(customLayer);
+                layer = customLayer;
             } else {
-                if (customLayer != null) {
-                    consumer = vcp.getBuffer(customLayer);
-                    layer = customLayer;
-                } else {
-                    consumer = vcp.getBuffer(layerFunction.apply(texture));
-                }
+                consumer = vcp.getBuffer(layerFunction.apply(texture));
             }
 
+            //render
             renderCube(leftToRender, matrices, consumer, light, overlay, u, v, color, alpha);
         }
 
@@ -186,7 +183,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction);
+            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction, isExtraTex);
         }
 
         matrices.pop();

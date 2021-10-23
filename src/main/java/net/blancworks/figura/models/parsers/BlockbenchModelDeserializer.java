@@ -211,6 +211,10 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
     }
 
     public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
+        if (elementObject.has("type") && elementObject.get("type").getAsString().equals("null_object")) {
+            return null;
+        }
+
         if (elementObject.has("visibility") && !elementObject.get("visibility").getAsBoolean()) return null;
 
         boolean isMeshPart = elementObject.has("type") && elementObject.get("type").getAsString().equals("mesh");

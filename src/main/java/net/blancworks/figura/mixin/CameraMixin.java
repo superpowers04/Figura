@@ -5,11 +5,8 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.api.camera.CameraAPI;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.minecraft.client.render.Camera;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -25,61 +22,52 @@ public abstract class CameraMixin {
     @Shadow private float cameraY;
     @Shadow private float lastCameraY;
 
-    @Inject(method = "update", at = @At(value = "TAIL"))
+    @Inject(method = "update", at = @At(value = "RETURN"))
     private void updateTail(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
 
         PlayerData currentData = PlayerDataManager.getDataForPlayer(focusedEntity.getUuid());
-        if (currentData != null && currentData.script != null) {
+        if (currentData == null || currentData.script == null)
+            return;
 
-            CameraCustomization customization = thirdPerson ? currentData.script.cameraCustomizations.get(CameraAPI.THIRD_PERSON) : currentData.script.cameraCustomizations.get(CameraAPI.FIRST_PERSON);
+        CameraCustomization customization = thirdPerson ? currentData.script.cameraCustomizations.get(CameraAPI.THIRD_PERSON) : currentData.script.cameraCustomizations.get(CameraAPI.FIRST_PERSON);
+        if (customization == null)
+            return;
 
-            if (customization == null)
-                return;
+        //rotate
+        if (customization.rotation != null)
+            this.setRotation(this.yaw + customization.rotation.getY(), this.pitch + customization.rotation.getX());
 
-            //rotation
-            if (customization.rotation != null && !customization.rotation.equals(Vec2f.ZERO))
-                this.setRotation(this.yaw + customization.rotation.y, this.pitch + customization.rotation.x);
+        //move y
+        if (customization.position != null) {
+            this.setPos(
+                    MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
+                    MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY) + customization.position.getY(),
+                    MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ())
+            );
+        }
 
-            //move
+        //first person
+        if (!thirdPerson) {
+            //move xz
             if (customization.position != null) {
-                this.setPos(
-                        MathHelper.lerp(tickDelta, focusedEntity.prevX, focusedEntity.getX()),
-                        MathHelper.lerp(tickDelta, focusedEntity.prevY, focusedEntity.getY()) + (double) MathHelper.lerp(tickDelta, this.lastCameraY, this.cameraY) + customization.position.getY(),
-                        MathHelper.lerp(tickDelta, focusedEntity.prevZ, focusedEntity.getZ())
-                );
+                this.moveBy(-customization.position.getZ(), 0d, -customization.position.getX());
             }
+        }
+        //third person
+        else {
+            //move xz
+            if (customization.position != null) {
+                this.setRotation(this.yaw - 90, this.pitch);
+                double x = -this.clipToSpace(customization.position.getX());
+                this.setRotation(this.yaw + 90, this.pitch);
 
-            //third person
-            if (!thirdPerson) {
-                //move
-                if (customization.position != null && !customization.position.equals(new Vector3f(0.0f, 0.0f, 0.0f))) {
-                    this.moveBy(-customization.position.getZ(), 0.0d, -customization.position.getX());
-                }
-
-                //bed fix
-                if (focusedEntity instanceof LivingEntity && ((LivingEntity) focusedEntity).isSleeping()) {
-                    this.moveBy(0.0d, 0.3d, 0.0d);
-                }
-            }
-            //first person
-            else {
-                //move
-                if (customization.position != null) {
-                    this.setRotation(this.yaw - 90, this.pitch);
-                    double x = -this.clipToSpace(customization.position.getX());
-                    this.setRotation(this.yaw + 90, this.pitch);
-
-                    this.moveBy(-this.clipToSpace(4.0d + customization.position.getZ()), 0.0d, x);
-                }
+                this.moveBy(-this.clipToSpace(4d + customization.position.getZ()), 0d, x);
             }
         }
     }
 
     @Shadow protected abstract void moveBy(double x, double y, double z);
-
     @Shadow protected abstract double clipToSpace(double desiredCameraDistance);
-
     @Shadow protected abstract void setPos(double lerp, double v, double lerp1);
-
     @Shadow protected abstract void setRotation(float yaw, float pitch);
 }

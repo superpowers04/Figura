@@ -1,7 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.ParrotModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -41,9 +41,8 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
 
     @Inject(at = @At("HEAD"), method = "renderShoulderParrot", cancellable = true)
     public void onRenderShoulder(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T player, float limbAngle, float limbDistance, float headYaw, float headPitch, boolean leftShoulder, CallbackInfo ci) {
-        PlayerData data = FiguraMod.currentData;
-
-        if (data == null || data.playerId.compareTo(player.getUuid()) != 0 || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        PlayerData data = PlayerDataManager.getDataForPlayer(player.getUuid());
+        if (data == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
             return;
 
         try {

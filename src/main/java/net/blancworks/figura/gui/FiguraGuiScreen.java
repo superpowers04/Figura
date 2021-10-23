@@ -359,7 +359,7 @@ public class FiguraGuiScreen extends Screen {
 
         boolean hasBackend = connectionStatus == 3;
 
-        uploadButton.active = PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.isLocalAvatar && hasBackend;
+        uploadButton.active = PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.isLocalAvatar && PlayerDataManager.localPlayer.hasAvatar() && hasBackend;
 
         boolean wasUploadActive = uploadButton.active;
         uploadButton.active = true;
@@ -417,32 +417,10 @@ public class FiguraGuiScreen extends Screen {
         }
     }
 
-    public void clickButton(String fileName) {
-        if (fileName == null) {
-            FiguraMod.clearRenderingData();
-            PlayerDataManager.clearLocalPlayer();
-            return;
-        }
-
+    public void loadLocalAvatar(String fileName) {
         PlayerDataManager.lastLoadedFileName = fileName;
         PlayerDataManager.localPlayer.isLocalAvatar = true;
         PlayerDataManager.localPlayer.loadModelFile(fileName);
-
-        CompletableFuture.runAsync(() -> {
-            for (int i = 0; i < 10; i++) {
-                if (PlayerDataManager.localPlayer.texture.isDone) {
-                    break;
-                }
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            updateAvatarData();
-
-        }, Util.getMainWorkerExecutor());
     }
 
     public void updateAvatarData() {

@@ -45,7 +45,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
 
                 @Override
                 public Text getDisplayText() {
-                    return new TranslatableText("models.figura.none").formatted(Formatting.ITALIC, Formatting.DARK_GRAY);
+                    return new TranslatableText("models.figura.unselect").formatted(Formatting.ITALIC, Formatting.DARK_GRAY);
                 }
             });
 
@@ -96,7 +96,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
         super.select(entry);
 
         FiguraGuiScreen parent = (FiguraGuiScreen) getParent();
-        parent.clickButton(entry.getName());
+        parent.loadLocalAvatar(entry.getName());
     }
 
     public static class ModelFileListWidgetEntry extends CustomListEntry {
