@@ -150,5 +150,5 @@
   "key.figura.reloadavatar": "Figura Reload Avatar",
   "key.figura.tooltip.reloadavatar": "Reload Avatar Keybind",
 
-  "models.figura.none": "-none-"
+  "models.figura.unselect": "-unselect-"
 }

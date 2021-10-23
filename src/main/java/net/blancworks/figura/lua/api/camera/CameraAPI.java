@@ -5,6 +5,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -44,7 +45,8 @@ public class CameraAPI {
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).position);
+                    Vec3f pos = targetScript.getOrMakeCameraCustomization(accessor).position;
+                    return pos == null ? NIL : LuaVector.of(pos);
                 }
             });
 
@@ -59,14 +61,15 @@ public class CameraAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).rotation);
+                    Vec3f rot = targetScript.getOrMakeCameraCustomization(accessor).rotation;
+                    return rot == null ? NIL : LuaVector.of(rot);
                 }
             });
 
             ret.set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetScript.getOrMakeCameraCustomization(accessor).rotation = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV2f();
+                    targetScript.getOrMakeCameraCustomization(accessor).rotation = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -74,7 +77,8 @@ public class CameraAPI {
             ret.set("getPivot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).pivot);
+                    Vec3f piv = targetScript.getOrMakeCameraCustomization(accessor).pivot;
+                    return piv == null ? NIL : LuaVector.of(piv);
                 }
             });
 

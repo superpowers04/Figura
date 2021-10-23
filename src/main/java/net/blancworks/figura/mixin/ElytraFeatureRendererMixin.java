@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ElytraEntityModelAccess;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
@@ -37,9 +38,10 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
 
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        PlayerData data = FiguraMod.currentData;
+        PlayerData data = PlayerDataManager.getDataForPlayer(livingEntity.getUuid());
+        FiguraMod.currentData = data;
 
-        if (data != null && data.playerId.compareTo(livingEntity.getUuid()) == 0 && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+        if (data != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
             figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess) elytra).getLeftWing());
             figura$applyPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING, ((ElytraEntityModelAccess) elytra).getRightWing());
         }

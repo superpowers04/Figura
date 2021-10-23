@@ -1,7 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.SpyglassModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -28,9 +28,8 @@ public class PlayerHeldItemFeatureRendererMixin {
 
     @Inject(method = "renderSpyglass", at = @At(value = "HEAD"), cancellable = true)
     public void renderSpyglass(LivingEntity entity, ItemStack stack, Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-        PlayerData data = FiguraMod.currentData;
-
-        if (data == null || data.playerId.compareTo(entity.getUuid()) != 0 || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
+        if (data == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
             return;
 
         boolean left = arm == Arm.LEFT;

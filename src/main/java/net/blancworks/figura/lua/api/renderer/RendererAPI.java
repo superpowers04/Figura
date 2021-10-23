@@ -3,6 +3,7 @@ package net.blancworks.figura.lua.api.renderer;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -123,8 +124,10 @@ public class RendererAPI {
                                 else
                                     throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
                             }
-                        } catch (LuaError error) {
-                            script.handleError(error);
+                        } catch (Exception e) {
+                            PlayerData local = PlayerDataManager.localPlayer;
+                            if (local == null || script.playerData.playerId != local.playerId || script.equals(local.script))
+                                script.handleError(e);
                         }
                     });
                     return NIL;
