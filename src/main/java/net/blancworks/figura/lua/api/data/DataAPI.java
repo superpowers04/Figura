@@ -34,6 +34,22 @@ public class DataAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
+            //script name
+            set("setName", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    script.scriptName = arg.checkjstring();
+                    return NIL;
+                }
+            });
+
+            set("getName", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.scriptName);
+                }
+            });
+
             //store a value
             set("save", new TwoArgFunction() {
                 @Override
