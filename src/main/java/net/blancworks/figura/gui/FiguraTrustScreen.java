@@ -5,6 +5,8 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.gui.widgets.PlayerListWidget;
+import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
+import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.trust.settings.PermissionSetting;
@@ -183,8 +185,35 @@ public class FiguraTrustScreen extends Screen {
         //this.uuidBox.render(matrices, mouseX, mouseY, delta);
 
         if (playerListState.selected instanceof PlayerListEntry entry) {
-            Text nameText = new LiteralText(entry.getProfile().getName()).setStyle(Style.EMPTY.withColor(TextColor.parse("white")));
-            Text uuidText = new LiteralText(entry.getProfile().getId().toString()).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
+            UUID id = entry.getProfile().getId();
+            String name = entry.getProfile().getName();
+
+            Text nameText = new LiteralText(name).setStyle(Style.EMPTY.withColor(TextColor.parse("white")));
+            Text uuidText = new LiteralText(id.toString()).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
+
+            PlayerData data = PlayerDataManager.getDataForPlayer(id);
+
+            if (data != null && !name.equals("")) {
+                NamePlateCustomization nameplateData = data.script == null ? null : data.script.nameplateCustomizations.get(NamePlateAPI.TABLIST);
+
+                try {
+                    if (nameText instanceof TranslatableText) {
+                        Object[] args = ((TranslatableText) nameText).getArgs();
+
+                        for (Object arg : args) {
+                            if (arg instanceof TranslatableText || !(arg instanceof Text))
+                                continue;
+
+                            if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, name, nameplateData, data))
+                                break;
+                        }
+                    } else if (nameText instanceof LiteralText) {
+                        NamePlateAPI.applyFormattingRecursive((LiteralText) nameText, name, nameplateData, data);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
             drawTextWithShadow(matrices, textRenderer, nameText, paneWidth + 13, 22, TextColor.parse("white").getRgb());
             matrices.push();
@@ -192,40 +221,32 @@ public class FiguraTrustScreen extends Screen {
             drawTextWithShadow(matrices, textRenderer, uuidText, MathHelper.floor((paneWidth + 13) / 0.75f), MathHelper.floor((32) / 0.75f), TextColor.parse("white").getRgb());
             matrices.pop();
 
-            if (PlayerDataManager.hasPlayerData(entry.getProfile().getId())) {
-                PlayerData data = PlayerDataManager.getDataForPlayer(entry.getProfile().getId());
+            if (data != null) {
                 TrustContainer trustData = data.getTrustContainer();
 
+                //Complexity
+                int currX = paneWidth + 13;
                 if (data.model != null) {
-                    int currX = paneWidth + 13;
-                    //Complexity
-                    {
-                        int complexity = data.model.getRenderComplexity();
-                        MutableText complexityText = new TranslatableText("gui.figura.complexity", complexity).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+                    int complexity = data.model.getRenderComplexity();
+                    MutableText complexityText = new TranslatableText("gui.figura.complexity", complexity).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
 
-                        if (trustData != null) {
-                            if (complexity >= trustData.getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                                complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
-                            }
-                        }
+                    if (trustData != null && complexity >= trustData.getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID))
+                        complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
 
-                        drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, TextColor.parse("white").getRgb());
-                        currX += textRenderer.getWidth(complexityText) + 10;
-                    }
-
-                    {
-                        long size = data.getFileSize();
-
-                        //format file size
-                        DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
-                        df.setRoundingMode(RoundingMode.HALF_UP);
-                        float fileSize = Float.parseFloat(df.format(size / 1024.0f));
-
-                        MutableText sizeText = new TranslatableText("gui.figura.filesize", fileSize).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
-
-                        drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, TextColor.parse("white").getRgb());
-                    }
+                    drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, TextColor.parse("white").getRgb());
+                    currX += textRenderer.getWidth(complexityText) + 10;
                 }
+
+                long size = data.getFileSize();
+
+                //format file size
+                DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
+                df.setRoundingMode(RoundingMode.HALF_UP);
+                float fileSize = Float.parseFloat(df.format(size / 1024.0f));
+
+                MutableText sizeText = new TranslatableText("gui.figura.filesize", fileSize).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+
+                drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, TextColor.parse("white").getRgb());
             }
         }
 

@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraTrustScreen;
+import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
@@ -23,7 +24,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
     public static final Identifier lockTextureID = new Identifier("figura", "textures/gui/lock.png");
 
-    public PlayerListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
+    public PlayerListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget<?, ?> list, Screen parent, CustomListWidgetState state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
     }
 
@@ -32,8 +33,8 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         super.doFiltering(searchTerm);
         FiguraTrustScreen realScreen = (FiguraTrustScreen) getParent();
 
-        HashMap<Identifier, ArrayList<PlayerListEntry>> sortedEntries = new HashMap<Identifier, ArrayList<PlayerListEntry>>();
-        ArrayList<Identifier> sortedEntriesOrdered = new ArrayList<Identifier>();
+        HashMap<Identifier, ArrayList<PlayerListEntry>> sortedEntries = new HashMap<>();
+        ArrayList<Identifier> sortedEntriesOrdered = new ArrayList<>();
 
         for (Identifier preset : PlayerTrustManager.defaultGroups) {
             sortedEntries.put(preset, new ArrayList<>());
@@ -41,11 +42,20 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         }
 
         //Foreach player
+        ArrayList<PlayerListEntry> players = new ArrayList<>();
+        ArrayList<PlayerListEntry> figuraPlayers = new ArrayList<>();
+
         for (PlayerListEntry listEntry : client.getNetworkHandler().getPlayerList()) {
             PlayerData data = PlayerDataManager.getDataForPlayer(listEntry.getProfile().getId());
-            if (data == null || data.model == null)
-                continue;
+            if (data == null || !data.hasAvatar()) {
+                players.add(listEntry);
+            } else {
+                figuraPlayers.add(listEntry);
+            }
+        }
+        figuraPlayers.addAll(players);
 
+        for (PlayerListEntry listEntry : figuraPlayers) {
             if (!listEntry.getProfile().getName().toLowerCase().contains(searchTerm.toLowerCase()) || listEntry.getProfile().getId() == realScreen.draggedId)
                 continue;
 
@@ -71,8 +81,9 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         for (Identifier id : sortedEntriesOrdered) {
             TrustContainer tc = PlayerTrustManager.getContainer(id);
             
-            if(tc.isHidden)
+            if (tc.isHidden)
                 continue;
+
             ArrayList<PlayerListEntry> list = sortedEntries.get(id);
 
             if (tc.displayChildren) {
@@ -124,11 +135,11 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         ((FiguraTrustScreen) getParent()).permissionList.rebuild();
     }
 
-    public class PlayerListWidgetEntry extends CustomListEntry {
+    public static class PlayerListWidgetEntry extends CustomListEntry {
 
         public ToggleButtonWidget toggleButton;
 
-        public PlayerListWidgetEntry(Object obj, CustomListWidget list) {
+        public PlayerListWidgetEntry(Object obj, CustomListWidget<?, ?> list) {
             super(obj, list);
 
             Identifier id;
@@ -185,7 +196,11 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         @Override
         public Text getDisplayText() {
             PlayerListEntry entry = (PlayerListEntry) getEntryObject();
-            return new LiteralText("  " + entry.getProfile().getName());
+            LiteralText name = new LiteralText("  " + entry.getProfile().getName());
+
+            Text badges = NamePlateAPI.getBadges(PlayerDataManager.getDataForPlayer(entry.getProfile().getId()));
+            if (badges != null) name.append(badges);
+            return name;
         }
 
         @Override
@@ -211,11 +226,11 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         }
     }
 
-    public class GroupListWidgetEntry extends PlayerListWidgetEntry {
+    public static class GroupListWidgetEntry extends PlayerListWidgetEntry {
         public String identifier;
         public Text displayText;
 
-        public GroupListWidgetEntry(Object obj, CustomListWidget list) {
+        public GroupListWidgetEntry(Object obj, CustomListWidget<?, ?> list) {
             super(obj, list);
         }
 

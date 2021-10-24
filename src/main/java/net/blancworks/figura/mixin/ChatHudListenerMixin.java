@@ -72,11 +72,11 @@ public class ChatHudListenerMixin {
                     if (arg instanceof TranslatableText || !(arg instanceof Text))
                         continue;
 
-                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
+                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, playerName, nameplateData, currentData))
                         break;
                 }
             } else if (message instanceof LiteralText) {
-                NamePlateAPI.applyFormattingRecursive((LiteralText) message, uuid, playerName, nameplateData, currentData);
+                NamePlateAPI.applyFormattingRecursive((LiteralText) message, playerName, nameplateData, currentData);
             }
         } catch (Exception e) {
             e.printStackTrace();
