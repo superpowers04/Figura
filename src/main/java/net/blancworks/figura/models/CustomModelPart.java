@@ -55,14 +55,13 @@ public class CustomModelPart {
 
     public ShaderType shaderType = ShaderType.None;
 
-    //public RenderType renderType = RenderType.None;
-
     public RenderLayer customLayer = null;
 
     public TextureType textureType = TextureType.Custom;
     public Identifier textureVanilla = FiguraTexture.DEFAULT_ID;
 
     public boolean extraTex = true;
+    public boolean cull = false;
 
     public float alpha = 1f;
 
@@ -92,7 +91,7 @@ public class CustomModelPart {
         //lets render boys!!
 
         //main texture
-        Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucentCull;
+        Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
         int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction, false);
 
         //extra textures
@@ -144,7 +143,7 @@ public class CustomModelPart {
         if (renderOnly == null || this.parentType == renderOnly)
             canRender = true;
 
-        //uv -> color -> alpha
+        //uv -> color -> alpha -> cull
         u += this.uvOffset.x;
         v += this.uvOffset.y;
 
@@ -152,6 +151,9 @@ public class CustomModelPart {
         color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
 
         alpha = this.alpha * alpha;
+
+        if (!isExtraTex && this.cull)
+            layerFunction = RenderLayer::getEntityTranslucentCull;
 
         //texture
         if (this.textureType != TextureType.Custom)
@@ -760,15 +762,6 @@ public class CustomModelPart {
         public boolean isShader(int shader) {
             return (id & shader) == id;
         }
-    }
-
-    public enum RenderType {
-        None,
-        Cutout,
-        CutoutNoCull,
-        Translucent,
-        TranslucentNoCull,
-        NoTransparent
     }
 
     public enum TextureType {
