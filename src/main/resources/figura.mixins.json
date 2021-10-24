@@ -31,6 +31,7 @@
     "PlayerEntityModelMixin",
     "PlayerEntityRendererMixin",
     "PlayerHeldItemFeatureRendererMixin",
+    "PlayerListHudAccessorMixin",
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
     "RenderPhaseInvokerMixin",

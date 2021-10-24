@@ -122,7 +122,8 @@ public class CustomModel extends FiguraAsset {
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
 
         //CustomModelPart.applyHiddenTransforms = false;
-        for (CustomModelPart part : playerData.model.allParts) {
+        ArrayList<CustomModelPart> temp = new ArrayList<>(playerData.model.allParts);
+        for (CustomModelPart part : temp) {
             if (arm == model.rightArm)
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.RightArm;
             else if (arm == model.leftArm)

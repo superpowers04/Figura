@@ -5,6 +5,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraTrustScreen;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
+import net.blancworks.figura.mixin.PlayerListHudAccessorMixin;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
@@ -19,6 +20,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerListWidget.PlayerListWidgetEntry> {
 
@@ -45,7 +47,8 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         ArrayList<PlayerListEntry> players = new ArrayList<>();
         ArrayList<PlayerListEntry> figuraPlayers = new ArrayList<>();
 
-        for (PlayerListEntry listEntry : client.getNetworkHandler().getPlayerList()) {
+        List<PlayerListEntry> orderedPlayerList = PlayerListHudAccessorMixin.getEntryOrdering().sortedCopy(client.getNetworkHandler().getPlayerList());
+        for (PlayerListEntry listEntry : orderedPlayerList) {
             PlayerData data = PlayerDataManager.getDataForPlayer(listEntry.getProfile().getId());
             if (data == null || !data.hasAvatar()) {
                 players.add(listEntry);
@@ -53,6 +56,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
                 figuraPlayers.add(listEntry);
             }
         }
+
         figuraPlayers.addAll(players);
 
         for (PlayerListEntry listEntry : figuraPlayers) {
@@ -178,7 +182,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
                     }
 
                     matrices.push();
-                    this.drawTexture(matrices, this.x, this.y, i, j, this.width, this.height, 32, 32);
+                    drawTexture(matrices, this.x, this.y, i, j, this.width, this.height, 32, 32);
                     matrices.pop();
                     RenderSystem.enableDepthTest();
                 }
