@@ -84,10 +84,10 @@ public class PlayerListHudMixin {
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V"), method = "render")
     private void render(MatrixStack matrices, int x, int y, int width, int height, float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-        PlayerData data = PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
+        PlayerData data = playerEntity == null ? null : PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
 
         //draw figura head
-        if (playerEntity == null || data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID) || !(boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
+        if (data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID) || !(boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
             DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
             return;
         }
