@@ -84,6 +84,7 @@ public class FiguraMod implements ClientModInitializer {
     public static AbstractClientPlayerEntity currentPlayer;
     public static PlayerData currentData;
     public static VertexConsumerProvider vertexConsumerProvider;
+    public static VertexConsumerProvider.Immediate immediate;
     public static float deltaTime;
 
     private static final boolean USE_DEBUG_MODEL = true;
@@ -95,13 +96,20 @@ public class FiguraMod implements ClientModInitializer {
     //Set current player.
     //If there is a model loaded for the player, it'll be assigned here to the current model.
     //Otherwise, sends the model to the request list.
-    public static void setRenderingData(AbstractClientPlayerEntity player, VertexConsumerProvider vertexConsumerProvider, PlayerEntityModel<?> mdl, float dt) {
+    public static void setRenderingData(AbstractClientPlayerEntity player, VertexConsumerProvider vcp, PlayerEntityModel<?> mdl, float dt) {
         currentPlayer = player;
         currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
         if (currentData != null)
             currentData.vanillaModel = mdl;
-        FiguraMod.vertexConsumerProvider = vertexConsumerProvider;
+        FiguraMod.vertexConsumerProvider = vcp;
+        if (vcp.getClass() == VertexConsumerProvider.Immediate.class) {
+            FiguraMod.immediate = (VertexConsumerProvider.Immediate) vcp;
+        }
         deltaTime = dt;
+    }
+
+    public static VertexConsumerProvider tryGetImmediate() {
+        return immediate == null ? vertexConsumerProvider : immediate;
     }
 
     public static void clearRenderingData() {

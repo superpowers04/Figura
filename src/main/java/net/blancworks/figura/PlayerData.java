@@ -74,12 +74,10 @@ public class PlayerData {
     public static final int FILESIZE_WARNING_THRESHOLD = 76800;
     public static final int FILESIZE_LARGE_THRESHOLD = 102400;
 
-    public VertexConsumerProvider getVCP(boolean getDefault) {
-        if (!getDefault) {
-            if (customVCP != null) return customVCP;
-            else if (FiguraMod.vertexConsumerProvider != null) return FiguraMod.vertexConsumerProvider;
-        }
-        return MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+    public VertexConsumerProvider getVCP() {
+        if (customVCP != null) return customVCP;
+        else if (FiguraMod.vertexConsumerProvider != null) return FiguraMod.vertexConsumerProvider;
+        else return MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
     }
 
     public Identifier getTrustIdentifier() {
