@@ -84,16 +84,17 @@ public class PlayerListHudMixin {
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V"), method = "render")
     private void render(MatrixStack matrices, int x, int y, int width, int height, float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-        //draw the texture
-        DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
-
         //draw figura head
-        if (playerEntity == null || !PlayerDataManager.hasPlayerData(playerEntity.getUuid()) || !(boolean) Config.PLAYERLIST_MODIFICATIONS.value)
+        if (playerEntity == null || !PlayerDataManager.hasPlayerData(playerEntity.getUuid()) || !(boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
+            DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
             return;
+        }
 
         PlayerData data = PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
-        if (data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        if (data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+            DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
             return;
+        }
 
         FiguraMod.currentData = data;
         FiguraMod.currentPlayer = (AbstractClientPlayerEntity) playerEntity;
@@ -111,7 +112,16 @@ public class PlayerListHudMixin {
         stack.scale(-16, 16, 16);
         stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
 
-        data.model.renderSkull(data, stack, data.getVCP(true), 0xF000E0);
+        if (!data.model.renderSkull(data, stack, data.getVCP(true), 0xF000E0)) {
+            matrices.push();
+            matrices.translate(0f, 0f, 4f);
+
+            RenderSystem.enableDepthTest();
+            RenderSystem.setShaderTexture(0, MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(playerEntity.getUuid()).getSkinTexture());
+            DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
+
+            matrices.pop();
+        }
 
         stack.pop();
 
