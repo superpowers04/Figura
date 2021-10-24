@@ -41,7 +41,7 @@ public abstract class SkullBlockEntityRendererMixin {
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(yaw));
 
         //render skull :3
-        if (data.model.renderSkull(data, matrices, data.getVCP(true), light))
+        if (data.model.renderSkull(data, matrices, FiguraMod.tryGetImmediate(), light))
             ci.cancel();
 
         matrices.pop();

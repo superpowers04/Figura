@@ -108,7 +108,7 @@ public class PlayerListHudMixin {
         stack.scale(-16, 16, 16);
         stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
 
-        if (!data.model.renderSkull(data, stack, data.getVCP(true), 0xF000E0)) {
+        if (!data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 0xF000E0)) {
             matrices.push();
             matrices.translate(0f, 0f, 4f);
 
