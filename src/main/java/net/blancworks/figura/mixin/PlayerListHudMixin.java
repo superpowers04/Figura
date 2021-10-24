@@ -84,36 +84,38 @@ public class PlayerListHudMixin {
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V"), method = "render")
     private void render(MatrixStack matrices, int x, int y, int width, int height, float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-        if (playerEntity != null && PlayerDataManager.hasPlayerData(playerEntity.getUuid()) && (boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
-            PlayerData data = PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
-            if ((data != null && data.model != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))) {
-                FiguraMod.currentData = data;
-                FiguraMod.currentPlayer = (AbstractClientPlayerEntity) playerEntity;
-
-                Window w = MinecraftClient.getInstance().getWindow();
-                final double guiScale = w.getScaleFactor();
-
-                RenderSystem.enableScissor((int) (x * guiScale), w.getHeight() - (int) ((regionHeight + y) * guiScale), (int) (regionWidth * guiScale), (int) (regionHeight * guiScale));
-                DiffuseLighting.disableGuiDepthLighting();
-
-                MatrixStack stack = new MatrixStack();
-                stack.push();
-
-                stack.translate(x + 4, y + 8, 0);
-                stack.scale(-16, 16, 16);
-                stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
-
-                data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 0xF000E0);
-
-                stack.pop();
-
-                RenderSystem.disableScissor();
-                DiffuseLighting.enableGuiDepthLighting();
-
-                return;
-            }
-        }
-
+        //draw the texture
         DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
+
+        //draw figura head
+        if (playerEntity == null || !PlayerDataManager.hasPlayerData(playerEntity.getUuid()) || !(boolean) Config.PLAYERLIST_MODIFICATIONS.value)
+            return;
+
+        PlayerData data = PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
+        if (data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+            return;
+
+        FiguraMod.currentData = data;
+        FiguraMod.currentPlayer = (AbstractClientPlayerEntity) playerEntity;
+
+        Window w = MinecraftClient.getInstance().getWindow();
+        final double guiScale = w.getScaleFactor();
+
+        RenderSystem.enableScissor((int) (x * guiScale), w.getHeight() - (int) ((regionHeight + y) * guiScale), (int) (regionWidth * guiScale), (int) (regionHeight * guiScale));
+        DiffuseLighting.disableGuiDepthLighting();
+
+        MatrixStack stack = new MatrixStack();
+        stack.push();
+
+        stack.translate(x + 4, y + 8, 0);
+        stack.scale(-16, 16, 16);
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
+
+        data.model.renderSkull(data, stack, data.getVCP(true), 0xF000E0);
+
+        stack.pop();
+
+        RenderSystem.disableScissor();
+        DiffuseLighting.enableGuiDepthLighting();
     }
 }

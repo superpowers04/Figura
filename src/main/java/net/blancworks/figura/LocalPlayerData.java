@@ -237,14 +237,10 @@ public class LocalPlayerData extends PlayerData {
             String finalModelJsonText = modelJsonText;
             //Load model from GSON in off-thread.
             FiguraMod.doTask(() -> {
-                try {
-                    this.model = FiguraMod.GSON.fromJson(finalModelJsonText, CustomModel.class);
-                    this.model.owner = this;
-                    this.model.isDone = true;
-                    FiguraMod.LOGGER.info("Model Loading Finished");
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                this.model = FiguraMod.GSON.fromJson(finalModelJsonText, CustomModel.class);
+                this.model.owner = this;
+                this.model.isDone = true;
+                FiguraMod.LOGGER.info("Model Loading Finished");
             });
         } catch (Exception e) {
             e.printStackTrace();
