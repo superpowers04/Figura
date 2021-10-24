@@ -158,11 +158,11 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                     if (arg instanceof TranslatableText || !(arg instanceof Text))
                         continue;
 
-                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
+                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, playerName, nameplateData, currentData))
                         break;
                 }
             } else if (text instanceof LiteralText) {
-                NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
+                NamePlateAPI.applyFormattingRecursive((LiteralText) text, playerName, nameplateData, currentData);
             }
         } catch (Exception e) {
             e.printStackTrace();

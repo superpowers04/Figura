@@ -62,11 +62,11 @@ public class PlayerListHudMixin {
                             if (arg instanceof TranslatableText || !(arg instanceof Text))
                                 continue;
 
-                            if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData))
+                            if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, playerName, nameplateData, currentData))
                                 break;
                         }
                     } else if (text instanceof LiteralText) {
-                        NamePlateAPI.applyFormattingRecursive((LiteralText) text, uuid, playerName, nameplateData, currentData);
+                        NamePlateAPI.applyFormattingRecursive((LiteralText) text, playerName, nameplateData, currentData);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -84,14 +84,10 @@ public class PlayerListHudMixin {
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V"), method = "render")
     private void render(MatrixStack matrices, int x, int y, int width, int height, float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-        //draw figura head
-        if (playerEntity == null || !PlayerDataManager.hasPlayerData(playerEntity.getUuid()) || !(boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
-            DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
-            return;
-        }
-
         PlayerData data = PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
-        if (data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+
+        //draw figura head
+        if (playerEntity == null || data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID) || !(boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
             DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
             return;
         }

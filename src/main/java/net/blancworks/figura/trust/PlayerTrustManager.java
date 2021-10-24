@@ -238,11 +238,9 @@ public class PlayerTrustManager {
             }
             allContainers.put(id, newContainer);
             return newContainer;
-        }
-
-        if (allContainers.containsKey(id))
+        } else {
             return allContainers.get(id);
-        return null;
+        }
     }
 
     public static void readNbt(NbtCompound nbt) {
@@ -296,11 +294,11 @@ public class PlayerTrustManager {
             entry.getValue().toNbt(containerNbt);
 
             if (entry.getKey().getNamespace().equals("players")) {
-                if (!entry.getKey().getPath().equals(MinecraftClient.getInstance().player.getUuid().toString()))
+                if (!containerNbt.getCompound("perms").isEmpty() && !entry.getKey().getPath().equals(MinecraftClient.getInstance().player.getUuid().toString()))
                     playerList.add(containerNbt);
-            }
-            else
+            } else {
                 containerList.add(containerNbt);
+            }
         }
 
         nbt.put("containers", containerList);

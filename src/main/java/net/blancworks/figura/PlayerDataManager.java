@@ -31,10 +31,6 @@ public final class PlayerDataManager {
 
     public static String lastLoadedFileName;
 
-    public static boolean hasPlayerData(UUID id) {
-        return LOADED_PLAYER_DATA.containsKey(id);
-    }
-
     public static PlayerData getDataForPlayer(UUID id) {
         try {
             if (TO_CLEAR.remove(id))

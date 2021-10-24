@@ -1,10 +1,10 @@
 package net.blancworks.figura.lua.api.nameplate;
 
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.FiguraTextAccess;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
@@ -21,7 +21,6 @@ import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.ArrayList;
-import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class NamePlateAPI {
@@ -136,14 +135,14 @@ public class NamePlateAPI {
         }
     }
 
-    public static boolean applyFormattingRecursive(LiteralText text, UUID uuid, String playerName, NamePlateCustomization nameplateData, PlayerData currentData) {
+    public static boolean applyFormattingRecursive(LiteralText text, String playerName, NamePlateCustomization nameplateData, PlayerData currentData) {
         //save siblings
         ArrayList<Text> siblings = new ArrayList<>(text.getSiblings());
 
         //transform already transformed text
         if (((FiguraTextAccess) text).figura$getFigura()) {
             //transform the text
-            Text transformed = applyNameplateFormatting(text, uuid, nameplateData, currentData);
+            Text transformed = applyNameplateFormatting(text, nameplateData, currentData);
 
             //set text as transformed
             ((FiguraTextAccess) text).figura$setText(((LiteralText) transformed).getRawString());
@@ -170,7 +169,7 @@ public class NamePlateAPI {
             Text playerNameSplitted = new LiteralText(playerName).setStyle(style);
 
             //transform the text
-            Text transformed = applyNameplateFormatting(playerNameSplitted, uuid, nameplateData, currentData);
+            Text transformed = applyNameplateFormatting(playerNameSplitted, nameplateData, currentData);
 
             //return the text
             if (!textSplit[0].equals("")) {
@@ -219,13 +218,13 @@ public class NamePlateAPI {
                         if (arg instanceof TranslatableText || !(arg instanceof Text))
                             continue;
 
-                        if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, uuid, playerName, nameplateData, currentData)) {
+                        if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, playerName, nameplateData, currentData)) {
                             return true;
                         }
                     }
                 }
                 //else check and format literal text
-                else if (sibling instanceof LiteralText && applyFormattingRecursive((LiteralText) sibling, uuid, playerName, nameplateData, currentData)) {
+                else if (sibling instanceof LiteralText && applyFormattingRecursive((LiteralText) sibling, playerName, nameplateData, currentData)) {
                     return true;
                 }
             }
@@ -234,7 +233,7 @@ public class NamePlateAPI {
         return false;
     }
 
-    public static Text applyNameplateFormatting(Text text, UUID uuid, NamePlateCustomization nameplateData, PlayerData currentData) {
+    public static Text applyNameplateFormatting(Text text, NamePlateCustomization nameplateData, PlayerData currentData) {
         //dummy playername text
         MutableText formattedText = new LiteralText(((LiteralText) text).getRawString());
 
@@ -267,12 +266,24 @@ public class NamePlateAPI {
         }
 
         //add badges
+        Text badgesText = getBadges(currentData);
+
+        //append badges
+        if ((boolean) Config.BADGES.value && badgesText != null)
+            formattedText.append(badgesText);
+
+        return formattedText;
+    }
+
+    public static Text getBadges(PlayerData currentData) {
+        if (currentData == null) return null;
+
         //font
         Identifier font = (boolean) Config.BADGE_AS_ICONS.value ? FiguraMod.FIGURA_FONT : Style.DEFAULT_FONT_ID;
         String badges = " ";
 
         //the mark
-        if (currentData != null && currentData.hasAvatar()) {
+        if (currentData.hasAvatar()) {
             if (FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
             else if (currentData.model != null)
@@ -282,25 +293,21 @@ public class NamePlateAPI {
         }
 
         //special badges
-        if (FiguraMod.special.contains(uuid))
+        if (FiguraMod.special.contains(currentData.playerId))
             badges += "✭";
 
-        //append badges
-        if ((boolean) Config.BADGES.value && !badges.equals(" ")) {
-            //create badges text
-            LiteralText badgesText = new LiteralText(badges);
+        //return null if no badges
+        if (badges.equals(" ")) return null;
 
-            //set formatting
-            badgesText.setStyle(Style.EMPTY.withExclusiveFormatting(Formatting.WHITE).withFont(font));
+        //create badges text
+        LiteralText badgesText = new LiteralText(badges);
 
-            //flag as figura text
-            ((FiguraTextAccess) badgesText).figura$setFigura(true);
+        //set formatting
+        badgesText.setStyle(Style.EMPTY.withExclusiveFormatting(Formatting.WHITE).withFont(font));
 
-            //append
-            formattedText.append(badgesText);
-        }
+        //flag as figura text
+        ((FiguraTextAccess) badgesText).figura$setFigura(true);
 
-        return formattedText;
+        return badgesText;
     }
-
 }
