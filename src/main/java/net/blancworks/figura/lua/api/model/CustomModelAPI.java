@@ -1,7 +1,5 @@
 package net.blancworks.figura.lua.api.model;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -9,15 +7,12 @@ import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.shaders.FiguraShader;
-import net.blancworks.figura.trust.PlayerTrustManager;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.math.Vector4f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
@@ -366,6 +361,21 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     targetPart.extraTex = arg.checkboolean();
+                    return null;
+                }
+            });
+
+            ret.set("getCullEnabled", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(targetPart.cull);
+                }
+            });
+
+            ret.set("setCullEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    targetPart.cull = arg.checkboolean();
                     return null;
                 }
             });
