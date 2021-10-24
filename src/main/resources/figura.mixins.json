@@ -2,7 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "net.blancworks.figura.mixin",
-  "compatibilityLevel": "JAVA_8",
+  "compatibilityLevel": "JAVA_16",
   "client": [
     "ArmorFeatureRendererMixin",
     "CameraMixin",
@@ -30,6 +30,8 @@
     "PlayerEntityMixin",
     "PlayerEntityModelMixin",
     "PlayerEntityRendererMixin",
+    "PlayerHeldItemFeatureRendererMixin",
+    "PlayerListHudAccessorMixin",
     "PlayerListHudMixin",
     "PlayerModelRendererMixin",
     "RenderPhaseInvokerMixin",
