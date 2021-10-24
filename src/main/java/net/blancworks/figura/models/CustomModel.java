@@ -71,17 +71,14 @@ public class CustomModel extends FiguraAsset {
         return tc != null ? tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) : 0;
     }
 
-    public void render(EntityModel<?> entity_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        render(entity_model, matrices, new MatrixStack(), vcp, light, overlay, alpha);
-    }
-
     public void render(EntityModel<?> entity_model, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        if (owner == null) return;
+
         leftToRender = getMaxRenderAmount();
         int maxRender = leftToRender;
 
-        if (owner != null && owner.script != null) {
+        if (owner.script != null)
             owner.script.render(FiguraMod.deltaTime);
-        }
 
         for (CustomModelPart part : allParts) {
             if (part.isParentSpecial() || !part.visible)

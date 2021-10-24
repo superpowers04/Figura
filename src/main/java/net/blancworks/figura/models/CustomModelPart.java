@@ -92,7 +92,7 @@ public class CustomModelPart {
         //lets render boys!!
 
         //main texture
-        Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
+        Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucentCull;
         int ret = renderTextures(data.model.leftToRender, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction, false);
 
         //extra textures

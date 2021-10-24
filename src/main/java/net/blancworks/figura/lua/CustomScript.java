@@ -854,14 +854,20 @@ public class CustomScript extends FiguraAsset {
         try {
             String functionName = functionIDMap.get(id);
 
-            LuaPing p = new LuaPing();
-            p.function = scriptGlobals.get(functionName).checkfunction();
-            p.args = args;
-            p.functionID = id;
+            if (functionName != null) {
+                LuaValue function = scriptGlobals.get(functionName);
+                LuaPing p = new LuaPing();
+                p.function = function.checkfunction();
+                p.args = args;
+                p.functionID = id;
 
-            incomingPingQueue.add(p);
+                incomingPingQueue.add(p);
+            }
         } catch (Exception error) {
-            handleError(error);
+            if (error instanceof LuaError err)
+                logLuaError(err);
+            else
+                error.printStackTrace();
         }
     }
 

@@ -51,12 +51,6 @@ public class PlayerData {
     //The custom VCP for the model.
     public FiguraVertexConsumerProvider customVCP;
 
-    public VertexConsumerProvider getVCP() {
-        if (customVCP != null)
-            return customVCP;
-        return MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
-    }
-
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel<?> vanillaModel;
 
@@ -79,6 +73,14 @@ public class PlayerData {
 
     public static final int FILESIZE_WARNING_THRESHOLD = 76800;
     public static final int FILESIZE_LARGE_THRESHOLD = 102400;
+
+    public VertexConsumerProvider getVCP(boolean getDefault) {
+        if (!getDefault) {
+            if (customVCP != null) return customVCP;
+            else if (FiguraMod.vertexConsumerProvider != null) return FiguraMod.vertexConsumerProvider;
+        }
+        return MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+    }
 
     public Identifier getTrustIdentifier() {
         if (trustIdentifier == null)

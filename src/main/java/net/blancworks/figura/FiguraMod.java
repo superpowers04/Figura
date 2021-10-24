@@ -84,7 +84,6 @@ public class FiguraMod implements ClientModInitializer {
     public static AbstractClientPlayerEntity currentPlayer;
     public static PlayerData currentData;
     public static VertexConsumerProvider vertexConsumerProvider;
-    public static VertexConsumerProvider.Immediate immediate;
     public static float deltaTime;
 
     private static final boolean USE_DEBUG_MODEL = true;
@@ -101,20 +100,8 @@ public class FiguraMod implements ClientModInitializer {
         currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
         if (currentData != null)
             currentData.vanillaModel = mdl;
-        setVertexConsumerProvider(vertexConsumerProvider);
+        FiguraMod.vertexConsumerProvider = vertexConsumerProvider;
         deltaTime = dt;
-    }
-
-    public static void setVertexConsumerProvider(VertexConsumerProvider vcp) {
-        FiguraMod.vertexConsumerProvider = vcp;
-
-        if (vcp.getClass() == VertexConsumerProvider.Immediate.class) {
-            FiguraMod.immediate = (VertexConsumerProvider.Immediate) vcp;
-        }
-    }
-
-    public static VertexConsumerProvider tryGetImmediate() {
-        return immediate == null ? vertexConsumerProvider : immediate;
     }
 
     public static void clearRenderingData() {
@@ -234,7 +221,13 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static CompletableFuture<?> doTask(Runnable toRun) {
-        return doTask(toRun, null);
+        try {
+            return doTask(toRun, null);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     public static CompletableFuture<?> doTask(Runnable toRun, @Nullable Runnable onFinished) {
