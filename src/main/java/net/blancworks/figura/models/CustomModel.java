@@ -52,6 +52,7 @@ public class CustomModel extends FiguraAsset {
         lastComplexity = 0;
 
         try {
+            ArrayList<CustomModelPart> allParts = new ArrayList<>(this.allParts);
             for (CustomModelPart part : allParts) {
                 lastComplexity += part.getComplexity();
             }
@@ -80,6 +81,7 @@ public class CustomModel extends FiguraAsset {
         if (owner.script != null)
             owner.script.render(FiguraMod.deltaTime);
 
+        ArrayList<CustomModelPart> allParts = new ArrayList<>(this.allParts);
         for (CustomModelPart part : allParts) {
             if (part.isParentSpecial() || !part.visible)
                 continue;
@@ -122,8 +124,8 @@ public class CustomModel extends FiguraAsset {
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
 
         //CustomModelPart.applyHiddenTransforms = false;
-        ArrayList<CustomModelPart> temp = new ArrayList<>(playerData.model.allParts);
-        for (CustomModelPart part : temp) {
+        ArrayList<CustomModelPart> allParts = new ArrayList<>(playerData.model.allParts);
+        for (CustomModelPart part : allParts) {
             if (arm == model.rightArm)
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.RightArm;
             else if (arm == model.leftArm)
@@ -140,7 +142,8 @@ public class CustomModel extends FiguraAsset {
         data.model.leftToRender = getMaxRenderAmount();
 
         if (!data.model.skullParts.isEmpty()) {
-            for (CustomModelPart modelPart : data.model.skullParts) {
+            ArrayList<CustomModelPart> skullParts = new ArrayList<>(data.model.skullParts);
+            for (CustomModelPart modelPart : skullParts) {
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
                 if (data.model.leftToRender <= 0)
@@ -151,7 +154,8 @@ public class CustomModel extends FiguraAsset {
         }
         else {
             CustomModelPart.applyHiddenTransforms = false;
-            for (CustomModelPart modelPart : data.model.allParts) {
+            ArrayList<CustomModelPart> allParts = new ArrayList<>(data.model.allParts);
+            for (CustomModelPart modelPart : allParts) {
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
@@ -175,7 +179,8 @@ public class CustomModel extends FiguraAsset {
 
         CustomModelPart.canRenderHitBox = (boolean) ConfigManager.Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-        for (CustomModelPart part : data.model.worldParts) {
+        ArrayList<CustomModelPart> worldParts = new ArrayList<>(data.model.worldParts);
+        for (CustomModelPart part : worldParts) {
             data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
         }
 
