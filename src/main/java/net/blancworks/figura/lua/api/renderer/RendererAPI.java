@@ -24,6 +24,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -42,7 +43,7 @@ public class RendererAPI {
             set("setShadowSize", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    script.customShadowSize = arg.isnil() ? null : arg.checknumber().tofloat();
+                    script.customShadowSize = arg.isnil() ? null : MathHelper.clamp(arg.checknumber().tofloat(), 0f, 24f);
                     return NIL;
                 }
             });
