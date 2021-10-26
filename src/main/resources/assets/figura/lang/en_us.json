@@ -136,6 +136,10 @@
   "gui.figura.toast.upload.error.empty": "The avatar is empty!!",
   "gui.figura.toast.upload.error.space": "Not enough space on server!!",
 
+  "gui.figura.toast.avatar.reload.title": "Avatar Reloaded!",
+  "gui.figura.toast.avatar.moretrust.title": "Trust Increased!",
+  "gui.figura.toast.avatar.lesstrust.title": "Trust Decreased!",
+
   "gui.figura.keybinds.warning": "Figura cannot use keys already in use by Minecraft or other mods",
 
   "gui.figura.actionwheel.warning": "No script found",

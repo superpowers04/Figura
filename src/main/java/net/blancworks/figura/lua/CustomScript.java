@@ -228,6 +228,7 @@ public class CustomScript extends FiguraAsset {
                     }
             );
         } catch (Exception error) {
+            isDone = true;
             handleError(error);
         }
     }

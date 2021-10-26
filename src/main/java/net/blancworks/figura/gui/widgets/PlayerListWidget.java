@@ -38,7 +38,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         HashMap<Identifier, ArrayList<PlayerListEntry>> sortedEntries = new HashMap<>();
         ArrayList<Identifier> sortedEntriesOrdered = new ArrayList<>();
 
-        for (Identifier preset : PlayerTrustManager.defaultGroups) {
+        for (Identifier preset : PlayerTrustManager.allGroups) {
             sortedEntries.put(preset, new ArrayList<>());
             sortedEntriesOrdered.add(preset);
         }
@@ -93,7 +93,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             if (tc.displayChildren) {
                 addEntry(new GroupListWidgetEntry(id, this) {{
                     identifier = id.toString();
-                    if (PlayerTrustManager.defaultGroups.contains(id)) {
+                    if (PlayerTrustManager.allGroups.contains(id)) {
                         Text text = new TranslatableText("gui.figura." + id.getPath());
                         displayText = new LiteralText("- ").setStyle(Style.EMPTY.withColor(TextColor.parse("gray"))).append(text);
                     } else {
@@ -108,7 +108,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
                 addEntry(new GroupListWidgetEntry(id, this) {{
                     identifier = id.toString();
 
-                    if (PlayerTrustManager.defaultGroups.contains(id)) {
+                    if (PlayerTrustManager.allGroups.contains(id)) {
                         Text text = new TranslatableText("gui.figura." + id.getPath());
                         displayText = new LiteralText("+ ").setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray"))).append(text);
                     } else {

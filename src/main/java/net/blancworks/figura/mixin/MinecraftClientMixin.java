@@ -49,8 +49,8 @@ public class MinecraftClientMixin {
             actionWheelActive = false;
         }
 
-        if (FiguraMod.reloadAvatar.isPressed()) {
-            if (this.targetedEntity instanceof PlayerEntity player) {
+        if (FiguraMod.playerPopup.isPressed()) {
+            if (this.targetedEntity instanceof PlayerEntity player && PlayerPopup.entity == null) {
                 PlayerPopup.entity = player;
                 playerPopupActive = true;
             }

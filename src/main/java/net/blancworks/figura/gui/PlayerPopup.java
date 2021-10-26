@@ -1,16 +1,22 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
+import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.util.List;
@@ -29,7 +35,7 @@ public class PlayerPopup extends DrawableHelper {
             new TranslatableText("gui.figura.playerpopup.decreasetrust")
     );
 
-    public static boolean render(AbstractClientPlayerEntity entity, MatrixStack matrices, EntityRenderDispatcher dispatcher, PlayerData data) {
+    public static boolean render(AbstractClientPlayerEntity entity, MatrixStack matrices, VertexConsumerProvider vcp, EntityRenderDispatcher dispatcher, PlayerData data) {
         if (entity != PlayerPopup.entity || data == null) return false;
 
         matrices.push();
@@ -40,19 +46,34 @@ public class PlayerPopup extends DrawableHelper {
 
         RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
         RenderSystem.enableDepthTest();
+        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+
+        //title
+        Text title = buttons.get(index);
+        textRenderer.drawWithOutline(title.asOrderedText(), -textRenderer.getWidth(title) / 2f, -28, 0xFFFFFF, 0x3D3D3D, matrices.peek().getModel(), vcp, 0xffffff);
 
         //background
-        drawTexture(matrices, -36, -12, 72, 24, 0f, 0f, 72, 24, 72, 60);
+        drawTexture(matrices, -36, -18, 72, 30, 0f, 0f, 72, 30, 72, 66);
 
         //icons
-        matrices.translate(0f, 0f, -1f);
+        matrices.translate(0f, 0f, -2f);
         for (int i = 0; i < 4; i++) {
-            drawTexture(matrices, -36 + (18 * i), -11, 18, 18, 18f * i, i == index ? 42f : 24f, 18, 18, 72, 60);
+            drawTexture(matrices, -36 + (18 * i), -11, 18, 18, 18f * i, i == index ? 48f : 30f, 18, 18, 72, 66);
         }
 
-        //text
-        drawCenteredTextWithShadow(matrices, MinecraftClient.getInstance().textRenderer, buttons.get(index).asOrderedText(), 0, -24, 0xFFFFFF);
+        //playername
+        MutableText name = new LiteralText("").formatted(Formatting.BLACK).append(data.playerName);
+        Text badges = NamePlateAPI.getBadges(data);
+        if (badges != null) name.append(badges);
 
+        Text trust = new LiteralText("- ").formatted(Formatting.BLACK).append(new TranslatableText("gui.figura." + data.getTrustContainer().getParentIdentifier().getPath()));
+
+        matrices.scale(0.5f, 0.5f, 0.5f);
+        matrices.translate(0f, 0f, -1f);
+        textRenderer.draw(matrices, name, -66, -31, 0xFFFFFF);
+        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 66, -31, 0xFFFFFF);
+
+        //return
         matrices.pop();
         enabled = true;
         return true;
@@ -69,13 +90,20 @@ public class PlayerPopup extends DrawableHelper {
         if (data != null) {
             switch (index) {
                 case 1 -> {
-                    if (data.hasAvatar() && data.isAvatarLoaded()) PlayerDataManager.clearPlayer(entity.getUuid());
+                    if (data.hasAvatar() && data.isAvatarLoaded()) {
+                        PlayerDataManager.clearPlayer(entity.getUuid());
+                        FiguraMod.sendToast("Figura:", "gui.figura.toast.avatar.reload.title");
+                    }
                 }
                 case 2 -> {
-                    //todo
+                    TrustContainer tc = data.getTrustContainer();
+                    if (PlayerTrustManager.increaseTrust(tc))
+                        FiguraMod.sendToast("gui.figura.toast.avatar.moretrust.title", "gui.figura." + tc.getParentIdentifier().getPath());
                 }
                 case 3 -> {
-                    //todo 2
+                    TrustContainer tc = data.getTrustContainer();
+                    if (PlayerTrustManager.decreaseTrust(tc))
+                        FiguraMod.sendToast("gui.figura.toast.avatar.lesstrust.title", "gui.figura." + tc.getParentIdentifier().getPath());
                 }
             }
         }
