@@ -27,6 +27,7 @@
     "MatrixStackMixin",
     "MinecraftClientMixin",
     "ModelPartMixin",
+    "MouseMixin",
     "PlayerEntityMixin",
     "PlayerEntityModelMixin",
     "PlayerEntityRendererMixin",

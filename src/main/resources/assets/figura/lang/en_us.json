@@ -136,13 +136,16 @@
   "gui.figura.toast.upload.error.empty": "The avatar is empty!!",
   "gui.figura.toast.upload.error.space": "Not enough space on server!!",
 
-  "gui.figura.toast.avatar.reload.title": "Avatar Reloaded!",
-
   "gui.figura.keybinds.warning": "Figura cannot use keys already in use by Minecraft or other mods",
 
   "gui.figura.actionwheel.warning": "No script found",
   "gui.figura.actionwheel.warninginfo": "The Action Wheel contents are set by your avatar script",
   "gui.figura.actionwheel.nofunction": "unbound function!",
+
+  "gui.figura.playerpopup.cancel": "Cancel",
+  "gui.figura.playerpopup.reload": "Reload Avatar",
+  "gui.figura.playerpopup.increasetrust": "Increase Trust",
+  "gui.figura.playerpopup.decreasetrust": "Decrease Trust",
 
   "key.figura.actionwheel": "Figura Action Wheel",
   "key.figura.tooltip.actionwheel": "Action Wheel Keybind",
