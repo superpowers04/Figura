@@ -143,7 +143,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
 
         //render player popup
-        if (PlayerPopup.render(entity, matrices, this.dispatcher, data)) {
+        if (PlayerPopup.render(entity, matrices, vertexConsumers, this.dispatcher, data)) {
             ci.cancel();
             return;
         }
@@ -152,13 +152,10 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         String playerName = entity.getEntityName();
 
         //check for data and trust settings
-        if (!(boolean) Config.NAMEPLATE_MODIFICATIONS.value || data == null || playerName.equals("") || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
+        if (!(boolean) Config.NAMEPLATE_MODIFICATIONS.value || data == null || playerName.equals(""))
             return;
 
-        //cancel callback info
-        ci.cancel();
-
-        //nameplate
+        //nameplate data
         NamePlateCustomization nameplateData = data.script == null ? null : data.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
 
         //apply text and/or badges
@@ -180,16 +177,21 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
             e.printStackTrace();
         }
 
+        //do not continue if untrusted
+        if (!data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
+            return;
+
+        ci.cancel();
+
         //nameplate transformations
         float spacing = entity.getHeight() + 0.5F;
         Vec3f translation = new Vec3f(0.0f, spacing, 0.0f);
         Vec3f scale = new Vec3f(1.0f, 1.0f, 1.0f);
-        boolean enabled = true;
 
         //apply main nameplate transformations
         if (nameplateData != null) {
-            if (nameplateData.enabled != null)
-                enabled = nameplateData.enabled;
+            if (nameplateData.enabled != null && !nameplateData.enabled)
+                return;
             if (nameplateData.position != null)
                 translation.add(nameplateData.position);
             if (nameplateData.scale != null)
@@ -202,7 +204,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         //render scoreboard
         double distance = this.dispatcher.getSquaredDistanceToCamera(entity);
-        if (enabled && distance < 100.0D) {
+        if (distance < 100.0D) {
             //get scoreboard
             Scoreboard scoreboard = entity.getScoreboard();
             ScoreboardObjective scoreboardObjective = scoreboard.getObjectiveForSlot(2);
@@ -219,7 +221,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         }
 
         //render nameplate
-        if (enabled && !(distance > 4096.0D)) {
+        if (!(distance > 4096.0D)) {
             boolean sneaky = !entity.isSneaky();
             int i = 0;
             List<Text> textList = TextUtils.splitText(text, "\n");
@@ -228,6 +230,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 i++;
             }
         }
+
         matrices.pop();
     }
 

@@ -286,8 +286,10 @@ public class NamePlateAPI {
         if (currentData.hasAvatar()) {
             if (FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
-            else if (currentData.model != null)
-                badges += currentData.model.getRenderComplexity() < currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) ? "△" : "▲";
+            else if (currentData.model != null && currentData.model.getRenderComplexity() >= currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID))
+                badges += "▲";
+            else if (currentData.script != null && currentData.script.scriptError)
+                badges += "▲";
             else
                 badges += "△";
         }

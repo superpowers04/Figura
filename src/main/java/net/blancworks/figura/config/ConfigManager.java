@@ -63,7 +63,7 @@ public class ConfigManager {
         ACTION_WHEEL_TITLE_POS(0, 4),
         RENDER_DEBUG_PARTS_PIVOT(true),
         MODEL_FOLDER_PATH(""),
-        RELOAD_AVATAR_BUTTON(GLFW.GLFW_KEY_R);
+        PLAYER_POPUP_BUTTON(GLFW.GLFW_KEY_R);
 
         //config data
         public Object value;

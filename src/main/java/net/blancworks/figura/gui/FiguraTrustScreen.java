@@ -237,16 +237,18 @@ public class FiguraTrustScreen extends Screen {
                     currX += textRenderer.getWidth(complexityText) + 10;
                 }
 
-                long size = data.getFileSize();
+                if (data.hasAvatar()) {
+                    long size = data.getFileSize();
 
-                //format file size
-                DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
-                df.setRoundingMode(RoundingMode.HALF_UP);
-                float fileSize = Float.parseFloat(df.format(size / 1024.0f));
+                    //format file size
+                    DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
+                    df.setRoundingMode(RoundingMode.HALF_UP);
+                    float fileSize = Float.parseFloat(df.format(size / 1024.0f));
 
-                MutableText sizeText = new TranslatableText("gui.figura.filesize", fileSize).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+                    MutableText sizeText = new TranslatableText("gui.figura.filesize", fileSize).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
 
-                drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, TextColor.parse("white").getRgb());
+                    drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, TextColor.parse("white").getRgb());
+                }
             }
         }
 

@@ -64,7 +64,7 @@ public class FiguraMod implements ClientModInitializer {
     public static CompoundTag cheese;
 
     public static KeyBinding actionWheel;
-    public static KeyBinding reloadAvatar;
+    public static KeyBinding playerPopup;
 
     //Loading
 
@@ -120,9 +120,9 @@ public class FiguraMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        ConfigManager.initialize();
         FiguraLuaManager.initialize();
         PlayerTrustManager.init();
-        ConfigManager.initialize();
 
         try {
             SSLFixer.main();
@@ -147,20 +147,20 @@ public class FiguraMod implements ClientModInitializer {
         KeyBindingRegistryImpl.registerKeyBinding(actionWheel);
 
         //reload avatar keybind
-        reloadAvatar = new KeyBinding(
-                "key.figura.reloadavatar",
+        playerPopup = new KeyBinding(
+                "key.figura.playerpopup",
                 GLFW.GLFW_KEY_R,
                 "key.categories.misc"
         ){
             @Override
             public void setBoundKey(InputUtil.Key boundKey) {
                 super.setBoundKey(boundKey);
-                Config.RELOAD_AVATAR_BUTTON.value = boundKey.getCode();
+                Config.PLAYER_POPUP_BUTTON.value = boundKey.getCode();
                 ConfigManager.saveConfig();
             }};
 
-        reloadAvatar.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.RELOAD_AVATAR_BUTTON.value));
-        KeyBindingRegistryImpl.registerKeyBinding(reloadAvatar);
+        playerPopup.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.PLAYER_POPUP_BUTTON.value));
+        KeyBindingRegistryImpl.registerKeyBinding(playerPopup);
 
         //Set up network
         newNetworkManager = new NewFiguraNetworkManager();
@@ -289,12 +289,12 @@ public class FiguraMod implements ClientModInitializer {
         }
     }
 
-    public static void sendToast(String title, String message) {
+    public static void sendToast(Object title, Object message) {
+        TranslatableText text = title instanceof TranslatableText t ? t : new TranslatableText(title.toString());
+        TranslatableText text2 = message instanceof TranslatableText m ? m : new TranslatableText(message.toString());
+
         MinecraftClient.getInstance().getToastManager().clear();
-        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP,
-                new TranslatableText(title),
-                new TranslatableText(message))
-        );
+        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP, text, text2));
     }
 
     public final static List<UUID> special = Arrays.asList(

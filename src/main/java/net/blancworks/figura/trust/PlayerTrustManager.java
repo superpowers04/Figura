@@ -244,6 +244,10 @@ public class PlayerTrustManager {
     }
 
     public static void readNbt(NbtCompound nbt) {
+        allGroups.clear();
+        defaultGroups.clear();
+        loadDefaultGroups();
+
         NbtList containersList = (NbtList) nbt.get("containers");
         if (containersList != null && containersList.getHeldType() == NbtType.COMPOUND) {
             for (NbtElement element : containersList) {
@@ -294,7 +298,7 @@ public class PlayerTrustManager {
             entry.getValue().toNbt(containerNbt);
 
             if (entry.getKey().getNamespace().equals("players")) {
-                if (!containerNbt.getCompound("perms").isEmpty() && !entry.getKey().getPath().equals(MinecraftClient.getInstance().player.getUuid().toString()))
+                if (!containerNbt.getString("pid").equals("group:local") && !(containerNbt.getCompound("perms").isEmpty() && containerNbt.getString("pid").equals("group:untrusted")) && !entry.getKey().getPath().equals(MinecraftClient.getInstance().player.getUuid().toString()))
                     playerList.add(containerNbt);
             } else {
                 containerList.add(containerNbt);
@@ -339,5 +343,47 @@ public class PlayerTrustManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static boolean increaseTrust(TrustContainer tc) {
+        Identifier parentID = tc.getParentIdentifier();
+
+        int index = -1;
+        for (int i = 0; i < allGroups.size() - 1; i++) {
+            if (allGroups.get(i).equals(parentID))
+                index = i;
+        }
+
+        if (index != -1 && !getContainer(parentID).isHidden) {
+            Identifier nextID = allGroups.get(index + 1);
+            if (!getContainer(nextID).isHidden) {
+                tc.setParent(nextID);
+                saveToDisk();
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean decreaseTrust(TrustContainer tc) {
+        Identifier parentID = tc.getParentIdentifier();
+
+        int index = -1;
+        for (int i = allGroups.size() - 1; i > 0; i--) {
+            if (allGroups.get(i).equals(parentID))
+                index = i;
+        }
+
+        if (index != -1 && !getContainer(parentID).isHidden) {
+            Identifier prevID = allGroups.get(index - 1);
+            if (!getContainer(prevID).isHidden) {
+                tc.setParent(prevID);
+                saveToDisk();
+                return true;
+            }
+        }
+
+        return false;
     }
 }

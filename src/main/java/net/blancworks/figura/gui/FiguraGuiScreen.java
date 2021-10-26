@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -359,7 +358,8 @@ public class FiguraGuiScreen extends Screen {
 
         boolean hasBackend = connectionStatus == 3;
 
-        uploadButton.active = PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.isLocalAvatar && PlayerDataManager.localPlayer.hasAvatar() && hasBackend;
+        PlayerData local = PlayerDataManager.localPlayer;
+        uploadButton.active = hasBackend && local != null && local.hasAvatar() && local.isAvatarLoaded() && local.isLocalAvatar;
 
         boolean wasUploadActive = uploadButton.active;
         uploadButton.active = true;
