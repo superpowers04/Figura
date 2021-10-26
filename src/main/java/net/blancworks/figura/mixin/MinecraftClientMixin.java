@@ -1,10 +1,9 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.LocalPlayerData;
-import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
+import net.blancworks.figura.gui.PlayerPopup;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.screen.Screen;
@@ -15,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -25,7 +25,9 @@ public class MinecraftClientMixin {
     @Shadow @Final public Mouse mouse;
     @Shadow @Nullable public Entity targetedEntity;
     @Shadow @Nullable public ClientPlayerEntity player;
-    public boolean actionWheelActive = false;
+
+    @Unique public boolean actionWheelActive = false;
+    @Unique public boolean playerPopupActive = false;
 
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {
@@ -41,31 +43,20 @@ public class MinecraftClientMixin {
                 this.mouse.unlockCursor();
                 actionWheelActive = true;
             }
-        }
-        else if (actionWheelActive) {
+        } else if (actionWheelActive) {
             ActionWheel.play();
             this.mouse.lockCursor();
             actionWheelActive = false;
         }
 
-        if (FiguraMod.reloadAvatar.wasPressed()) {
-            LocalPlayerData localPlayer = PlayerDataManager.localPlayer;
+        if (FiguraMod.reloadAvatar.isPressed()) {
             if (this.targetedEntity instanceof PlayerEntity player) {
-                PlayerData data = PlayerDataManager.getDataForPlayer(player.getUuid());
-
-                if (data != null && data.hasAvatar() && data.isAvatarLoaded()) {
-                    PlayerDataManager.clearPlayer(player.getUuid());
-                    FiguraMod.sendToast("Figura:", "gui.figura.toast.avatar.reload.title");
-                }
+                PlayerPopup.entity = player;
+                playerPopupActive = true;
             }
-            else if (localPlayer != null && localPlayer.hasAvatar() && localPlayer.isAvatarLoaded()) {
-                if (!localPlayer.isLocalAvatar)
-                    PlayerDataManager.clearLocalPlayer();
-                else if (localPlayer.loadedName != null)
-                    localPlayer.reloadAvatar();
-
-                FiguraMod.sendToast("Figura:", "gui.figura.toast.avatar.reload.title");
-            }
+        } else if (playerPopupActive) {
+            PlayerPopup.execute();
+            playerPopupActive = false;
         }
     }
 
@@ -74,6 +65,10 @@ public class MinecraftClientMixin {
         if (actionWheelActive) {
             ActionWheel.play();
             actionWheelActive = false;
+        }
+        else if (playerPopupActive) {
+            PlayerPopup.execute();
+            playerPopupActive = false;
         }
     }
 }

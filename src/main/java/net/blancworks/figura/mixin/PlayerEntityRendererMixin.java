@@ -6,6 +6,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.access.PlayerEntityRendererAccess;
 import net.blancworks.figura.config.ConfigManager.Config;
+import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
@@ -41,7 +42,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 @Mixin(PlayerEntityRenderer.class)
 public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<AbstractClientPlayerEntity, PlayerEntityModel<AbstractClientPlayerEntity>> implements PlayerEntityRendererAccess {
@@ -132,22 +132,34 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants);
     }
 
+    @Inject(method = "renderLabelIfPresent", at = @At("HEAD"))
+    private void renderPopupMenu(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, int light, CallbackInfo ci) {
+
+
+    }
+
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
     private void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
+
+        //render player popup
+        if (PlayerPopup.render(entity, matrices, this.dispatcher, data)) {
+            ci.cancel();
+            return;
+        }
+
         //get uuid and name
-        UUID uuid = entity.getGameProfile().getId();
         String playerName = entity.getEntityName();
 
         //check for data and trust settings
-        PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
-        if (!(boolean) Config.NAMEPLATE_MODIFICATIONS.value || currentData == null || playerName.equals("") || !currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
+        if (!(boolean) Config.NAMEPLATE_MODIFICATIONS.value || data == null || playerName.equals("") || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
             return;
 
         //cancel callback info
         ci.cancel();
 
         //nameplate
-        NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
+        NamePlateCustomization nameplateData = data.script == null ? null : data.script.nameplateCustomizations.get(NamePlateAPI.ENTITY);
 
         //apply text and/or badges
         try {
@@ -158,11 +170,11 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                     if (arg instanceof TranslatableText || !(arg instanceof Text))
                         continue;
 
-                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, playerName, nameplateData, currentData))
+                    if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, playerName, nameplateData, data))
                         break;
                 }
             } else if (text instanceof LiteralText) {
-                NamePlateAPI.applyFormattingRecursive((LiteralText) text, playerName, nameplateData, currentData);
+                NamePlateAPI.applyFormattingRecursive((LiteralText) text, playerName, nameplateData, data);
             }
         } catch (Exception e) {
             e.printStackTrace();
