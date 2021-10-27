@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.config.ConfigManager.Config;
+import net.blancworks.figura.gui.widgets.FiguraToast;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
@@ -25,12 +26,12 @@ import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.toast.SystemToast;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
@@ -289,11 +290,11 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static void sendToast(Object title, Object message) {
-        TranslatableText text = title instanceof TranslatableText t ? t : new TranslatableText(title.toString());
-        TranslatableText text2 = message instanceof TranslatableText m ? m : new TranslatableText(message.toString());
+        Text text = title instanceof Text t ? t : new TranslatableText(title.toString());
+        Text text2 = message instanceof Text m ? m : new TranslatableText(message.toString());
 
         MinecraftClient.getInstance().getToastManager().clear();
-        MinecraftClient.getInstance().getToastManager().add(new SystemToast(SystemToast.Type.WORLD_BACKUP, text, text2));
+        MinecraftClient.getInstance().getToastManager().add(new FiguraToast(text, text2));
     }
 
     public final static List<UUID> special = Arrays.asList(

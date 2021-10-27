@@ -137,8 +137,7 @@
   "gui.figura.toast.upload.error.space": "Not enough space on server!!",
 
   "gui.figura.toast.avatar.reload.title": "Avatar Reloaded!",
-  "gui.figura.toast.avatar.moretrust.title": "Trust Increased!",
-  "gui.figura.toast.avatar.lesstrust.title": "Trust Decreased!",
+  "gui.figura.toast.avatar.trust.title": "is now: ",
 
   "gui.figura.keybinds.warning": "Figura cannot use keys already in use by Minecraft or other mods",
 
@@ -154,8 +153,8 @@
   "key.figura.actionwheel": "Figura Action Wheel",
   "key.figura.tooltip.actionwheel": "Action Wheel Keybind",
 
-  "key.figura.reloadavatar": "Figura Reload Avatar",
-  "key.figura.tooltip.reloadavatar": "Reload Avatar Keybind",
+  "key.figura.playerpopup": "Figura Player Popup",
+  "key.figura.tooltip.playerpopup": "Player Popup Keybind",
 
   "models.figura.unselect": "-unselect-"
 }
