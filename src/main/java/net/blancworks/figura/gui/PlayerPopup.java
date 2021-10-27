@@ -15,7 +15,10 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.text.*;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
@@ -88,22 +91,26 @@ public class PlayerPopup extends DrawableHelper {
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
 
         if (data != null) {
+            MutableText playerName = new LiteralText("").append(data.playerName);
+            Text badges = NamePlateAPI.getBadges(data);
+            if (badges != null) playerName.append(badges);
+
             switch (index) {
                 case 1 -> {
                     if (data.hasAvatar() && data.isAvatarLoaded()) {
                         PlayerDataManager.clearPlayer(entity.getUuid());
-                        FiguraMod.sendToast("Figura:", "gui.figura.toast.avatar.reload.title");
+                        FiguraMod.sendToast(playerName, "gui.figura.toast.avatar.reload.title");
                     }
                 }
                 case 2 -> {
                     TrustContainer tc = data.getTrustContainer();
                     if (PlayerTrustManager.increaseTrust(tc))
-                        FiguraMod.sendToast("gui.figura.toast.avatar.moretrust.title", "gui.figura." + tc.getParentIdentifier().getPath());
+                        FiguraMod.sendToast(playerName, new TranslatableText("gui.figura.toast.avatar.trust.title").append(new TranslatableText("gui.figura." + tc.getParentIdentifier().getPath())));
                 }
                 case 3 -> {
                     TrustContainer tc = data.getTrustContainer();
                     if (PlayerTrustManager.decreaseTrust(tc))
-                        FiguraMod.sendToast("gui.figura.toast.avatar.lesstrust.title", "gui.figura." + tc.getParentIdentifier().getPath());
+                        FiguraMod.sendToast(playerName, new TranslatableText("gui.figura.toast.avatar.trust.title").append(new TranslatableText("gui.figura." + tc.getParentIdentifier().getPath())));
                 }
             }
         }
