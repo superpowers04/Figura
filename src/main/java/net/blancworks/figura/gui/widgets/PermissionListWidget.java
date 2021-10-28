@@ -2,9 +2,10 @@ package net.blancworks.figura.gui.widgets;
 
 import net.blancworks.figura.gui.FiguraTrustScreen;
 import net.blancworks.figura.gui.widgets.permissions.PermissionListEntry;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListSliderEntry;
+import net.blancworks.figura.gui.widgets.permissions.PermissionListToggleEntry;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.screen.Screen;
@@ -13,11 +14,10 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 
-public class PermissionListWidget extends CustomListWidget<PermissionSetting, PermissionListEntry> {
+public class PermissionListWidget extends CustomListWidget<TrustContainer.Trust, PermissionListEntry> {
 
-    public PermissionListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
+    public PermissionListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget<?, ?> list, Screen parent, CustomListWidgetState<?> state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
-        //allowSelection = false;
     }
 
     @Override
@@ -30,54 +30,37 @@ public class PermissionListWidget extends CustomListWidget<PermissionSetting, Pe
     public boolean mouseClicked(double double_1, double double_2, int int_1) {
         boolean r = super.mouseClicked(double_1, double_2, int_1);
 
-        if (r) {
-            if (getFocused() instanceof PermissionListEntry) {
-                PermissionListEntry focused = (PermissionListEntry) getFocused();
-
-                getParent().focusOn(focused.matchingElement);
-            }
-        }
+        if (r && getFocused() instanceof PermissionListEntry focused)
+            getParent().focusOn(focused.matchingElement);
 
         return r;
     }
 
     public void rebuild() {
         clear();
-        FiguraTrustScreen trustScreen = (FiguraTrustScreen) getParent();
 
         TrustContainer tc = getCurrentContainer();
-        if(tc != null)
+        if (tc != null)
             buildForTrustContainer(tc);
     }
 
-    public TrustContainer getCurrentContainer(){
+    public TrustContainer getCurrentContainer() {
         FiguraTrustScreen trustScreen = (FiguraTrustScreen) getParent();
 
-        if(trustScreen.playerListState.selected instanceof Identifier){
-            Identifier groupId = (Identifier) trustScreen.playerListState.selected;
-            TrustContainer tc = PlayerTrustManager.getContainer(groupId);
-
-            return tc;
-        } else if(trustScreen.playerListState.selected instanceof PlayerListEntry){
-            PlayerListEntry listEntry = (PlayerListEntry) trustScreen.playerListState.selected;
-            Identifier id = new Identifier("players", listEntry.getProfile().getId().toString());
-            TrustContainer tc = PlayerTrustManager.getContainer(id);
-
-            return tc;
+        if (trustScreen.playerListState.selected instanceof Identifier groupId) {
+            return PlayerTrustManager.getContainer(groupId);
+        } else if (trustScreen.playerListState.selected instanceof PlayerListEntry listEntry) {
+            Identifier id = new Identifier("player", listEntry.getProfile().getId().toString());
+            return PlayerTrustManager.getContainer(id);
         }
 
         return null;
     }
 
-    private void buildForTrustContainer(TrustContainer tc){
-
-        for (Identifier identifier : PlayerTrustManager.permissionDisplayOrder) {
-            PermissionSetting ps = tc.getSetting(identifier);
-
-            if(ps == null)
-                continue;
-
-            addEntry(ps.getEntry(this));
+    private void buildForTrustContainer(TrustContainer tc) {
+        for (TrustContainer.Trust trust : TrustContainer.Trust.values()) {
+            if (trust.isBool) addEntry(new PermissionListToggleEntry(trust, this, tc));
+            else addEntry(new PermissionListSliderEntry(trust, this, tc));
         }
     }
 
@@ -114,26 +97,13 @@ public class PermissionListWidget extends CustomListWidget<PermissionSetting, Pe
         if(lastFocus != null)
             lastFocus.changeFocus(true);
     }
-
-
-    public void setPermissionValue(PermissionSetting newSetting){
-        TrustContainer tc = getCurrentContainer();
-
-        if(tc == null)
-            return;
-
-        tc.setSetting(newSetting.getCopy());
-    }
     
-    public boolean isDifferent(PermissionSetting setting){
+    public boolean isDifferent(TrustContainer.Trust trust) {
         TrustContainer tc = getCurrentContainer();
 
-        if(tc == null)
+        if (tc == null)
             return false;
-        
-        if(tc.getParentIdentifier() == null)
-            return false;
-        
-        return tc.permissionSet.containsKey(setting.id);
+
+        return tc.contains(trust);
     }
 }

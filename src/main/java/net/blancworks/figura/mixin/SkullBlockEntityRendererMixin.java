@@ -4,7 +4,7 @@ import com.mojang.authlib.GameProfile;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.block.SkullBlock;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
@@ -26,7 +26,7 @@ public abstract class SkullBlockEntityRendererMixin {
     @Inject(method = "render(Lnet/minecraft/util/math/Direction;FLnet/minecraft/block/SkullBlock$SkullType;Lcom/mojang/authlib/GameProfile;FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At(value = "HEAD"), cancellable = true)
     private static void renderSkull(Direction direction, float yaw, SkullBlock.SkullType skullType, GameProfile gameProfile, float animationProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         PlayerData data = FiguraMod.currentData;
-        if (data == null || data.model == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        if (data == null || data.model == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
         matrices.push();

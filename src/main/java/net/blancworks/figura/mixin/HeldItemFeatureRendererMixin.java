@@ -5,7 +5,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.ItemModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
@@ -38,7 +38,7 @@ public class HeldItemFeatureRendererMixin<T extends LivingEntity, M extends Enti
     @Inject(at = @At("HEAD"), cancellable = true, method = "renderItem(Lnet/minecraft/entity/LivingEntity;Lnet/minecraft/item/ItemStack;Lnet/minecraft/client/render/model/json/ModelTransformation$Mode;Lnet/minecraft/util/Arm;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     private void onRenderItem(LivingEntity entity, ItemStack stack, ModelTransformation.Mode transformationMode, Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (data == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        if (data == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
         try {
@@ -46,7 +46,7 @@ public class HeldItemFeatureRendererMixin<T extends LivingEntity, M extends Enti
                 VanillaModelPartCustomization originModification = arm == Arm.LEFT ? data.model.originModifications.get(ItemModelAPI.VANILLA_LEFT_HAND_ID) : data.model.originModifications.get(ItemModelAPI.VANILLA_RIGHT_HAND_ID);
 
                 if (originModification != null) {
-                    if (originModification.part == null || originModification.visible == null || data.model.lastComplexity >= data.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
+                    if (originModification.part == null || originModification.visible == null || data.model.lastComplexity > data.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY)) {
                         ci.cancel();
                         return;
                     }

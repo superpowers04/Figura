@@ -5,7 +5,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.CapeFeatureRenderer;
@@ -52,7 +52,7 @@ public class CapeFeatureRendererMixin extends FeatureRenderer<AbstractClientPlay
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/network/AbstractClientPlayerEntity;isInSneakingPose()Z", shift = At.Shift.AFTER), locals = LocalCapture.CAPTURE_FAILHARD, cancellable = true)
     private void afterSneakingPose(MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, int i, AbstractClientPlayerEntity entity, float var5, float var6, float h, float var8, float var9, float var10, CallbackInfo ci, ItemStack itemStack, double d, double e, double m, float n, double o, double p, float q, float r, float s, float t) {
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (data == null || data.script == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        if (data == null || data.script == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
         try {

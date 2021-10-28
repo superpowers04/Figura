@@ -1,6 +1,7 @@
 package net.blancworks.figura.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraTrustScreen;
@@ -15,17 +16,18 @@ import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerListWidget.PlayerListWidgetEntry> {
 
     public static final Identifier lockTextureID = new Identifier("figura", "textures/gui/lock.png");
 
-    public PlayerListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget<?, ?> list, Screen parent, CustomListWidgetState state) {
+    public PlayerListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget<?, ?> list, Screen parent, CustomListWidgetState<?> state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
     }
 
@@ -33,14 +35,6 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
     protected void doFiltering(String searchTerm) {
         super.doFiltering(searchTerm);
         FiguraTrustScreen realScreen = (FiguraTrustScreen) getParent();
-
-        HashMap<Identifier, ArrayList<PlayerListEntry>> sortedEntries = new HashMap<>();
-        ArrayList<Identifier> sortedEntriesOrdered = new ArrayList<>();
-
-        for (Identifier preset : PlayerTrustManager.allGroups) {
-            sortedEntries.put(preset, new ArrayList<>());
-            sortedEntriesOrdered.add(preset);
-        }
 
         //Foreach player
         ArrayList<PlayerListEntry> players = new ArrayList<>();
@@ -58,65 +52,30 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
         figuraPlayers.addAll(players);
 
-        for (PlayerListEntry listEntry : figuraPlayers) {
-            if (!listEntry.getProfile().getName().toLowerCase().contains(searchTerm.toLowerCase()) || listEntry.getProfile().getId() == realScreen.draggedId)
-                continue;
+        for (Map.Entry<Identifier, TrustContainer> entry : PlayerTrustManager.groups.entrySet()) {
+            addEntry(new GroupListWidgetEntry(entry.getKey(), this) {{
+                identifier = entry.getKey().toString();
+                Text text = new TranslatableText("gui.figura." + entry.getKey().getPath());
+                displayText = new LiteralText("").append(new LiteralText(entry.getValue().expanded ? "V " : "> ")
+                        .setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)))
+                        .setStyle(Style.EMPTY.withColor(TextColor.parse(entry.getValue().expanded ? "gray" : "dark_gray")))
+                        .append(text);
+            }});
 
-            //Get trust container for that player
-            TrustContainer container = PlayerTrustManager.getContainer(new Identifier("players", listEntry.getProfile().getId().toString()));
-            Identifier groupName = container.getParentIdentifier();
+            if (!entry.getValue().expanded) continue;
 
-            if (container.isHidden)
-                continue;
+            for (PlayerListEntry listEntry : figuraPlayers) {
+                if (!listEntry.getProfile().getName().toLowerCase().contains(searchTerm.toLowerCase()) || listEntry.getProfile().getId() == realScreen.draggedId)
+                    continue;
 
-            //Create sorting group if need be
-            if (!sortedEntries.containsKey(groupName)) {
-                sortedEntries.put(groupName, new ArrayList<>());
-                sortedEntriesOrdered.add(groupName);
-            }
+                //Get trust container for that player
+                TrustContainer container = PlayerTrustManager.getContainer(new Identifier("player", listEntry.getProfile().getId().toString()));
+                TrustContainer parent = PlayerTrustManager.getContainer(container.parentID);
 
-            //Add to sorting group
-            ArrayList<PlayerListEntry> list = sortedEntries.get(groupName);
-            list.add(listEntry);
-        }
-
-        //For all the sorted entries
-        for (Identifier id : sortedEntriesOrdered) {
-            TrustContainer tc = PlayerTrustManager.getContainer(id);
-            
-            if (tc.isHidden)
-                continue;
-
-            ArrayList<PlayerListEntry> list = sortedEntries.get(id);
-
-            if (tc.displayChildren) {
-                addEntry(new GroupListWidgetEntry(id, this) {{
-                    identifier = id.toString();
-                    if (PlayerTrustManager.allGroups.contains(id)) {
-                        Text text = new TranslatableText("gui.figura." + id.getPath());
-                        displayText = new LiteralText("- ").setStyle(Style.EMPTY.withColor(TextColor.parse("gray"))).append(text);
-                    } else {
-                        displayText = new LiteralText(id.getPath()).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
-                    }
-                }});
-
-                for (PlayerListEntry playerListEntry : list) {
-                    addEntry(new PlayerListWidgetEntry(playerListEntry, this));
-                }
-            } else {
-                addEntry(new GroupListWidgetEntry(id, this) {{
-                    identifier = id.toString();
-
-                    if (PlayerTrustManager.allGroups.contains(id)) {
-                        Text text = new TranslatableText("gui.figura." + id.getPath());
-                        displayText = new LiteralText("+ ").setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray"))).append(text);
-                    } else {
-                        displayText = new LiteralText(id.getPath()).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
-                    }
-                }});
+                if (parent.equals(entry.getValue()))
+                    addEntry(new PlayerListWidgetEntry(listEntry, this));
             }
         }
-
     }
 
     @Override
@@ -126,7 +85,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             if (state.selected == entry.entryValue) {
                 TrustContainer tc = PlayerTrustManager.getContainer((Identifier) state.selected);
 
-                tc.displayChildren = !tc.displayChildren;
+                tc.expanded = !tc.expanded;
 
                 reloadFilters();
                 return;
@@ -148,17 +107,17 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             Identifier id;
 
             if (obj instanceof PlayerListEntry)
-                id = new Identifier("players", ((PlayerListEntry) obj).getProfile().getId().toString());
+                id = new Identifier("player", ((PlayerListEntry) obj).getProfile().getId().toString());
             else 
                 id = (Identifier) obj;
 
             TrustContainer tc = PlayerTrustManager.getContainer(id);
 
-            toggleButton = new ToggleButtonWidget(0, 0, 16, 16, !tc.isLocked) {
+            toggleButton = new ToggleButtonWidget(0, 0, 16, 16, !tc.locked) {
                 @Override
                 public void onClick(double mouseX, double mouseY) {
-                    tc.isLocked = !tc.isLocked;
-                    toggled = !tc.isLocked;
+                    tc.locked = tc.name.equals("local") || tc.name.equals(MinecraftClient.getInstance().player.getUuid().toString()) || !tc.locked;
+                    toggled = !tc.locked;
 
                     FiguraTrustScreen trustScreen = (FiguraTrustScreen) list.getParent();
                     trustScreen.permissionList.rebuild();
@@ -198,7 +157,11 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         @Override
         public Text getDisplayText() {
             PlayerListEntry entry = (PlayerListEntry) getEntryObject();
-            LiteralText name = new LiteralText("  " + entry.getProfile().getName());
+            MutableText name;
+            if (entry.getProfile().getId().compareTo(MinecraftClient.getInstance().player.getUuid()) == 0)
+                name = new LiteralText("  [").formatted(Formatting.AQUA).append(new TranslatableText("gui.figura.local")).append("] " + entry.getProfile().getName());
+            else
+                name = new LiteralText("  " + entry.getProfile().getName());
 
             Text badges = NamePlateAPI.getBadges(PlayerDataManager.getDataForPlayer(entry.getProfile().getId()));
             if (badges != null) name.append(badges);

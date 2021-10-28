@@ -3,7 +3,7 @@ package net.blancworks.figura.lua.api.particle;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
@@ -88,7 +88,7 @@ public class ParticleAPI {
 
     private static AbstractMap.Entry<Identifier, ParticleType<?>> particleSetup(CustomScript script, LuaValue id) {
         //check string or script particle count
-        if (!id.isstring() || script.particleSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID))
+        if (!id.isstring() || script.particleSpawnCount > script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES))
             return null;
 
         //increase particle count

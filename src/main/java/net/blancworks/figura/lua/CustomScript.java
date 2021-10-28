@@ -18,14 +18,13 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.*;
@@ -215,7 +214,7 @@ public class CustomScript extends FiguraAsset {
             currTask = CompletableFuture.runAsync(
                     () -> {
                         try {
-                            setInstructionLimitPermission(PlayerTrustManager.MAX_INIT_ID);
+                            setInstructionLimitPermission(TrustContainer.Trust.INIT_INST);
                             if (data != null) data.lastEntity = null;
                             chunk.call();
                         } catch (Exception error) {
@@ -281,7 +280,7 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
             try {
                 allEvents.get("onCommand").call(LuaString.valueOf(message));
             } catch (Exception error) {
@@ -295,7 +294,7 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
             try {
                 function.call();
             } catch (Exception error) {
@@ -309,7 +308,7 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
+            setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
             try {
                 allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
             } catch (Exception error) {
@@ -324,7 +323,7 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
             try {
                 allEvents.get("onDamage").call(LuaNumber.valueOf(amount));
             } catch (Exception error) {
@@ -468,8 +467,8 @@ public class CustomScript extends FiguraAsset {
 
     //Sets the instruction limit of the next function we'll call, and resets the bytecode count to 0
     //Uses the permission at permissionID to set it.
-    public void setInstructionLimitPermission(Identifier permissionID) {
-        int count = playerData.getTrustContainer().getIntSetting(permissionID);
+    public void setInstructionLimitPermission(TrustContainer.Trust permissionID) {
+        int count = playerData.getTrustContainer().getTrust(permissionID);
         setInstructionLimit(count);
     }
 
@@ -492,9 +491,9 @@ public class CustomScript extends FiguraAsset {
     //Called whenever the global tick event happens
     public void tick() {
         if (particleSpawnCount > 0)
-            particleSpawnCount = MathHelper.clamp(particleSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID)), 0, 999);
+            particleSpawnCount = MathHelper.clamp(particleSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES)), 0, 999);
         if (soundSpawnCount > 0)
-            soundSpawnCount = MathHelper.clamp(soundSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID)), 0, 999);
+            soundSpawnCount = MathHelper.clamp(soundSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS)), 0, 999);
 
         //If the tick function exists, call it.
         if (tickLuaEvent != null) {
@@ -518,7 +517,7 @@ public class CustomScript extends FiguraAsset {
         if (!isDone || tickLuaEvent == null || scriptError || !hasPlayer || playerData.lastEntity == null)
             return;
 
-        setInstructionLimitPermission(PlayerTrustManager.MAX_TICK_ID);
+        setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
         try {
             tickLuaEvent.call();
 
@@ -546,7 +545,7 @@ public class CustomScript extends FiguraAsset {
             CustomModelPart.clearExtraRendering(part);
         }
 
-        setInstructionLimitPermission(PlayerTrustManager.MAX_RENDER_ID);
+        setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
         } catch (Exception error) {

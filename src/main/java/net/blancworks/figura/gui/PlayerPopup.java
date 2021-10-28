@@ -53,7 +53,7 @@ public class PlayerPopup extends DrawableHelper {
 
         //title
         Text title = buttons.get(index);
-        textRenderer.drawWithOutline(title.asOrderedText(), -textRenderer.getWidth(title) / 2f, -28, 0xFFFFFF, 0x3D3D3D, matrices.peek().getModel(), vcp, 0xffffff);
+        textRenderer.drawWithOutline(title.asOrderedText(), -textRenderer.getWidth(title) / 2f, -28, 0xFFFFFF, 0x3D3D3D, matrices.peek().getModel(), vcp, 0xF000F0);
 
         //background
         drawTexture(matrices, -36, -18, 72, 30, 0f, 0f, 72, 30, 72, 66);
@@ -69,7 +69,7 @@ public class PlayerPopup extends DrawableHelper {
         Text badges = NamePlateAPI.getBadges(data);
         if (badges != null) name.append(badges);
 
-        Text trust = new LiteralText("- ").formatted(Formatting.BLACK).append(new TranslatableText("gui.figura." + data.getTrustContainer().getParentIdentifier().getPath()));
+        Text trust = new LiteralText("").formatted(Formatting.BLACK).append(new TranslatableText("gui.figura." + data.getTrustContainer().parentID.getPath()));
 
         matrices.scale(0.5f, 0.5f, 0.5f);
         matrices.translate(0f, 0f, -1f);
@@ -88,7 +88,7 @@ public class PlayerPopup extends DrawableHelper {
     }
 
     public static void execute() {
-        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
+        PlayerData data = entity == null ? null : PlayerDataManager.getDataForPlayer(entity.getUuid());
 
         if (data != null) {
             MutableText playerName = new LiteralText("").append(data.playerName);
@@ -105,12 +105,12 @@ public class PlayerPopup extends DrawableHelper {
                 case 2 -> {
                     TrustContainer tc = data.getTrustContainer();
                     if (PlayerTrustManager.increaseTrust(tc))
-                        FiguraMod.sendToast(playerName, new TranslatableText("gui.figura.toast.avatar.trust.title").append(new TranslatableText("gui.figura." + tc.getParentIdentifier().getPath())));
+                        FiguraMod.sendToast(playerName, new TranslatableText("gui.figura.toast.avatar.trust.title").append(new TranslatableText("gui.figura." + tc.parentID.getPath())));
                 }
                 case 3 -> {
                     TrustContainer tc = data.getTrustContainer();
                     if (PlayerTrustManager.decreaseTrust(tc))
-                        FiguraMod.sendToast(playerName, new TranslatableText("gui.figura.toast.avatar.trust.title").append(new TranslatableText("gui.figura." + tc.getParentIdentifier().getPath())));
+                        FiguraMod.sendToast(playerName, new TranslatableText("gui.figura.toast.avatar.trust.title").append(new TranslatableText("gui.figura." + tc.parentID.getPath())));
                 }
             }
         }

@@ -5,7 +5,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -34,7 +34,7 @@ public class Deadmau5FeatureRendererMixin extends FeatureRenderer<AbstractClient
     @Inject(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/entity/LivingEntityRenderer;getOverlay(Lnet/minecraft/entity/LivingEntity;F)I", shift = At.Shift.AFTER), cancellable = true)
     private void afterGetOverlay(MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, int light, AbstractClientPlayerEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch, CallbackInfo ci) {
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (data == null || data.script == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        if (data == null || data.script == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
         boolean prevEnabled = ((PlayerEntityModelAccess) this.getContextModel()).getEar().visible;

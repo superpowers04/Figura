@@ -41,6 +41,31 @@
       "file": "figura:font/cheese.png",
       "ascent": 8,
       "chars": ["\uD83E\uDDC0"]
+    },
+
+    {
+      "type": "bitmap",
+      "file": "figura:font/right.png",
+      "ascent": 8,
+      "chars": [">"]
+    },
+    {
+      "type": "bitmap",
+      "file": "figura:font/down.png",
+      "ascent": 8,
+      "chars": ["V"]
+    },
+    {
+      "type": "bitmap",
+      "file": "figura:font/left.png",
+      "ascent": 8,
+      "chars": ["<"]
+    },
+    {
+      "type": "bitmap",
+      "file": "figura:font/up.png",
+      "ascent": 8,
+      "chars": ["^"]
     }
   ]
 }

@@ -82,7 +82,7 @@ public class PlayerData {
 
     public Identifier getTrustIdentifier() {
         if (trustIdentifier == null)
-            trustIdentifier = new Identifier("players", playerId.toString());
+            trustIdentifier = new Identifier("player", playerId.toString());
         return trustIdentifier;
     }
 
@@ -199,7 +199,7 @@ public class PlayerData {
         }
 
         try {
-            if (getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS)) {
+            if (getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1) {
                 if (nbt.contains("customVCP")) {
                     NbtCompound vcpNbt = nbt.getCompound("customVCP");
 
@@ -308,7 +308,7 @@ public class PlayerData {
     }
 
     public boolean canRenderCustomLayers() {
-        boolean ret = getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_CUSTOM_RENDERLAYERS);
+        boolean ret = getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1;
 
         if (FabricLoader.getInstance().isModLoaded("iris"))
             return ret && net.coderbot.iris.Iris.getCurrentPack().isEmpty();

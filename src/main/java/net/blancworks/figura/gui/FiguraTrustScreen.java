@@ -9,7 +9,6 @@ import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
@@ -128,10 +127,10 @@ public class FiguraTrustScreen extends Screen {
 
                 //if a perm is selected, reset only this perm
                 if (playerListState != null && permissionListState.selected != null)
-                    tc.reset(((PermissionSetting<?>) permissionListState.selected).id);
+                    tc.resetTrust((TrustContainer.Trust) permissionListState.selected);
                 //else reset all the entry perms
                 else
-                    tc.resetAll();
+                    tc.resetAllTrust();
 
                 permissionList.rebuild();
             }
@@ -146,8 +145,7 @@ public class FiguraTrustScreen extends Screen {
                 playerList.children().forEach(customListEntry -> {
                     playerListState.selected = customListEntry.getEntryObject();
                     TrustContainer tc = permissionList.getCurrentContainer();
-
-                    tc.resetAll();
+                    tc.resetAllTrust();
                 });
             } catch (Exception e) {
                 e.printStackTrace();
@@ -230,7 +228,7 @@ public class FiguraTrustScreen extends Screen {
                     int complexity = data.model.getRenderComplexity();
                     MutableText complexityText = new TranslatableText("gui.figura.complexity", complexity).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
 
-                    if (trustData != null && complexity >= trustData.getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID))
+                    if (trustData != null && complexity > trustData.getTrust(TrustContainer.Trust.COMPLEXITY))
                         complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
 
                     drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, TextColor.parse("white").getRgb());
@@ -263,7 +261,7 @@ public class FiguraTrustScreen extends Screen {
                 } else if (playerListState.selected instanceof Identifier) {
                     TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
 
-                    if (tc != null && tc.isHidden) {
+                    if (tc != null) {
                         renderTooltip(matrices, new TranslatableText("gui.figura.button.tooltip.cantreset"), mouseX, mouseY);
                     } else {
                         renderTooltip(matrices, new TranslatableText("gui.figura.button.tooltip.resetallperm"), mouseX, mouseY);
@@ -353,7 +351,7 @@ public class FiguraTrustScreen extends Screen {
             resetPermissionButton.active = shiftPressed;
         } else if (playerListState.selected instanceof Identifier) {
             TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
-            if (tc != null && !tc.isHidden)
+            if (tc != null)
                 resetPermissionButton.active = shiftPressed;
         } else {
             resetPermissionButton.active = false;
@@ -443,7 +441,6 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-
         if (draggedId != null) {
             if (playerList.isMouseOver(mouseX, mouseY)) {
                 PlayerListWidget.PlayerListWidgetEntry listEntry = (PlayerListWidget.PlayerListWidgetEntry) playerList.getEntryAtPos(mouseX, mouseY);
@@ -451,18 +448,20 @@ public class FiguraTrustScreen extends Screen {
                 if (listEntry != null) {
                     Object obj = listEntry.getEntryObject();
 
-                    if (obj instanceof Identifier) {
-                        Identifier playerID = new Identifier("players", draggedId.toString());
+                    if (obj instanceof Identifier id) {
+                        Identifier playerID = new Identifier("player", draggedId.toString());
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
 
-                        if (tc != null) tc.setParent((Identifier) obj);
+                        if (tc != null && (!id.getPath().equals("local") || draggedId.compareTo(MinecraftClient.getInstance().player.getUuid()) == 0))
+                            tc.parentID = id;
                     } else if (obj instanceof PlayerListEntry) {
-                        Identifier playerID = new Identifier("players", draggedId.toString());
+                        Identifier playerID = new Identifier("player", draggedId.toString());
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
-                        Identifier droppedID = new Identifier("players", ((PlayerListEntry) obj).getProfile().getId().toString());
+
+                        Identifier droppedID = new Identifier("player", ((PlayerListEntry) obj).getProfile().getId().toString());
                         TrustContainer droppedTC = PlayerTrustManager.getContainer(droppedID);
 
-                        if (tc != null) tc.setParent(droppedTC.getParentIdentifier());
+                        if (tc != null && droppedTC != null && !droppedTC.parentID.getPath().equals("local")) tc.parentID = droppedTC.parentID;
                     }
                 }
             }

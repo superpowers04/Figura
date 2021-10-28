@@ -5,7 +5,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.SpyglassModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.PlayerHeldItemFeatureRenderer;
@@ -29,7 +29,7 @@ public class PlayerHeldItemFeatureRendererMixin {
     @Inject(method = "renderSpyglass", at = @At(value = "HEAD"), cancellable = true)
     public void renderSpyglass(LivingEntity entity, ItemStack stack, Arm arm, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (data == null || !data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID))
+        if (data == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
         boolean left = arm == Arm.LEFT;
@@ -38,7 +38,7 @@ public class PlayerHeldItemFeatureRendererMixin {
                 VanillaModelPartCustomization originModification = left ? data.model.originModifications.get(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID) : data.model.originModifications.get(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID);
 
                 if (originModification != null) {
-                    if (originModification.part == null || originModification.visible == null || data.model.lastComplexity >= data.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
+                    if (originModification.part == null || originModification.visible == null || data.model.lastComplexity > data.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY)) {
                         ci.cancel();
                         return;
                     }
