@@ -2,7 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.render.entity.EntityRenderer;
@@ -27,7 +27,7 @@ public abstract class EntityRenderDispatcherMixin {
     private final Predicate<Entity> MOUNT_DISABLED_PREDICATE = (entity -> {
         if (entity instanceof PlayerEntity player) {
             PlayerData data = PlayerDataManager.getDataForPlayer(player.getUuid());
-            if (data != null && data.script != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+            if (data != null && data.script != null && data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1) {
                 this.renderShadows = data.script.renderMountShadow;
                 return !data.script.renderMount;
             }

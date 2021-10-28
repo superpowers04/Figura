@@ -24,7 +24,6 @@ import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
-import org.luaj.vm2.LuaError;
 
 import java.util.List;
 import java.util.Objects;
@@ -33,10 +32,10 @@ public class ActionWheel extends DrawableHelper {
 
     private final MinecraftClient client;
 
-    public static final Identifier ACTION_WHEEL = new Identifier("figura", "textures/gui/action_wheel.png");
-    public static final Identifier ACTION_WHEEL_SELECTED = new Identifier("figura", "textures/gui/action_wheel_selected.png");
-    public static final Vec3f ERROR_COLOR = new Vec3f(1.0f, 0.28f, 0.28f);
-    public static final List<Text> NO_FUNCTION_MESSAGE = ImmutableList.of(new TranslatableText("gui.figura.actionwheel.nofunction"));
+    private static final Identifier ACTION_WHEEL = new Identifier("figura", "textures/gui/action_wheel.png");
+    private static final Identifier ACTION_WHEEL_SELECTED = new Identifier("figura", "textures/gui/action_wheel_selected.png");
+    private static final Vec3f ERROR_COLOR = new Vec3f(1.0f, 0.28f, 0.28f);
+    private static final List<Text> NO_FUNCTION_MESSAGE = ImmutableList.of(new TranslatableText("gui.figura.actionwheel.nofunction"));
 
     public static int selectedSlot = -1;
     public static boolean enabled = true;
@@ -351,7 +350,7 @@ public class ActionWheel extends DrawableHelper {
         matrices.translate(0, 0, 599);
         int i = 0;
         for (Text text : lines) {
-            drawTextWithShadow(matrices, this.client.textRenderer, text, (int) textPos.x, (int) textPos.y + (i-lines.size()+1)*9, textColor);
+            drawTextWithShadow(matrices, this.client.textRenderer, text, (int) textPos.x, (int) textPos.y + (i - lines.size() + 1) * 9, textColor);
             i++;
         }
         matrices.pop();

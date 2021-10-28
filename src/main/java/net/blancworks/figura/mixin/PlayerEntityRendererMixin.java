@@ -11,7 +11,7 @@ import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -62,7 +62,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         //Reset this here because... Execution order.
 
         PlayerData data = FiguraMod.currentData;
-        if (data != null && data.script != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+        if (data != null && data.script != null && data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1) {
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().body);
             figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm);
@@ -89,7 +89,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         if (data != null) {
 
-            if (data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_OFFSCREEN_RENDERING))
+            if (data.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1)
                 return true;
         }
 
@@ -178,7 +178,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         }
 
         //do not continue if untrusted
-        if (!data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID))
+        if (data.getTrustContainer().getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 0)
             return;
 
         ci.cancel();

@@ -43,7 +43,6 @@ import org.lwjgl.glfw.GLFW;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.WatchKey;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -72,11 +71,8 @@ public class FiguraMod implements ClientModInitializer {
     //If an asset is set to load, it will attach to this if it exists, or create a new one if it doesn't.
     private static CompletableFuture<?> globalLoadTask;
 
-    private PlayerDataManager dataManagerInstance;
-
     public static IFiguraNetwork networkManager;
 
-    
     //private static FiguraNetworkManager oldNetworkManager;
     private static NewFiguraNetworkManager newNetworkManager;
 
@@ -86,10 +82,6 @@ public class FiguraMod implements ClientModInitializer {
     public static VertexConsumerProvider vertexConsumerProvider;
     public static VertexConsumerProvider.Immediate immediate;
     public static float deltaTime;
-
-    private static final boolean USE_DEBUG_MODEL = true;
-    private static WatchKey watchKey;
-    private static Path path;
 
     //Methods
 
@@ -171,7 +163,6 @@ public class FiguraMod implements ClientModInitializer {
         WorldRenderEvents.AFTER_ENTITIES.register(FiguraMod::renderFirstPersonWorldParts);
         ClientLifecycleEvents.CLIENT_STOPPING.register((v) -> networkManager.onClose());
 
-        dataManagerInstance = new PlayerDataManager();
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
             @Override
             public Identifier getFabricId() {

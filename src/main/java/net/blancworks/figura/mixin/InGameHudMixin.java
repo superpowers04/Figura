@@ -8,6 +8,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.math.MatrixStack;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
@@ -17,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
 
-    private ActionWheel actionWheel;
+    @Unique private ActionWheel actionWheel;
 
     @Inject(at = @At ("RETURN"), method = "<init>")
     public void init(MinecraftClient client, CallbackInfo ci) {
@@ -29,8 +30,7 @@ public class InGameHudMixin {
         if (FiguraMod.actionWheel.isPressed()) {
             if (ActionWheel.enabled)
                 actionWheel.render(matrices);
-        }
-        else {
+        } else {
             ActionWheel.enabled = true;
         }
     }

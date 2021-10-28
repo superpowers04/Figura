@@ -5,7 +5,7 @@ import net.blancworks.figura.access.SoundSystemAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.Channel;
 import net.minecraft.client.sound.SoundInstance;
@@ -14,7 +14,6 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.VarArgFunction;
@@ -83,7 +82,7 @@ public class SoundAPI {
     }
 
     public static void playSound(CustomScript script, LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-        if (script.soundSpawnCount > script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID))
+        if (script.soundSpawnCount > script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS))
             return;
         script.soundSpawnCount++;
 

@@ -68,8 +68,8 @@ public class CustomModel extends FiguraAsset {
         if (this.owner == null)
             return 0;
 
-        TrustContainer tc = PlayerTrustManager.getContainer(new Identifier("players", this.owner.playerId.toString()));
-        return tc != null ? tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID) : 0;
+        TrustContainer tc = PlayerTrustManager.getContainer(new Identifier("player", this.owner.playerId.toString()));
+        return tc != null ? tc.getTrust(TrustContainer.Trust.COMPLEXITY) : 0;
     }
 
     public void render(EntityModel<?> entity_model, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {

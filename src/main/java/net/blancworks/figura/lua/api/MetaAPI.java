@@ -4,7 +4,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -20,63 +20,70 @@ public class MetaAPI {
             set("getInitLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_INIT_ID));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.INIT_INST));
                 }
             });
 
             set("getTickLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_TICK_ID));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.TICK_INST));
                 }
             });
 
             set("getRenderLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_RENDER_ID));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.RENDER_INST));
                 }
             });
 
             set("getCanModifyVanilla", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1);
                 }
             });
 
             set("getComplexityLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY));
                 }
             });
 
             set("getParticleLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_PARTICLES_ID));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES));
                 }
             });
 
             set("getSoundLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getIntSetting(PlayerTrustManager.MAX_SOUND_EFFECTS_ID));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS));
                 }
             });
 
             set("getDoesRenderOffscreen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_OFFSCREEN_RENDERING));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1);
                 }
             });
 
             set("getCanModifyNameplate", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID));
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 1);
+                }
+            });
+
+            set("getCanHaveCustomRenderLayer", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1);
                 }
             });
 

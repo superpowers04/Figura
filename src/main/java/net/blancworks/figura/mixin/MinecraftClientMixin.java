@@ -8,6 +8,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerEntity;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +24,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MinecraftClientMixin {
 
     @Shadow @Final public Mouse mouse;
+    @Shadow @Final public GameOptions options;
     @Shadow @Nullable public Entity targetedEntity;
     @Shadow @Nullable public ClientPlayerEntity player;
 
@@ -50,9 +52,14 @@ public class MinecraftClientMixin {
         }
 
         if (FiguraMod.playerPopup.isPressed()) {
-            if (this.targetedEntity instanceof PlayerEntity player && PlayerPopup.entity == null) {
-                PlayerPopup.entity = player;
-                playerPopupActive = true;
+            if (PlayerPopup.entity == null) {
+                if (this.targetedEntity instanceof PlayerEntity player) {
+                    playerPopupActive = true;
+                    PlayerPopup.entity = player;
+                } else if (!this.options.getPerspective().isFirstPerson()){
+                    playerPopupActive = true;
+                    PlayerPopup.entity = this.player;
+                }
             }
         } else if (playerPopupActive) {
             PlayerPopup.execute();

@@ -7,7 +7,7 @@ import net.blancworks.figura.access.ElytraEntityModelAccess;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.feature.ElytraFeatureRenderer;
@@ -41,7 +41,7 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
         PlayerData data = PlayerDataManager.getDataForPlayer(livingEntity.getUuid());
         FiguraMod.currentData = data;
 
-        if (data != null && data.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_VANILLA_MOD_ID)) {
+        if (data != null && data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1) {
             figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess) elytra).getLeftWing());
             figura$applyPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING, ((ElytraEntityModelAccess) elytra).getRightWing());
         }

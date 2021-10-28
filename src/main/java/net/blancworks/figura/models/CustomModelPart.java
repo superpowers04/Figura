@@ -173,7 +173,7 @@ public class CustomModelPart {
             }
 
             //render
-            renderCube(leftToRender, matrices, consumer, light, overlay, u, v, color, alpha);
+            leftToRender = renderCube(leftToRender, matrices, consumer, light, overlay, u, v, color, alpha);
         }
 
         for (CustomModelPart child : this.children) {
@@ -227,9 +227,9 @@ public class CustomModelPart {
         //render!
         if (canRender) {
             if (ShaderType.EndPortal.isShader(shaders))
-                renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEndGateway()), light, overlay, u, v, color, alpha);
+                leftToRender = renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEndGateway()), light, overlay, u, v, color, alpha);
             if (ShaderType.Glint.isShader(shaders))
-                renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getDirectEntityGlint()), light, overlay, u, v, color, alpha);
+                leftToRender = renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getDirectEntityGlint()), light, overlay, u, v, color, alpha);
         }
 
         for (CustomModelPart child : this.children) {
@@ -310,7 +310,7 @@ public class CustomModelPart {
         return textureId;
     }
 
-    public void renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
+    public int renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
         Matrix4f modelMatrix = matrices.peek().getModel();
         Matrix3f normalMatrix = matrices.peek().getNormal();
 
@@ -354,6 +354,8 @@ public class CustomModelPart {
                     break;
             }
         }
+
+        return leftToRender;
     }
 
     public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {

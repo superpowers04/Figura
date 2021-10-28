@@ -9,7 +9,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
@@ -246,7 +246,7 @@ public class NamePlateAPI {
 
         if (currentData != null) {
             //apply nameplate formatting
-            if (nameplateData != null && nameplateData.text != null && currentData.getTrustContainer().getBoolSetting(PlayerTrustManager.ALLOW_NAMEPLATE_MOD_ID)) {
+            if (nameplateData != null && nameplateData.text != null && currentData.getTrustContainer().getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 1) {
                 //try to parse the string as json text
                 //otherwise use the raw text
                 try {
@@ -286,7 +286,7 @@ public class NamePlateAPI {
         if (currentData.hasAvatar()) {
             if (FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
-            else if (currentData.model != null && currentData.model.getRenderComplexity() >= currentData.getTrustContainer().getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID))
+            else if (currentData.model != null && currentData.model.getRenderComplexity() > currentData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY))
                 badges += "▲";
             else if (currentData.script != null && currentData.script.scriptError)
                 badges += "▲";

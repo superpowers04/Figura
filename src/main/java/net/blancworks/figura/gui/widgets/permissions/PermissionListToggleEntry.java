@@ -3,28 +3,23 @@ package net.blancworks.figura.gui.widgets.permissions;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
-import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
-import net.minecraft.client.MinecraftClient;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.render.GameRenderer;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 
 public class PermissionListToggleEntry extends PermissionListEntry{
     public ToggleButtonWidget widget;
 
-    public PermissionListToggleEntry(PermissionBooleanSetting obj, CustomListWidget list) {
-        super(obj, list);
+    public PermissionListToggleEntry(TrustContainer.Trust trust, CustomListWidget<?, ?> list, TrustContainer container) {
+        super(trust, list, container);
 
-        matchingElement = widget = new ToggleButtonWidget(0, 0, 16 , 16, obj.value){
+        matchingElement = widget = new ToggleButtonWidget(0, 0, 16 , 16, container.getTrust(trust) == 1) {
             @Override
             public void onClick(double mouseX, double mouseY) {
-                obj.value = !obj.value;
-                toggled = obj.value;
-                ((PermissionListWidget)list).setPermissionValue(obj);
+                container.setTrust(trust, (container.getTrust(trust) + 1) % 2);
+                toggled = container.getTrust(trust) == 1;
             }
 
             @Override
@@ -43,14 +38,14 @@ public class PermissionListToggleEntry extends PermissionListEntry{
                     j += this.hoverVOffset;
                 }
 
-                this.drawTexture(matrices, this.x, this.y, i, j, this.width, this.height, 64, 32);
+                drawTexture(matrices, this.x, this.y, i, j, this.width, this.height, 64, 32);
                 RenderSystem.enableDepthTest();
             }
         };
         
         widget.setTextureUV(0, 0, 16, 16, new Identifier("figura", "textures/gui/togglebox.png"));
 
-        if(((PermissionListWidget) list).getCurrentContainer().isLocked)
+        if(((PermissionListWidget) list).getCurrentContainer().locked)
             widget.active = false;
     }
 
@@ -66,18 +61,4 @@ public class PermissionListToggleEntry extends PermissionListEntry{
         widget.render(matrices, mouseX, mouseY, delta);
     }
 
-    @Override
-    public Text getDisplayText() {
-        PermissionListWidget realList = (PermissionListWidget) list;
-
-        if(realList.isDifferent(getEntrySetting()))
-            return new TranslatableText("gui.figura." + getEntrySetting().id.getPath()).append("*").setStyle(Style.EMPTY.withBold(true).withUnderline(true));
-
-        return new TranslatableText("gui.figura." + getEntrySetting().id.getPath());
-    }
-
-    @Override
-    public String getIdentifier() {
-        return getEntrySetting().id.toString();
-    }
 }

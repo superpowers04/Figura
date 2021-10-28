@@ -2,28 +2,28 @@ package net.blancworks.figura.gui.widgets.permissions;
 
 import net.blancworks.figura.gui.widgets.CustomListEntry;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
+import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.gui.Element;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
 
 public class PermissionListEntry extends CustomListEntry {
 
-    public TrustContainer targetContainer;
-    public Identifier targetSetting;
+    public TrustContainer container;
     public Element matchingElement;
+    public ArrayList<Text> tooltipText = new ArrayList<>();
 
-    public ArrayList<Text> tooltipText = new ArrayList<Text>();
-
-    public PermissionListEntry(PermissionSetting obj, CustomListWidget list) {
-        super(obj, list);
+    public PermissionListEntry(TrustContainer.Trust trust, CustomListWidget<?, ?> list, TrustContainer container) {
+        super(trust, list);
+        this.container = container;
     }
 
-    public PermissionSetting getEntrySetting(){
-        return (PermissionSetting) entryValue;
+    public TrustContainer.Trust getEntrySetting() {
+        return (TrustContainer.Trust) entryValue;
     }
     
     @Override
@@ -81,5 +81,20 @@ public class PermissionListEntry extends CustomListEntry {
         if(matchingElement != null)
             return matchingElement.charTyped(chr, modifiers);
         return super.charTyped(chr, modifiers);
+    }
+
+    @Override
+    public Text getDisplayText() {
+        PermissionListWidget realList = (PermissionListWidget) list;
+
+        if(realList.isDifferent(getEntrySetting()))
+            return new TranslatableText("gui.figura." + getEntrySetting().id).append("*").formatted(Formatting.AQUA);
+
+        return new TranslatableText("gui.figura." + getEntrySetting().id);
+    }
+
+    @Override
+    public String getIdentifier() {
+        return getEntrySetting().id;
     }
 }
