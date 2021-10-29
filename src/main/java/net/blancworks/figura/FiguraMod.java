@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.config.ConfigManager.Config;
-import net.blancworks.figura.gui.widgets.FiguraToast;
+import net.blancworks.figura.gui.FiguraToast;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;

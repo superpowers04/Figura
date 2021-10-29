@@ -2,6 +2,7 @@ package net.blancworks.figura.gui.widgets;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.LocalPlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -93,6 +94,9 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
 
     @Override
     public void select(ModelFileListWidgetEntry entry) {
+        if (!PlayerDataManager.localPlayer.isAvatarLoaded())
+            return;
+
         super.select(entry);
 
         FiguraGuiScreen parent = (FiguraGuiScreen) getParent();

@@ -2,70 +2,15 @@
   "providers": [
     {
       "type": "bitmap",
-      "file": "figura:font/mark.png",
+      "file": "figura:font/badges.png",
       "ascent": 8,
-      "chars": ["△"]
+      "chars": ["△▲★✯☆✭\uD83E\uDDC0"]
     },
     {
       "type": "bitmap",
-      "file": "figura:font/mark_red.png",
+      "file": "figura:font/arrows.png",
       "ascent": 8,
-      "chars": ["▲"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/star_pink.png",
-      "ascent": 8,
-      "chars": ["★"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/star_burned.png",
-      "ascent": 8,
-      "chars": ["✯"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/star.png",
-      "ascent": 8,
-      "chars": ["☆"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/starite.png",
-      "ascent": 8,
-      "chars": ["✭"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/cheese.png",
-      "ascent": 8,
-      "chars": ["\uD83E\uDDC0"]
-    },
-
-    {
-      "type": "bitmap",
-      "file": "figura:font/right.png",
-      "ascent": 8,
-      "chars": [">"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/down.png",
-      "ascent": 8,
-      "chars": ["V"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/left.png",
-      "ascent": 8,
-      "chars": ["<"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/up.png",
-      "ascent": 8,
-      "chars": ["^"]
+      "chars": [">V<^"]
     }
   ]
 }
