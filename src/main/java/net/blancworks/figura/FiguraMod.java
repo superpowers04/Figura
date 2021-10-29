@@ -65,6 +65,8 @@ public class FiguraMod implements ClientModInitializer {
     public static KeyBinding actionWheel;
     public static KeyBinding playerPopup;
 
+    public static long ticksElapsed;
+
     //Loading
 
     //This task is what's used to manage all loading requests in the whole mod.
@@ -196,6 +198,7 @@ public class FiguraMod implements ClientModInitializer {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        ticksElapsed++;
     }
 
     public static Path getModContentDirectory() {
