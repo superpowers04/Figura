@@ -284,7 +284,9 @@ public class NamePlateAPI {
 
         //the mark
         if (currentData.hasAvatar()) {
-            if (FiguraMod.IS_CHEESE)
+             if (!currentData.isAvatarLoaded())
+                badges += Integer.toHexString((int) (FiguraMod.ticksElapsed % 16)).toUpperCase();
+            else if (FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
             else if (currentData.model != null && currentData.model.getRenderComplexity() > currentData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY))
                 badges += "▲";

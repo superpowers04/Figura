@@ -1,8 +1,8 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.minecraft.client.MinecraftClient;
@@ -28,15 +28,14 @@ public class ChatHudListenerMixin {
     @Shadow @Final private MinecraftClient client;
 
     @Inject(method = "onChatMessage", at = @At("HEAD"))
-    private void onChatMessage(MessageType type, Text message, UUID senderUuid, CallbackInfo ci) {
+    private void onChatMessage(MessageType type, Text message, UUID uuid, CallbackInfo ci) {
         if (!(boolean) Config.CHAT_MODIFICATIONS.value)
             return;
 
         String playerName = "";
-        UUID uuid = senderUuid;
 
         //get player profile
-        PlayerListEntry playerEntry = this.client.player.networkHandler.getPlayerListEntry(senderUuid);
+        PlayerListEntry playerEntry = this.client.player == null ? null : this.client.player.networkHandler.getPlayerListEntry(uuid);
 
         if (playerEntry == null) {
             String textString = message.getString();
@@ -76,8 +75,8 @@ public class ChatHudListenerMixin {
                     if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, playerName, nameplateData, currentData))
                         break;
                 }
-            } else if (message instanceof LiteralText) {
-                NamePlateAPI.applyFormattingRecursive((LiteralText) message, playerName, nameplateData, currentData);
+            } else if (message instanceof LiteralText literal) {
+                NamePlateAPI.applyFormattingRecursive(literal, playerName, nameplateData, currentData);
             }
         } catch (Exception e) {
             e.printStackTrace();
