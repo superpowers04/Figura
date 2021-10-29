@@ -7,7 +7,7 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 @Mixin(RenderPhase.class)
 public interface RenderPhaseInvokerMixin {
     @Invoker("setupGlintTexturing")
-    public static void setupGlintTexturing(float f) {
+    static void setupGlintTexturing(float f) {
         throw new AssertionError();
     }
 }

@@ -1,4 +1,4 @@
-package net.blancworks.figura.gui.widgets;
+package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;

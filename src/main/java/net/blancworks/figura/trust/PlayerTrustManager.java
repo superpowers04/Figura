@@ -92,7 +92,7 @@ public class PlayerTrustManager {
         });
 
         players.forEach((key, value) -> {
-            if (!value.isTrustEmpty() || !value.parentID.getPath().equals("untrusted")) {
+            if (!key.getPath().equals(MinecraftClient.getInstance().player.getUuid().toString()) && !value.parentID.getPath().equals("local") && (!value.isTrustEmpty() || !value.parentID.getPath().equals("untrusted"))) {
                 NbtCompound container = new NbtCompound();
                 value.writeNbt(container);
                 playerList.add(container);
@@ -125,12 +125,14 @@ public class PlayerTrustManager {
 
             String name = compound.getString("name");
             Identifier parentID = new Identifier(compound.getString("parent"));
-            TrustContainer container =  new TrustContainer(name, parentID, compound.getCompound("trust"));
 
-            container.locked = parentID.getPath().equals("local") || compound.getBoolean("locked");
-            container.expanded = compound.getBoolean("expanded");
+            if (!name.equals(MinecraftClient.getInstance().player.getUuid().toString()) && !parentID.getPath().equals("local")) {
+                TrustContainer container = new TrustContainer(name, parentID, compound.getCompound("trust"));
+                container.locked = compound.getBoolean("locked");
+                container.expanded = compound.getBoolean("expanded");
 
-            players.put(new Identifier("player", name), container);
+                players.put(new Identifier("player", name), container);
+            }
         });
     }
 

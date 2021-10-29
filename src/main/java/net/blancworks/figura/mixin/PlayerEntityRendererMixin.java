@@ -30,11 +30,10 @@ import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Matrix4f;
 import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -50,9 +49,14 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         super(ctx, model, shadowRadius);
     }
 
-    @Shadow protected abstract void renderLabelIfPresent(AbstractClientPlayerEntity abstractClientPlayerEntity, Text text, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i);
+    @Unique private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
+    @Unique private boolean hideNameplate = false;
 
-    private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
+    @Override
+    public boolean shouldRender(AbstractClientPlayerEntity entity, Frustum frustum, double x, double y, double z) {
+        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
+        return (data != null && data.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1) || super.shouldRender(entity, frustum, x, y, z);
+    }
 
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(AbstractClientPlayerEntity abstractClientPlayerEntity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
@@ -81,19 +85,9 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 shadowRadius = data.script.customShadowSize;
             }
         }
-    }
 
-    @Override
-    public boolean shouldRender(AbstractClientPlayerEntity entity, Frustum frustum, double x, double y, double z) {
-        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
-
-        if (data != null) {
-
-            if (data.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1)
-                return true;
-        }
-
-        return super.shouldRender(entity, frustum, x, y, z);
+        //render player popup
+        hideNameplate = !MinecraftClient.getInstance().options.hudHidden && PlayerPopup.render(abstractClientPlayerEntity, matrixStack, vertexConsumerProvider, this.dispatcher, data);
     }
 
     @Inject(at = @At("RETURN"), method = "render")
@@ -132,18 +126,24 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants);
     }
 
-    @Inject(method = "renderLabelIfPresent", at = @At("HEAD"))
-    private void renderPopupMenu(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, int light, CallbackInfo ci) {
+    @Inject(at = @At("RETURN"), method = "renderArm")
+    private void postRenderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo ci) {
+        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
+        PlayerEntityModel<?> model = realRenderer.getModel();
+        PlayerData playerData = FiguraMod.currentData;
 
+        if (playerData != null && playerData.model != null) {
+            arm.pitch = 0;
+            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, arm, model, 1f);
+        }
 
+        FiguraMod.clearRenderingData();
+        figura$clearAllPartCustomizations();
     }
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
     private void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
-
-        //render player popup
-        if (PlayerPopup.render(entity, matrices, vertexConsumers, this.dispatcher, data)) {
+        if (hideNameplate) {
             ci.cancel();
             return;
         }
@@ -152,6 +152,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         String playerName = entity.getEntityName();
 
         //check for data and trust settings
+        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
         if (!(boolean) Config.NAMEPLATE_MODIFICATIONS.value || data == null || playerName.equals(""))
             return;
 
@@ -256,21 +257,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
     }
 
-    @Inject(at = @At("RETURN"), method = "renderArm")
-    private void postRenderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, CallbackInfo ci) {
-        PlayerEntityRenderer realRenderer = (PlayerEntityRenderer) (Object) this;
-        PlayerEntityModel<?> model = realRenderer.getModel();
-        PlayerData playerData = FiguraMod.currentData;
-
-        if (playerData != null && playerData.model != null) {
-            arm.pitch = 0;
-            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, arm, model, 1f);
-        }
-
-        FiguraMod.clearRenderingData();
-        figura$clearAllPartCustomizations();
-    }
-
     public void figura$applyPartCustomization(String id, ModelPart part) {
         PlayerData data = FiguraMod.currentData;
 
@@ -291,14 +277,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         figura$customizedParts.clear();
     }
 
-    public void figura$setupTransformsPublic(AbstractClientPlayerEntity abstractClientPlayerEntity, MatrixStack matrixStack, float f, float g, float h){
+    public void figura$setupTransformsPublic(AbstractClientPlayerEntity abstractClientPlayerEntity, MatrixStack matrixStack, float f, float g, float h) {
         this.setupTransforms(abstractClientPlayerEntity, matrixStack, f, g, h);
     }
-
-    @Shadow
-    @Override
-    public Identifier getTexture(AbstractClientPlayerEntity entity) {
-        return null;
-    }
-
 }

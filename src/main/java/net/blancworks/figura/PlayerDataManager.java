@@ -148,13 +148,14 @@ public final class PlayerDataManager {
     }
 
     public static void clearPlayer(UUID id) {
-        TO_CLEAR.add(id);
-
-        if (localPlayer != null) {
-            if (id == localPlayer.playerId) {
-                localPlayer = null;
-                didInitLocalPlayer = false;
-            }
+        if (localPlayer != null && id.compareTo(localPlayer.playerId) == 0) {
+            if (!localPlayer.isLocalAvatar)
+                clearLocalPlayer();
+            else if (localPlayer.loadedName != null)
+                localPlayer.reloadAvatar();
+        }
+        else {
+            TO_CLEAR.add(id);
         }
     }
 
