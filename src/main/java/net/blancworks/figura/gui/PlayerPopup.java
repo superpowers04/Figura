@@ -47,7 +47,6 @@ public class PlayerPopup extends DrawableHelper {
         matrices.scale(-0.025f, -0.025f, 0.025f);
         matrices.translate(0f, 0f, -3f);
 
-        RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
         RenderSystem.enableDepthTest();
         TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
 
@@ -56,6 +55,7 @@ public class PlayerPopup extends DrawableHelper {
         textRenderer.drawWithOutline(title.asOrderedText(), -textRenderer.getWidth(title) / 2f, -28, 0xFFFFFF, 0x3D3D3D, matrices.peek().getModel(), vcp, 0xF000F0);
 
         //background
+        RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
         drawTexture(matrices, -36, -18, 72, 30, 0f, 0f, 72, 30, 72, 66);
 
         //icons
