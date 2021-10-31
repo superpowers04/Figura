@@ -137,6 +137,13 @@ public class VectorAPI {
                     return LuaVector.of(MathUtils.quaternionToEulerXYZ(new Quaternion(vec.x(), vec.y(), vec.z(), vec.w())));
                 }
             });
+
+            set("worldToScreenSpace", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return LuaVector.of(MathUtils.worldToScreenSpace(LuaVector.checkOrNew(arg).asV3f()));
+                }
+            });
         }});
     }
 
