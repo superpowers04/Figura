@@ -1,12 +1,13 @@
 package net.blancworks.figura.utils;
 
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.util.math.Quaternion;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.Camera;
+import net.minecraft.util.math.*;
 
 public class MathUtils {
 
     //yoinked from wikipedia
-    public static Vector3f quaternionToEulerXYZ(Quaternion q) {
+    public static Vec3f quaternionToEulerXYZ(Quaternion q) {
         double pitch, yaw, roll;
 
         float x = q.getX();
@@ -31,6 +32,31 @@ public class MathUtils {
         double cosy_cosp = 1 - 2 * (y * y + z * z);
         yaw = Math.atan2(siny_cosp, cosy_cosp);
 
-        return new Vector3f((float) Math.toDegrees(roll), (float) Math.toDegrees(pitch), (float) Math.toDegrees(yaw));
+        return new Vec3f((float) Math.toDegrees(roll), (float) Math.toDegrees(pitch), (float) Math.toDegrees(yaw));
+    }
+
+    /**
+     * Calculates the screen space from a point in the world, with W being the distance from the camera to that point.
+     * @param worldSpace
+     * @return screenSpaceAndDistance
+     */
+    public static Vector4f worldToScreenSpace(Vec3f worldSpace) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        Camera camera = client.gameRenderer.getCamera();
+        Matrix3f transformMatrix = new Matrix3f(camera.getRotation());
+        transformMatrix.invert();
+        Vec3f camSpace = new Vec3f(worldSpace.getX(), worldSpace.getY(), worldSpace.getZ());
+        camSpace.subtract(new Vec3f(camera.getPos()));
+        camSpace.transform(transformMatrix);
+        double dist = Math.sqrt(camSpace.dot(camSpace));
+
+        Vector4f projectiveCamSpace = new Vector4f(camSpace);
+        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(client.options.fov);
+        projectiveCamSpace.transform(projMat);
+        float x = projectiveCamSpace.getX();
+        float y = projectiveCamSpace.getY();
+        float z = projectiveCamSpace.getZ();
+        float w = projectiveCamSpace.getW();
+        return new Vector4f(x/w, y/w, z/w, (float)dist);
     }
 }

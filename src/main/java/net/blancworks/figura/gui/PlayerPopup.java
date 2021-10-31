@@ -7,6 +7,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
@@ -19,6 +20,8 @@ import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 
 import java.util.List;
 
@@ -46,10 +49,7 @@ public class PlayerPopup extends DrawableHelper {
         MinecraftClient client = MinecraftClient.getInstance();
         TextRenderer textRenderer = client.textRenderer;
 
-        Vec2f screen = new Vec2f(client.getWindow().getWidth(), client.getWindow().getHeight());
-        //screen.multiply((float) client.getWindow().getScaleFactor());
-
-        matrices.translate(screen.x / 2f, screen.y / 2f, 0f);
+        //matrices.translate(screen.x / 2f, screen.y / 2f, 0f);
 
         //matrices.translate(0f, entity.getHeight() + 0.5f, 0f);
         //matrices.multiply(dispatcher.getRotation());
@@ -57,6 +57,15 @@ public class PlayerPopup extends DrawableHelper {
         //matrices.translate(0f, 0f, -3f);
 
         //RenderSystem.enableDepthTest();
+
+        Vec3f worldPos = new Vec3f(entity.getLerpedPos(client.getTickDelta()));
+        worldPos.add(0, entity.getHeight() + 0.5f, 0);
+        Vector4f vec = MathUtils.worldToScreenSpace(worldPos);
+        float w = client.getWindow().getScaledWidth();
+        float h = client.getWindow().getScaledHeight();
+        matrices.translate((vec.getX()+1)/2f*w, (vec.getY()+1)/2f*h, vec.getZ());
+        float s = 16f/vec.getW();
+        matrices.scale(s/2,s/2,1);
 
         //title
         Text title = buttons.get(index);
