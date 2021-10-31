@@ -8,7 +8,6 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
@@ -109,7 +108,7 @@ public class PlayerListHudMixin {
         stack.scale(-16, 16, 16);
         stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
 
-        if (!data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 0xF000E0)) {
+        if (!data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 0xF000F0)) {
             matrices.push();
             matrices.translate(0f, 0f, 4f);
 

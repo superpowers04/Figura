@@ -286,18 +286,18 @@ public class NamePlateAPI {
         if (currentData.hasAvatar()) {
              if (!currentData.isAvatarLoaded())
                 badges += Integer.toHexString((int) (FiguraMod.ticksElapsed % 16)).toUpperCase();
-            else if (FiguraMod.IS_CHEESE)
-                badges += "\uD83E\uDDC0";
             else if (currentData.model != null && currentData.model.getRenderComplexity() > currentData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY))
                 badges += "▲";
             else if (currentData.script != null && currentData.script.scriptError)
                 badges += "▲";
+            else if (FiguraMod.IS_CHEESE)
+                badges += "\uD83E\uDDC0";
             else
                 badges += "△";
         }
 
         //special badges
-        if (FiguraMod.special.contains(currentData.playerId))
+        if (FiguraMod.VIP.contains(currentData.playerId))
             badges += "✭";
 
         //return null if no badges

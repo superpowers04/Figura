@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -270,7 +269,7 @@ public class FiguraMod implements ClientModInitializer {
 
                     if (FiguraMod.vertexConsumerProvider != null) {
                         Vec3d camera = context.camera().getPos();
-                        data.model.renderWorldParts(data, camera.x, camera.y, camera.z, context.matrixStack(), FiguraMod.vertexConsumerProvider, MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1f);
+                        data.model.renderWorldParts(data, camera.x, camera.y, camera.z, context.matrixStack(), data.getVCP(), MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1f);
                     }
 
                     data.model.leftToRender = prevCount;
@@ -292,12 +291,13 @@ public class FiguraMod implements ClientModInitializer {
         MinecraftClient.getInstance().getToastManager().add(new FiguraToast(text, text2));
     }
 
-    public final static List<UUID> special = Arrays.asList(
+    public final static List<UUID> VIP = List.of(
             UUID.fromString("aa0e3391-e497-4e8e-8afe-b69dfaa46afa"), //salad
             UUID.fromString("da53c608-d17c-4759-94fe-a0317ed63876"), //zandra
             UUID.fromString("66a6c5c4-963b-4b73-a0d9-162faedd8b7f"), //fran
             UUID.fromString("45361fcf-f188-46de-ae96-43d89afd6658"), //money
             UUID.fromString("d47ce8af-b942-47de-8790-f602241531e3"), //omo
-            UUID.fromString("0d04770a-9482-4a39-8011-fcbb7c99b8e1")  //lily
+            UUID.fromString("0d04770a-9482-4a39-8011-fcbb7c99b8e1"), //lily
+            UUID.fromString("10c4a29c-78fd-428c-bf51-f70b93e2ab45")  //rambles
     );
 }

@@ -10,17 +10,15 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec2f;
 
 import java.util.List;
 
@@ -38,21 +36,31 @@ public class PlayerPopup extends DrawableHelper {
             new TranslatableText("gui.figura.playerpopup.decreasetrust")
     );
 
-    public static boolean render(AbstractClientPlayerEntity entity, MatrixStack matrices, VertexConsumerProvider vcp, EntityRenderDispatcher dispatcher, PlayerData data) {
-        if (entity != PlayerPopup.entity || data == null) return false;
+    public static boolean render(MatrixStack matrices) {
+        VertexConsumerProvider vcp = FiguraMod.vertexConsumerProvider;
+        PlayerData data = entity == null ? null : PlayerDataManager.getDataForPlayer(entity.getUuid());
+        if (data == null || vcp == null) return false;
 
         matrices.push();
-        matrices.translate(0f, entity.getHeight() + 0.5f, 0f);
-        matrices.multiply(dispatcher.getRotation());
-        matrices.scale(-0.025f, -0.025f, 0.025f);
-        matrices.translate(0f, 0f, -3f);
 
-        RenderSystem.enableDepthTest();
-        TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
+        MinecraftClient client = MinecraftClient.getInstance();
+        TextRenderer textRenderer = client.textRenderer;
+
+        Vec2f screen = new Vec2f(client.getWindow().getWidth(), client.getWindow().getHeight());
+        //screen.multiply((float) client.getWindow().getScaleFactor());
+
+        matrices.translate(screen.x / 2f, screen.y / 2f, 0f);
+
+        //matrices.translate(0f, entity.getHeight() + 0.5f, 0f);
+        //matrices.multiply(dispatcher.getRotation());
+        //matrices.scale(-0.025f, -0.025f, 0.025f);
+        //matrices.translate(0f, 0f, -3f);
+
+        //RenderSystem.enableDepthTest();
 
         //title
         Text title = buttons.get(index);
-        textRenderer.drawWithOutline(title.asOrderedText(), -textRenderer.getWidth(title) / 2f, -28, 0xFFFFFF, 0x3D3D3D, matrices.peek().getModel(), vcp, 0xF000F0);
+        textRenderer.drawWithOutline(title.asOrderedText(), -textRenderer.getWidth(title) / 2f, -28, 0xFFFFFF, 0x202020, matrices.peek().getModel(), vcp, 0xF000F0);
 
         //background
         RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
@@ -65,16 +73,16 @@ public class PlayerPopup extends DrawableHelper {
         }
 
         //playername
-        MutableText name = new LiteralText("").formatted(Formatting.BLACK).append(data.playerName);
+        MutableText name = data.playerName.shallowCopy();
         Text badges = NamePlateAPI.getBadges(data);
         if (badges != null) name.append(badges);
 
-        Text trust = new LiteralText("").formatted(Formatting.BLACK).append(new TranslatableText("gui.figura." + data.getTrustContainer().parentID.getPath()));
+        Text trust = new TranslatableText("gui.figura." + data.getTrustContainer().parentID.getPath());
 
         matrices.scale(0.5f, 0.5f, 0.5f);
         matrices.translate(0f, 0f, -1f);
-        textRenderer.draw(matrices, name, -66, -31, 0xFFFFFF);
-        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 66, -31, 0xFFFFFF);
+        textRenderer.draw(matrices, name, -66, -31, 0);
+        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 66, -31, 0);
 
         //return
         matrices.pop();
@@ -83,8 +91,12 @@ public class PlayerPopup extends DrawableHelper {
     }
 
     public static boolean mouseScrolled(double d) {
-        if (enabled) index = ((int) (index - d) + 4) % 4;
+        if (enabled) index = (int) (index - d + 4) % 4;
         return enabled;
+    }
+
+    public static void hotbarKeyPressed(int i) {
+        if (enabled) index = i % 4;
     }
 
     public static void execute() {

@@ -47,7 +47,7 @@ public class WorldRendererMixin {
                 FiguraMod.currentData = data;
 
                 if (data != null && data.model != null && data.lastEntity != null)
-                    data.model.renderWorldParts(data, cameraX, cameraY, cameraZ, matrices, vertexConsumers, entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1f);
+                    data.model.renderWorldParts(data, cameraX, cameraY, cameraZ, matrices, data.getVCP(), entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1f);
 
                 FiguraMod.clearRenderingData();
             } catch (Exception e) {

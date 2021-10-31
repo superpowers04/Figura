@@ -4,11 +4,10 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
-import net.minecraft.client.MinecraftClient;
+import net.blancworks.figura.gui.PlayerPopup;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.util.math.MatrixStack;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
@@ -18,21 +17,12 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 @Mixin(InGameHud.class)
 public class InGameHudMixin {
 
-    @Unique private ActionWheel actionWheel;
-
-    @Inject(at = @At ("RETURN"), method = "<init>")
-    public void init(MinecraftClient client, CallbackInfo ci) {
-        actionWheel = new ActionWheel(client);
-    }
-
     @Inject(at = @At ("RETURN"), method = "render")
     public void render(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        if (FiguraMod.actionWheel.isPressed()) {
-            if (ActionWheel.enabled)
-                actionWheel.render(matrices);
-        } else {
-            ActionWheel.enabled = true;
-        }
+        if (FiguraMod.actionWheel.isPressed())
+            ActionWheel.render(matrices);
+        else if (FiguraMod.playerPopup.isPressed())
+            PlayerPopup.render(matrices);
     }
 
     @Inject(at = @At ("HEAD"), method = "renderCrosshair", cancellable = true)
