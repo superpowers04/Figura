@@ -1,8 +1,6 @@
 package net.blancworks.figura;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
-import net.blancworks.figura.models.FiguraTexture;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.option.KeyBinding;
@@ -17,7 +15,7 @@ import java.util.*;
 
 public final class PlayerDataManager {
     public static boolean didInitLocalPlayer = false;
-    public static final Map<UUID, PlayerData> LOADED_PLAYER_DATA = new Object2ObjectOpenHashMap<>();
+    public static final Map<UUID, PlayerData> LOADED_PLAYER_DATA = new HashMap<>();
 
     //Players that we're currently queued up to grab data for.
     private static final Set<UUID> SERVER_REQUESTED_PLAYERS = new HashSet<>();
@@ -74,16 +72,18 @@ public final class PlayerDataManager {
             getData = LOADED_PLAYER_DATA.get(id);
         }
 
-        LiteralText playerName = new LiteralText("");
-        if (MinecraftClient.getInstance().getNetworkHandler() != null) {
-            PlayerListEntry playerEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
-            if (playerEntry != null && playerEntry.getProfile() != null)
-                playerName = new LiteralText(playerEntry.getProfile().getName());
-        }
-        getData.playerName = playerName;
+        if (getData != null) {
+            LiteralText playerName = new LiteralText("");
+            if (MinecraftClient.getInstance().getNetworkHandler() != null) {
+                PlayerListEntry playerEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
+                if (playerEntry != null && playerEntry.getProfile() != null)
+                    playerName = new LiteralText(playerEntry.getProfile().getName());
+            }
+            getData.playerName = playerName;
 
-        if (MinecraftClient.getInstance().getNetworkHandler() != null)
-            getData.playerListEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
+            if (MinecraftClient.getInstance().getNetworkHandler() != null)
+                getData.playerListEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
+        }
 
         return getData;
     }
@@ -192,24 +192,21 @@ public final class PlayerDataManager {
         }
         TO_CLEAR.clear();
 
-        for (Map.Entry<UUID, PlayerData> entry : LOADED_PLAYER_DATA.entrySet()) {
-            entry.getValue().tick();
-        }
+        LOADED_PLAYER_DATA.values().forEach(PlayerData::tick);
     }
 
     //Reloads all textures, used for asset reloads in vanilla.
     public static void reloadAllTextures() {
-        for (Map.Entry<UUID, PlayerData> entry : LOADED_PLAYER_DATA.entrySet()) {
-            PlayerData pDat = entry.getValue();
-            if (pDat.texture != null) {
-                pDat.texture.registerTexture();
-                pDat.texture.uploadUsingData();
+        LOADED_PLAYER_DATA.values().forEach(data -> {
+            if (data.texture != null) {
+                data.texture.registerTexture();
+                data.texture.uploadUsingData();
             }
 
-            for (FiguraTexture extraTexture : pDat.extraTextures) {
-                extraTexture.registerTexture();
-                extraTexture.uploadUsingData();
-            }
-        }
+            data.extraTextures.forEach(figuraTexture -> {
+                figuraTexture.registerTexture();
+                figuraTexture.uploadUsingData();
+            });
+        });
     }
 }

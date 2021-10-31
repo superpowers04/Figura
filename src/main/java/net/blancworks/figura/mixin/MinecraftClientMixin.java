@@ -53,10 +53,10 @@ public class MinecraftClientMixin {
 
         if (FiguraMod.playerPopup.isPressed()) {
             if (PlayerPopup.entity == null) {
-                if (this.targetedEntity instanceof PlayerEntity player) {
+                if (this.targetedEntity instanceof PlayerEntity player && !this.targetedEntity.isInvisibleTo(this.player)) {
                     playerPopupActive = true;
                     PlayerPopup.entity = player;
-                } else if (!this.options.getPerspective().isFirstPerson()){
+                } else if (!this.options.getPerspective().isFirstPerson()) {
                     playerPopupActive = true;
                     PlayerPopup.entity = this.player;
                 }
@@ -64,6 +64,12 @@ public class MinecraftClientMixin {
         } else if (playerPopupActive) {
             PlayerPopup.execute();
             playerPopupActive = false;
+        }
+
+        for (int i = 0; i < 4; ++i) {
+            if (this.options.keysHotbar[i].isPressed()) {
+                PlayerPopup.hotbarKeyPressed(i);
+            }
         }
     }
 

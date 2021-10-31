@@ -30,27 +30,23 @@ import java.util.Objects;
 
 public class ActionWheel extends DrawableHelper {
 
-    private final MinecraftClient client;
-
     private static final Identifier ACTION_WHEEL = new Identifier("figura", "textures/gui/action_wheel.png");
     private static final Identifier ACTION_WHEEL_SELECTED = new Identifier("figura", "textures/gui/action_wheel_selected.png");
     private static final Vec3f ERROR_COLOR = new Vec3f(1.0f, 0.28f, 0.28f);
     private static final List<Text> NO_FUNCTION_MESSAGE = ImmutableList.of(new TranslatableText("gui.figura.actionwheel.nofunction"));
 
     public static int selectedSlot = -1;
-    public static boolean enabled = true;
+    public static boolean enabled = false;
 
-    public ActionWheel(MinecraftClient client) {
-        this.client = client;
-    }
+    public static void render(MatrixStack matrices) {
+        MinecraftClient client = MinecraftClient.getInstance();
 
-    public void render(MatrixStack matrices) {
         //screen
-        Vec2f screenSize = new Vec2f(this.client.getWindow().getWidth() / 2.0f, this.client.getWindow().getHeight() / 2.0f);
-        float screenScale = (float) this.client.getWindow().getScaleFactor();
+        Vec2f screenSize = new Vec2f(client.getWindow().getWidth() / 2.0f, client.getWindow().getHeight() / 2.0f);
+        float screenScale = (float) client.getWindow().getScaleFactor();
 
         //mouse
-        Vec2f mousePos = new Vec2f((float) this.client.mouse.getX() - screenSize.x, (float) this.client.mouse.getY() - screenSize.y);
+        Vec2f mousePos = new Vec2f((float) client.mouse.getX() - screenSize.x, (float) client.mouse.getY() - screenSize.y);
         float angle = getAngle(mousePos.x, mousePos.y);
         float distance = MathHelper.sqrt(mousePos.x * mousePos.x + mousePos.y * mousePos.y);
 
@@ -97,11 +93,11 @@ public class ActionWheel extends DrawableHelper {
 
             //render text
             if (selectedSlot != -1) {
-                renderText(matrices, wheelPos, wheelSize, screenScale, data);
+                renderText(matrices, wheelPos, wheelSize, screenScale, data, client);
             }
 
             //render items
-            renderItems(leftSegments, rightSegments, itemOffset, itemRadius, data);
+            renderItems(leftSegments, rightSegments, itemOffset, itemRadius, data, client);
         }
         else {
             //draw default wheel
@@ -123,14 +119,15 @@ public class ActionWheel extends DrawableHelper {
         }
 
         RenderSystem.disableBlend();
+        enabled = true;
     }
 
-    public float getAngle(float x, float y) {
+    public static float getAngle(float x, float y) {
         float ang = (float) Math.toDegrees(MathHelper.atan2(x, -y));
         return ang < 0 ? 360 + ang : ang;
     }
 
-    public void renderWheel(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments) {
+    public static void renderWheel(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments) {
         //texture
         RenderSystem.setShaderTexture(0, ACTION_WHEEL);
 
@@ -154,7 +151,7 @@ public class ActionWheel extends DrawableHelper {
         matrices.pop();
     }
 
-    public void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments, PlayerData data, int slot) {
+    public static void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments, PlayerData data, int slot) {
         ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (slot + 1));
 
         //property variables
@@ -257,7 +254,7 @@ public class ActionWheel extends DrawableHelper {
         matrices.pop();
     }
 
-    public void renderTextures(MatrixStack matrices, int leftSegments, int rightSegments, Vec2f offset, int radius, PlayerData data) {
+    public static void renderTextures(MatrixStack matrices, int leftSegments, int rightSegments, Vec2f offset, int radius, PlayerData data) {
         for (int i = 0; i < leftSegments + rightSegments; i++) {
 
             int index;
@@ -305,7 +302,7 @@ public class ActionWheel extends DrawableHelper {
         }
     }
 
-    public void renderText(MatrixStack matrices, Vec2f pos, int size, float scale, PlayerData data) {
+    public static void renderText(MatrixStack matrices, Vec2f pos, int size, float scale, PlayerData data, MinecraftClient client) {
         //customization
         ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
 
@@ -332,17 +329,17 @@ public class ActionWheel extends DrawableHelper {
 
         //text pos
         Vec2f textPos;
-        int titleLen = this.client.textRenderer.getWidth(lines.get(0)) / 2;
+        int titleLen = client.textRenderer.getWidth(lines.get(0)) / 2;
 
         switch ((int) Config.ACTION_WHEEL_TITLE_POS.value) {
             //top
             case 1 -> textPos = new Vec2f(pos.x - titleLen, (float) Math.max(pos.y - size / 2.0 - 10, 4));
             //bottom
-            case 2 -> textPos = new Vec2f(pos.x - titleLen, (float) Math.min(pos.y + size / 2.0 + 4, this.client.getWindow().getHeight() - 12));
+            case 2 -> textPos = new Vec2f(pos.x - titleLen, (float) Math.min(pos.y + size / 2.0 + 4, client.getWindow().getHeight() - 12));
             //center
             case 3 -> textPos = new Vec2f(pos.x - titleLen, pos.y - 4);
             //default mouse
-            default -> textPos = new Vec2f((float) this.client.mouse.getX() / scale, (float) this.client.mouse.getY() / scale - 10);
+            default -> textPos = new Vec2f((float) client.mouse.getX() / scale, (float) client.mouse.getY() / scale - 10);
         }
 
         //draw
@@ -350,13 +347,13 @@ public class ActionWheel extends DrawableHelper {
         matrices.translate(0, 0, 599);
         int i = 0;
         for (Text text : lines) {
-            drawTextWithShadow(matrices, this.client.textRenderer, text, (int) textPos.x, (int) textPos.y + (i - lines.size() + 1) * 9, textColor);
+            drawTextWithShadow(matrices, client.textRenderer, text, (int) textPos.x, (int) textPos.y + (i - lines.size() + 1) * 9, textColor);
             i++;
         }
         matrices.pop();
     }
 
-    public void renderItems(int leftSegments, int rightSegments, Vec2f offset, int radius, PlayerData data) {
+    public static void renderItems(int leftSegments, int rightSegments, Vec2f offset, int radius, PlayerData data, MinecraftClient client) {
         for (int i = 0; i < leftSegments + rightSegments; i++) {
 
             int index;
@@ -392,7 +389,7 @@ public class ActionWheel extends DrawableHelper {
             matrixStack.push();
             matrixStack.scale(1.5f, 1.5f, 1.5f);
 
-            this.client.getItemRenderer().renderGuiItemIcon(item, (int) pos.x, (int) pos.y);
+            client.getItemRenderer().renderGuiItemIcon(item, (int) pos.x, (int) pos.y);
 
             matrixStack.pop();
         }
@@ -409,9 +406,9 @@ public class ActionWheel extends DrawableHelper {
                     currentData.script.runActionWheelFunction(customization.function);
                 }
             }
-
-            enabled = false;
-            selectedSlot = -1;
         }
+
+        enabled = false;
+        selectedSlot = -1;
     }
 }

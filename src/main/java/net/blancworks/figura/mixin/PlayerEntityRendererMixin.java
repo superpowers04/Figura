@@ -6,7 +6,6 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.access.PlayerEntityRendererAccess;
 import net.blancworks.figura.config.ConfigManager.Config;
-import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
@@ -50,7 +49,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
     }
 
     @Unique private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
-    @Unique private boolean hideNameplate = false;
 
     @Override
     public boolean shouldRender(AbstractClientPlayerEntity entity, Frustum frustum, double x, double y, double z) {
@@ -85,9 +83,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
                 shadowRadius = data.script.customShadowSize;
             }
         }
-
-        //render player popup
-        hideNameplate = !MinecraftClient.getInstance().options.hudHidden && PlayerPopup.render(abstractClientPlayerEntity, matrixStack, vertexConsumerProvider, this.dispatcher, data);
     }
 
     @Inject(at = @At("RETURN"), method = "render")
@@ -134,7 +129,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         if (playerData != null && playerData.model != null) {
             arm.pitch = 0;
-            playerData.model.renderArm(playerData, matrices, vertexConsumers, light, arm, model, 1f);
+            playerData.model.renderArm(playerData, matrices, playerData.getVCP(), light, arm, model, 1f);
         }
 
         FiguraMod.clearRenderingData();
@@ -143,11 +138,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
     @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
     private void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-        if (hideNameplate) {
-            ci.cancel();
-            return;
-        }
-
         //get uuid and name
         String playerName = entity.getEntityName();
 
