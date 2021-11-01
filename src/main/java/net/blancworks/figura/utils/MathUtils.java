@@ -1,5 +1,6 @@
 package net.blancworks.figura.utils;
 
+import net.blancworks.figura.access.GameRendererAccess;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.util.math.*;
@@ -37,7 +38,7 @@ public class MathUtils {
 
     /**
      * Calculates the screen space from a point in the world, with W being the distance from the camera to that point.
-     * @param worldSpace
+     * @param worldSpace position in the world
      * @return screenSpaceAndDistance
      */
     public static Vector4f worldToScreenSpace(Vec3f worldSpace) {
@@ -51,12 +52,12 @@ public class MathUtils {
         double dist = Math.sqrt(camSpace.dot(camSpace));
 
         Vector4f projectiveCamSpace = new Vector4f(camSpace);
-        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(client.options.fov);
+        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(((GameRendererAccess) client.gameRenderer).figura$getFov(camera, client.getTickDelta(), true));
         projectiveCamSpace.transform(projMat);
         float x = projectiveCamSpace.getX();
         float y = projectiveCamSpace.getY();
         float z = projectiveCamSpace.getZ();
         float w = projectiveCamSpace.getW();
-        return new Vector4f(x/w, y/w, z/w, (float)dist);
+        return new Vector4f(x / w, y / w, z / w, (float) dist);
     }
 }
