@@ -1,5 +1,7 @@
 package net.blancworks.figura.utils;
 
+import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -42,5 +44,18 @@ public class TextUtils {
         for (Text child : text.getSiblings()) {
             removeClickableObjects((MutableText) child);
         }
+    }
+
+    public static void renderOutlineText(TextRenderer textRenderer, Text text, float x, float y, int color, int outline, MatrixStack matrices) {
+        for (int i = -1; i <= 1; ++i) {
+            for (int j = -1; j <= 1; ++j) {
+                textRenderer.draw(matrices, text, x + i, y + j, outline);
+            }
+        }
+
+        matrices.push();
+        matrices.translate(0f, 0f, 0.1f);
+        textRenderer.draw(matrices, text, x, y, color);
+        matrices.pop();
     }
 }

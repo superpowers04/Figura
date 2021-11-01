@@ -143,6 +143,12 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         //check for data and trust settings
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getGameProfile().getId());
+
+        if (data != null && data.hasPopup) {
+            ci.cancel();
+            return;
+        }
+
         if (!(boolean) Config.NAMEPLATE_MODIFICATIONS.value || data == null || playerName.equals(""))
             return;
 

@@ -19,6 +19,7 @@
     "EntityRenderDispatcherMixin",
     "FiguraTextImplMixin",
     "GameMenuScreenMixin",
+    "GameRendererMixin",
     "HeadFeatureRendererMixin",
     "HeldItemFeatureRendererMixin",
     "InGameHudMixin",

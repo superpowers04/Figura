@@ -4,10 +4,12 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.access.GameRendererAccess;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.MathUtils;
+import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
@@ -19,7 +21,6 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.math.Vector4f;
 
@@ -44,41 +45,40 @@ public class PlayerPopup extends DrawableHelper {
         PlayerData data = entity == null ? null : PlayerDataManager.getDataForPlayer(entity.getUuid());
         if (data == null || vcp == null) return false;
 
-        matrices.push();
-
         MinecraftClient client = MinecraftClient.getInstance();
         TextRenderer textRenderer = client.textRenderer;
+        RenderSystem.enableDepthTest();
+        matrices.push();
 
-        //matrices.translate(screen.x / 2f, screen.y / 2f, 0f);
-
-        //matrices.translate(0f, entity.getHeight() + 0.5f, 0f);
-        //matrices.multiply(dispatcher.getRotation());
-        //matrices.scale(-0.025f, -0.025f, 0.025f);
-        //matrices.translate(0f, 0f, -3f);
-
-        //RenderSystem.enableDepthTest();
-
+        //world to screen space
         Vec3f worldPos = new Vec3f(entity.getLerpedPos(client.getTickDelta()));
-        worldPos.add(0, entity.getHeight() + 0.5f, 0);
+        worldPos.add(0f, entity.getHeight() + 0.1f, 0f);
+
         Vector4f vec = MathUtils.worldToScreenSpace(worldPos);
+        if (vec.getZ() < 1) return false;
+
         float w = client.getWindow().getScaledWidth();
         float h = client.getWindow().getScaledHeight();
-        matrices.translate((vec.getX()+1)/2f*w, (vec.getY()+1)/2f*h, vec.getZ());
-        float s = 16f/vec.getW();
-        matrices.scale(s/2,s/2,1);
+        float s = client.getWindow().getHeight() * 0.035f / vec.getW() * (float) (1f / client.getWindow().getScaleFactor());
+
+        ((GameRendererAccess) client.gameRenderer).figura$bobViewWhenHurt(matrices, vec.getW());
+        if (client.options.bobView) ((GameRendererAccess) client.gameRenderer).figura$bobView(matrices, vec.getW());
+
+        matrices.translate((vec.getX() + 1f) / 2f * w, (vec.getY() + 1f) / 2f * h, -100f);
+        matrices.scale(s / 2f, s / 2f, 1f);
 
         //title
         Text title = buttons.get(index);
-        textRenderer.drawWithOutline(title.asOrderedText(), -textRenderer.getWidth(title) / 2f, -28, 0xFFFFFF, 0x202020, matrices.peek().getModel(), vcp, 0xF000F0);
+        TextUtils.renderOutlineText(textRenderer, title, -textRenderer.getWidth(title) / 2f, -40, 0xFFFFFF, 0x202020, matrices);
 
         //background
         RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
-        drawTexture(matrices, -36, -18, 72, 30, 0f, 0f, 72, 30, 72, 66);
+        drawTexture(matrices, -36, -30, 72, 30, 0f, 0f, 72, 30, 72, 66);
 
         //icons
         matrices.translate(0f, 0f, -2f);
         for (int i = 0; i < 4; i++) {
-            drawTexture(matrices, -36 + (18 * i), -11, 18, 18, 18f * i, i == index ? 48f : 30f, 18, 18, 72, 66);
+            drawTexture(matrices, -36 + (18 * i), -23, 18, 18, 18f * i, i == index ? 48f : 30f, 18, 18, 72, 66);
         }
 
         //playername
@@ -90,11 +90,12 @@ public class PlayerPopup extends DrawableHelper {
 
         matrices.scale(0.5f, 0.5f, 0.5f);
         matrices.translate(0f, 0f, -1f);
-        textRenderer.draw(matrices, name, -66, -31, 0);
-        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 66, -31, 0);
+        textRenderer.draw(matrices, name, -66, -55, 0);
+        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 66, -55, 0);
 
         //return
         matrices.pop();
+        data.hasPopup = true;
         enabled = true;
         return true;
     }
@@ -112,6 +113,7 @@ public class PlayerPopup extends DrawableHelper {
         PlayerData data = entity == null ? null : PlayerDataManager.getDataForPlayer(entity.getUuid());
 
         if (data != null) {
+            data.hasPopup = false;
             MutableText playerName = new LiteralText("").append(data.playerName);
             Text badges = NamePlateAPI.getBadges(data);
             if (badges != null) playerName.append(badges);
