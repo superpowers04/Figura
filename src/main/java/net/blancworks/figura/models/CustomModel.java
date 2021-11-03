@@ -3,7 +3,7 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.assets.FiguraAsset;
-import net.blancworks.figura.config.ConfigManager;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -52,8 +52,7 @@ public class CustomModel extends FiguraAsset {
         lastComplexity = 0;
 
         try {
-            ArrayList<CustomModelPart> allParts = new ArrayList<>(this.allParts);
-            for (CustomModelPart part : allParts) {
+            for (CustomModelPart part : new ArrayList<>(this.allParts)) {
                 lastComplexity += part.getComplexity();
             }
         } catch (Exception e) {
@@ -81,8 +80,7 @@ public class CustomModel extends FiguraAsset {
         if (owner.script != null)
             owner.script.render(FiguraMod.deltaTime);
 
-        ArrayList<CustomModelPart> allParts = new ArrayList<>(this.allParts);
-        for (CustomModelPart part : allParts) {
+        for (CustomModelPart part : new ArrayList<>(this.allParts)) {
             if (part.isParentSpecial() || !part.visible)
                 continue;
 
@@ -101,7 +99,7 @@ public class CustomModel extends FiguraAsset {
                     CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
 
                 //hitboxes :p
-                CustomModelPart.canRenderHitBox = (boolean) ConfigManager.Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+                CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
                 leftToRender = part.render(owner, matrices, transformStack, vcp, light, overlay, alpha);
                 lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
@@ -123,9 +121,8 @@ public class CustomModel extends FiguraAsset {
         int prevCount = playerData.model.leftToRender;
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
 
-        //CustomModelPart.applyHiddenTransforms = false;
-        ArrayList<CustomModelPart> allParts = new ArrayList<>(playerData.model.allParts);
-        for (CustomModelPart part : allParts) {
+        //CustomModelPart.applyHiddenTransforms = !(boolean) Config.FIX_FIRST_PERSON_HANDS.value;
+        for (CustomModelPart part : new ArrayList<>(playerData.model.allParts)) {
             if (arm == model.rightArm)
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.RightArm;
             else if (arm == model.leftArm)
@@ -142,8 +139,7 @@ public class CustomModel extends FiguraAsset {
         data.model.leftToRender = getMaxRenderAmount();
 
         if (!data.model.skullParts.isEmpty()) {
-            ArrayList<CustomModelPart> skullParts = new ArrayList<>(data.model.skullParts);
-            for (CustomModelPart modelPart : skullParts) {
+            for (CustomModelPart modelPart : new ArrayList<>(data.model.skullParts)) {
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
                 if (data.model.leftToRender <= 0)
@@ -154,8 +150,7 @@ public class CustomModel extends FiguraAsset {
         }
         else {
             CustomModelPart.applyHiddenTransforms = false;
-            ArrayList<CustomModelPart> allParts = new ArrayList<>(data.model.allParts);
-            for (CustomModelPart modelPart : allParts) {
+            for (CustomModelPart modelPart : new ArrayList<>(data.model.allParts)) {
                 CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
@@ -177,10 +172,9 @@ public class CustomModel extends FiguraAsset {
         matrices.translate(-cameraX, -cameraY, -cameraZ);
         matrices.scale(-1, -1, 1);
 
-        CustomModelPart.canRenderHitBox = (boolean) ConfigManager.Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+        CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-        ArrayList<CustomModelPart> worldParts = new ArrayList<>(data.model.worldParts);
-        for (CustomModelPart part : worldParts) {
+        for (CustomModelPart part : new ArrayList<>(data.model.worldParts)) {
             data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
         }
 

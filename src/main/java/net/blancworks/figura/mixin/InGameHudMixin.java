@@ -18,11 +18,15 @@ import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 public abstract class InGameHudMixin {
 
     @Inject(at = @At ("HEAD"), method = "render")
-    public void render(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+    public void preRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+        if (FiguraMod.playerPopup.isPressed())
+            PlayerPopup.render(matrices);
+    }
+
+    @Inject(at = @At ("RETURN"), method = "render")
+    public void postRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
         if (FiguraMod.actionWheel.isPressed())
             ActionWheel.render(matrices);
-        else if (FiguraMod.playerPopup.isPressed())
-            PlayerPopup.render(matrices);
     }
 
     @Inject(at = @At ("HEAD"), method = "renderCrosshair", cancellable = true)

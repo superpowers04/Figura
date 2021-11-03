@@ -28,6 +28,7 @@ import java.util.zip.ZipFile;
  */
 public class LocalPlayerData extends PlayerData {
     public String loadedName;
+    public String loadedPath;
     private final Map<String, WatchKey> watchKeys = new Object2ObjectOpenHashMap<>();
     private final Set<String> watchedFiles = new HashSet<>();
     public static WatchService ws;
@@ -42,7 +43,7 @@ public class LocalPlayerData extends PlayerData {
 
     @Override
     public void tick() {
-        if (this.loadedName != null)
+        if (this.loadedPath != null)
             this.lastHash = "";
         super.tick();
 
@@ -56,9 +57,9 @@ public class LocalPlayerData extends PlayerData {
     /**
      * Loads a model file at a specific directory.
      *
-     * @param fileName - the file to load
+     * @param path - the full file path to load
      */
-    public void loadModelFile(String fileName) {
+    public void loadModelFile(String path) {
         //clear keybinds
         if (this.script != null) {
             script.keyBindings.forEach(keyBinding -> KeyBindingAccessorMixin.getKeysById().remove(keyBinding.getTranslationKey()));
@@ -74,23 +75,21 @@ public class LocalPlayerData extends PlayerData {
         extraTextures.clear();
         watchedFiles.clear();
 
-        if (fileName == null)
+        if (path == null || path.equals(""))
             return;
 
-        //create root directory
-        Path contentDirectory = getContentDirectory();
+        //avatar file
+        File file = new File(path);
 
-        try {
-            Files.createDirectories(contentDirectory);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        //set loaded name
+        loadedPath = path;
+        loadedName = file.getName();
+
+        //set root directory
+        Path contentDirectory = Path.of(file.getParent());
 
         //check file type
-        boolean isZip = fileName.endsWith(".zip");
-
-        //avatar file
-        File file = new File(contentDirectory.resolve(fileName).toString());
+        boolean isZip = path.endsWith(".zip");
 
         //loading stuff
         //1 - model | 2 - player model | 4 - texture | 8 - script | 16 - render layers
@@ -151,22 +150,19 @@ public class LocalPlayerData extends PlayerData {
 
         //log and clear player model
         if (data == 0 || data == 4) {
-            FiguraMod.LOGGER.warn("Failed to load model " + fileName);
+            FiguraMod.LOGGER.warn("Failed to load model " + path);
             PlayerDataManager.clearLocalPlayer();
             return;
         }
 
         //add directory to watched files
-        if (!watchKeys.containsKey(contentDirectory.toString())) {
+        if (!watchKeys.containsKey(path)) {
             try {
-                watchKeys.put(contentDirectory.toString(), contentDirectory.register(ws, StandardWatchEventKinds.ENTRY_MODIFY));
+                watchKeys.put(path, contentDirectory.register(ws, StandardWatchEventKinds.ENTRY_MODIFY));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
-        //set loaded name
-        this.loadedName = fileName;
 
         //Set up ZIP file.
         ZipFile modelZip = null;
@@ -443,13 +439,8 @@ public class LocalPlayerData extends PlayerData {
                 String realName = child.getFileName().toString();
 
                 try {
-
-                    if (watchedFiles.contains(child.toString()))
+                    if (watchedFiles.contains(child.toString()) || realName.equals(loadedName))
                         doReload = true;
-
-                    if (realName.equals(loadedName) && !doReload)
-                        doReload = true;
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -463,7 +454,7 @@ public class LocalPlayerData extends PlayerData {
         watchKeys.clear();
 
         PlayerDataManager.lastLoadedFileName = loadedName;
-        loadModelFile(loadedName);
+        loadModelFile(loadedPath);
         isLocalAvatar = true;
     }
 }

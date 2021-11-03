@@ -151,7 +151,7 @@ public final class PlayerDataManager {
         if (localPlayer != null && id.compareTo(localPlayer.playerId) == 0) {
             if (!localPlayer.isLocalAvatar)
                 clearLocalPlayer();
-            else if (localPlayer.loadedName != null)
+            else if (localPlayer.loadedPath != null)
                 localPlayer.reloadAvatar();
         }
         else {

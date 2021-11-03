@@ -288,19 +288,13 @@ public class FiguraGuiScreen extends Screen {
         this.client.setScreen(parentScreen);
     }
 
-    int tickCount = 0;
-
     @Override
     public void tick() {
         super.tick();
 
-        tickCount++;
-
-        if (tickCount > 20) {
-            tickCount = 0;
-
-            //reload model list
-            modelFileList.reloadFilters();
+        if (FiguraMod.ticksElapsed % 20 == 0) {
+            //update avatar list
+            modelFileList.updateAvatarList();
 
             //reload data
             updateAvatarData();
@@ -417,10 +411,10 @@ public class FiguraGuiScreen extends Screen {
         }
     }
 
-    public void loadLocalAvatar(String fileName) {
+    public void loadLocalAvatar(String fileName, String path) {
         PlayerDataManager.lastLoadedFileName = fileName;
         PlayerDataManager.localPlayer.isLocalAvatar = true;
-        PlayerDataManager.localPlayer.loadModelFile(fileName);
+        PlayerDataManager.localPlayer.loadModelFile(path);
     }
 
     public void updateAvatarData() {

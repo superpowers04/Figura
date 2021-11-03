@@ -52,7 +52,7 @@ public class MathUtils {
         double dist = Math.sqrt(camSpace.dot(camSpace));
 
         Vector4f projectiveCamSpace = new Vector4f(camSpace);
-        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(((GameRendererAccess) client.gameRenderer).figura$getFov(camera, client.getTickDelta(), true));
+        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(((GameRendererAccess) client.gameRenderer).figura$getFov(camera, true));
         projectiveCamSpace.transform(projMat);
         float x = projectiveCamSpace.getX();
         float y = projectiveCamSpace.getY();
