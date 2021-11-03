@@ -11,11 +11,12 @@ import net.minecraft.util.Identifier;
 
 public class PermissionListToggleEntry extends PermissionListEntry{
     public ToggleButtonWidget widget;
+    private static final Identifier TEXTURE = new Identifier("figura", "textures/gui/toggle.png");
 
     public PermissionListToggleEntry(TrustContainer.Trust trust, CustomListWidget<?, ?> list, TrustContainer container) {
         super(trust, list, container);
 
-        matchingElement = widget = new ToggleButtonWidget(0, 0, 16 , 16, container.getTrust(trust) == 1) {
+        matchingElement = widget = new ToggleButtonWidget(0, 0, 32, 16, container.getTrust(trust) == 1) {
             @Override
             public void onClick(double mouseX, double mouseY) {
                 container.setTrust(trust, (container.getTrust(trust) + 1) % 2);
@@ -38,12 +39,12 @@ public class PermissionListToggleEntry extends PermissionListEntry{
                     j += this.hoverVOffset;
                 }
 
-                drawTexture(matrices, this.x, this.y, i, j, this.width, this.height, 64, 32);
+                drawTexture(matrices, this.x, this.y, i, j, 32, 16, 128, 32);
                 RenderSystem.enableDepthTest();
             }
         };
         
-        widget.setTextureUV(0, 0, 16, 16, new Identifier("figura", "textures/gui/togglebox.png"));
+        widget.setTextureUV(64, 0, 32, 16, TEXTURE);
 
         if(((PermissionListWidget) list).getCurrentContainer().locked)
             widget.active = false;
@@ -53,10 +54,10 @@ public class PermissionListToggleEntry extends PermissionListEntry{
     public void render(MatrixStack matrices, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
         super.render(matrices, index, y, x, rowWidth, rowHeight, mouseX, mouseY, isSelected, delta);
         
-        widget.x = x + 2 + (rowWidth / 2);
+        widget.x = x + 2 + (rowWidth / 2) + 48;
         widget.y = y + 2;
-        if(!widget.active)
-            widget.setTextureUV(32, 0, 16, 16, new Identifier("figura", "textures/gui/togglebox.png"));
+        if (!widget.active)
+            widget.setTextureUV(0, 0, 32, 16, TEXTURE);
         
         widget.render(matrices, mouseX, mouseY, delta);
     }

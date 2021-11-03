@@ -4,7 +4,6 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.access.GameRendererAccess;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -21,6 +20,7 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.math.Vector4f;
 
@@ -40,14 +40,18 @@ public class PlayerPopup extends DrawableHelper {
             new TranslatableText("gui.figura.playerpopup.decreasetrust")
     );
 
-    public static boolean render(MatrixStack matrices) {
-        VertexConsumerProvider vcp = FiguraMod.vertexConsumerProvider;
-        PlayerData data = entity == null ? null : PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (data == null || vcp == null) return false;
-
+    public static void render(MatrixStack matrices) {
         MinecraftClient client = MinecraftClient.getInstance();
+        VertexConsumerProvider vcp = FiguraMod.vertexConsumerProvider;
+
+        PlayerData data = entity == null ? null : PlayerDataManager.getDataForPlayer(entity.getUuid());
+        if (data == null || vcp == null || (entity.isInvisibleTo(client.player) && entity != client.player)) {
+            entity = null;
+            return;
+        }
+
         TextRenderer textRenderer = client.textRenderer;
-        RenderSystem.enableDepthTest();
+        RenderSystem.disableDepthTest();
         matrices.push();
 
         //world to screen space
@@ -55,14 +59,11 @@ public class PlayerPopup extends DrawableHelper {
         worldPos.add(0f, entity.getHeight() + 0.1f, 0f);
 
         Vector4f vec = MathUtils.worldToScreenSpace(worldPos);
-        if (vec.getZ() < 1) return false;
+        if (vec.getZ() < 1) return;
 
         float w = client.getWindow().getScaledWidth();
         float h = client.getWindow().getScaledHeight();
-        float s = client.getWindow().getHeight() * 0.035f / vec.getW() * (float) (1f / client.getWindow().getScaleFactor());
-
-        ((GameRendererAccess) client.gameRenderer).figura$bobViewWhenHurt(matrices, vec.getW());
-        if (client.options.bobView) ((GameRendererAccess) client.gameRenderer).figura$bobView(matrices, vec.getW());
+        float s = (float) MathHelper.clamp(client.getWindow().getHeight() * 0.035f / vec.getW() * (1f / client.getWindow().getScaleFactor()), 1f, 16f);
 
         matrices.translate((vec.getX() + 1f) / 2f * w, (vec.getY() + 1f) / 2f * h, -100f);
         matrices.scale(s / 2f, s / 2f, 1f);
@@ -97,7 +98,6 @@ public class PlayerPopup extends DrawableHelper {
         matrices.pop();
         data.hasPopup = true;
         enabled = true;
-        return true;
     }
 
     public static boolean mouseScrolled(double d) {
