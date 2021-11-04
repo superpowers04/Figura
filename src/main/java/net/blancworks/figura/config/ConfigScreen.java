@@ -136,6 +136,20 @@ public class ConfigScreen extends Screen {
         configListWidget.addEntry(EntryType.ENUM, new TranslatableText("gui.figura.config.scriptlog"), new TranslatableText("gui.figura.config.tooltip.scriptlog"), Config.SCRIPT_LOG_LOCATION, scriptLogEntries);
         configListWidget.addEntry(EntryType.KEYBIND, new TranslatableText("key.figura.playerpopup"), new TranslatableText("key.figura.tooltip.playerpopup"), Config.PLAYER_POPUP_BUTTON, FiguraMod.playerPopup);
 
+        List<Text> accentColorsEntries = Arrays.asList(
+                new TranslatableText("gui.figura.config.accentcolor.red").styled((s) -> s.withColor(FiguraMod.AccentColors.RED.color)),
+                new TranslatableText("gui.figura.config.accentcolor.orange").styled((s) -> s.withColor(FiguraMod.AccentColors.ORANGE.color)),
+                new TranslatableText("gui.figura.config.accentcolor.yellow").styled((s) -> s.withColor(FiguraMod.AccentColors.YELLOW.color)),
+                new TranslatableText("gui.figura.config.accentcolor.green").styled((s) -> s.withColor(FiguraMod.AccentColors.GREEN.color)),
+                new TranslatableText("gui.figura.config.accentcolor.aceblue").styled((s) -> s.withColor(FiguraMod.AccentColors.ACE_BLUE.color)),
+                new TranslatableText("gui.figura.config.accentcolor.aqua").styled((s) -> s.withColor(FiguraMod.AccentColors.AQUA.color)),
+                new TranslatableText("gui.figura.config.accentcolor.blue").styled((s) -> s.withColor(FiguraMod.AccentColors.BLUE.color)),
+                new TranslatableText("gui.figura.config.accentcolor.purple").styled((s) -> s.withColor(FiguraMod.AccentColors.PURPLE.color)),
+                new TranslatableText("gui.figura.config.accentcolor.franpink").styled((s) -> s.withColor(FiguraMod.AccentColors.FRAN_PINK.color)),
+                new TranslatableText("gui.figura.config.accentcolor.white").styled((s) -> s.withColor(FiguraMod.AccentColors.WHITE.color))
+        );
+        configListWidget.addEntry(EntryType.ENUM, new TranslatableText("gui.figura.config.accentcolor"), new TranslatableText("gui.figura.config.tooltip.accentcolor"), Config.ACCENT_COLOR, accentColorsEntries);
+
         //category title
         configListWidget.addEntry(EntryType.CATEGORY, new TranslatableText("gui.figura.config.actionwheel"));
 

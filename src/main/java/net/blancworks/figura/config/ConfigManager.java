@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.FiguraMod;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.Formatting;
+import net.minecraft.text.Style;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.BufferedReader;
@@ -15,11 +15,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 public class ConfigManager {
 
     //accent color
-    public static final Formatting ACCENT_COLOR = Formatting.AQUA;
+    public static final UnaryOperator<Style> ACCENT_COLOR = FiguraMod.ACCENT_COLOR;
 
     //mod name
     public static final String MOD_NAME = "figura";
@@ -63,7 +64,8 @@ public class ConfigManager {
         ACTION_WHEEL_TITLE_POS(0, 4),
         RENDER_DEBUG_PARTS_PIVOT(true),
         MODEL_FOLDER_PATH(""),
-        PLAYER_POPUP_BUTTON(GLFW.GLFW_KEY_R);
+        PLAYER_POPUP_BUTTON(GLFW.GLFW_KEY_R),
+        ACCENT_COLOR(5, 10);
 
         //config data
         public Object value;

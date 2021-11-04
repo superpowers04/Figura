@@ -2,9 +2,10 @@ package net.blancworks.figura.lua.api.math;
 
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.lua.CustomScript;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.*;
@@ -501,12 +502,12 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public Text toJsonText() {
         return new LiteralText("").append("vec: {")
-                .append(new LiteralText("\n  x").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(x())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  y").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(y())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  z").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(z())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  w").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(w())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  t").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(t())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  h").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(h())).formatted(Formatting.AQUA))
+                .append(new LiteralText("\n  x").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(x())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  y").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(y())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  z").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(z())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  w").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(w())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  t").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(t())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  h").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(h())).styled(FiguraMod.ACCENT_COLOR))
                 .append("\n}");
     }
 }

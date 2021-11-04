@@ -130,6 +130,19 @@
   "gui.figura.config.actionwheelpos.bottom": "Bottom",
   "gui.figura.config.actionwheelpos.center": "Center",
 
+  "gui.figura.config.accentcolor": "UI Accent Color",
+  "gui.figura.config.tooltip.accentcolor": "Changes the accent color used by the UI",
+  "gui.figura.config.accentcolor.red": "Red",
+  "gui.figura.config.accentcolor.orange": "Orange",
+  "gui.figura.config.accentcolor.yellow": "Yellow",
+  "gui.figura.config.accentcolor.green": "Green",
+  "gui.figura.config.accentcolor.aceblue": "Ace Blue",
+  "gui.figura.config.accentcolor.aqua": "Aqua",
+  "gui.figura.config.accentcolor.blue": "Blue",
+  "gui.figura.config.accentcolor.purple": "Purple",
+  "gui.figura.config.accentcolor.franpink": "Fran Pink",
+  "gui.figura.config.accentcolor.white": "White",
+
   "gui.figura.toast.upload.success.title": "Avatar Uploaded!",
 
   "gui.figura.toast.upload.error.title": "Avatar Upload Failed!",
@@ -157,5 +170,6 @@
   "key.figura.playerpopup": "Figura Player Popup",
   "key.figura.tooltip.playerpopup": "Player Popup Keybind",
 
-  "models.figura.unselect": "-unselect-"
+  "models.figura.unselect": "-unselect-",
+  "models.figura.loading": "Loading..."
 }

@@ -114,7 +114,8 @@ public class DataAPI {
         try {
             //create file
             Path contentDirectory = getContentDirectory();
-            Files.createDirectories(contentDirectory);
+            if (!Files.exists(contentDirectory))
+                Files.createDirectories(contentDirectory);
 
             Path file = contentDirectory.resolve(script.scriptName + ".json");
             if (!Files.exists(file)) {
@@ -280,7 +281,8 @@ public class DataAPI {
         try {
             //delete file
             Path contentDirectory = getContentDirectory();
-            Files.createDirectories(contentDirectory);
+            if (!Files.exists(contentDirectory))
+                Files.createDirectories(contentDirectory);
             Path file = contentDirectory.resolve(script.scriptName + ".json");
             Files.deleteIfExists(file);
         } catch (Exception ignored) {}

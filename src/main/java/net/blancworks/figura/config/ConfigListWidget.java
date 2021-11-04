@@ -11,6 +11,7 @@ import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
@@ -175,7 +176,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
             //if setting is changed
             if ((boolean) this.config.configValue != this.initValue)
-                this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(ConfigManager.ACCENT_COLOR));
+                this.toggle.setMessage(new LiteralText("").styled(ConfigManager.ACCENT_COLOR).append(this.toggle.getMessage()));
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
 
@@ -256,7 +257,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
             //if setting is changed
             if ((int) this.config.configValue != this.initValue)
-                this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(ConfigManager.ACCENT_COLOR));
+                this.toggle.setMessage(new LiteralText("").styled(ConfigManager.ACCENT_COLOR).append(this.toggle.getMessage()));
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
 
@@ -366,7 +367,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             if (!this.config.configValue.equals(this.initValue + ""))
                 try {
                     this.config.defaultValue.getClass().getConstructor(new Class[] {String.class}).newInstance(this.config.configValue);
-                    this.field.setEditableColor(ConfigManager.ACCENT_COLOR.getColorValue());
+                    this.field.setEditableColor(ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb());
                 } catch (Exception e) {
                     this.field.setEditableColor(Formatting.RED.getColorValue());
                 }
@@ -456,7 +457,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.toggle.setMessage(this.binding.getBoundKeyLocalizedText());
 
             if (focusedBinding == this.binding) {
-                this.toggle.setMessage((new LiteralText("> ")).append(this.toggle.getMessage().shallowCopy().formatted(ConfigManager.ACCENT_COLOR)).append(" <").formatted(ConfigManager.ACCENT_COLOR));
+                this.toggle.setMessage(new LiteralText("> ").styled(ConfigManager.ACCENT_COLOR).append(this.toggle.getMessage()).append(" <"));
             }
             else if (!this.binding.isUnbound()) {
                 for (KeyBinding key : MinecraftClient.getInstance().options.keysAll) {

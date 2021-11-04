@@ -8,6 +8,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.config.ConfigScreen;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
+import net.blancworks.figura.gui.widgets.CustomTextFieldWidget;
 import net.blancworks.figura.gui.widgets.ModelFileListWidget;
 import net.blancworks.figura.gui.widgets.TexturedButtonWidget;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
@@ -17,9 +18,7 @@ import net.minecraft.client.gui.screen.ConfirmScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ClickableWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
@@ -55,7 +54,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier keybindsTexture = new Identifier("figura", "textures/gui/keybinds.png");
     public Identifier statusIndicatorTexture = new Identifier("figura", "textures/gui/status_indicator.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
-    public Identifier scalableBoxTexture = new Identifier("figura", "textures/gui/scalable_box.png");
+    public Identifier expandedBackgroundTexture = new Identifier("figura", "textures/gui/expanded_background.png");
 
     public static final List<Style> textColors = List.of(
             Style.EMPTY.withColor(Formatting.WHITE),
@@ -117,7 +116,7 @@ public class FiguraGuiScreen extends Screen {
     private int scriptStatus = 0;
     private int connectionStatus = 0;
 
-    private TextFieldWidget searchBox;
+    private CustomTextFieldWidget searchBox;
     private int paneY;
     private int paneWidth;
     private int searchBoxX;
@@ -183,7 +182,7 @@ public class FiguraGuiScreen extends Screen {
 
         int searchBoxWidth = paneWidth - 5;
         searchBoxX = 7;
-        this.searchBox = new TextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("gui.figura.button.search"));
+        this.searchBox = new CustomTextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("gui.figura.button.search").formatted(Formatting.ITALIC));
         this.searchBox.setChangedListener((string_1) -> modelFileList.filter(string_1, false));
         this.modelFileList = new ModelFileListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, this.modelFileList, this, modelFileListState);
         this.modelFileList.setLeftPos(5);
@@ -205,7 +204,10 @@ public class FiguraGuiScreen extends Screen {
         }));
 
         //back button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> this.client.setScreen(parentScreen)));
+        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> {
+            this.client.setScreen(parentScreen);
+            modelFileList.saveFolderNbt();
+        }));
 
         //trust button
         this.addDrawableChild(new ButtonWidget(this.width - width - 5, 15, width, 20, new TranslatableText("gui.figura.button.trustmenu"), (buttonWidgetx) -> this.client.setScreen(trustScreen)));
@@ -286,6 +288,7 @@ public class FiguraGuiScreen extends Screen {
     @Override
     public void onClose() {
         this.client.setScreen(parentScreen);
+        modelFileList.saveFolderNbt();
     }
 
     @Override
@@ -303,16 +306,18 @@ public class FiguraGuiScreen extends Screen {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackgroundTexture(0);
-
-        //draw player preview
         if (!expand) {
+            //draw background
+            this.renderBackgroundTexture(0);
+
+            //draw player preview
             RenderSystem.setShaderTexture(0, playerBackgroundTexture);
             drawTexture(matrices, this.width / 2 - modelBgSize / 2, this.height / 2 - modelBgSize / 2, 0, 0, modelBgSize, modelBgSize, modelBgSize, modelBgSize);
         }
         else {
-            RenderSystem.setShaderTexture(0, scalableBoxTexture);
-            drawTexture(matrices, 0, 0, 0, 0, this.width, this.height, this.width, this.height);
+            //draw background
+            RenderSystem.setShaderTexture(0, expandedBackgroundTexture);
+            this.renderAsBackground(0);
 
             //render expand button 3:
             this.expandButton.render(matrices, mouseX, mouseY, delta);
@@ -409,6 +414,19 @@ public class FiguraGuiScreen extends Screen {
                 matrices.pop();
             }
         }
+    }
+
+    public void renderAsBackground(int vOffset) {
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder bufferBuilder = tessellator.getBuffer();
+        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        bufferBuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE_COLOR);
+        bufferBuilder.vertex(0f, this.height, 0f).texture(0f, this.height / 32f + vOffset).color(255, 255, 255, 255).next();
+        bufferBuilder.vertex(this.width, this.height, 0f).texture(this.width / 32f, this.height / 32f + vOffset).color(255, 255, 255, 255).next();
+        bufferBuilder.vertex(this.width, 0f, 0f).texture(this.width / 32f, vOffset).color(255, 255, 255, 255).next();
+        bufferBuilder.vertex(0f, 0f, 0f).texture(0f, vOffset).color(255, 255, 255, 255).next();
+        tessellator.draw();
     }
 
     public void loadLocalAvatar(String fileName, String path) {

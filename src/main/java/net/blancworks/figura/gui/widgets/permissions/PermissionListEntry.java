@@ -1,5 +1,6 @@
 package net.blancworks.figura.gui.widgets.permissions;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.gui.widgets.CustomListEntry;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
@@ -7,7 +8,6 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.gui.Element;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
 
 import java.util.ArrayList;
 
@@ -88,7 +88,7 @@ public class PermissionListEntry extends CustomListEntry {
         PermissionListWidget realList = (PermissionListWidget) list;
 
         if(realList.isDifferent(getEntrySetting()))
-            return new TranslatableText("gui.figura." + getEntrySetting().id).append("*").formatted(Formatting.AQUA);
+            return new TranslatableText("gui.figura." + getEntrySetting().id).append("*").styled(FiguraMod.ACCENT_COLOR);
 
         return new TranslatableText("gui.figura." + getEntrySetting().id);
     }
