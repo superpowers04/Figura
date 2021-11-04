@@ -31,6 +31,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
@@ -48,6 +49,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.UnaryOperator;
 
 public class FiguraMod implements ClientModInitializer {
 
@@ -56,6 +58,7 @@ public class FiguraMod implements ClientModInitializer {
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static final Identifier FIGURA_FONT = new Identifier("figura", "default");
+    public static final UnaryOperator<Style> ACCENT_COLOR = FiguraMod::getAccentColor;
 
     public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 
@@ -205,7 +208,8 @@ public class FiguraMod implements ClientModInitializer {
         String userPath = (String) Config.MODEL_FOLDER_PATH.value;
         Path p = userPath.isEmpty() ? getDefaultDirectory() : new File(userPath).toPath();
         try {
-            Files.createDirectories(p);
+            if (!Files.exists(p))
+                Files.createDirectories(p);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -215,7 +219,8 @@ public class FiguraMod implements ClientModInitializer {
     public static Path getDefaultDirectory() {
         Path p = FabricLoader.getInstance().getGameDir().normalize().resolve("figura");
         try {
-            Files.createDirectories(p);
+            if (!Files.exists(p))
+                Files.createDirectories(p);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -289,6 +294,28 @@ public class FiguraMod implements ClientModInitializer {
 
         MinecraftClient.getInstance().getToastManager().clear();
         MinecraftClient.getInstance().getToastManager().add(new FiguraToast(text, text2));
+    }
+
+    public static Style getAccentColor(Style style) {
+        return style.withColor((AccentColors.values()[((int) Config.ACCENT_COLOR.value)].color));
+    }
+
+    public enum AccentColors {
+        RED(0xFF4444),
+        ORANGE(0xFF862B),
+        YELLOW(0xFFFF00),
+        GREEN(0x00FF82),
+        ACE_BLUE(0xAFF2FF),
+        AQUA(0x55FFFF),
+        BLUE(0x0088FF),
+        PURPLE(0xE03DE7),
+        FRAN_PINK(0xFF72B7),
+        WHITE(0xFFFFFF);
+
+        public final int color;
+        AccentColors(int rgb) {
+            this.color = rgb;
+        }
     }
 
     public final static List<UUID> VIP = List.of(

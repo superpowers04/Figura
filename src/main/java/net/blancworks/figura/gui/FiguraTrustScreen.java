@@ -3,6 +3,7 @@ package net.blancworks.figura.gui;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
+import net.blancworks.figura.gui.widgets.CustomTextFieldWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.gui.widgets.PlayerListWidget;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
@@ -14,10 +15,10 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
@@ -34,8 +35,8 @@ public class FiguraTrustScreen extends Screen {
 
     public Screen parentScreen;
 
-    private TextFieldWidget searchBox;
-    private TextFieldWidget uuidBox;
+    private CustomTextFieldWidget searchBox;
+    private CustomTextFieldWidget uuidBox;
 
     private int paneY;
     private int paneWidth;
@@ -78,7 +79,7 @@ public class FiguraTrustScreen extends Screen {
 
         int searchBoxWidth = paneWidth - 5;
         searchBoxX = 7;
-        this.searchBox = new TextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("gui.figura.search"));
+        this.searchBox = new CustomTextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("gui.figura.button.search").formatted(Formatting.ITALIC));
         this.searchBox.setChangedListener((string_1) -> this.playerList.filter(string_1, false));
         this.playerList = new PlayerListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, this.playerList, this, playerListState);
         this.playerList.setLeftPos(5);
@@ -156,7 +157,7 @@ public class FiguraTrustScreen extends Screen {
         this.addDrawableChild(resetPermissionButton);
         this.addDrawableChild(resetAllPermissionsButton);
 
-        this.uuidBox = new TextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new TranslatableText("UUID"));
+        this.uuidBox = new CustomTextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new LiteralText("UUID").formatted(Formatting.ITALIC));
         this.uuidBox.setMaxLength(36);
         /*
         this.addSelectableChild(uuidBox);

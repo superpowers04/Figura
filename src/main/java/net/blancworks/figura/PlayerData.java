@@ -338,7 +338,8 @@ public class PlayerData {
                 NbtCompound targetTag = new NbtCompound();
                 this.writeNbt(targetTag);
 
-                Files.createDirectories(nbtFilePath.getParent());
+                if (!Files.exists(nbtFilePath.getParent()))
+                    Files.createDirectories(nbtFilePath.getParent());
                 NbtIo.writeCompressed(targetTag, new FileOutputStream(nbtFilePath.toFile()));
                 Files.writeString(hashFilePath, this.lastHash);
             } catch (Exception e) {

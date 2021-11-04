@@ -31,7 +31,7 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
         int maxNameWidth = rowWidth - 3;
         TextRenderer font = this.client.textRenderer;
         if (font.getWidth(name) > maxNameWidth) {
-            StringVisitable ellipsis = StringVisitable.plain("...");
+            StringVisitable ellipsis = StringVisitable.styled("...", name.getStyle());
             trimmedName = StringVisitable.concat(font.trimToWidth(name, maxNameWidth - font.getWidth(ellipsis)), ellipsis);
         }
         font.draw(matrices, Language.getInstance().reorder(trimmedName), x + 3, y + (rowHeight / 2) - (font.fontHeight/2), 0xFFFFFF);

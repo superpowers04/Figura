@@ -35,6 +35,7 @@ import org.luaj.vm2.lib.jse.JseMathLib;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -112,7 +113,8 @@ public class CustomScript extends FiguraAsset {
 
     public String commandPrefix = "\u0000";
 
-    public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").formatted(Formatting.BLUE));
+    public static final UnaryOperator<Style> LUA_COLOR = (s) -> s.withColor(0x5555FF);
+    public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").styled(LUA_COLOR));
 
     public final Map<String, LuaValue> SHARED_VALUES = new HashMap<>();
 
@@ -202,7 +204,7 @@ public class CustomScript extends FiguraAsset {
                     if (data == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
                         if (data != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(data.playerName.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
-                        message.append(new LiteralText(">> ").formatted(Formatting.BLUE)).append(error).formatted(Formatting.RED);
+                        message.append(new LiteralText(">> ").styled(LUA_COLOR)).append(error).formatted(Formatting.RED);
 
                         sendChatMessage(message);
                     }
@@ -355,7 +357,7 @@ public class CustomScript extends FiguraAsset {
                     if (playerData == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
                         if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
-                        message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
+                        message.append(new LiteralText(">> ").styled(LUA_COLOR));
 
                         Text log;
                         if (arg instanceof LuaVector logText) {
@@ -400,7 +402,7 @@ public class CustomScript extends FiguraAsset {
                     if (playerData == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
                         if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
-                        message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
+                        message.append(new LiteralText(">> ").styled(LUA_COLOR));
 
                         int config = (int) Config.SCRIPT_LOG_LOCATION.value;
                         if (config != 2) {
@@ -692,7 +694,7 @@ public class CustomScript extends FiguraAsset {
 
         MutableText message = LOG_PREFIX.shallowCopy();
         if (playerData != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
-        message.append(new LiteralText(">> ").formatted(Formatting.BLUE));
+        message.append(new LiteralText(">> ").styled(LUA_COLOR));
         sendChatMessage(message);
 
         for (String part : messageParts) {
@@ -747,9 +749,9 @@ public class CustomScript extends FiguraAsset {
             LuaValue value = table.get(key);
 
             MutableText valString = new LiteralText(spacing + depthString + '"').formatted(Formatting.ITALIC)
-                    .append(new LiteralText(key.toString()).formatted(Formatting.BLUE))
+                    .append(new LiteralText(key.toString()).styled(LUA_COLOR))
                     .append('"' + " : ")
-                    .append(new LiteralText(value.toString()).formatted(Formatting.AQUA));
+                    .append(new LiteralText(value.toString()).styled(FiguraMod.ACCENT_COLOR));
 
             if (value.istable()) {
                 if (config != 2) {

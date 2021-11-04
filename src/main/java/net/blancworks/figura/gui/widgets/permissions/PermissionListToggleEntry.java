@@ -1,11 +1,13 @@
 package net.blancworks.figura.gui.widgets.permissions;
 
 import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.Style;
 import net.minecraft.util.Identifier;
 
 public class PermissionListToggleEntry extends PermissionListEntry{
@@ -33,12 +35,21 @@ public class PermissionListToggleEntry extends PermissionListEntry{
                     i += this.pressedUOffset;
                 }
 
-                if (this.isHovered()) {
+                if (this.active && this.isHovered()) {
                     j += this.hoverVOffset;
                 }
 
                 drawTexture(matrices, this.x, this.y, i, j, 32, 16, 128, 32);
+
+                //overlay
+                if (this.toggled) {
+                    int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
+                    RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >> 8) & 0xFF) / 255f, (color & 0xFF) / 255f, this.alpha);
+                }
+                drawTexture(matrices, this.x, this.y, this.toggled ? 32f : 0f, 16f, 32, 16, 128, 32);
+
                 RenderSystem.enableDepthTest();
+                RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
             }
         };
         

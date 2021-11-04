@@ -1,5 +1,6 @@
 package net.blancworks.figura.gui.widgets;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraKeyBindsScreen;
@@ -91,7 +92,7 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
             this.toggle.setMessage(this.binding.getBoundKeyLocalizedText());
 
             if (focusedBinding == this.binding) {
-                this.toggle.setMessage((new LiteralText("> ")).append(this.toggle.getMessage().shallowCopy().formatted(Formatting.AQUA)).append(" <").formatted(Formatting.AQUA));
+                this.toggle.setMessage(new LiteralText("> ").styled(FiguraMod.ACCENT_COLOR).append(this.toggle.getMessage()).append(" <"));
             }
             else if (!this.binding.isUnbound()) {
                 for (KeyBinding key : MinecraftClient.getInstance().options.keysAll) {

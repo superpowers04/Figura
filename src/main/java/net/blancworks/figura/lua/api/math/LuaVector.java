@@ -2,15 +2,11 @@ package net.blancworks.figura.lua.api.math;
 
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.lua.CustomScript;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -75,7 +71,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ(), vec.getW());
     }
 
-    public static LuaValue of(Vector3f vec) {
+    public static LuaValue of(Vec3f vec) {
         if (vec == null) return NIL;
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ());
     }
@@ -146,8 +142,8 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new Vector4f(x(), y(), z(), w());
     }
 
-    public Vector3f asV3f() {
-        return new Vector3f(x(), y(), z());
+    public Vec3f asV3f() {
+        return new Vec3f(x(), y(), z());
     }
 
     public Vec3d asV3d() {
@@ -460,32 +456,15 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public Integer _getIndex(String name) {
-        switch (name) {
-            case "x":
-            case "r":
-            case "u":
-            case "pitch":
-                return 1;
-            case "y":
-            case "g":
-            case "v":
-            case "yaw":
-            case "volume":
-                return 2;
-            case "z":
-            case "b":
-            case "roll":
-                return 3;
-            case "w":
-            case "a":
-                return 4;
-            case "t":
-                return 5;
-            case "h":
-                return 6;
-            default:
-                return null;
-        }
+        return switch (name) {
+            case "x", "r", "u", "pitch" -> 1;
+            case "y", "g", "v", "yaw", "volume" -> 2;
+            case "z", "b", "roll" -> 3;
+            case "w", "a" -> 4;
+            case "t" -> 5;
+            case "h" -> 6;
+            default -> null;
+        };
     }
 
     @NotNull
@@ -523,12 +502,12 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public Text toJsonText() {
         return new LiteralText("").append("vec: {")
-                .append(new LiteralText("\n  x").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(x())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  y").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(y())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  z").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(z())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  w").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(w())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  t").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(t())).formatted(Formatting.AQUA))
-                .append(new LiteralText(",\n  h").formatted(Formatting.BLUE)).append(" = ").append(new LiteralText(String.valueOf(h())).formatted(Formatting.AQUA))
+                .append(new LiteralText("\n  x").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(x())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  y").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(y())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  z").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(z())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  w").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(w())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  t").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(t())).styled(FiguraMod.ACCENT_COLOR))
+                .append(new LiteralText(",\n  h").styled(CustomScript.LUA_COLOR)).append(" = ").append(new LiteralText(String.valueOf(h())).styled(FiguraMod.ACCENT_COLOR))
                 .append("\n}");
     }
 }

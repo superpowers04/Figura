@@ -16,7 +16,6 @@ import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -159,7 +158,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             PlayerListEntry entry = (PlayerListEntry) getEntryObject();
             MutableText name;
             if (entry.getProfile().getId().compareTo(MinecraftClient.getInstance().player.getUuid()) == 0)
-                name = new LiteralText("  [").formatted(Formatting.AQUA).append(new TranslatableText("gui.figura.local")).append("] " + entry.getProfile().getName());
+                name = new LiteralText("  [").styled(FiguraMod.ACCENT_COLOR).append(new TranslatableText("gui.figura.local")).append("] " + entry.getProfile().getName());
             else
                 name = new LiteralText("  " + entry.getProfile().getName());
 
