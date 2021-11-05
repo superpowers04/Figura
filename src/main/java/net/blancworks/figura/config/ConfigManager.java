@@ -65,7 +65,7 @@ public class ConfigManager {
         RENDER_DEBUG_PARTS_PIVOT(true),
         MODEL_FOLDER_PATH(""),
         PLAYER_POPUP_BUTTON(GLFW.GLFW_KEY_R),
-        ACCENT_COLOR(5, 10);
+        ACCENT_COLOR(0x55FFFF);
 
         //config data
         public Object value;

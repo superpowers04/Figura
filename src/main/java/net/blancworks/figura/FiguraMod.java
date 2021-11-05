@@ -22,12 +22,12 @@ import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
@@ -41,7 +41,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,7 +62,7 @@ public class FiguraMod implements ClientModInitializer {
     public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 
     public static final boolean IS_CHEESE = LocalDate.now().getDayOfMonth() == 1 && LocalDate.now().getMonthValue() == 4;
-    public static CompoundTag cheese;
+    public static NbtCompound cheese;
 
     public static KeyBinding actionWheel;
     public static KeyBinding playerPopup;
@@ -175,7 +174,7 @@ public class FiguraMod implements ClientModInitializer {
             }
 
             @Override
-            public void apply(ResourceManager manager) {
+            public void reload(ResourceManager manager) {
                 PlayerDataManager.reloadAllTextures();
 
                 try {
@@ -206,14 +205,17 @@ public class FiguraMod implements ClientModInitializer {
 
     public static Path getModContentDirectory() {
         String userPath = (String) Config.MODEL_FOLDER_PATH.value;
-        Path p = userPath.isEmpty() ? getDefaultDirectory() : new File(userPath).toPath();
         try {
+            Path p = userPath.isEmpty() ? getDefaultDirectory() : Path.of(userPath);
             if (!Files.exists(p))
                 Files.createDirectories(p);
+
+            return p;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return p;
+
+        return getDefaultDirectory();
     }
 
     public static Path getDefaultDirectory() {
@@ -297,25 +299,7 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static Style getAccentColor(Style style) {
-        return style.withColor((AccentColors.values()[((int) Config.ACCENT_COLOR.value)].color));
-    }
-
-    public enum AccentColors {
-        RED(0xFF4444),
-        ORANGE(0xFF862B),
-        YELLOW(0xFFFF00),
-        GREEN(0x00FF82),
-        ACE_BLUE(0xAFF2FF),
-        AQUA(0x55FFFF),
-        BLUE(0x0088FF),
-        PURPLE(0xE03DE7),
-        FRAN_PINK(0xFF72B7),
-        WHITE(0xFFFFFF);
-
-        public final int color;
-        AccentColors(int rgb) {
-            this.color = rgb;
-        }
+        return style.withColor((int) Config.ACCENT_COLOR.value);
     }
 
     public final static List<UUID> VIP = List.of(
