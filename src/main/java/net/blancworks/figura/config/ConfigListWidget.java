@@ -32,22 +32,28 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     public KeyBinding focusedBinding;
 
     //text types
-    public static final Predicate<String> ANY = s -> true;
-    public static final Predicate<String> INT = s -> s.matches("^[\\-+]?[0-9]*$");
-    public static final Predicate<String> FLOAT = s -> s.matches("[\\-+]?[0-9]*(\\.[0-9]+)?") || s.endsWith(".") || s.isEmpty();
-    public static final Predicate<String> HEX_COLOR = s -> s.matches("^[#]?[0-9a-fA-F]{0,6}$");
-
-    public static final Predicate<String> FOLDER_PATH = s -> {
-        if (!s.isBlank()) {
-            try {
-                return Path.of(s.trim()).toFile().isDirectory();
-            } catch (Exception ignored) {
-                return false;
+    public enum InputTypes {
+        ANY(s -> true),
+        INT(s -> s.matches("^[\\-+]?[0-9]*$")),
+        FLOAT(s -> s.matches("[\\-+]?[0-9]*(\\.[0-9]+)?") || s.endsWith(".") || s.isEmpty()),
+        HEX_COLOR(s -> s.matches("^[#]?[0-9A-Fa-f]{0,6}$")),
+        FOLDER_PATH(s -> {
+            if (!s.isBlank()) {
+                try {
+                    return Path.of(s.trim()).toFile().isDirectory();
+                } catch (Exception ignored) {
+                    return false;
+                }
             }
-        }
 
-        return true;
-    };
+            return true;
+        });
+
+        public final Predicate<String> validator;
+        InputTypes(Predicate<String> predicate) {
+            this.validator = predicate;
+        }
+    }
 
     public enum EntryType {
         CATEGORY,
@@ -68,7 +74,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             case CATEGORY -> entry = new CategoryEntry((Text) data[0]);
             case BOOLEAN -> entry = new BooleanEntry((Text) data[0], (Text) data[1], (Config) data[2]);
             case ENUM -> entry = new EnumEntry((Text) data[0], (Text) data[1], (Config) data[2], (List<Text>) data[3]);
-            case INPUT -> entry = new InputEntry((Text) data[0], (Text) data[1], (Config) data[2], (Predicate<String>) data[3]);
+            case INPUT -> entry = new InputEntry((Text) data[0], (Text) data[1], (Config) data[2], (InputTypes) data[3]);
             case KEYBIND -> entry = new KeyBindEntry((Text) data[0], (Text) data[1], (Config) data[2], (KeyBinding) data[3]);
             default -> entry = null;
         }
@@ -106,6 +112,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.text = text;
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //render text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -121,6 +128,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return false;
         }
 
+        @Override
         public List<? extends Element> children() {
             return Collections.emptyList();
         }
@@ -157,6 +165,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -238,6 +247,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
@@ -304,24 +314,29 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         private final TextFieldWidget field;
         private final ButtonWidget reset;
 
-        private final Predicate<String> validator;
+        private final InputTypes inputType;
 
-        public InputEntry(Text display, Text tooltip, Config config, Predicate<String> validator) {
+        public InputEntry(Text display, Text tooltip, Config config, InputTypes inputType) {
             this.display = display;
             this.tooltip = tooltip;
             this.config = config;
             this.initValue = config.value;
-            this.validator = validator;
+            this.inputType = inputType;
 
             //field
-            this.field = new TextFieldWidget(ConfigListWidget.this.client.textRenderer, 0, 0, 70, 16, new LiteralText(config.configValue + ""));
-            this.field.setChangedListener((fieldText) -> {
+            Text fieldText = inputType == InputTypes.HEX_COLOR ? new LiteralText("#" + Integer.toHexString((int) config.configValue)) : new LiteralText(config.configValue + "");
+            this.field = new TextFieldWidget(ConfigListWidget.this.client.textRenderer, 0, 0, 70, 16, fieldText);
+            this.field.setChangedListener((text) -> {
                 // Only write config value if it's valid
-                if (validator.test(fieldText))
-                    config.configValue = fieldText;
+                if (inputType.validator.test(text)) {
+                    if (inputType == InputTypes.HEX_COLOR)
+                        config.configValue = parseHex(text);
+                    else
+                        config.configValue = text;
+                }
             });
             this.field.setMaxLength(1000);
-            this.field.setText(config.configValue + "");
+            this.field.setText(fieldText.asString());
             this.field.setCursorToStart();
 
             //reset button
@@ -331,11 +346,19 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             });
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
             int posY = y + entryHeight / 2;
-            textRenderer.draw(matrices, this.display, (float) x, (float)(posY - 9 / 2), 16777215);
+
+            if (this.field.isFocused() && this.inputType == InputTypes.HEX_COLOR) {
+                Text text = new LiteralText("").append(this.display).append(" (").append(this.field.getText()).append(")");
+                textRenderer.draw(matrices, text, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
+            }
+            else {
+                textRenderer.draw(matrices, this.display, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
+            }
 
             //reset button
             this.reset.x = x + 250;
@@ -355,6 +378,23 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.field.setWidth(70 + extraWidth);
             this.field.x = x + 167 - extraWidth;
 
+            //set text color
+            int color = 0xFFFFFF;
+
+            if (!this.config.configValue.equals(this.initValue + ""))
+                if (this.inputType == InputTypes.HEX_COLOR)
+                    color = parseHex(this.field.getText());
+                else
+                    color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
+
+            if (!inputType.validator.test(field.getText())) {
+                color = 0xFF5555;
+            }
+            this.field.setEditableColor(color);
+
+            //render
+            this.field.render(matrices, mouseX, mouseY, tickDelta);
+
             //render overlay text
             if (isMouseOver(mouseX, mouseY) && mouseX < x + textRenderer.getWidth(this.display.getString())) {
                 matrices.push();
@@ -362,23 +402,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
                 parent.renderTooltip(matrices, this.tooltip, mouseX, mouseY);
                 matrices.pop();
             }
-
-            //if setting is changed
-            if (!this.config.configValue.equals(this.initValue + ""))
-                try {
-                    this.config.defaultValue.getClass().getConstructor(new Class[] {String.class}).newInstance(this.config.configValue);
-                    this.field.setEditableColor(ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb());
-                } catch (Exception e) {
-                    this.field.setEditableColor(Formatting.RED.getColorValue());
-                }
-            else
-                this.field.setEditableColor(Formatting.WHITE.getColorValue());
-
-            if (!validator.test(field.getText())) {
-                this.field.setEditableColor(Formatting.RED.getColorValue());
-            }
-
-            this.field.render(matrices, mouseX, mouseY, tickDelta);
         }
 
         @Override
@@ -401,12 +424,36 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return this.field.mouseReleased(mouseX, mouseY, button) || this.reset.mouseReleased(mouseX, mouseY, button);
         }
 
+        @Override
         public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
             return super.keyPressed(keyCode, scanCode, modifiers) || this.field.keyPressed(keyCode, scanCode, modifiers);
         }
 
+        @Override
         public boolean charTyped(char chr, int modifiers) {
             return this.field.charTyped(chr, modifiers);
+        }
+
+        public static int parseHex(String hexString) {
+            //parse hex color
+            StringBuilder hex = new StringBuilder(hexString);
+
+            if (hex.toString().startsWith("#")) hex = new StringBuilder(hex.substring(1));
+            if (hex.length() < 6) {
+                char[] bgChar = hex.toString().toCharArray();
+
+                //special catch for 3
+                if (hex.length() == 3)
+                    hex = new StringBuilder("" + bgChar[0] + bgChar[0] + bgChar[1] + bgChar[1] + bgChar[2] + bgChar[2]);
+                else
+                    hex.append("0".repeat(Math.max(0, 6 - hex.toString().length())));
+            }
+
+            try {
+                return Integer.parseInt(hex.toString(), 16);
+            } catch (Exception ignored) {
+                return 0xFF5555;
+            }
         }
     }
 
@@ -439,6 +486,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             });
         }
 
+        @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;

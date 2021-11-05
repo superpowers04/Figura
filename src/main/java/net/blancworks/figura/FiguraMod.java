@@ -205,14 +205,17 @@ public class FiguraMod implements ClientModInitializer {
 
     public static Path getModContentDirectory() {
         String userPath = (String) Config.MODEL_FOLDER_PATH.value;
-        Path p = userPath.isEmpty() ? getDefaultDirectory() : Path.of(userPath);
         try {
+            Path p = userPath.isEmpty() ? getDefaultDirectory() : Path.of(userPath);
             if (!Files.exists(p))
                 Files.createDirectories(p);
+
+            return p;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return p;
+
+        return getDefaultDirectory();
     }
 
     public static Path getDefaultDirectory() {
@@ -296,25 +299,7 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static Style getAccentColor(Style style) {
-        return style.withColor((AccentColors.values()[((int) Config.ACCENT_COLOR.value)].color));
-    }
-
-    public enum AccentColors {
-        RED(0xFF4444),
-        ORANGE(0xFF862B),
-        YELLOW(0xFFFF00),
-        GREEN(0x00FF82),
-        ACE_BLUE(0xAFF2FF),
-        AQUA(0x55FFFF),
-        BLUE(0x0088FF),
-        PURPLE(0xE03DE7),
-        FRAN_PINK(0xFF72B7),
-        WHITE(0xFFFFFF);
-
-        public final int color;
-        AccentColors(int rgb) {
-            this.color = rgb;
-        }
+        return style.withColor((int) Config.ACCENT_COLOR.value);
     }
 
     public final static List<UUID> VIP = List.of(
