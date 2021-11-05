@@ -99,6 +99,7 @@ public class CustomScript extends FiguraAsset {
     public float soundSpawnCount = 0;
 
     public Float customShadowSize = null;
+    public Boolean shouldRenderFire = null;
 
     public Vec2f crossHairPos = null;
     public boolean crossHairEnabled = true;

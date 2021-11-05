@@ -324,7 +324,15 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.inputType = inputType;
 
             //field
-            Text fieldText = inputType == InputTypes.HEX_COLOR ? new LiteralText("#" + Integer.toHexString((int) config.configValue)) : new LiteralText(config.configValue + "");
+            Text fieldText;
+            if (inputType == InputTypes.HEX_COLOR) {
+                String hex = Integer.toHexString((int) config.configValue);
+                hex = "0".repeat(6 - hex.length()) + hex;
+                fieldText = new LiteralText("#" + hex);
+            } else {
+                fieldText = new LiteralText(config.configValue + "");
+            }
+
             this.field = new TextFieldWidget(ConfigListWidget.this.client.textRenderer, 0, 0, 70, 16, fieldText);
             this.field.setChangedListener((text) -> {
                 // Only write config value if it's valid

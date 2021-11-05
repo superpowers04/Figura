@@ -48,9 +48,9 @@ public class RendererAPI {
                 }
             });
 
-            set("getShadowSize", new OneArgFunction() {
+            set("getShadowSize", new ZeroArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg) {
+                public LuaValue call() {
                     return script.customShadowSize == null ? NIL : LuaNumber.valueOf(script.customShadowSize);
                 }
             });
@@ -81,6 +81,21 @@ public class RendererAPI {
                     //Yes, this IS intended to also be called for non-local players.
                     //This might be exploitable? idk
                     return LuaVector.of(MinecraftClient.getInstance().gameRenderer.getCamera().getPos());
+                }
+            });
+
+            set("setRenderFire", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    script.shouldRenderFire = arg.isnil() ? null : arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            set("getRenderFire", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return script.shouldRenderFire == null ? NIL : LuaBoolean.valueOf(script.shouldRenderFire);
                 }
             });
 
