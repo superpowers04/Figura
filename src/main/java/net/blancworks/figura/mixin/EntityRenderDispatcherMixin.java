@@ -51,4 +51,14 @@ public abstract class EntityRenderDispatcherMixin {
     private <T extends Entity> void renderEnd(T entity, double x, double y, double z, float yaw, float tickDelta, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         this.renderShadows = renderShadowOld;
     }
+
+    @Inject(method = "renderFire", at = @At("HEAD"), cancellable = true)
+    private void renderFire(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Entity entity, CallbackInfo ci) {
+        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
+        if (data == null || data.script == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0 || data.script.customShadowSize == null)
+            return;
+
+        if (!data.script.shouldRenderFire)
+            ci.cancel();
+    }
 }
