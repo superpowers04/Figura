@@ -145,6 +145,7 @@ public class FiguraGuiScreen extends Screen {
 
     //model nameplate
     public static boolean showOwnNametag = false;
+    public static boolean renderFireOverlay = true;
 
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
     public FiguraKeyBindsScreen keyBindsScreen = new FiguraKeyBindsScreen(this);
@@ -752,6 +753,7 @@ public class FiguraGuiScreen extends Screen {
         entity.prevHeadYaw = entity.getYaw();
         entity.setInvisible(false);
         showOwnNametag = (boolean) Config.PREVIEW_NAMEPLATE.value;
+        renderFireOverlay = false;
         DiffuseLighting.method_34742();
         EntityRenderDispatcher entityRenderDispatcher = MinecraftClient.getInstance().getEntityRenderDispatcher();
         quaternion2.conjugate();
@@ -772,6 +774,7 @@ public class FiguraGuiScreen extends Screen {
         entity.headYaw = l;
         entity.setInvisible(invisible);
         showOwnNametag = false;
+        renderFireOverlay = true;
         matrixStack.pop();
         RenderSystem.applyModelViewMatrix();
         DiffuseLighting.enableGuiDepthLighting();

@@ -67,7 +67,7 @@ public class FiguraMod implements ClientModInitializer {
     public static KeyBinding actionWheel;
     public static KeyBinding playerPopup;
 
-    public static long ticksElapsed;
+    public static int ticksElapsed;
 
     //Loading
 

@@ -16,7 +16,7 @@
       "type": "bitmap",
       "file": "figura:font/loading.png",
       "ascent": 8,
-      "chars": ["0123456789ABCDEF"]
+      "chars": ["0123456789abcdef"]
     }
   ]
 }
