@@ -275,6 +275,7 @@ public class NamePlateAPI {
         return formattedText;
     }
 
+    private static final String LOADING = "\u22EE\u22F0\u22EF\u22F1";
     public static Text getBadges(PlayerData currentData) {
         if (currentData == null) return null;
 
@@ -284,8 +285,12 @@ public class NamePlateAPI {
 
         //the mark
         if (currentData.hasAvatar()) {
-             if (!currentData.isAvatarLoaded())
-                badges += Integer.toHexString((int) (FiguraMod.ticksElapsed % 16)).toUpperCase();
+            if (!currentData.isAvatarLoaded()) {
+                if ((boolean) Config.BADGE_AS_ICONS.value)
+                    badges += Integer.toHexString(Math.abs(FiguraMod.ticksElapsed) % 16);
+                else
+                    badges += LOADING.charAt(Math.abs(FiguraMod.ticksElapsed) % 4);
+            }
             else if (currentData.model != null && currentData.model.getRenderComplexity() > currentData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY))
                 badges += "▲";
             else if (currentData.script != null && currentData.script.scriptError)

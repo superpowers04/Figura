@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -54,8 +55,13 @@ public abstract class EntityRenderDispatcherMixin {
 
     @Inject(method = "renderFire", at = @At("HEAD"), cancellable = true)
     private void renderFire(MatrixStack matrices, VertexConsumerProvider vertexConsumers, Entity entity, CallbackInfo ci) {
+        if (!FiguraGuiScreen.renderFireOverlay) {
+            ci.cancel();
+            return;
+        }
+
         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (data == null || data.script == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0 || data.script.customShadowSize == null)
+        if (data == null || data.script == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0 || data.script.shouldRenderFire == null)
             return;
 
         if (!data.script.shouldRenderFire)
