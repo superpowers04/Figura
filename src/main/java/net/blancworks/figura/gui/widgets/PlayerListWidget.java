@@ -16,6 +16,7 @@ import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.*;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
 import java.util.ArrayList;
@@ -38,15 +39,22 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         //Foreach player
         ArrayList<PlayerListEntry> players = new ArrayList<>();
         ArrayList<PlayerListEntry> figuraPlayers = new ArrayList<>();
+        List<String> addedPlayers = new ArrayList<>();
 
         List<PlayerListEntry> orderedPlayerList = PlayerListHudAccessorMixin.getEntryOrdering().sortedCopy(client.getNetworkHandler().getPlayerList());
         for (PlayerListEntry listEntry : orderedPlayerList) {
+            String name = listEntry.getProfile().getName().toLowerCase();
+            if (addedPlayers.contains(name))
+                continue;
+
             PlayerData data = PlayerDataManager.getDataForPlayer(listEntry.getProfile().getId());
             if (data == null || !data.hasAvatar()) {
                 players.add(listEntry);
             } else {
                 figuraPlayers.add(listEntry);
             }
+
+            addedPlayers.add(name);
         }
 
         figuraPlayers.addAll(players);
@@ -57,14 +65,15 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
                 Text text = new TranslatableText("gui.figura." + entry.getKey().getPath());
                 displayText = new LiteralText("").append(new LiteralText(entry.getValue().expanded ? "V " : "> ")
                         .setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)))
-                        .setStyle(Style.EMPTY.withColor(TextColor.parse(entry.getValue().expanded ? "gray" : "dark_gray")))
+                        .formatted(entry.getValue().expanded ? Formatting.GRAY : Formatting.DARK_GRAY)
                         .append(text);
             }});
 
             if (!entry.getValue().expanded) continue;
 
             for (PlayerListEntry listEntry : figuraPlayers) {
-                if (!listEntry.getProfile().getName().toLowerCase().contains(searchTerm.toLowerCase()) || listEntry.getProfile().getId() == realScreen.draggedId)
+                String name = listEntry.getProfile().getName();
+                if (!name.toLowerCase().contains(searchTerm.toLowerCase()) || listEntry.getProfile().getId() == realScreen.draggedId || name.equals(""))
                     continue;
 
                 //Get trust container for that player

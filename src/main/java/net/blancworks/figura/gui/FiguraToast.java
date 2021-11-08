@@ -6,6 +6,7 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.toast.Toast;
 import net.minecraft.client.toast.ToastManager;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
@@ -21,9 +22,9 @@ public class FiguraToast implements Toast {
     private static final Identifier TEXTURE = new Identifier("figura", "textures/gui/toast.png");
 
     public FiguraToast(Text title, Text message) {
-        this.title = title;
-        this.message = message;
         this.cheese = FiguraMod.IS_CHEESE || Math.random() < 0.0001;
+        this.title = title.shallowCopy().fillStyle(Style.EMPTY.withColor(cheese ? 0xF8C53A : 0x55FFFF));
+        this.message = message;
     }
 
     @Override
@@ -37,9 +38,9 @@ public class FiguraToast implements Toast {
         DrawableHelper.drawTexture(matrices, 0, 0, 0f, cheese ? 32f : 0f, 160, 32, 160, 64);
 
         if (this.message == null) {
-            manager.getGame().textRenderer.draw(matrices, this.title, 31f, 12f, 0x55FFFF);
+            manager.getGame().textRenderer.draw(matrices, this.title, 31f, 12f, 0xFFFFFF);
         } else {
-            manager.getGame().textRenderer.draw(matrices, this.title, 31f, 7f, 0x55FFFF);
+            manager.getGame().textRenderer.draw(matrices, this.title, 31f, 7f, 0xFFFFFF);
             manager.getGame().textRenderer.draw(matrices, this.message, 31f, 18f, 0xFFFFFF);
         }
 

@@ -59,9 +59,9 @@
   "gui.figura.script": "Script",
   "gui.figura.backend": "Backend",
 
-  "gui.figura.complexity": "Complexity: %d",
-  "gui.figura.filesize": "File Size: %dkb",
-  "gui.figura.name": "Name: %d",
+  "gui.figura.complexity": "Complexity:",
+  "gui.figura.filesize": "File Size (kb):",
+  "gui.figura.name": "Name:",
 
   "gui.figura.config.nametag": "NameTag",
   "gui.figura.config.misc": "Misc",

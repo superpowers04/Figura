@@ -19,6 +19,7 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3f;
@@ -83,16 +84,16 @@ public class PlayerPopup extends DrawableHelper {
         }
 
         //playername
-        MutableText name = data.playerName.shallowCopy();
+        MutableText name = data.playerName.shallowCopy().formatted(Formatting.BLACK);
         Text badges = NamePlateAPI.getBadges(data);
         if (badges != null) name.append(badges);
 
-        Text trust = new TranslatableText("gui.figura." + data.getTrustContainer().parentID.getPath());
+        Text trust = new TranslatableText("gui.figura." + data.getTrustContainer().parentID.getPath()).formatted(Formatting.BLACK);
 
         matrices.scale(0.5f, 0.5f, 0.5f);
         matrices.translate(0f, 0f, -1f);
-        textRenderer.draw(matrices, name, -66, -55, 0);
-        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 66, -55, 0);
+        textRenderer.draw(matrices, name, -66, -55, 0xFFFFFF);
+        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 66, -55, 0xFFFFFF);
 
         //return
         matrices.pop();
