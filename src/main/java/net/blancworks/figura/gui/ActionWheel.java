@@ -272,8 +272,7 @@ public class ActionWheel extends DrawableHelper {
 
             //render textures
             ActionWheelCustomization cust = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
-            if (cust != null && cust.texture != ActionWheelCustomization.TextureType.None && cust.uvOffset != null && cust.uvSize != null) {
-
+            if (cust != null && cust.texture != ActionWheelCustomization.TextureType.None && cust.uvOffset != null && cust.uvSize != null && data.playerListEntry != null) {
                 //texture
                 Identifier textureId;
                 switch (cust.texture) {

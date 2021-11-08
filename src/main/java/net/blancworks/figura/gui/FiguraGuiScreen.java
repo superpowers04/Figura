@@ -438,14 +438,14 @@ public class FiguraGuiScreen extends Screen {
 
     public void updateAvatarData() {
         if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.hasAvatar()) {
-            nameText = PlayerDataManager.lastLoadedFileName != null ? new TranslatableText("gui.figura.name", PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length()))) : null;
+            nameText = PlayerDataManager.lastLoadedFileName != null ? new TranslatableText("gui.figura.name").append(new LiteralText(" " + PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length()))).styled(FiguraMod.ACCENT_COLOR)) : null;
 
             if (PlayerDataManager.localPlayer.model != null) {
-                modelComplexityText = new TranslatableText("gui.figura.complexity", PlayerDataManager.localPlayer.model.getRenderComplexity());
+                modelComplexityText = new TranslatableText("gui.figura.complexity").append(new LiteralText(" " + PlayerDataManager.localPlayer.model.getRenderComplexity()).styled(FiguraMod.ACCENT_COLOR));
                 FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
             }
             else {
-                modelComplexityText = new TranslatableText("gui.figura.complexity", 0);
+                modelComplexityText = new TranslatableText("gui.figura.complexity").append(new LiteralText(" " + 0).styled(FiguraMod.ACCENT_COLOR));
                 modelSizeStatus = 0;
             }
 
@@ -480,7 +480,7 @@ public class FiguraGuiScreen extends Screen {
         df.setRoundingMode(RoundingMode.HALF_UP);
         float size = Float.parseFloat(df.format(fileSize / 1024.0f));
 
-        MutableText fsText = new TranslatableText("gui.figura.filesize", size);
+        MutableText fsText = new TranslatableText("gui.figura.filesize").append(new LiteralText(" " + size).styled(FiguraMod.ACCENT_COLOR));
 
         if (fileSize >= PlayerData.FILESIZE_LARGE_THRESHOLD) {
             fsText.setStyle(textColors.get(1));

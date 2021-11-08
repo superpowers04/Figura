@@ -71,7 +71,7 @@ public class PlayerTrustManager {
         if (players.containsKey(id))
             return players.get(id);
 
-        boolean isLocal = id.getPath().equals(MinecraftClient.getInstance().player.getUuid().toString());
+        boolean isLocal = id.getPath().equals(getClientPlayerID());
         Identifier parentID = new Identifier("group", isLocal ? "local" : "untrusted");
         TrustContainer trust =  new TrustContainer(id.getPath(), parentID, new HashMap<>());
 
@@ -92,7 +92,7 @@ public class PlayerTrustManager {
         });
 
         players.forEach((key, value) -> {
-            if (!key.getPath().equals(MinecraftClient.getInstance().player.getUuid().toString()) && !value.parentID.getPath().equals("local") && (!value.isTrustEmpty() || !value.parentID.getPath().equals("untrusted"))) {
+            if (!key.getPath().equals(getClientPlayerID()) && !value.parentID.getPath().equals("local") && (!value.isTrustEmpty() || !value.parentID.getPath().equals("untrusted"))) {
                 NbtCompound container = new NbtCompound();
                 value.writeNbt(container);
                 playerList.add(container);
@@ -126,7 +126,7 @@ public class PlayerTrustManager {
             String name = compound.getString("name");
             Identifier parentID = new Identifier(compound.getString("parent"));
 
-            if (!name.equals(MinecraftClient.getInstance().player.getUuid().toString()) && !parentID.getPath().equals("local")) {
+            if (!name.equals(getClientPlayerID()) && !parentID.getPath().equals("local")) {
                 TrustContainer container = new TrustContainer(name, parentID, compound.getCompound("trust"));
                 container.locked = compound.getBoolean("locked");
                 container.expanded = compound.getBoolean("expanded");
@@ -189,7 +189,7 @@ public class PlayerTrustManager {
             i++;
         }
 
-        if (nextID == null || (nextID.getPath().equals("local") && !tc.name.equals(MinecraftClient.getInstance().player.getUuid().toString())) || i == groups.size())
+        if (nextID == null || (nextID.getPath().equals("local") && !tc.name.equals(getClientPlayerID())) || i == groups.size())
             return false;
 
         tc.parentID = nextID;
@@ -216,5 +216,9 @@ public class PlayerTrustManager {
         tc.parentID = prevID;
         saveToDisk();
         return true;
+    }
+
+    private static String getClientPlayerID() {
+        return MinecraftClient.getInstance().player != null ? MinecraftClient.getInstance().player.getUuid().toString() : "";
     }
 }

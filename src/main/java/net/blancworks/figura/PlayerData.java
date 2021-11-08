@@ -154,6 +154,7 @@ public class PlayerData {
      * @param nbt the nbt to read
      */
     public void readNbt(NbtCompound nbt) {
+        if (!nbt.contains("id")) return;
         playerId = nbt.getUuid("id");
 
         model = null;

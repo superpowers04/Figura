@@ -43,6 +43,10 @@ public class CustomModel extends FiguraAsset {
     public int leftToRender = 0;
     public int lastComplexity = 0;
 
+    //used during rendering
+    public boolean applyHiddenTransforms = true;
+    public CustomModelPart.ParentType renderOnly = null;
+
     //This contains all the modifications to origins for stuff like elytra and held items.
     //This is separate from script customizations, as these are groups from blockbench that are the new,
     //override origins against vanilla.
@@ -96,7 +100,7 @@ public class CustomModel extends FiguraAsset {
 
                 //render only heads in spectator
                 if (owner.lastEntity != null && owner.lastEntity.isSpectator())
-                    CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
+                    renderOnly = CustomModelPart.ParentType.Head;
 
                 //hitboxes :p
                 CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
@@ -121,16 +125,16 @@ public class CustomModel extends FiguraAsset {
         int prevCount = playerData.model.leftToRender;
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
 
-        //CustomModelPart.applyHiddenTransforms = !(boolean) Config.FIX_FIRST_PERSON_HANDS.value;
+        //applyHiddenTransforms = !(boolean) Config.FIX_FIRST_PERSON_HANDS.value;
         for (CustomModelPart part : new ArrayList<>(playerData.model.allParts)) {
             if (arm == model.rightArm)
-                CustomModelPart.renderOnly = CustomModelPart.ParentType.RightArm;
+                renderOnly = CustomModelPart.ParentType.RightArm;
             else if (arm == model.leftArm)
-                CustomModelPart.renderOnly = CustomModelPart.ParentType.LeftArm;
+                renderOnly = CustomModelPart.ParentType.LeftArm;
 
             playerData.model.leftToRender = part.render(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
         }
-        //CustomModelPart.applyHiddenTransforms = true;
+        //applyHiddenTransforms = true;
 
         playerData.model.leftToRender = prevCount;
     }
@@ -149,15 +153,15 @@ public class CustomModel extends FiguraAsset {
             return true;
         }
         else {
-            CustomModelPart.applyHiddenTransforms = false;
+            applyHiddenTransforms = false;
             for (CustomModelPart modelPart : new ArrayList<>(data.model.allParts)) {
-                CustomModelPart.renderOnly = CustomModelPart.ParentType.Head;
+                renderOnly = CustomModelPart.ParentType.Head;
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
                 if (data.model.leftToRender <= 0)
                     break;
             }
-            CustomModelPart.applyHiddenTransforms = true;
+            applyHiddenTransforms = true;
 
             if (data.script != null) {
                 VanillaModelPartCustomization customization = data.script.allCustomizations.get(VanillaModelAPI.VANILLA_HEAD);

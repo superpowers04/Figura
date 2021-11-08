@@ -4,6 +4,7 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.Nullable;
 
 public class CustomTextFieldWidget extends TextFieldWidget {
@@ -19,7 +20,7 @@ public class CustomTextFieldWidget extends TextFieldWidget {
     public void renderButton(MatrixStack matrices, int mouseX, int mouseY, float delta) {
         super.renderButton(matrices, mouseX, mouseY, delta);
         if (this.getText().isEmpty() && !this.isFocused()) {
-            this.textRenderer.drawWithShadow(matrices, this.getMessage(), this.x + 4, this.y + (this.height - 8) / 2, 7368816);
+            this.textRenderer.drawWithShadow(matrices, this.getMessage().shallowCopy().formatted(Formatting.DARK_GRAY), this.x + 4, this.y + (this.height - 8) / 2, 0xFFFFFF);
         }
     }
 }

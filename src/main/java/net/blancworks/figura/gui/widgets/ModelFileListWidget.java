@@ -336,7 +336,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
         public Text getDisplayText() {
             return new LiteralText("  ".repeat(offset)).append(new LiteralText(this.expanded ? "V " : "> ")
                     .setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)))
-                    .setStyle(Style.EMPTY.withColor(TextColor.parse(this.expanded ? "gray" : "dark_gray")))
+                    .formatted(this.expanded ? Formatting.GRAY : Formatting.DARK_GRAY)
                     .append(new LiteralText(getName()));
         }
     }

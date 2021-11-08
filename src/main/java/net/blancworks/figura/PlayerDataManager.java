@@ -37,20 +37,24 @@ public final class PlayerDataManager {
             e.printStackTrace();
         }
 
-        if (MinecraftClient.getInstance().player != null && id == MinecraftClient.getInstance().player.getUuid()) {
-            if (didInitLocalPlayer)
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client.player != null && id == client.player.getUuid()) {
+            if (didInitLocalPlayer) {
+                if (client.getNetworkHandler() != null)
+                    localPlayer.playerListEntry = client.getNetworkHandler().getPlayerListEntry(localPlayer.playerId);
                 return localPlayer;
+            }
 
             localPlayer = new LocalPlayerData();
-            localPlayer.playerId = MinecraftClient.getInstance().player.getUuid();
-            LOADED_PLAYER_DATA.put(MinecraftClient.getInstance().player.getUuid(), localPlayer);
+            localPlayer.playerId = client.player.getUuid();
+            LOADED_PLAYER_DATA.put(client.player.getUuid(), localPlayer);
             didInitLocalPlayer = true;
 
-            if (MinecraftClient.getInstance().getNetworkHandler() != null)
-                localPlayer.playerListEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(localPlayer.playerId);
+            if (client.getNetworkHandler() != null)
+                localPlayer.playerListEntry = client.getNetworkHandler().getPlayerListEntry(localPlayer.playerId);
 
             if (lastLoadedFileName != null) {
-                localPlayer.vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
+                localPlayer.vanillaModel = ((PlayerEntityRenderer) client.getEntityRenderDispatcher().getRenderer(client.player)).getModel();
                 localPlayer.loadModelFile(lastLoadedFileName);
                 return localPlayer;
             }
@@ -74,15 +78,14 @@ public final class PlayerDataManager {
 
         if (getData != null) {
             LiteralText playerName = new LiteralText("");
-            if (MinecraftClient.getInstance().getNetworkHandler() != null) {
-                PlayerListEntry playerEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
+            if (client.getNetworkHandler() != null) {
+                PlayerListEntry playerEntry = client.getNetworkHandler().getPlayerListEntry(id);
                 if (playerEntry != null && playerEntry.getProfile() != null)
                     playerName = new LiteralText(playerEntry.getProfile().getName());
+
+                getData.playerListEntry = client.getNetworkHandler().getPlayerListEntry(id);
             }
             getData.playerName = playerName;
-
-            if (MinecraftClient.getInstance().getNetworkHandler() != null)
-                getData.playerListEntry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(id);
         }
 
         return getData;
