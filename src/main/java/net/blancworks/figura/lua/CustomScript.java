@@ -699,7 +699,8 @@ public class CustomScript extends FiguraAsset {
         sendChatMessage(message);
 
         for (String part : messageParts) {
-            sendChatMessage(new LiteralText(part).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+            if (!part.trim().equals("[Java]: in ?"))
+                sendChatMessage(new LiteralText(part).formatted(Formatting.RED));
         }
 
         error.printStackTrace();
@@ -731,7 +732,7 @@ public class CustomScript extends FiguraAsset {
             }
         } catch (Exception ignored) {}
 
-        sendChatMessage(new LiteralText("script:\n   " + location).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+        sendChatMessage(new LiteralText("script:\n   " + location).formatted(Formatting.RED));
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
