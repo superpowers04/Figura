@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -15,10 +16,7 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -73,14 +71,19 @@ public class PlayerPopup extends DrawableHelper {
         Text title = buttons.get(index);
         TextUtils.renderOutlineText(textRenderer, title, -textRenderer.getWidth(title) / 2f, -40, 0xFFFFFF, 0x202020, matrices);
 
+        int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
+
         //background
         RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
-        drawTexture(matrices, -36, -30, 72, 30, 0f, 0f, 72, 30, 72, 66);
+        drawTexture(matrices, -36, -30, 72, 30, 0f, 0f, 72, 30, 72, 96);
+
+        RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
+        drawTexture(matrices, -36, -30, 72, 30, 0f, 30f, 72, 30, 72, 96);
 
         //icons
         matrices.translate(0f, 0f, -2f);
         for (int i = 0; i < 4; i++) {
-            drawTexture(matrices, -36 + (18 * i), -23, 18, 18, 18f * i, i == index ? 48f : 30f, 18, 18, 72, 66);
+            drawTexture(matrices, -36 + (18 * i), -23, 18, 18, 18f * i, i == index ? 78f : 60f, 18, 18, 72, 96);
         }
 
         //playername
@@ -97,6 +100,7 @@ public class PlayerPopup extends DrawableHelper {
 
         //return
         matrices.pop();
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         data.hasPopup = true;
         enabled = true;
     }

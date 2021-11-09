@@ -49,10 +49,10 @@
   "gui.figura.button.tooltip.clearcache": "Hold LEFT SHIFT and click to clear all loaded avatar data",
   "gui.figura.button.tooltip.keybinds": "Current Script Keybinds",
 
-  "gui.figura.button.tooltip.status": "> none / not found",
-  "gui.figura.button.tooltip.statustwo": "> 100kb+ / error / disconnected",
-  "gui.figura.button.tooltip.statusthree": "> 75kb+ / connecting",
-  "gui.figura.button.tooltip.statusfour": "> ok / connected",
+  "gui.figura.button.tooltip.status": "none | not found",
+  "gui.figura.button.tooltip.statustwo": "100kb+ | error | disconnected",
+  "gui.figura.button.tooltip.statusthree": "75kb+ | connecting",
+  "gui.figura.button.tooltip.statusfour": "ok | connected",
 
   "gui.figura.model": "Model",
   "gui.figura.texture": "Texture",
@@ -60,7 +60,7 @@
   "gui.figura.backend": "Backend",
 
   "gui.figura.complexity": "Complexity:",
-  "gui.figura.filesize": "File Size (kb):",
+  "gui.figura.filesize": "Size (kb):",
   "gui.figura.name": "Name:",
 
   "gui.figura.config.nametag": "NameTag",
