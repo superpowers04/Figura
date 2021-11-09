@@ -52,7 +52,6 @@ public class FiguraGuiScreen extends Screen {
     public Identifier deleteTexture = new Identifier("figura", "textures/gui/delete.png");
     public Identifier expandTexture = new Identifier("figura", "textures/gui/expand.png");
     public Identifier keybindsTexture = new Identifier("figura", "textures/gui/keybinds.png");
-    public Identifier statusIndicatorTexture = new Identifier("figura", "textures/gui/status_indicator.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier expandedBackgroundTexture = new Identifier("figura", "textures/gui/expanded_background.png");
 
@@ -85,17 +84,24 @@ public class FiguraGuiScreen extends Screen {
     public static final TranslatableText scriptStatusText = new TranslatableText("gui.figura.script");
     public static final TranslatableText backendStatusText = new TranslatableText("gui.figura.backend");
 
+    public static final List<MutableText> statusIndicators = List.of(
+            new LiteralText("-").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)),
+            new LiteralText("*").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)),
+            new LiteralText("/").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)),
+            new LiteralText("+").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT))
+    );
+
     public static final List<Text> statusTooltip = new ArrayList<>(Arrays.asList(
             new LiteralText("").append(modelStatusText).append(statusDividerText)
                     .append(textureStatusText).append(statusDividerText)
                     .append(scriptStatusText).append(statusDividerText)
                     .append(backendStatusText),
 
-                    new LiteralText(""),
-                    new TranslatableText("gui.figura.button.tooltip.status").setStyle(textColors.get(0)),
-                    new TranslatableText("gui.figura.button.tooltip.statustwo").setStyle(textColors.get(1)),
-                    new TranslatableText("gui.figura.button.tooltip.statusthree").setStyle(textColors.get(2)),
-                    new TranslatableText("gui.figura.button.tooltip.statusfour").setStyle(textColors.get(3))
+            new LiteralText(""),
+            new LiteralText("").append(statusIndicators.get(0)).append(" ").append(new TranslatableText("gui.figura.button.tooltip.status").setStyle(textColors.get(0))),
+            new LiteralText("").append(statusIndicators.get(1)).append(" ").append(new TranslatableText("gui.figura.button.tooltip.statustwo").setStyle(textColors.get(1))),
+            new LiteralText("").append(statusIndicators.get(2)).append(" ").append(new TranslatableText("gui.figura.button.tooltip.statusthree").setStyle(textColors.get(2))),
+            new LiteralText("").append(statusIndicators.get(3)).append(" ").append(new TranslatableText("gui.figura.button.tooltip.statusfour").setStyle(textColors.get(3)))
     ));
 
     public static final TranslatableText reloadTooltip = new TranslatableText("gui.figura.button.tooltip.reloadavatar");
@@ -332,14 +338,8 @@ public class FiguraGuiScreen extends Screen {
         searchBox.render(matrices, mouseX, mouseY, delta);
 
         //draw status indicators
-        RenderSystem.setShaderTexture(0, statusIndicatorTexture);
-
-        //backend, script, texture, model
-        int currX = this.width;
-        drawTexture(matrices, currX -= 16, 88, 10 * connectionStatus, 0, 10, 10, 40, 10);
-        drawTexture(matrices, currX -= 18, 88, 10 * scriptStatus, 0, 10, 10, 40, 10);
-        drawTexture(matrices, currX -= 18, 88, 10 * textureStatus, 0, 10, 10, 40, 10);
-        drawTexture(matrices, currX - 18, 88, 10 * modelSizeStatus, 0, 10, 10, 40, 10);
+        Text statusText = new LiteralText("").append(statusIndicators.get(modelSizeStatus)).append("  ").append(statusIndicators.get(textureStatus)).append("  ").append(statusIndicators.get(scriptStatus)).append("  ").append(statusIndicators.get(connectionStatus));
+        drawTextWithShadow(matrices, this.textRenderer, statusText, this.width - 75, 89, 0xFFFFFF);
 
         //draw text
         int currY = 90;
@@ -384,7 +384,7 @@ public class FiguraGuiScreen extends Screen {
         }
 
         //status tooltip
-        if (mouseX >= this.width - 69 && mouseX < this.width - 6 && mouseY >= 88 && mouseY < 99) {
+        if (mouseX >= this.width - 75 && mouseX < this.width - 6 && mouseY >= 88 && mouseY < 99) {
             matrices.push();
             matrices.translate(0, 0, 599);
             renderTooltip(matrices, statusTooltip, mouseX, mouseY);

@@ -17,6 +17,13 @@
       "file": "figura:font/loading.png",
       "ascent": 8,
       "chars": ["0123456789abcdef"]
+    },
+    {
+      "type": "bitmap",
+      "file": "figura:font/status.png",
+      "ascent": 8,
+      "height": 10,
+      "chars": ["-*/+"]
     }
   ]
 }
