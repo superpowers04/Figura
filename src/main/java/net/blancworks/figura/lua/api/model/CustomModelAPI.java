@@ -237,16 +237,14 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     CustomModel model = partOwner.model;
                     
-                    if (targetPart.isSpecial()) {
+                    if (targetPart.isSpecial())
                         model.removeSpecialPart(targetPart);
-                    }
 
                     try {
                         targetPart.parentType = CustomModelPart.ParentType.valueOf(arg1.checkjstring());
 
-                        if (targetPart.isSpecial()) {
-                            model.specialParts.put(targetPart.parentType, targetPart);
-                        }
+                        if (targetPart.isSpecial())
+                            model.addSpecialPart(targetPart);
                     } catch (Exception ignored) {
                         targetPart.parentType = CustomModelPart.ParentType.Model;
                     }

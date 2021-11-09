@@ -31,12 +31,12 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public class MinecraftClientMixin {
 
     @Shadow @Final public Mouse mouse;
+    @Shadow @Final public InGameHud inGameHud;
     @Shadow @Final public GameOptions options;
     @Shadow @Final private RenderTickCounter renderTickCounter;
     @Shadow @Nullable public ClientPlayerEntity player;
     @Shadow @Nullable public Entity cameraEntity;
 
-    @Shadow @Final public InGameHud inGameHud;
     @Unique public boolean actionWheelActive = false;
     @Unique public boolean playerPopupActive = false;
 
@@ -62,11 +62,12 @@ public class MinecraftClientMixin {
 
 
         if (FiguraMod.playerPopup.isPressed()) {
-            if (((PlayerListHudAccessorMixin)this.inGameHud.getPlayerListHud()).isVisible()) {
-                playerPopupActive = true;
-            } else if (PlayerPopup.entity == null) {
+            if (PlayerPopup.entity == null) {
                 Entity target = getTargetedEntity();
-                if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
+                if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
+                    playerPopupActive = true;
+                    PlayerPopup.miniExchange = true;
+                } else if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
                     playerPopupActive = true;
                     PlayerPopup.entity = player;
                 } else if (!this.options.getPerspective().isFirstPerson()) {

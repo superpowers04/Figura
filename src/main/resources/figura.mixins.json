@@ -24,7 +24,6 @@
     "HeldItemFeatureRendererMixin",
     "InGameHudMixin",
     "KeyBindingAccessorMixin",
-    "LivingEntityMixin",
     "LivingEntityRendererMixin",
     "MatrixStackMixin",
     "MinecraftClientMixin",
