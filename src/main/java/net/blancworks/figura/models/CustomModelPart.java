@@ -87,38 +87,40 @@ public class CustomModelPart {
             return 0;
 
         //lets render boys!!
+        boolean applyHiddenTransforms = data.model.applyHiddenTransforms;
+        ParentType renderOnly = data.model.renderOnly;
+        int ret = data.model.leftToRender;
+        data.model.renderOnly = null;
 
         //main texture
         Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
-        int ret = renderTextures(data.model.leftToRender, data, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction, false);
+        ret = renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction, false, applyHiddenTransforms, renderOnly);
 
         //extra textures
         for (FiguraTexture figuraTexture : FiguraMod.currentData.extraTextures) {
             Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
 
             if (renderLayerGetter != null) {
-                renderTextures(ret, data, matrices, transformStack, vcp, null, light, overlay, 0,0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true);
+                renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0,0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
             }
         }
 
         draw(vcp);
 
         //shaders
-        ret = renderShaders(ret, data, matrices, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, (byte) 0);
+        ret = renderShaders(ret, matrices, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
         draw(vcp);
 
         //extra stuff and hitboxes
-        ret = renderExtraParts(ret, data, matrices, vcp, light, false);
+        ret = renderExtraParts(ret, matrices, vcp, light, false, applyHiddenTransforms, renderOnly);
         draw(vcp);
 
-        //post render
-        data.model.renderOnly = null;
         return ret;
     }
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int renderTextures(int leftToRender, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction, boolean isExtraTex) {
+    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction, boolean isExtraTex, boolean applyHiddenTransforms, ParentType renderOnly) {
         //do not render invisible parts
         if (!this.visible || (isExtraTex && !this.extraTex))
             return leftToRender;
@@ -126,7 +128,7 @@ public class CustomModelPart {
         matrices.push();
         transformStack.push();
 
-        if (data.model.applyHiddenTransforms) {
+        if (applyHiddenTransforms) {
             applyVanillaTransforms(matrices, transformStack);
 
             applyTransforms(matrices);
@@ -138,7 +140,7 @@ public class CustomModelPart {
             applyTransforms(transformStack);
         }
 
-        if (data.model.renderOnly == null || this.parentType == data.model.renderOnly)
+        if (renderOnly == null || this.parentType == renderOnly)
             canRender = true;
 
         //uv -> color -> alpha -> cull
@@ -183,7 +185,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderTextures(leftToRender, data, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction, isExtraTex);
+            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction, isExtraTex, applyHiddenTransforms, renderOnly);
         }
 
         matrices.pop();
@@ -192,21 +194,21 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    public int renderShaders(int leftToRender, PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, byte shadersToRender) {
+    public int renderShaders(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, byte shadersToRender, boolean applyHiddenTransforms, ParentType renderOnly) {
         //do not render invisible parts
         if (!this.visible)
             return leftToRender;
 
         matrices.push();
 
-        if (data.model.applyHiddenTransforms) {
+        if (applyHiddenTransforms) {
             applyVanillaTransforms(matrices, new MatrixStack());
             applyTransforms(matrices);
         } else if (canRender) {
             applyTransforms(matrices);
         }
 
-        if (data.model.renderOnly == null || this.parentType == data.model.renderOnly)
+        if (renderOnly == null || this.parentType == renderOnly)
             canRender = true;
 
         //uv -> color -> alpha -> shaders
@@ -239,7 +241,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderShaders(leftToRender, data, matrices, vcp, light, overlay, u, v, color, alpha, canRender, shaders);
+            leftToRender = child.renderShaders(leftToRender, matrices, vcp, light, overlay, u, v, color, alpha, canRender, shaders, applyHiddenTransforms, renderOnly);
         }
 
         matrices.pop();
@@ -247,21 +249,21 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    public int renderExtraParts(int leftToRender, PlayerData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRender) {
+    public int renderExtraParts(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRender, boolean applyHiddenTransforms, ParentType renderOnly) {
         //do not render invisible parts
         if (!this.visible)
             return leftToRender;
 
         matrices.push();
 
-        if (data.model.applyHiddenTransforms) {
+        if (applyHiddenTransforms) {
             applyVanillaTransforms(matrices, new MatrixStack());
             applyTransforms(matrices);
         } else if (canRender) {
             applyTransforms(matrices);
         }
 
-        if (data.model.renderOnly == null || this.parentType == data.model.renderOnly)
+        if (renderOnly == null || this.parentType == renderOnly)
             canRender = true;
 
         //render!
@@ -277,7 +279,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderExtraParts(leftToRender, data, matrices, vcp, light, canRender);
+            leftToRender = child.renderExtraParts(leftToRender, matrices, vcp, light, canRender, applyHiddenTransforms, renderOnly);
         }
 
         matrices.pop();
@@ -737,8 +739,7 @@ public class CustomModelPart {
         LeftSpyglass, //Left position of the spyglass model
         RightSpyglass, //Right position of the spyglass model
         Camera, //paparazzi
-        Skull(true), // A replacement for the "Head" type, but only rendered in the tab list and player head item/blocks
-        ParticleSource(true); // Where eating, tool breaking, and other particles come from
+        Skull(true); // A replacement for the "Head" type, but only rendered in the tab list and player head item/blocks
 
         private final boolean special;
         ParentType(boolean special) {
