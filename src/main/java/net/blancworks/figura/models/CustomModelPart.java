@@ -179,7 +179,7 @@ public class CustomModelPart {
                 break;
 
             //Don't render special parts.
-            if (child.isParentSpecial())
+            if (child.isSpecial())
                 continue;
 
             //render part
@@ -235,7 +235,7 @@ public class CustomModelPart {
                 break;
 
             //Don't render special parts.
-            if (child.isParentSpecial())
+            if (child.isSpecial())
                 continue;
 
             //render part
@@ -273,7 +273,7 @@ public class CustomModelPart {
                 break;
 
             //Don't render special parts.
-            if (child.isParentSpecial())
+            if (child.isSpecial())
                 continue;
 
             //render part
@@ -393,7 +393,7 @@ public class CustomModelPart {
 
     public int getComplexity() {
         //don't render filtered parts
-        if (!this.visible || this.isParentSpecial()) {
+        if (!this.visible || this.isSpecial()) {
             return 0;
         }
 
@@ -714,10 +714,6 @@ public class CustomModelPart {
         return PartType.GROUP;
     }
 
-    public boolean isParentSpecial() {
-        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra || parentType == ParentType.Skull;
-    }
-
     public void applyTrueOffset(Vec3f offset) {}
 
     public enum ParentType {
@@ -729,19 +725,32 @@ public class CustomModelPart {
         LeftLeg,
         RightLeg,
         Torso,
-        WORLD,
+        WORLD(true),
         LeftItemOrigin, //Origin position of the held item in the left hand
         RightItemOrigin, //Origin position of the held item
         LeftElytraOrigin, //Left origin position of the elytra
         RightElytraOrigin, //Right origin position of the elytra
         LeftParrotOrigin, //Left origin position of the shoulder parrot
         RightParrotOrigin, //Right origin position of the shoulder parrot
-        LeftElytra, //Left position of the elytra model
-        RightElytra, //Right position of the elytra model
+        LeftElytra(true), //Left position of the elytra model
+        RightElytra(true), //Right position of the elytra model
         LeftSpyglass, //Left position of the spyglass model
         RightSpyglass, //Right position of the spyglass model
         Camera, //paparazzi
-        Skull
+        Skull(true), // A replacement for the "Head" type, but only rendered in the tab list and player head item/blocks
+        ParticleSource(true); // Where eating, tool breaking, and other particles come from
+
+        private final boolean special;
+        ParentType(boolean special) {
+            this.special = special;
+        }
+        ParentType() {
+            this.special = false;
+        }
+    }
+
+    public boolean isSpecial() {
+        return this.parentType.special;
     }
 
     public enum RotationType {

@@ -41,6 +41,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("RIGHT_SPYGLASS", CustomModelPart.ParentType.RightSpyglass)
                     .put("CAMERA", CustomModelPart.ParentType.Camera)
                     .put("SKULL", CustomModelPart.ParentType.Skull)
+                    .put("PARTICLE_SOURCE", CustomModelPart.ParentType.ParticleSource)
                     .build();
 
     private static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =
@@ -152,7 +153,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 }
             }
 
-            //Only set group parent if not mimicing. We can't mimic and be parented.
+            //Only set group parent if not mimicking. We can't mimic and be parented.
             if (!groupPart.isMimicMode) {
                 //Check for parent parts
                 for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_PARENT_TYPE_TAGS.entrySet()) {

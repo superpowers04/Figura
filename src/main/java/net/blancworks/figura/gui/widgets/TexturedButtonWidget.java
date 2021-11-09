@@ -62,4 +62,8 @@ public class TexturedButtonWidget extends ButtonWidget {
         }
 
     }
+
+    public void setTexture(Identifier texture) {
+        this.texture = texture;
+    }
 }

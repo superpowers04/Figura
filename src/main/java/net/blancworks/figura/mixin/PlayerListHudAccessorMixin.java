@@ -12,4 +12,7 @@ public interface PlayerListHudAccessorMixin {
     static Ordering<PlayerListEntry> getEntryOrdering() {
         throw new AssertionError();
     }
+
+    @Accessor("visible")
+    boolean isVisible();
 }

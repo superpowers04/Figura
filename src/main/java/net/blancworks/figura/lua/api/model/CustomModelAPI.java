@@ -237,23 +237,15 @@ public class CustomModelAPI {
                 public LuaValue call(LuaValue arg1) {
                     CustomModel model = partOwner.model;
                     
-                    if (targetPart.isParentSpecial()) {
-                        model.worldParts.remove(targetPart);
-                        model.leftElytraParts.remove(targetPart);
-                        model.rightElytraParts.remove(targetPart);
-                        model.skullParts.remove(targetPart);
+                    if (targetPart.isSpecial()) {
+                        model.removeSpecialPart(targetPart);
                     }
 
                     try {
                         targetPart.parentType = CustomModelPart.ParentType.valueOf(arg1.checkjstring());
 
-                        if (targetPart.isParentSpecial()) {
-                            switch (targetPart.parentType) {
-                                case WORLD -> model.worldParts.add(targetPart);
-                                case LeftElytra -> model.leftElytraParts.add(targetPart);
-                                case RightElytra -> model.rightElytraParts.add(targetPart);
-                                case Skull -> model.skullParts.add(targetPart);
-                            }
+                        if (targetPart.isSpecial()) {
+                            model.specialParts.put(targetPart.parentType, targetPart);
                         }
                     } catch (Exception ignored) {
                         targetPart.parentType = CustomModelPart.ParentType.Model;

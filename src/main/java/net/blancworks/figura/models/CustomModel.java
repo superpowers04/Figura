@@ -1,5 +1,6 @@
 package net.blancworks.figura.models;
 
+import com.google.common.collect.HashMultimap;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.assets.FiguraAsset;
@@ -23,20 +24,16 @@ import net.minecraft.util.math.Vec2f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
 
 public class CustomModel extends FiguraAsset {
     public PlayerData owner;
     public ArrayList<CustomModelPart> allParts = new ArrayList<>();
     public NbtCompound modelNbt = new NbtCompound();
 
-    //Customized pivots for stuff like elytra, held items, that sort.
-    public HashMap<Identifier, CustomModelPart> customParents = new HashMap<>();
-
-    //TODO - probably improve this?
-    public ArrayList<CustomModelPart> leftElytraParts = new ArrayList<>();
-    public ArrayList<CustomModelPart> rightElytraParts = new ArrayList<>();
-    public ArrayList<CustomModelPart> worldParts = new ArrayList<>();
-    public ArrayList<CustomModelPart> skullParts = new ArrayList<>();
+    public HashMultimap<CustomModelPart.ParentType, CustomModelPart> specialParts = HashMultimap.create();
 
     public Vec2f defaultTextureSize = new Vec2f(0f, 0f);
 
@@ -51,6 +48,23 @@ public class CustomModel extends FiguraAsset {
     //This is separate from script customizations, as these are groups from blockbench that are the new,
     //override origins against vanilla.
     public HashMap<Identifier, VanillaModelPartCustomization> originModifications = new HashMap<>();
+
+    public ArrayList<CustomModelPart> getSpecialParts(CustomModelPart.ParentType type) {
+        return Objects.requireNonNullElse(new ArrayList<>(specialParts.get(type)), new ArrayList<>());
+    }
+
+    public ArrayList<CustomModelPart> getSpecialParts(CustomModelPart.ParentType type, Predicate<CustomModelPart> predicate) {
+        ArrayList<CustomModelPart> parts = getSpecialParts(type);
+        ArrayList<CustomModelPart> output = new ArrayList<>();
+        parts.forEach(p -> {
+            if (predicate.test(p)) output.add(p);
+        });
+        return output;
+    }
+
+    public void removeSpecialPart(CustomModelPart part) {
+        this.specialParts.get(part.parentType).remove(part);
+    }
 
     public int getRenderComplexity() {
         lastComplexity = 0;
@@ -85,7 +99,7 @@ public class CustomModel extends FiguraAsset {
             owner.script.render(FiguraMod.deltaTime);
 
         for (CustomModelPart part : new ArrayList<>(this.allParts)) {
-            if (part.isParentSpecial() || !part.visible)
+            if (part.isSpecial() || !part.visible)
                 continue;
 
             matrices.push();
@@ -142,8 +156,9 @@ public class CustomModel extends FiguraAsset {
     public boolean renderSkull(PlayerData data, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
         data.model.leftToRender = getMaxRenderAmount();
 
-        if (!data.model.skullParts.isEmpty()) {
-            for (CustomModelPart modelPart : new ArrayList<>(data.model.skullParts)) {
+        ArrayList<CustomModelPart> skullParts = data.model.getSpecialParts(CustomModelPart.ParentType.Skull);
+        if (!skullParts.isEmpty()) {
+            for (CustomModelPart modelPart : new ArrayList<>(skullParts)) {
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
                 if (data.model.leftToRender <= 0)
@@ -178,7 +193,7 @@ public class CustomModel extends FiguraAsset {
 
         CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-        for (CustomModelPart part : new ArrayList<>(data.model.worldParts)) {
+        for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
             data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
         }
 
@@ -207,10 +222,7 @@ public class CustomModel extends FiguraAsset {
 
     //Sorts parts into their respective places.
     public void sortAllParts() {
-        leftElytraParts.clear();
-        rightElytraParts.clear();
-        worldParts.clear();
-        skullParts.clear();
+        specialParts.clear();
 
         for (CustomModelPart part : allParts) {
             sortPart(part);
@@ -218,12 +230,8 @@ public class CustomModel extends FiguraAsset {
     }
 
     public void sortPart(CustomModelPart part) {
-        switch(part.parentType) {
-            case LeftElytra -> leftElytraParts.add(part);
-            case RightElytra -> rightElytraParts.add(part);
-            case WORLD -> worldParts.add(part);
-            case Skull -> skullParts.add(part);
-        }
+        if (part.isSpecial())
+            specialParts.put(part.parentType, part);
 
         for (CustomModelPart child : part.children) {
             sortPart(child);
