@@ -51,6 +51,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier reloadTexture = new Identifier("figura", "textures/gui/reload.png");
     public Identifier deleteTexture = new Identifier("figura", "textures/gui/delete.png");
     public Identifier expandTexture = new Identifier("figura", "textures/gui/expand.png");
+    public Identifier expandInverseTexture = new Identifier("figura", "textures/gui/expand_inverse.png");
     public Identifier keybindsTexture = new Identifier("figura", "textures/gui/keybinds.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier expandedBackgroundTexture = new Identifier("figura", "textures/gui/expanded_background.png");
@@ -501,6 +502,7 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public void updateExpand() {
+        expandButton.setTexture(expand ? expandInverseTexture : expandTexture);
         if (expand) {
             this.children().forEach(child -> {
                 if (child instanceof ClickableWidget widget)
@@ -517,7 +519,7 @@ public class FiguraGuiScreen extends Screen {
                     widget.visible = true;
             });
 
-            expandButton.setPos(Math.max(this.width / 2 - modelBgSize / 2, paneWidth + 5), this.height / 2 - modelBgSize / 2 - 15);
+            expandButton.setPos(Math.max(this.width / 2 - modelBgSize / 2, paneWidth + 5), this.height / 2 - modelBgSize / 2 + 1);
 
             modelFileList.updateSize(paneWidth, this.height, paneY + 19, this.height - 36);
             modelFileList.setLeftPos(5);

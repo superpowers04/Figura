@@ -64,4 +64,8 @@ public class TexturedButtonWidget extends ButtonWidget {
 
         RenderSystem.enableDepthTest();
     }
+
+    public void setTexture(Identifier texture) {
+        this.texture = texture;
+    }
 }

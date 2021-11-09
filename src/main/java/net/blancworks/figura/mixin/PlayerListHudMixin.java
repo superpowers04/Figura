@@ -6,6 +6,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
+import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.trust.TrustContainer;
@@ -25,7 +26,9 @@ import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.math.Vec3f;
+import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -40,6 +43,7 @@ import java.util.UUID;
 @Mixin(PlayerListHud.class)
 public class PlayerListHudMixin {
 
+    @Shadow @Final private MinecraftClient client;
     @Unique private PlayerEntity playerEntity;
 
     @Inject(at = @At("RETURN"), method = "getPlayerName", cancellable = true)
@@ -80,10 +84,31 @@ public class PlayerListHudMixin {
     @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V", shift = At.Shift.BEFORE), method = "render", locals = LocalCapture.CAPTURE_FAILHARD)
     private void render(MatrixStack matrices, int scaledWindowWidth, Scoreboard scoreboard, ScoreboardObjective objective, CallbackInfo ci, ClientPlayNetworkHandler clientPlayNetworkHandler, List<?> list, int i, int j, int l, int m, int n, boolean bl, int q, int r, int s, int t, int u, List<?> list2, List<?> list3, int w, int x, int y, int z, int aa, int ab, PlayerListEntry playerListEntry2, GameProfile gameProfile, PlayerEntity playerEntity, boolean bl2, int ae, int af) {
         this.playerEntity = playerEntity;
+
+        if (FiguraMod.playerPopup.isPressed()) {
+            if (x == PlayerPopup.listIndex) {
+                PlayerEntity entity = this.client.world.getPlayerByUuid(playerListEntry2.getProfile().getId());
+                if (PlayerPopup.entity == null) {
+                    PlayerPopup.entity = entity;
+                }
+
+                if (entity != null) {
+                    PlayerPopup.listSize = list.size();
+                    PlayerPopup.renderMini(matrices, playerListEntry2, aa, ab);
+                    RenderSystem.setShaderTexture(0, playerListEntry2.getSkinTexture());
+                }
+            }
+        } else {
+            PlayerPopup.miniEnabled = false;
+        }
     }
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V"), method = "render")
     private void render(MatrixStack matrices, int x, int y, int width, int height, float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
+        Window w = MinecraftClient.getInstance().getWindow();
+        final double guiScale = w.getScaleFactor();
+        PlayerPopup.lastX = x;
+
         PlayerData data = playerEntity == null ? null : PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
 
         //draw figura head
@@ -95,8 +120,6 @@ public class PlayerListHudMixin {
         FiguraMod.currentData = data;
         FiguraMod.currentPlayer = (AbstractClientPlayerEntity) playerEntity;
 
-        Window w = MinecraftClient.getInstance().getWindow();
-        final double guiScale = w.getScaleFactor();
 
         RenderSystem.enableScissor((int) (x * guiScale), w.getHeight() - (int) ((regionHeight + y) * guiScale), (int) (regionWidth * guiScale), (int) (regionHeight * guiScale));
         DiffuseLighting.disableGuiDepthLighting();
@@ -123,5 +146,6 @@ public class PlayerListHudMixin {
 
         RenderSystem.disableScissor();
         DiffuseLighting.enableGuiDepthLighting();
+
     }
 }

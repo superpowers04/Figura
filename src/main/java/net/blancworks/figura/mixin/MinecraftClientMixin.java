@@ -6,6 +6,7 @@ import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.option.GameOptions;
@@ -35,6 +36,7 @@ public class MinecraftClientMixin {
     @Shadow @Nullable public ClientPlayerEntity player;
     @Shadow @Nullable public Entity cameraEntity;
 
+    @Shadow @Final public InGameHud inGameHud;
     @Unique public boolean actionWheelActive = false;
     @Unique public boolean playerPopupActive = false;
 
@@ -58,8 +60,11 @@ public class MinecraftClientMixin {
             actionWheelActive = false;
         }
 
+
         if (FiguraMod.playerPopup.isPressed()) {
-            if (PlayerPopup.entity == null) {
+            if (((PlayerListHudAccessorMixin)this.inGameHud.getPlayerListHud()).isVisible()) {
+                playerPopupActive = true;
+            } else if (PlayerPopup.entity == null) {
                 Entity target = getTargetedEntity();
                 if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
                     playerPopupActive = true;
