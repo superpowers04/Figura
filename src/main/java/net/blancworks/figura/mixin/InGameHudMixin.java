@@ -6,11 +6,13 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
 import net.minecraft.client.gui.hud.InGameHud;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
@@ -27,6 +29,11 @@ public abstract class InGameHudMixin {
     public void postRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
         if (FiguraMod.actionWheel.isPressed())
             ActionWheel.render(matrices);
+    }
+
+    @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))
+    private boolean onPlayerListRender(KeyBinding keyPlayerList) {
+        return keyPlayerList.isPressed() || PlayerPopup.miniEnabled;
     }
 
     @Inject(at = @At ("HEAD"), method = "renderCrosshair", cancellable = true)
