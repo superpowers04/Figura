@@ -60,13 +60,12 @@ public class MinecraftClientMixin {
             actionWheelActive = false;
         }
 
-
         if (FiguraMod.playerPopup.isPressed()) {
             if (PlayerPopup.entity == null) {
                 Entity target = getTargetedEntity();
                 if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
                     playerPopupActive = true;
-                    PlayerPopup.miniExchange = true;
+                    PlayerPopup.miniEnabled = true;
                 } else if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
                     playerPopupActive = true;
                     PlayerPopup.entity = player;

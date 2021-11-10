@@ -34,7 +34,6 @@ public class PlayerPopup extends DrawableHelper {
     private static boolean enabled = false;
 
     public static boolean miniEnabled = false;
-    public static boolean miniExchange = false;
     public static int miniSelected = 0;
     public static int miniSize = 0;
 
@@ -180,12 +179,11 @@ public class PlayerPopup extends DrawableHelper {
             }
         }
 
-        index = 0;
         enabled = false;
-
         miniEnabled = false;
-        miniExchange = false;
+        //miniSelected = 0;
 
+        index = 0;
         entity = null;
     }
 }
