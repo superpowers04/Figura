@@ -173,7 +173,7 @@ public class CustomScript extends FiguraAsset {
         scriptGlobals.get("math").set("lerp", new ThreeArgFunction() {
             @Override
             public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                return LuaNumber.valueOf(MathHelper.lerp(arg3.checknumber().tofloat(), arg1.checknumber().tofloat(), arg2.checknumber().tofloat()));
+                return arg1.add(arg2.sub(arg1).mul(arg3));
             }
         });
         scriptGlobals.get("math").set("clamp", new ThreeArgFunction() {

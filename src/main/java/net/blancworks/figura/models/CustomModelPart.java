@@ -394,10 +394,9 @@ public class CustomModelPart {
     }
 
     public int getComplexity() {
-        //don't render filtered parts
-        if (!this.visible || this.isSpecial()) {
+        //don't render invisible parts
+        if (!this.visible)
             return 0;
-        }
 
         int complexity = this.vertexCount;
 

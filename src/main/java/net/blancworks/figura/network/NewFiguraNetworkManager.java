@@ -193,6 +193,9 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
                     byte[] result = baos.toByteArray();
 
+                    //since this version of mod only support ONE avatar per user
+                    //delete old avatar then upload the new one
+                    new UserDeleteCurrentAvatarMessageSender().sendMessage(currWebSocket);
                     new AvatarUploadMessageSender(result).sendMessage(currWebSocket);
 
                     nbtDataStream.close();
@@ -325,7 +328,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //Opens a connection
     public CompletableFuture<Void> openNewConnection() {
         //Ensure user is authed, we need the JWT to verify this user.
-        CompletableFuture.runAsync(() -> authUser(false)).thenRun(() -> {
+        return authUser().thenComposeAsync(unused -> {
             try {
                 closeSocketConnection();
                 String connectionString = String.format("%s/connect/", mainServerURL());
@@ -345,13 +348,14 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 newSocket.sendText(jwtToken);
 
                 messageHandler.sendClientRegistry(newSocket);
+
+                return messageHandler.initializedFuture;
             } catch (Exception e) {
                 connectionStatus = 1;
                 e.printStackTrace();
+                return CompletableFuture.completedFuture(null);
             }
         });
-
-        return CompletableFuture.completedFuture(null);
     }
 
     private void closeSocketConnection() {
@@ -365,6 +369,10 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         currWebSocket.sendClose(0);
         currWebSocket = null;
+    }
+
+    public CompletableFuture<Void> authUser() {
+        return authUser(false);
     }
 
     public CompletableFuture<Void> authUser(boolean force) {
