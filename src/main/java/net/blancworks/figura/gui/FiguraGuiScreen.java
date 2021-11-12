@@ -5,6 +5,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.LocalPlayerData;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.LocalAvatarManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.config.ConfigScreen;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
@@ -214,7 +215,7 @@ public class FiguraGuiScreen extends Screen {
         //back button
         this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> {
             this.client.setScreen(parentScreen);
-            modelFileList.saveFolderNbt();
+            LocalAvatarManager.saveFolderNbt();
         }));
 
         //trust button
@@ -262,7 +263,7 @@ public class FiguraGuiScreen extends Screen {
                 25, 25,
                 0, 0, 25,
                 uploadTexture, 50, 50,
-                (bx) -> FiguraMod.networkManager.postAvatar().thenRun(()->System.out.println("UPLOADED AVATAR"))
+                (bx) -> FiguraMod.networkManager.postAvatar().thenRun(() -> System.out.println("UPLOADED AVATAR"))
         );
         this.addDrawableChild(uploadButton);
 
@@ -289,6 +290,9 @@ public class FiguraGuiScreen extends Screen {
         );
         this.addDrawableChild(expandButton);
 
+        //init updates
+        LocalAvatarManager.loadFolderNbt();
+        modelFileList.updateAvatarList();
         updateAvatarData();
         updateExpand();
     }
@@ -296,13 +300,14 @@ public class FiguraGuiScreen extends Screen {
     @Override
     public void onClose() {
         this.client.setScreen(parentScreen);
-        modelFileList.saveFolderNbt();
+        LocalAvatarManager.saveFolderNbt();
     }
 
     @Override
     public void tick() {
         super.tick();
 
+        connectionStatus = NewFiguraNetworkManager.connectionStatus;
         if (FiguraMod.ticksElapsed % 20 == 0) {
             //update avatar list
             modelFileList.updateAvatarList();

@@ -119,6 +119,7 @@ public class FiguraMod implements ClientModInitializer {
         ConfigManager.initialize();
         FiguraLuaManager.initialize();
         PlayerTrustManager.init();
+        LocalAvatarManager.init();
 
         try {
             SSLFixer.main();
