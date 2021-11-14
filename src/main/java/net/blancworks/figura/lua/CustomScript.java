@@ -95,8 +95,8 @@ public class CustomScript extends FiguraAsset {
     //Keep track of these because we want to apply data to them later.
     public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();
 
-    public float particleSpawnCount = 0;
-    public float soundSpawnCount = 0;
+    public float particleSpawnCount = 0f;
+    public float soundSpawnCount = 0f;
 
     public Float customShadowSize = null;
     public Boolean shouldRenderFire = null;
@@ -493,10 +493,12 @@ public class CustomScript extends FiguraAsset {
 
     //Called whenever the global tick event happens
     public void tick() {
-        if (particleSpawnCount > 0)
-            particleSpawnCount = MathHelper.clamp(particleSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES)), 0, 999);
-        if (soundSpawnCount > 0)
-            soundSpawnCount = MathHelper.clamp(soundSpawnCount - ((1 / 20f) * playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS)), 0, 999);
+        if (playerData != null) {
+            float particles = playerData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES);
+            float sounds = playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS);
+            particleSpawnCount = MathHelper.clamp(particleSpawnCount + (1 / 20f * particles), 0, particles);
+            soundSpawnCount = MathHelper.clamp(soundSpawnCount + (1 / 20f * sounds), 0, sounds);
+        }
 
         //If the tick function exists, call it.
         if (tickLuaEvent != null) {

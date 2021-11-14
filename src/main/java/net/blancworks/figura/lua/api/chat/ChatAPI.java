@@ -1,10 +1,10 @@
 package net.blancworks.figura.lua.api.chat;
 
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.access.ChatHudAccess;
-import net.blancworks.figura.access.ChatScreenAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.mixin.ChatHudAccessorMixin;
+import net.blancworks.figura.mixin.ChatScreenAccessorMixin;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.screen.ChatScreen;
@@ -51,7 +51,7 @@ public class ChatAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     //get message list
-                    List<ChatHudLine<Text>> chat = ((ChatHudAccess) MinecraftClient.getInstance().inGameHud.getChatHud()).getMessages();
+                    List<ChatHudLine<Text>> chat = ((ChatHudAccessorMixin) MinecraftClient.getInstance().inGameHud.getChatHud()).getMessages();
 
                     //access message
                     try {
@@ -65,8 +65,8 @@ public class ChatAPI {
 
             set("getInputText", new ZeroArgFunction() {
                 public LuaValue call() {
-                    if (MinecraftClient.getInstance().currentScreen instanceof ChatScreen) {
-                        String message = ((ChatScreenAccess) MinecraftClient.getInstance().currentScreen).getChatField().getText();
+                    if (MinecraftClient.getInstance().currentScreen instanceof ChatScreen chatScreen) {
+                        String message = ((ChatScreenAccessorMixin) chatScreen).getChatField().getText();
                         return message == null || Objects.equals(message, "") ? NIL : LuaString.valueOf(message);
                     }
 

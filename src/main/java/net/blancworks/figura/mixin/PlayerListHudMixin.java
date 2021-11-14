@@ -83,7 +83,7 @@ public class PlayerListHudMixin {
         this.playerEntity = playerEntity;
 
         if (PlayerPopup.miniEnabled && x == PlayerPopup.miniSelected) {
-            PlayerPopup.entity = MinecraftClient.getInstance().world.getPlayerByUuid(playerListEntry2.getProfile().getId());
+            PlayerPopup.data = PlayerDataManager.getDataForPlayer(playerListEntry2.getProfile().getId());
 
             PlayerPopup.miniSize = list.size();
 

@@ -2,7 +2,6 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.TrustContainer;
@@ -35,13 +34,13 @@ public class CapeFeatureRendererMixin extends FeatureRenderer<AbstractClientPlay
 
     @Inject(method = "render", at = @At("HEAD"), cancellable = true)
     private void onRender(MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, int light, AbstractClientPlayerEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch, CallbackInfo ci) {
-        prevEnabled = ((PlayerEntityModelAccess) this.getContextModel()).getCloak().visible;
-        ((PlayerEntityModelAccess) this.getContextModel()).getCloak().visible = true;
+        prevEnabled = ((PlayerEntityModelAccessorMixin) this.getContextModel()).getCloak().visible;
+        ((PlayerEntityModelAccessorMixin) this.getContextModel()).getCloak().visible = true;
     }
 
     @Inject(method = "render", at = @At("TAIL"))
     private void postRender(MatrixStack matrices, VertexConsumerProvider vertexConsumerProvider, int light, AbstractClientPlayerEntity entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch, CallbackInfo ci) {
-        ((PlayerEntityModelAccess) this.getContextModel()).getCloak().visible = prevEnabled;
+        ((PlayerEntityModelAccessorMixin) this.getContextModel()).getCloak().visible = prevEnabled;
 
         for (int i = 0; i < figura$pushedMatrixCount; i++)
             matrices.pop();

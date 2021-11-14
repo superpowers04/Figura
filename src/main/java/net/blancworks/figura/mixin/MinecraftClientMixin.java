@@ -61,17 +61,17 @@ public class MinecraftClientMixin {
         }
 
         if (FiguraMod.playerPopup.isPressed()) {
-            if (PlayerPopup.entity == null) {
+            if (PlayerPopup.data == null) {
                 Entity target = getTargetedEntity();
                 if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
                     playerPopupActive = true;
                     PlayerPopup.miniEnabled = true;
                 } else if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
                     playerPopupActive = true;
-                    PlayerPopup.entity = player;
+                    PlayerPopup.data = PlayerDataManager.getDataForPlayer(player.getUuid());
                 } else if (!this.options.getPerspective().isFirstPerson()) {
                     playerPopupActive = true;
-                    PlayerPopup.entity = this.player;
+                    PlayerPopup.data = PlayerDataManager.localPlayer;
                 }
             }
         } else if (playerPopupActive) {

@@ -1,11 +1,11 @@
 package net.blancworks.figura.lua.api.model;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.mixin.PlayerEntityModelAccessorMixin;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -67,9 +67,9 @@ public class VanillaModelAPI {
             set(VANILLA_LEFT_PANTS, getTableForPart(() -> getCurrModel.get().leftPantLeg, VANILLA_LEFT_PANTS, script));
             set(VANILLA_RIGHT_PANTS, getTableForPart(() -> getCurrModel.get().rightPantLeg, VANILLA_RIGHT_PANTS, script));
 
-            set(VANILLA_CAPE, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getCloak(), VANILLA_CAPE, script));
-            set(VANILLA_LEFT_EAR, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getEar(), VANILLA_LEFT_EAR, script));
-            set(VANILLA_RIGHT_EAR, getTableForPart(() -> ((PlayerEntityModelAccess) getCurrModel.get()).getEar(), VANILLA_RIGHT_EAR, script));
+            set(VANILLA_CAPE, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.get()).getCloak(), VANILLA_CAPE, script));
+            set(VANILLA_LEFT_EAR, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.get()).getEar(), VANILLA_LEFT_EAR, script));
+            set(VANILLA_RIGHT_EAR, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.get()).getEar(), VANILLA_RIGHT_EAR, script));
         }});
     }
 
