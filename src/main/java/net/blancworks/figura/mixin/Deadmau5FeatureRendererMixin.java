@@ -2,7 +2,6 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.access.PlayerEntityModelAccess;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.TrustContainer;
@@ -37,8 +36,8 @@ public class Deadmau5FeatureRendererMixin extends FeatureRenderer<AbstractClient
         if (data == null || data.script == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
-        boolean prevEnabled = ((PlayerEntityModelAccess) this.getContextModel()).getEar().visible;
-        ((PlayerEntityModelAccess) this.getContextModel()).getEar().visible = true;
+        boolean prevEnabled = ((PlayerEntityModelAccessorMixin) this.getContextModel()).getEar().visible;
+        ((PlayerEntityModelAccessorMixin) this.getContextModel()).getEar().visible = true;
 
         try {
             VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(RenderLayer.getEntitySolid(entity.getSkinTexture()));
@@ -113,7 +112,7 @@ public class Deadmau5FeatureRendererMixin extends FeatureRenderer<AbstractClient
             e.printStackTrace();
         }
 
-        ((PlayerEntityModelAccess) this.getContextModel()).getEar().visible = prevEnabled;
+        ((PlayerEntityModelAccessorMixin) this.getContextModel()).getEar().visible = prevEnabled;
     }
 
     @Shadow

@@ -1,11 +1,10 @@
 package net.blancworks.figura.lua.api.sound;
 
-import net.blancworks.figura.access.SoundManagerAccess;
-import net.blancworks.figura.access.SoundSystemAccess;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.mixin.SoundManagerAccessorMixin;
+import net.blancworks.figura.mixin.SoundSystemAccessorMixin;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.Channel;
 import net.minecraft.client.sound.SoundInstance;
@@ -57,7 +56,7 @@ public class SoundAPI {
             set("getSounds", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Map<SoundInstance, Channel.SourceManager> sources = ((SoundSystemAccess) ((SoundManagerAccess) MinecraftClient.getInstance().getSoundManager()).getSoundSystem()).getSources();
+                    Map<SoundInstance, Channel.SourceManager> sources = ((SoundSystemAccessorMixin) ((SoundManagerAccessorMixin) MinecraftClient.getInstance().getSoundManager()).getSoundSystem()).getSources();
 
                     ArrayList<String> songs = new ArrayList<>();
 
@@ -82,9 +81,9 @@ public class SoundAPI {
     }
 
     public static void playSound(CustomScript script, LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-        if (script.soundSpawnCount > script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS))
+        if (script.soundSpawnCount < 1)
             return;
-        script.soundSpawnCount++;
+        script.soundSpawnCount--;
 
         SoundEvent targetEvent = soundEvents.get(arg1.checkjstring());
         if (targetEvent == null)

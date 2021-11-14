@@ -9,7 +9,6 @@ import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.tag.BlockTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
@@ -53,26 +52,7 @@ public class WorldAPI {
 
                     BlockState state = w.getBlockState(pos);
 
-                    return BlockStateAPI.getTable(state);
-                }
-            });
-
-            set("getBlockTags", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    LuaVector vec = LuaVector.checkOrNew(arg);
-                    BlockPos pos = new BlockPos(vec.asV3iFloored());
-
-                    World w = getWorld();
-
-                    if (w.getChunk(pos) == null) return NIL;
-
-                    BlockState state = w.getBlockState(pos);
-
-                    LuaTable table = new LuaTable();
-                    BlockTags.getTagGroup().getTagsFor(state.getBlock()).forEach(identifier -> table.insert(0, LuaValue.valueOf(String.valueOf(identifier))));
-
-                    return new ReadOnlyLuaTable(table);
+                    return BlockStateAPI.getTable(state, w, pos);
                 }
             });
 

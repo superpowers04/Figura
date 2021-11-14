@@ -1,17 +1,13 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.access.ChatScreenAccess;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(ChatScreen.class)
-public class ChatScreenAccessorMixin implements ChatScreenAccess {
+public interface ChatScreenAccessorMixin {
 
-    @Shadow protected TextFieldWidget chatField;
-
-    public TextFieldWidget getChatField() {
-        return this.chatField;
-    }
+    @Accessor("chatField")
+    TextFieldWidget getChatField();
 }

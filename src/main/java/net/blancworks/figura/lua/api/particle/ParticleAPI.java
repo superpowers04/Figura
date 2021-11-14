@@ -132,11 +132,11 @@ public class ParticleAPI {
 
     private static AbstractMap.Entry<Identifier, ParticleType<?>> particleSetup(CustomScript script, LuaValue id) {
         //check string or script particle count
-        if (!id.isstring() || script.particleSpawnCount > script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES))
+        if (!id.isstring() || script.particleSpawnCount < 1)
             return null;
 
         //increase particle count
-        script.particleSpawnCount++;
+        script.particleSpawnCount--;
 
         //get particle id and particle type
         Identifier identifier = new Identifier(id.checkjstring());

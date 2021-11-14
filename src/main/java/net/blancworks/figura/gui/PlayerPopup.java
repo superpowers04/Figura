@@ -37,7 +37,7 @@ public class PlayerPopup extends DrawableHelper {
     public static int miniSelected = 0;
     public static int miniSize = 0;
 
-    public static Entity entity;
+    public static PlayerData data;
 
     private static final List<Text> buttons = List.of(
             new TranslatableText("gui.figura.playerpopup.cancel"),
@@ -47,7 +47,7 @@ public class PlayerPopup extends DrawableHelper {
     );
 
     public static void renderMini(MatrixStack matrices) {
-        if (entity == null || enabled)
+        if (data == null || enabled)
             return;
 
         matrices.push();
@@ -71,13 +71,13 @@ public class PlayerPopup extends DrawableHelper {
     }
 
     public static void render(MatrixStack matrices) {
-        if (miniEnabled) return;
+        if (miniEnabled || data == null) return;
 
+        Entity entity = data.lastEntity;
         MinecraftClient client = MinecraftClient.getInstance();
 
-        PlayerData data = entity == null ? null : PlayerDataManager.getDataForPlayer(entity.getUuid());
-        if (data == null || (entity.isInvisibleTo(client.player) && entity != client.player)) {
-            entity = null;
+        if (entity == null || (entity.isInvisibleTo(client.player) && entity != client.player)) {
+            data = null;
             return;
         }
 
@@ -151,8 +151,6 @@ public class PlayerPopup extends DrawableHelper {
     }
 
     public static void execute() {
-        PlayerData data = entity == null ? null : PlayerDataManager.getDataForPlayer(entity.getUuid());
-
         if (data != null) {
             data.hasPopup = false;
             MutableText playerName = new LiteralText("").append(data.playerName);
@@ -162,7 +160,7 @@ public class PlayerPopup extends DrawableHelper {
             switch (index) {
                 case 1 -> {
                     if (data.hasAvatar() && data.isAvatarLoaded()) {
-                        PlayerDataManager.clearPlayer(entity.getUuid());
+                        PlayerDataManager.clearPlayer(data.playerId);
                         FiguraMod.sendToast(playerName, "gui.figura.toast.avatar.reload.title");
                     }
                 }
@@ -184,6 +182,6 @@ public class PlayerPopup extends DrawableHelper {
         //miniSelected = 0;
 
         index = 0;
-        entity = null;
+        data = null;
     }
 }
