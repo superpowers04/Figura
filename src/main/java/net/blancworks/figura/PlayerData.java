@@ -386,7 +386,7 @@ public class PlayerData {
     }
 
     public void cleanup() {
-        script.cleanup();
-        model.cleanup();
+        if (script != null) script.cleanup();
+        if (model != null) model.cleanup();
     }
 }
