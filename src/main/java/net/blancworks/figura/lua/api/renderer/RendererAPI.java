@@ -11,6 +11,7 @@ import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.renderer.RenderTask.*;
+import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
@@ -153,19 +154,14 @@ public class RendererAPI {
             set("renderBlock", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-                    try {
-                        BlockState state = BlockStateArgumentType.blockState().parse(new StringReader(args.arg(1).checkjstring())).getBlockState();
-                        CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
-                        boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
-                        Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
-                        Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                        Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                    BlockState state = BlockStateAPI.checkState(args.arg(1));
+                    CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
+                    boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
+                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
+                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
 
-                        parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale));
-                    } catch (CommandSyntaxException e) {
-                        throw new LuaError("Incorrectly formatted BlockState string!");
-                    }
-
+                    parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale));
                     return NIL;
                 }
             });

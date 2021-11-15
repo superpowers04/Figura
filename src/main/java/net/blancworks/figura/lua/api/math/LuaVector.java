@@ -166,6 +166,10 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new Vec2f(x(), y());
     }
 
+    public BlockPos asBlockPos() {
+        return new BlockPos(x(), y(), z());
+    }
+
     @Override
     public int type() {
         return TYPE;

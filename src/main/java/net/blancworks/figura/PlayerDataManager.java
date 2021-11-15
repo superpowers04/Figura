@@ -1,5 +1,6 @@
 package net.blancworks.figura;
 
+import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
@@ -20,10 +21,6 @@ public final class PlayerDataManager {
     //Players that we're currently queued up to grab data for.
     private static final Set<UUID> SERVER_REQUESTED_PLAYERS = new HashSet<>();
     private static final List<UUID> TO_CLEAR = new ArrayList<>();
-
-    //Hash checking stuff
-    public static final Queue<UUID> TO_REFRESH = new ArrayDeque<>();
-    public static final Set<UUID> TO_REFRESH_SET = new HashSet<>();
 
     public static LocalPlayerData localPlayer;
 
@@ -144,7 +141,6 @@ public final class PlayerDataManager {
         }
     }
 
-
     //Loads the model off of the network.
     public static void loadFromNetwork(UUID id, PlayerData targetData) {
         FiguraMod.networkManager.getAvatarData(id);
@@ -163,6 +159,7 @@ public final class PlayerDataManager {
     }
 
     public static void clearCache() {
+        LOADED_PLAYER_DATA.keySet().forEach(SoundAPI.figuraChannel::stopForPlayer);
         LOADED_PLAYER_DATA.clear();
         localPlayer = null;
         didInitLocalPlayer = false;
@@ -177,13 +174,13 @@ public final class PlayerDataManager {
             KeyBinding.updateKeysByCode();
         }
 
+        localPlayer.cleanup();
+
         LOADED_PLAYER_DATA.remove(localPlayer.playerId);
         localPlayer = null;
         didInitLocalPlayer = false;
         lastLoadedFileName = null;
     }
-
-    private static int hashCheckCooldown = 0;
 
     //Tick function for the client. Basically dispatches all the other functions in the mod.
     public static void tick() {
@@ -191,6 +188,7 @@ public final class PlayerDataManager {
             return;
 
         for (UUID uuid : TO_CLEAR) {
+            getDataForPlayer(uuid).cleanup();
             LOADED_PLAYER_DATA.remove(uuid);
         }
         TO_CLEAR.clear();

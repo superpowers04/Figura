@@ -8,6 +8,7 @@
     "ArmorFeatureRendererMixin",
     "CameraMixin",
     "CapeFeatureRendererMixin",
+    "ChannelAccessorMixin",
     "ChatHudListenerMixin",
     "ChatHudAccessorMixin",
     "ChatScreenAccessorMixin",
@@ -43,7 +44,9 @@
     "SkullBlockEntityRendererMixin",
     "SoundManagerAccessorMixin",
     "SoundSystemAccessorMixin",
+    "SourceManagerMixin",
     "SplashTextResourceSupplierMixin",
+    "StaticSoundAccessorMixin",
     "WorldRendererMixin"
   ],
   "injectors": {

@@ -16,17 +16,24 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
+import net.blancworks.figura.lua.api.sound.FiguraSound;
+import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.sound.StaticSound;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.*;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
+import org.apache.logging.log4j.CloseableThreadContext;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
 import org.luaj.vm2.lib.jse.JseBaseLib;
@@ -66,6 +73,7 @@ public class CustomScript extends FiguraAsset {
     public int damageInstructionCount = 0;
     public int pingSent = 0;
     public int pingReceived = 0;
+    public HashMap<String, FiguraSound> customSounds = new HashMap<>();
 
     //References to the tick and render functions for easy use elsewhere.
     private LuaEvent tickLuaEvent = null;
@@ -488,7 +496,6 @@ public class CustomScript extends FiguraAsset {
         );
     }
 
-
     //--Events--
 
     //Called whenever the global tick event happens
@@ -881,5 +888,15 @@ public class CustomScript extends FiguraAsset {
         public short functionID;
         public LuaFunction function;
         public LuaValue args;
+    }
+
+    //--Misc--
+    public void cleanup() {
+        if (playerData != null) {
+            SoundAPI.figuraChannel.stopForPlayer(playerData.playerId);
+        }
+
+        customSounds.values().forEach(FiguraSound::close);
+        customSounds.clear();
     }
 }
