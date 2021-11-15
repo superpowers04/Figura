@@ -4,6 +4,7 @@ package net.blancworks.figura;
 import com.google.common.io.CharStreams;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
@@ -109,6 +110,9 @@ public class LocalPlayerData extends PlayerData {
                 if (zipFile.getEntry("texture.png") != null) data = (byte) (data | 4);
                 if (zipFile.getEntry("script.lua") != null) data = (byte) (data | 8);
                 if (zipFile.getEntry("render_layers.json") != null) data = (byte) (data | 16);
+
+                ZipEntry soundsEntry = zipFile.getEntry("sounds");
+                if (soundsEntry != null && soundsEntry.isDirectory())  data = (byte) (data | 32);
             } catch (Exception e) {
                 e.printStackTrace();
                 data = 0;
@@ -125,20 +129,23 @@ public class LocalPlayerData extends PlayerData {
             Path texturePath = contentDirectory.resolve("texture.png");
             Path scriptPath = contentDirectory.resolve("script.lua");
             Path renderLayersPath = contentDirectory.resolve("render_layers.json");
+            Path soundsPath = contentDirectory.resolve("sounds");
 
-            //add watchedfiles
+            //add watched files
             watchedFiles.add(modelPath.toString());
             watchedFiles.add(playerModelPath.toString());
             watchedFiles.add(texturePath.toString());
             watchedFiles.add(scriptPath.toString());
             watchedFiles.add(renderLayersPath.toString());
+            watchedFiles.add(soundsPath.toString());
 
             //load!
-            if (Files.exists(modelPath)) data = (byte) (data | 1);
-            if (Files.exists(playerModelPath)) data = (byte) (data | 2);
-            if (Files.exists(texturePath)) data = (byte) (data | 4);
-            if (Files.exists(scriptPath)) data = (byte) (data | 8);
+            if (Files.exists(modelPath))        data = (byte) (data | 1);
+            if (Files.exists(playerModelPath))  data = (byte) (data | 2);
+            if (Files.exists(texturePath))      data = (byte) (data | 4);
+            if (Files.exists(scriptPath))       data = (byte) (data | 8);
             if (Files.exists(renderLayersPath)) data = (byte) (data | 16);
+            if (Files.isDirectory(soundsPath))       data = (byte) (data | 32);
 
             //add to hash map
             avatarPaths.put("model", modelPath);
@@ -146,6 +153,7 @@ public class LocalPlayerData extends PlayerData {
             avatarPaths.put("texture", texturePath);
             avatarPaths.put("script", scriptPath);
             avatarPaths.put("render_layers", renderLayersPath);
+            avatarPaths.put("sounds", soundsPath);
         }
 
         //log and clear player model
@@ -187,6 +195,9 @@ public class LocalPlayerData extends PlayerData {
         //try to load render_layers
         if ((data & 16) == 16) loadRenderLayers(avatarPaths.get("render_layers"), isZip, modelZip, file.toPath());
 
+        //try to load custom sounds (requires a script)
+        if ((data & 32) == 32 && (data & 8) == 8) loadCustomSounds(avatarPaths.get("sounds"), isZip, file.toPath());
+
         //try to load extra textures
         loadExtraTextures(file, isZip, modelZip);
 
@@ -197,6 +208,39 @@ public class LocalPlayerData extends PlayerData {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void loadCustomSounds(Path sounds, boolean isZip, Path zipPath) {
+
+        if (isZip) {
+            try {
+                FileSystems.newFileSystem(zipPath).getRootDirectories().forEach(path -> {
+                    if (path.endsWith("sounds")) {
+                       loadCustomSounds(path, false, zipPath);
+                    }
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        } else {
+            String[] filenames = sounds.toFile().list((dir, name) -> name.endsWith(".ogg"));
+
+            if (filenames != null) {
+                for(String curFilename : filenames) {
+                    Path cur = sounds.resolve(curFilename);
+                    if (curFilename.endsWith(".ogg")) {
+                        String name = curFilename.substring(0,curFilename.lastIndexOf(".ogg"));
+                        try {
+                            InputStream str = new FileInputStream(cur.toFile());
+                            SoundAPI.registerCustomSound(script, name, str.readAllBytes(), false);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     public void loadModel(boolean model, HashMap<String, Path> paths, boolean isZip, ZipFile modelZip) {
@@ -453,6 +497,7 @@ public class LocalPlayerData extends PlayerData {
     public void reloadAvatar() {
         watchKeys.clear();
 
+        this.cleanup();
         PlayerDataManager.lastLoadedFileName = loadedName;
         loadModelFile(loadedPath);
         isLocalAvatar = true;

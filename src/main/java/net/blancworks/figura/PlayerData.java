@@ -1,32 +1,30 @@
 package net.blancworks.figura;
 
 import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.api.sound.FiguraSound;
+import net.blancworks.figura.lua.api.sound.SoundAPI;
+import net.blancworks.figura.mixin.StaticSoundAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.sound.StaticSound;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.*;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
+import java.io.*;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -124,6 +122,14 @@ public class PlayerData {
             NbtCompound scriptNbt = new NbtCompound();
             script.toNBT(scriptNbt);
             nbt.put("script", scriptNbt);
+
+            try {
+                if (!script.customSounds.isEmpty()) {
+                    nbt.put("sounds", writeCustomSoundsNBT());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         //Put Render Layers.
@@ -225,6 +231,14 @@ public class PlayerData {
                 if (scriptNbt != null) FiguraMod.doTask(() -> {
                     script = new CustomScript();
                     script.fromNBT(this, scriptNbt);
+
+                    try {
+                        if (nbt.contains("sounds")) {
+                            readCustomSoundsNBT(nbt.getCompound("sounds"));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 });
             }
         } catch (Exception e) {
@@ -313,8 +327,8 @@ public class PlayerData {
     public boolean canRenderCustomLayers() {
         boolean ret = getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1;
 
-        if (FabricLoader.getInstance().isModLoaded("iris"))
-            return ret && net.coderbot.iris.Iris.getCurrentPack().isEmpty();
+        //if (FabricLoader.getInstance().isModLoaded("iris"))
+        //    return ret && net.coderbot.iris.Iris.getCurrentPack().isEmpty();
 
         return ret;
     }
@@ -355,5 +369,24 @@ public class PlayerData {
 
     public boolean isAvatarLoaded() {
         return (model == null || model.isDone) && (script == null || script.isDone) && (texture == null || texture.isDone);
+    }
+
+    private NbtElement writeCustomSoundsNBT() {
+        NbtCompound nbt = new NbtCompound();
+
+        for (String key : script.customSounds.keySet()) {
+            script.customSounds.get(key).writeNbt(nbt);
+        }
+
+        return nbt;
+    }
+
+    private void readCustomSoundsNBT(NbtCompound nbt) {
+        nbt.getKeys().forEach(key -> SoundAPI.registerCustomSound(script, key, nbt.getByteArray(key), false));
+    }
+
+    public void cleanup() {
+        script.cleanup();
+        model.cleanup();
     }
 }
