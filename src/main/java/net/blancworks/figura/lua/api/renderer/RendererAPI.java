@@ -17,6 +17,7 @@ import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.command.argument.BlockStateArgumentType;
@@ -111,7 +112,15 @@ public class RendererAPI {
                     Vec3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
                     Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
 
-                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale));
+                    FiguraRenderLayer customLayer = null;
+                    if (!args.arg(8).isnil()) {
+                        if (script.playerData.customVCP != null) {
+                            customLayer = script.playerData.customVCP.getRenderLayer(args.arg(8).checkjstring());
+                        } else
+                            throw new LuaError("The player has no custom VCP!");
+                    }
+
+                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale, customLayer));
 
                     return NIL;
                 }
@@ -161,7 +170,15 @@ public class RendererAPI {
                         Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
                         Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
 
-                        parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale));
+                        FiguraRenderLayer customLayer = null;
+                        if (!args.arg(7).isnil()) {
+                            if (script.playerData.customVCP != null) {
+                                customLayer = script.playerData.customVCP.getRenderLayer(args.arg(7).checkjstring());
+                            } else
+                                throw new LuaError("The player has no custom VCP!");
+                        }
+
+                        parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale, customLayer));
                     } catch (CommandSyntaxException e) {
                         throw new LuaError("Incorrectly formatted BlockState string!");
                     }

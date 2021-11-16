@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.function.Function;
 import java.util.zip.ZipEntry;
@@ -71,7 +72,6 @@ public class FiguraLocalShaderResourceFactory implements ResourceFactory {
                     str = str.substring("shaders/core/UUIDUUID-UUID-UUID-UUID-UUIDUUIDUUID-".length());
 
                     stream = inputStreamFunction.apply(str);
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -100,7 +100,8 @@ public class FiguraLocalShaderResourceFactory implements ResourceFactory {
 
             @Override
             public void close() throws IOException {
-                stream.close();
+                if (stream != null)
+                    stream.close();
             }
         };
     }
