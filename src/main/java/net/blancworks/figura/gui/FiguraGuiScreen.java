@@ -227,10 +227,10 @@ public class FiguraGuiScreen extends Screen {
         //help button
         this.addDrawableChild(new ButtonWidget(this.width - width - 5, 65, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
             if (bl) {
-                Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel");
+                Util.getOperatingSystem().open("https://github.com/Blancworks/Figura/wiki/Figura-Panel");
             }
             this.client.setScreen(this);
-        }, "https://github.com/TheOneTrueZandra/Figura/wiki/Figura-Panel", true))));
+        }, "https://github.com/Blancworks/Figura/wiki/Figura-Panel", true))));
 
         //keybinds button
         keybindsButton = new TexturedButtonWidget(

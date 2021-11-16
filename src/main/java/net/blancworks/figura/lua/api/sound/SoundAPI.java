@@ -16,12 +16,17 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.*;
-import org.luaj.vm2.lib.*;
+import org.luaj.vm2.lib.ThreeArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.VarArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class SoundAPI {
     public static FiguraChannel figuraChannel;
@@ -41,16 +46,11 @@ public class SoundAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-            set("playSound", new VarArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    playSound(script, arg1, arg2, new LuaVector(1.0f, 1.0f));
-                    return NIL;
-                }
-
+            set("playSound", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                    playSound(script, arg1, arg2, arg3);
+                    LuaValue vol = arg3.isnil() ? new LuaVector(1f, 1f) : arg3;
+                    playSound(script, arg1, arg2, vol);
                     return NIL;
                 }
             });

@@ -113,9 +113,9 @@ public class FiguraTrustScreen extends Screen {
         this.addDrawableChild(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
             //Open the trust menu from the Figura Wiki
             if (bl)
-                Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
+                Util.getOperatingSystem().open("https://github.com/Blancworks/Figura/wiki/Trust-Menu");
             this.client.setScreen(this);
-        }, "https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu", true))));
+        }, "https://github.com/Blancworks/Figura/wiki/Trust-Menu", true))));
 
         this.addDrawableChild(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> PlayerDataManager.clearCache()));
 
