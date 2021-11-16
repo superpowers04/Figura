@@ -123,7 +123,10 @@ public class CustomScript extends FiguraAsset {
     //----PINGS!----
 
     //Maps functions from lua to shorts for data saving.
+    @Deprecated
     public BiMap<Short, String> functionIDMap = HashBiMap.create();
+
+    public BiMap<Short, LuaValue> newFunctionIDMap = HashBiMap.create();
 
     private short lastPingID = Short.MIN_VALUE;
 
@@ -855,22 +858,25 @@ public class CustomScript extends FiguraAsset {
     }
 
     //--Pings--
+    @Deprecated
     public void registerPingName(String s) {
         functionIDMap.put(lastPingID++, s);
+    }
+
+    public void registerPing(LuaValue func) {
+        newFunctionIDMap.put(lastPingID++, func);
     }
 
     public void handlePing(short id, LuaValue args) {
         try {
             String functionName = functionIDMap.get(id);
+            LuaValue function = newFunctionIDMap.get(id);
 
-            if (functionName != null) {
-                LuaValue function = scriptGlobals.get(functionName);
-                LuaPing p = new LuaPing();
-                p.function = function.checkfunction();
-                p.args = args;
-                p.functionID = id;
-
-                incomingPingQueue.add(p);
+            if (function != null) {
+                addPing(function, args, id);
+            } else if (functionName != null) {
+                LuaValue func = scriptGlobals.get(functionName);
+                addPing(func, args, id);
             }
         } catch (Exception error) {
             if (error instanceof LuaError err)
@@ -878,6 +884,15 @@ public class CustomScript extends FiguraAsset {
             else
                 error.printStackTrace();
         }
+    }
+
+    public void addPing(LuaValue function, LuaValue args, short id) {
+        LuaPing p = new LuaPing();
+        p.function = function.checkfunction();
+        p.args = args;
+        p.functionID = id;
+
+        incomingPingQueue.add(p);
     }
 
     public static class LuaPing {

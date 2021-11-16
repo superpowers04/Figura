@@ -10,6 +10,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 
+@Deprecated
 public class NetworkAPI {
     public static Identifier getID() {
         return new Identifier("default", "network");
@@ -22,7 +23,7 @@ public class NetworkAPI {
     public static class NetworkAPILuaTable extends ReadOnlyLuaTable {
         public CustomScript targetScript;
         
-        public NetworkAPILuaTable(CustomScript script){
+        public NetworkAPILuaTable(CustomScript script) {
             this.targetScript = script;
 
             LuaTable table = new LuaTable();
