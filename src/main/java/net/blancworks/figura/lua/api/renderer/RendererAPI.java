@@ -113,7 +113,7 @@ public class RendererAPI {
                     Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
 
                     FiguraRenderLayer customLayer = null;
-                    if (!args.arg(8).isnil()) {
+                    if (!args.arg(8).isnil() && script.playerData.canRenderCustomLayers()) {
                         if (script.playerData.customVCP != null) {
                             customLayer = script.playerData.customVCP.getRenderLayer(args.arg(8).checkjstring());
                         } else
@@ -171,7 +171,7 @@ public class RendererAPI {
                         Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
 
                         FiguraRenderLayer customLayer = null;
-                        if (!args.arg(7).isnil()) {
+                        if (!args.arg(7).isnil() && script.playerData.canRenderCustomLayers()) {
                             if (script.playerData.customVCP != null) {
                                 customLayer = script.playerData.customVCP.getRenderLayer(args.arg(7).checkjstring());
                             } else
