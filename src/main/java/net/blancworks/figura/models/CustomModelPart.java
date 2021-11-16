@@ -163,11 +163,13 @@ public class CustomModelPart {
         if (canRender) {
             //get vertex consumer
             VertexConsumer consumer;
-            if (layer instanceof FiguraRenderLayer) {
-                consumer = vcp.getBuffer(layer);
-            } else if (customLayer != null) {
+
+            if (customLayer != null) {
                 consumer = vcp.getBuffer(customLayer);
                 layer = customLayer;
+            }
+            else if (layer instanceof FiguraRenderLayer) {
+                consumer = vcp.getBuffer(layer);
             } else {
                 consumer = vcp.getBuffer(layerFunction.apply(texture));
             }

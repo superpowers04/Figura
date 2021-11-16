@@ -1,5 +1,7 @@
 package net.blancworks.figura.lua.api.renderer;
 
+import net.blancworks.figura.models.shaders.FiguraRenderLayer;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
@@ -37,11 +39,13 @@ public abstract class RenderTask {
     public static class ItemRenderTask extends RenderTask {
         public final ItemStack stack;
         public final ModelTransformation.Mode mode;
+        public final FiguraRenderLayer customLayer;
 
-        public ItemRenderTask(ItemStack stack, ModelTransformation.Mode mode, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {
+        public ItemRenderTask(ItemStack stack, ModelTransformation.Mode mode, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale, FiguraRenderLayer customLayer) {
             super(emissive, pos, rot, scale);
             this.stack = stack;
             this.mode = mode;
+            this.customLayer = customLayer;
         }
 
         @Override
@@ -51,8 +55,10 @@ public abstract class RenderTask {
             this.transform(matrices);
             matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180));
 
+            RenderTask.renderLayerOverride(vcp, customLayer);
             MinecraftClient client = MinecraftClient.getInstance();
             client.getItemRenderer().renderItem(stack, mode, emissive ? 0xF000F0 : light, OverlayTexture.DEFAULT_UV, matrices, vcp, 0);
+            RenderTask.resetOverride(vcp);
 
             int complexity = 4 * client.getItemRenderer().getHeldItemModel(stack, null, null, 0).getQuads(null, null, client.world.random).size();
 
@@ -63,10 +69,12 @@ public abstract class RenderTask {
 
     public static class BlockRenderTask extends RenderTask {
         public final BlockState state;
+        public final FiguraRenderLayer customLayer;
 
-        public BlockRenderTask(BlockState state, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {
+        public BlockRenderTask(BlockState state, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale, FiguraRenderLayer customLayer) {
             super(emissive, pos, rot, scale);
             this.state = state;
+            this.customLayer = customLayer;
         }
 
         @Override
@@ -76,8 +84,10 @@ public abstract class RenderTask {
             this.transform(matrices);
             matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180));
 
+            RenderTask.renderLayerOverride(vcp, customLayer);
             MinecraftClient client = MinecraftClient.getInstance();
             client.getBlockRenderManager().renderBlockAsEntity(state, matrices, vcp, emissive ? 0xF000F0 : light, OverlayTexture.DEFAULT_UV);
+            RenderTask.resetOverride(vcp);
 
             int complexity = 4 * client.getBlockRenderManager().getModel(state).getQuads(state, null, client.world.random).size();
 
@@ -106,6 +116,20 @@ public abstract class RenderTask {
 
             matrices.pop();
             return instructions;
+        }
+    }
+
+    static FiguraRenderLayer storedOverride;
+    public static void renderLayerOverride(VertexConsumerProvider vcp, FiguraRenderLayer override) {
+        if (vcp instanceof FiguraVertexConsumerProvider) {
+            storedOverride = ((FiguraVertexConsumerProvider) vcp).overrideLayer;
+            ((FiguraVertexConsumerProvider) vcp).overrideLayer = override;
+        }
+    }
+
+    public static void resetOverride(VertexConsumerProvider vcp) {
+        if (vcp instanceof FiguraVertexConsumerProvider) {
+            ((FiguraVertexConsumerProvider) vcp).overrideLayer = storedOverride;
         }
     }
 }
