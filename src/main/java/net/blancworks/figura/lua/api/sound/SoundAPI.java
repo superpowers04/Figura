@@ -15,6 +15,7 @@ import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
@@ -39,16 +40,11 @@ public class SoundAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-            set("playSound", new VarArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    playSound(script, arg1, arg2, new LuaVector(1.0f, 1.0f));
-                    return NIL;
-                }
-
+            set("playSound", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                    playSound(script, arg1, arg2, arg3);
+                    LuaValue vol = arg3.isnil() ? new LuaVector(1f, 1f) : arg3;
+                    playSound(script, arg1, arg2, vol);
                     return NIL;
                 }
             });

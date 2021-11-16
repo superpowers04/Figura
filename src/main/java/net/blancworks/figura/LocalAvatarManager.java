@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.zip.ZipFile;
 
 public class LocalAvatarManager {
@@ -111,7 +112,7 @@ public class LocalAvatarManager {
         if (files == null || parent == null)
             return;
 
-        Map<String, LocalAvatar> newParent = new LinkedHashMap<>();
+        Map<String, LocalAvatar> newParent =  new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         //for all files in folder
         for (File file : files) {
@@ -198,7 +199,7 @@ public class LocalAvatarManager {
 
     public static class LocalAvatarFolder extends LocalAvatar {
         public boolean expanded;
-        public final Map<String, LocalAvatar> children = new HashMap<>();
+        public final Map<String, LocalAvatar> children = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         public LocalAvatarFolder(String path, boolean expanded) {
             super(path);

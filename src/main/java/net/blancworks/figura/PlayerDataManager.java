@@ -1,6 +1,8 @@
 package net.blancworks.figura;
 
+import com.mojang.authlib.GameProfile;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
+import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.option.KeyBinding;
@@ -16,6 +18,7 @@ import java.util.*;
 public final class PlayerDataManager {
     public static boolean didInitLocalPlayer = false;
     public static final Map<UUID, PlayerData> LOADED_PLAYER_DATA = new HashMap<>();
+    public static final Map<UUID, UUID> OFFLINE_SWAP_DATA = new HashMap<>();
 
     //Players that we're currently queued up to grab data for.
     private static final Set<UUID> SERVER_REQUESTED_PLAYERS = new HashSet<>();
@@ -35,6 +38,15 @@ public final class PlayerDataManager {
                 LOADED_PLAYER_DATA.remove(id);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+
+        if (OFFLINE_SWAP_DATA.containsKey(id)) {
+            PlayerData data = LOADED_PLAYER_DATA.get(OFFLINE_SWAP_DATA.get(id));
+            if (data != null) {
+                data.playerId = id;
+                LOADED_PLAYER_DATA.put(id, data);
+                OFFLINE_SWAP_DATA.remove(id);
+            }
         }
 
         MinecraftClient client = MinecraftClient.getInstance();
@@ -69,6 +81,22 @@ public final class PlayerDataManager {
             getData = new PlayerData();
             getData.playerId = id;
 
+            if (client.getNetworkHandler() != null) {
+                PlayerListEntry playerEntry = client.getNetworkHandler().getPlayerListEntry(id);
+                if (playerEntry != null && playerEntry.getProfile() != null) {
+                    String name = playerEntry.getProfile().getName();
+
+                    GameProfile gameProfile = new GameProfile(null, name);
+                    SkullBlockEntity.loadProperties(gameProfile, profile -> {
+                        UUID profileID = profile.getId();
+                        if (id.compareTo(profileID) == 0) return;
+
+                        getPlayerAvatarFromServerOrCache(profileID, getData);
+                        OFFLINE_SWAP_DATA.put(id, profileID);
+                    });
+                }
+            }
+
             getPlayerAvatarFromServerOrCache(id, getData);
 
             LOADED_PLAYER_DATA.put(id, getData);
@@ -83,7 +111,7 @@ public final class PlayerDataManager {
                 if (playerEntry != null && playerEntry.getProfile() != null)
                     playerName = new LiteralText(playerEntry.getProfile().getName());
 
-                getData.playerListEntry = client.getNetworkHandler().getPlayerListEntry(id);
+                getData.playerListEntry = playerEntry;
             }
             getData.playerName = playerName;
         }

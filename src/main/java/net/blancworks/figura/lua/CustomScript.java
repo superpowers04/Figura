@@ -19,6 +19,7 @@ import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
@@ -369,6 +370,8 @@ public class CustomScript extends FiguraAsset {
 
                                 if (log == null)
                                     throw new Exception("Error parsing JSON string");
+
+                                TextUtils.removeClickableObjects((MutableText) log);
                             } catch (Exception ignored) {
                                 log = new LiteralText(arg.toString());
                             }
