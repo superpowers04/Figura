@@ -10,6 +10,7 @@ import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
@@ -327,8 +328,8 @@ public class PlayerData {
     public boolean canRenderCustomLayers() {
         boolean ret = getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1;
 
-        //if (FabricLoader.getInstance().isModLoaded("iris"))
-        //    return ret && net.coderbot.iris.Iris.getCurrentPack().isEmpty();
+        if (FabricLoader.getInstance().isModLoaded("iris"))
+            return ret && net.coderbot.iris.Iris.getCurrentPack().isEmpty();
 
         return ret;
     }
