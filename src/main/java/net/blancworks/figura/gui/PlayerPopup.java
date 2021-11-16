@@ -35,7 +35,7 @@ public class PlayerPopup extends DrawableHelper {
 
     public static boolean miniEnabled = false;
     public static int miniSelected = 0;
-    public static int miniSize = 0;
+    public static int miniSize = 1;
 
     public static PlayerData data;
 
