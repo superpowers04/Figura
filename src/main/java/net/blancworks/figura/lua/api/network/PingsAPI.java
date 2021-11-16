@@ -81,12 +81,13 @@ public class PingsAPI {
 
         @Override
         public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-            throw new LuaError("Pings can only have ONE argument!");
+            return call(arg1);
         }
 
         @Override
         public Varargs invoke(Varargs args) {
-            throw new LuaError("Pings can only have ONE argument!");
+            LuaValue[] val = {call(args.arg(1))};
+            return varargsOf(val);
         }
     }
 }
