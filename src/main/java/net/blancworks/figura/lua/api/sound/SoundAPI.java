@@ -189,7 +189,7 @@ public class SoundAPI {
             StaticSound sound = new StaticSound(oggAudioStream.getBuffer(), oggAudioStream.getFormat());
             script.customSounds.put(name, new FiguraSound(sound, name, source, local));
         } catch (IOException e) {
-            throw new LuaError(e);
+            e.printStackTrace();
         }
     }
 
