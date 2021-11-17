@@ -69,14 +69,15 @@ public class PingsAPI {
 
                 //local ping is handled immediately
                 return this.func.call(arg);
-            } catch (Exception ignored) {
+            } catch (Exception e) {
+                e.printStackTrace();
                 throw new LuaError("Failed to send ping! Make sure the ping function is defined before sending it!");
             }
         }
 
         @Override
         public LuaValue call(LuaValue arg1, LuaValue arg2) {
-            return call(NIL, NIL, NIL);
+            return call(arg1);
         }
 
         @Override
