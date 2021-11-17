@@ -11,12 +11,14 @@ import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.renderer.RenderTask.*;
+import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.command.argument.BlockStateArgumentType;
@@ -111,7 +113,15 @@ public class RendererAPI {
                     Vec3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
                     Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
 
-                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale));
+                    FiguraRenderLayer customLayer = null;
+                    if (!args.arg(8).isnil()) {
+                        if (script.playerData.customVCP != null) {
+                            customLayer = script.playerData.customVCP.getRenderLayer(args.arg(8).checkjstring());
+                        } else
+                            throw new LuaError("The player has no custom VCP!");
+                    }
+
+                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale, customLayer));
 
                     return NIL;
                 }
@@ -153,18 +163,21 @@ public class RendererAPI {
             set("renderBlock", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-                    try {
-                        BlockState state = BlockStateArgumentType.blockState().parse(new StringReader(args.arg(1).checkjstring())).getBlockState();
-                        CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
-                        boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
-                        Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
-                        Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                        Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
-
-                        parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale));
-                    } catch (CommandSyntaxException e) {
-                        throw new LuaError("Incorrectly formatted BlockState string!");
+                    BlockState state = BlockStateAPI.checkState(args.arg(1));
+                    CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
+                    boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
+                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
+                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                    FiguraRenderLayer customLayer = null;
+                    if (!args.arg(7).isnil()) {
+                        if (script.playerData.customVCP != null) {
+                            customLayer = script.playerData.customVCP.getRenderLayer(args.arg(7).checkjstring());
+                        } else
+                            throw new LuaError("The player has no custom VCP!");
                     }
+
+                    parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale, customLayer));
 
                     return NIL;
                 }

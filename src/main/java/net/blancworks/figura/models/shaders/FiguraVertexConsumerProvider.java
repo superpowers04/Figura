@@ -44,6 +44,8 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
     private static final ArrayList<String> defaultTextures;
     private final Map<String, FiguraRenderLayer> stringLayerMap = new HashMap<>();
     private final NbtList nbtData = new NbtList();
+    //If this is non-null, then it will always be used. The value can be set to non-null for a short time, then reset to null after the operation.
+    public FiguraRenderLayer overrideLayer = null;
 
     protected FiguraVertexConsumerProvider(BufferBuilder fallbackBuffer, Map<RenderLayer, BufferBuilder> layerBuilderMap) {
         super(fallbackBuffer, layerBuilderMap);
@@ -57,7 +59,7 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
      * @param backup An immediate which will be queried if this does not have a buffer for the renderLayer.
      * @return The vertex buffer corresponding to that render layer, or the default framebuffer if it doesn't exist.
      */
-    public VertexConsumer getBuffer(RenderLayer renderLayer, VertexConsumerProvider backup) {
+    private VertexConsumer getBuffer(RenderLayer renderLayer, VertexConsumerProvider backup) {
         BufferBuilder buffer = (BufferBuilder) super.getBuffer(renderLayer); //Attempt to find the buffer builder, if custom.
         if (buffer == this.fallbackBuffer) { //We failed to find it here, so it was probably a default vanilla buffer
             //Access the backup immediate, the vanilla one, to find the buffer instead.
@@ -69,6 +71,10 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
     //Default backup is the vanilla EntityVertexConsumers
     public VertexConsumer getBuffer(RenderLayer renderLayer) {
         VertexConsumerProvider backup = FiguraMod.vertexConsumerProvider;
+        //If there's an override set, then forcibly use that render layer, ignoring whichever was passed in.
+        //This override is used in RendererAPI.renderBlock() and renderItem()
+        if (overrideLayer != null)
+            return getBuffer(overrideLayer, backup);
         return getBuffer(renderLayer, backup);
     }
 
@@ -97,7 +103,7 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
             //Get arraylist of renderLayers, iterate over them all
             ArrayList<Map> renderLayers = (ArrayList<Map>) jsonData.get("render_layers");
             for (Map layer : renderLayers) {
-
+                if (layer == null) continue;
                 NbtCompound layerCompound = new NbtCompound();
 
                 //Get basic information about the renderLayer

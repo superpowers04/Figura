@@ -2,6 +2,7 @@ package net.blancworks.figura;
 
 import com.mojang.authlib.GameProfile;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
+import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
@@ -172,7 +173,6 @@ public final class PlayerDataManager {
         }
     }
 
-
     //Loads the model off of the network.
     public static void loadFromNetwork(UUID id, PlayerData targetData) {
         FiguraMod.networkManager.getAvatarData(id);
@@ -191,6 +191,7 @@ public final class PlayerDataManager {
     }
 
     public static void clearCache() {
+        LOADED_PLAYER_DATA.keySet().forEach(FiguraSoundManager.figuraChannel::stopForPlayer);
         LOADED_PLAYER_DATA.clear();
         localPlayer = null;
         didInitLocalPlayer = false;
@@ -204,6 +205,8 @@ public final class PlayerDataManager {
             localPlayer.script.keyBindings.forEach(keyBinding -> KeyBindingAccessorMixin.getKeysById().remove(keyBinding.getTranslationKey()));
             KeyBinding.updateKeysByCode();
         }
+
+        localPlayer.clearSounds();
 
         LOADED_PLAYER_DATA.remove(localPlayer.playerId);
         localPlayer = null;
@@ -219,6 +222,7 @@ public final class PlayerDataManager {
             return;
 
         for (UUID uuid : TO_CLEAR) {
+            getDataForPlayer(uuid).clearSounds();
             LOADED_PLAYER_DATA.remove(uuid);
         }
         TO_CLEAR.clear();

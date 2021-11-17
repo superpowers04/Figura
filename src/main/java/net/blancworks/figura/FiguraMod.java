@@ -6,6 +6,7 @@ import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.FiguraToast;
 import net.blancworks.figura.lua.FiguraLuaManager;
+import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.network.IFiguraNetwork;
@@ -193,6 +194,7 @@ public class FiguraMod implements ClientModInitializer {
     public static void ClientEndTick(MinecraftClient client) {
         try {
             PlayerDataManager.tick();
+            SoundAPI.tick();
 
             networkManager = newNetworkManager;
 

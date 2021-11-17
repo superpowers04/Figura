@@ -2,8 +2,16 @@ package net.blancworks.figura;
 
 
 import com.google.common.io.CharStreams;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.gson.stream.JsonReader;
+import com.mojang.datafixers.types.Func;
+import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
@@ -109,6 +117,7 @@ public class LocalPlayerData extends PlayerData {
                 if (zipFile.getEntry("texture.png") != null) data = (byte) (data | 4);
                 if (zipFile.getEntry("script.lua") != null) data = (byte) (data | 8);
                 if (zipFile.getEntry("render_layers.json") != null) data = (byte) (data | 16);
+                if (zipFile.getEntry("sounds.json") != null) data = (byte) (data | 32);
             } catch (Exception e) {
                 e.printStackTrace();
                 data = 0;
@@ -125,20 +134,23 @@ public class LocalPlayerData extends PlayerData {
             Path texturePath = contentDirectory.resolve("texture.png");
             Path scriptPath = contentDirectory.resolve("script.lua");
             Path renderLayersPath = contentDirectory.resolve("render_layers.json");
+            Path soundsPath = contentDirectory.resolve("sounds.json");
 
-            //add watchedfiles
+            //add watched files
             watchedFiles.add(modelPath.toString());
             watchedFiles.add(playerModelPath.toString());
             watchedFiles.add(texturePath.toString());
             watchedFiles.add(scriptPath.toString());
             watchedFiles.add(renderLayersPath.toString());
+            watchedFiles.add(soundsPath.toString());
 
             //load!
-            if (Files.exists(modelPath)) data = (byte) (data | 1);
-            if (Files.exists(playerModelPath)) data = (byte) (data | 2);
-            if (Files.exists(texturePath)) data = (byte) (data | 4);
-            if (Files.exists(scriptPath)) data = (byte) (data | 8);
+            if (Files.exists(modelPath))        data = (byte) (data | 1);
+            if (Files.exists(playerModelPath))  data = (byte) (data | 2);
+            if (Files.exists(texturePath))      data = (byte) (data | 4);
+            if (Files.exists(scriptPath))       data = (byte) (data | 8);
             if (Files.exists(renderLayersPath)) data = (byte) (data | 16);
+            if (Files.exists(soundsPath))       data = (byte) (data | 32);
 
             //add to hash map
             avatarPaths.put("model", modelPath);
@@ -146,6 +158,7 @@ public class LocalPlayerData extends PlayerData {
             avatarPaths.put("texture", texturePath);
             avatarPaths.put("script", scriptPath);
             avatarPaths.put("render_layers", renderLayersPath);
+            avatarPaths.put("sounds", soundsPath);
         }
 
         //log and clear player model
@@ -187,6 +200,9 @@ public class LocalPlayerData extends PlayerData {
         //try to load render_layers
         if ((data & 16) == 16) loadRenderLayers(avatarPaths.get("render_layers"), isZip, modelZip, file.toPath());
 
+        //try to load custom sounds (requires a script)
+        if ((data & 32) == 32 && (data & 8) == 8) loadCustomSounds(avatarPaths.get("sounds"), isZip, modelZip, file);
+
         //try to load extra textures
         loadExtraTextures(file, isZip, modelZip);
 
@@ -197,6 +213,37 @@ public class LocalPlayerData extends PlayerData {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void loadCustomSounds(Path sounds, boolean isZip, ZipFile zip, File modelFile) {
+
+        try {
+            JsonElement soundsJson;
+            if (isZip) {
+                soundsJson = new JsonParser().parse(new InputStreamReader(zip.getInputStream(zip.getEntry("sounds.json"))));
+            } else {
+                soundsJson = new JsonParser().parse(new FileReader(sounds.toFile()));
+            }
+
+            JsonArray soundsArray = soundsJson.getAsJsonArray();
+
+            Function<String, InputStream> fileGetter = maybeReadZip(isZip ? zip : modelFile);
+            soundsArray.forEach(entry -> {
+                String name = entry.getAsString();
+                assert fileGetter != null;
+                InputStream str = fileGetter.get("sounds/"+name+".ogg");
+                try {
+                    SoundAPI.registerCustomSound(script, name, str.readAllBytes(), false);
+                } catch (Exception ignored) {}
+            });
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     public void loadModel(boolean model, HashMap<String, Path> paths, boolean isZip, ZipFile modelZip) {
@@ -450,9 +497,35 @@ public class LocalPlayerData extends PlayerData {
         if (doReload) reloadAvatar();
     }
 
+    public static Function<String, InputStream> maybeReadZip(Object source) {
+        if (source instanceof ZipFile zf) {
+            return (str) -> {
+                try {
+                    return zf.getInputStream(zf.getEntry((String)str));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            };
+        } else if (source instanceof File p) {
+            return (str) -> {
+                try {
+                    Path pp = p.toPath().resolve((String)str);
+                    System.out.printf("READING: %s\n", pp.toString());
+                    return new FileInputStream(pp.toFile());
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            };
+        }
+        return null;
+    }
+
     public void reloadAvatar() {
         watchKeys.clear();
 
+        this.cleanup();
         PlayerDataManager.lastLoadedFileName = loadedName;
         loadModelFile(loadedPath);
         isLocalAvatar = true;
