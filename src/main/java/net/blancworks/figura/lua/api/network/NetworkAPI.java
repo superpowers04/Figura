@@ -61,7 +61,8 @@ public class NetworkAPI {
 
                         if (!targetScript.playerData.isLocalAvatar)
                             targetScript.outgoingPingQueue.add(lp);
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        e.printStackTrace();
                         throw new LuaError("Failed to send ping! Make sure the ping is registered before sending it!");
                     }
 
