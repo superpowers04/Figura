@@ -1,17 +1,14 @@
 package net.blancworks.figura.lua.api.world;
 
-import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.command.argument.BlockStateArgumentType;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
@@ -53,20 +50,7 @@ public class WorldAPI {
                     if (w.getChunk(pos) == null) return NIL;
 
                     BlockState state = w.getBlockState(pos);
-                    return BlockStateAPI.getTable(state, w);
-                }
-            });
-
-            set("createBlockState", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    try {
-                        BlockState state = BlockStateArgumentType.blockState().parse(new StringReader(arg.checkjstring())).getBlockState();
-                        return BlockStateAPI.getTable(state, getWorld());
-                    } catch (CommandSyntaxException e) {
-                        e.printStackTrace();
-                    }
-                    throw new LuaError("Incorrectly formatted BlockState string!");
+                    return BlockStateAPI.getTable(state, w, pos);
                 }
             });
 

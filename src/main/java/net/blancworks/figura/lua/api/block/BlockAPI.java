@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.world.block;
+package net.blancworks.figura.lua.api.block;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;

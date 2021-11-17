@@ -1,12 +1,10 @@
 package net.blancworks.figura;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.sound.FiguraSound;
-import net.blancworks.figura.lua.api.sound.SoundAPI;
-import net.blancworks.figura.mixin.StaticSoundAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -17,15 +15,19 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.sound.StaticSound;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
-import java.io.*;
-import java.nio.ByteBuffer;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -383,11 +385,10 @@ public class PlayerData {
     }
 
     private void readCustomSoundsNBT(NbtCompound nbt) {
-        nbt.getKeys().forEach(key -> SoundAPI.registerCustomSound(script, key, nbt.getByteArray(key), false));
+        nbt.getKeys().forEach(key -> FiguraSoundManager.registerCustomSound(script, key, nbt.getByteArray(key), false));
     }
 
-    public void cleanup() {
-        if (script != null) script.cleanup();
-        if (model != null) model.cleanup();
+    public void clearSounds() {
+        if (script != null) script.clearSounds();
     }
 }

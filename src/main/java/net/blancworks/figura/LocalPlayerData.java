@@ -2,21 +2,17 @@ package net.blancworks.figura;
 
 
 import com.google.common.io.CharStreams;
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.mojang.datafixers.types.Func;
-import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.Identifier;
 
@@ -145,12 +141,12 @@ public class LocalPlayerData extends PlayerData {
             watchedFiles.add(soundsPath.toString());
 
             //load!
-            if (Files.exists(modelPath))        data = (byte) (data | 1);
-            if (Files.exists(playerModelPath))  data = (byte) (data | 2);
-            if (Files.exists(texturePath))      data = (byte) (data | 4);
-            if (Files.exists(scriptPath))       data = (byte) (data | 8);
+            if (Files.exists(modelPath)) data = (byte) (data | 1);
+            if (Files.exists(playerModelPath)) data = (byte) (data | 2);
+            if (Files.exists(texturePath)) data = (byte) (data | 4);
+            if (Files.exists(scriptPath)) data = (byte) (data | 8);
             if (Files.exists(renderLayersPath)) data = (byte) (data | 16);
-            if (Files.exists(soundsPath))       data = (byte) (data | 32);
+            if (Files.exists(soundsPath)) data = (byte) (data | 32);
 
             //add to hash map
             avatarPaths.put("model", modelPath);
@@ -213,37 +209,6 @@ public class LocalPlayerData extends PlayerData {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    private void loadCustomSounds(Path sounds, boolean isZip, ZipFile zip, File modelFile) {
-
-        try {
-            JsonElement soundsJson;
-            if (isZip) {
-                soundsJson = new JsonParser().parse(new InputStreamReader(zip.getInputStream(zip.getEntry("sounds.json"))));
-            } else {
-                soundsJson = new JsonParser().parse(new FileReader(sounds.toFile()));
-            }
-
-            JsonArray soundsArray = soundsJson.getAsJsonArray();
-
-            Function<String, InputStream> fileGetter = maybeReadZip(isZip ? zip : modelFile);
-            soundsArray.forEach(entry -> {
-                String name = entry.getAsString();
-                assert fileGetter != null;
-                InputStream str = fileGetter.get("sounds/"+name+".ogg");
-                try {
-                    SoundAPI.registerCustomSound(script, name, str.readAllBytes(), false);
-                } catch (Exception ignored) {}
-            });
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
     }
 
     public void loadModel(boolean model, HashMap<String, Path> paths, boolean isZip, ZipFile modelZip) {
@@ -413,6 +378,31 @@ public class LocalPlayerData extends PlayerData {
         }
     }
 
+    public void loadCustomSounds(Path sounds, boolean isZip, ZipFile zip, File modelFile) {
+        try {
+            JsonElement soundsJson;
+            if (isZip)
+                soundsJson = new JsonParser().parse(new InputStreamReader(zip.getInputStream(zip.getEntry("sounds.json"))));
+            else
+                soundsJson = new JsonParser().parse(new FileReader(sounds.toFile()));
+
+            JsonArray soundsArray = soundsJson.getAsJsonArray();
+            soundsArray.forEach(entry -> {
+                String name = entry.getAsString();
+                String path = "sounds/" + name + ".ogg";
+                try {
+                    InputStream str = isZip ? zip.getInputStream(zip.getEntry(path)) : new FileInputStream(modelFile.toPath().resolve(path).toFile());
+                    FiguraSoundManager.registerCustomSound(script, name, str.readAllBytes(), false);
+                } catch (Exception ignored) {
+                    FiguraMod.LOGGER.error("failed to load custom song \"" + path + "\"");
+                }
+            });
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     public void loadExtraTextures(File file, boolean isZip, ZipFile modelZip) {
         try {
             InputStream inputStream = null;
@@ -497,35 +487,10 @@ public class LocalPlayerData extends PlayerData {
         if (doReload) reloadAvatar();
     }
 
-    public static Function<String, InputStream> maybeReadZip(Object source) {
-        if (source instanceof ZipFile zf) {
-            return (str) -> {
-                try {
-                    return zf.getInputStream(zf.getEntry((String)str));
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            };
-        } else if (source instanceof File p) {
-            return (str) -> {
-                try {
-                    Path pp = p.toPath().resolve((String)str);
-                    System.out.printf("READING: %s\n", pp.toString());
-                    return new FileInputStream(pp.toFile());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            };
-        }
-        return null;
-    }
-
     public void reloadAvatar() {
         watchKeys.clear();
 
-        this.cleanup();
+        super.clearSounds();
         PlayerDataManager.lastLoadedFileName = loadedName;
         loadModelFile(loadedPath);
         isLocalAvatar = true;

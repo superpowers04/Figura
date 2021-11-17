@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.sound;
+package net.blancworks.figura.models.sounds;
 
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.SourceManagerAccessor;
@@ -25,7 +25,7 @@ public class FiguraChannel extends Channel {
     private boolean stopAllSounds = false;
 
     public FiguraChannel() {
-        super(SoundAPI.getSoundEngine(), Runnable::run);
+        super(FiguraSoundManager.getSoundEngine(), Runnable::run);
     }
 
     public Set<SourceManager> getSourceManagers() {
@@ -115,5 +115,4 @@ public class FiguraChannel extends Channel {
     public void stopAllSounds() {
         stopAllSounds = true;
     }
-
 }

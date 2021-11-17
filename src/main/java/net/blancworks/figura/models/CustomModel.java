@@ -6,7 +6,6 @@ import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
@@ -15,15 +14,12 @@ import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.sound.SoundInstance;
-import net.minecraft.client.sound.StaticSound;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
-import org.apache.logging.log4j.CloseableThreadContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -232,9 +228,5 @@ public class CustomModel extends FiguraAsset {
 
         for (CustomModelPart child : part.children)
             sortPart(child);
-    }
-
-    public void cleanup() {
-
     }
 }
