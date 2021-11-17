@@ -59,6 +59,9 @@ public class PingsAPI {
                 //get ping ID from the function
                 short id = targetScript.newFunctionIDMap.inverse().get(func);
 
+                //local ping is handled immediately
+                targetScript.handlePing(id, arg);
+
                 //add outgoing ping
                 CustomScript.LuaPing lp = new CustomScript.LuaPing();
                 lp.args = arg;
@@ -66,13 +69,12 @@ public class PingsAPI {
 
                 if (!targetScript.playerData.isLocalAvatar)
                     targetScript.outgoingPingQueue.add(lp);
-
-                //local ping is handled immediately
-                return this.func.call(arg);
             } catch (Exception e) {
                 e.printStackTrace();
-                throw new LuaError("Failed to send ping! Make sure the ping function is defined before sending it!");
+                throw new LuaError("Failed to send ping!");
             }
+
+            return NIL;
         }
 
         @Override
