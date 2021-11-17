@@ -18,6 +18,7 @@ public abstract class RenderTask {
     public final Vec3f pos;
     public final Vec3f rot;
     public final Vec3f scale;
+    private static FiguraRenderLayer storedOverride;
 
     protected RenderTask(boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {
         this.emissive = emissive;
@@ -34,6 +35,19 @@ public abstract class RenderTask {
         matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
         matrices.translate(pos.getX() / 16f, pos.getY() / 16f, pos.getZ() / 16f);
         matrices.scale(scale.getX(), scale.getY(), scale.getZ());
+    }
+
+    public static void renderLayerOverride(VertexConsumerProvider vcp, FiguraRenderLayer override) {
+        if (vcp instanceof FiguraVertexConsumerProvider) {
+            storedOverride = ((FiguraVertexConsumerProvider) vcp).overrideLayer;
+            ((FiguraVertexConsumerProvider) vcp).overrideLayer = override;
+        }
+    }
+
+    public static void resetOverride(VertexConsumerProvider vcp) {
+        if (vcp instanceof FiguraVertexConsumerProvider) {
+            ((FiguraVertexConsumerProvider) vcp).overrideLayer = storedOverride;
+        }
     }
 
     public static class ItemRenderTask extends RenderTask {
@@ -116,20 +130,6 @@ public abstract class RenderTask {
 
             matrices.pop();
             return instructions;
-        }
-    }
-
-    static FiguraRenderLayer storedOverride;
-    public static void renderLayerOverride(VertexConsumerProvider vcp, FiguraRenderLayer override) {
-        if (vcp instanceof FiguraVertexConsumerProvider) {
-            storedOverride = ((FiguraVertexConsumerProvider) vcp).overrideLayer;
-            ((FiguraVertexConsumerProvider) vcp).overrideLayer = override;
-        }
-    }
-
-    public static void resetOverride(VertexConsumerProvider vcp) {
-        if (vcp instanceof FiguraVertexConsumerProvider) {
-            ((FiguraVertexConsumerProvider) vcp).overrideLayer = storedOverride;
         }
     }
 }

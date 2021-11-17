@@ -2,7 +2,6 @@ package net.blancworks.figura.lua.api.renderer;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
@@ -10,18 +9,17 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
-import net.blancworks.figura.lua.api.renderer.RenderTask.*;
-import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
+import net.blancworks.figura.lua.api.renderer.RenderTask.BlockRenderTask;
+import net.blancworks.figura.lua.api.renderer.RenderTask.ItemRenderTask;
+import net.blancworks.figura.lua.api.renderer.RenderTask.TextRenderTask;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.model.json.ModelTransformation;
-import net.minecraft.command.argument.BlockStateArgumentType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -104,7 +102,6 @@ public class RendererAPI {
             set("renderItem", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-
                     ItemStack stack = ItemStackAPI.checkItemStack(args.arg(1));
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
@@ -163,7 +160,10 @@ public class RendererAPI {
             set("renderBlock", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-                    BlockState state = BlockStateAPI.checkState(args.arg(1));
+                    BlockState state = (BlockState) args.arg(1).get("state").touserdata(BlockState.class);
+                    if (state == null)
+                        throw new LuaError("Not a BlockState table!");
+
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
                     Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
