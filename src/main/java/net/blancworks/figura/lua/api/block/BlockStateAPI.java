@@ -17,6 +17,7 @@ import net.minecraft.tag.BlockTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaError;
@@ -37,19 +38,18 @@ public class BlockStateAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-
             set("createBlock", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     try {
                         BlockState block = BlockStateArgumentType.blockState().parse(new StringReader(arg1.checkjstring())).getBlockState();
-                        return getTable(block, MinecraftClient.getInstance().world, LuaVector.checkOrNew(arg2).asBlockPos());
+                        BlockPos pos = arg2.isnil() ? ((LuaVector) LuaVector.of(Vec3f.ZERO)).asBlockPos() : LuaVector.checkOrNew(arg2).asBlockPos();
+                        return getTable(block, MinecraftClient.getInstance().world, pos);
                     } catch (CommandSyntaxException e) {
                         throw new LuaError("Could not create blockstate\n" + e.getMessage());
                     }
                 }
             });
-
         }});
     }
 
