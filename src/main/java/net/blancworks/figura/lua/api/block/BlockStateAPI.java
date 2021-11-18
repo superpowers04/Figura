@@ -41,13 +41,9 @@ public class BlockStateAPI {
             set("createBlock", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    try {
-                        BlockState block = BlockStateArgumentType.blockState().parse(new StringReader(arg1.checkjstring())).getBlockState();
-                        BlockPos pos = arg2.isnil() ? ((LuaVector) LuaVector.of(Vec3f.ZERO)).asBlockPos() : LuaVector.checkOrNew(arg2).asBlockPos();
-                        return getTable(block, MinecraftClient.getInstance().world, pos);
-                    } catch (CommandSyntaxException e) {
-                        throw new LuaError("Could not create block state\n" + e.getMessage());
-                    }
+                    BlockState block = checkOrCreateBlockState(arg1);
+                    BlockPos pos = arg2.isnil() ? ((LuaVector) LuaVector.of(Vec3f.ZERO)).asBlockPos() : LuaVector.checkOrNew(arg2).asBlockPos();
+                    return getTable(block, MinecraftClient.getInstance().world, pos);
                 }
             });
         }});

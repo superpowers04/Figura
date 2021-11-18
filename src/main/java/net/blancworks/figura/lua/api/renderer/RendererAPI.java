@@ -136,6 +136,9 @@ public class RendererAPI {
             set("renderItem", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
+                    if (script.renderMode == CustomScript.RenderType.WORLD_RENDER)
+                        throw new LuaError("Cannot render item on world render!");
+
                     ItemStack stack = ItemStackAPI.checkOrCreateItemStack(args.arg(1));
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
@@ -161,6 +164,9 @@ public class RendererAPI {
             set("renderBlock", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
+                    if (script.renderMode == CustomScript.RenderType.WORLD_RENDER)
+                        throw new LuaError("Cannot render block on world render!");
+
                     BlockState state = BlockStateAPI.checkOrCreateBlockState(args.arg(1));
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
@@ -184,6 +190,9 @@ public class RendererAPI {
             set("renderText", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
+                    if (script.renderMode == CustomScript.RenderType.WORLD_RENDER)
+                        throw new LuaError("Cannot render text on world render!");
+
                     String arg1 = TextUtils.noBadges4U(args.arg(1).checkjstring()).replaceAll("[\n\r]", " ");
 
                     if (arg1.length() > 65535)

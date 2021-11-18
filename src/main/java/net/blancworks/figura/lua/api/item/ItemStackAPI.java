@@ -16,6 +16,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ItemStackAPI {
@@ -26,19 +27,14 @@ public class ItemStackAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-
-            set("createItem", new OneArgFunction() {
+            set("createItem", new TwoArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1) {
-                    try {
-                        ItemStack item = ItemStackArgumentType.itemStack().parse(new StringReader(arg1.checkjstring())).createStack(1, false);
-                        return getTable(item);
-                    } catch (CommandSyntaxException e) {
-                        throw new LuaError("Could not create item stack\n" + e.getMessage());
-                    }
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    ItemStack item = checkOrCreateItemStack(arg1);
+                    if (!arg2.isnil()) setItemNbt(item, arg2.checkjstring());
+                    return getTable(item);
                 }
             });
-
         }});
     }
 
