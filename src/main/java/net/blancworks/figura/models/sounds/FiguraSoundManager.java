@@ -11,13 +11,16 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
 public class FiguraSoundManager {
-    public static FiguraChannel figuraChannel;
+    private static FiguraChannel figuraChannel;
 
-    public static void tick() {
+    public static FiguraChannel getChannel() {
         if (figuraChannel == null)
             figuraChannel = new FiguraChannel();
+        return figuraChannel;
+    }
 
-        figuraChannel.tick();
+    public static void tick() {
+        if (figuraChannel != null) figuraChannel.tick();
     }
 
     public static SoundEngine getSoundEngine() {
@@ -30,7 +33,8 @@ public class FiguraSoundManager {
 
     public static void registerCustomSound(CustomScript script, String name, byte[] source, boolean local) {
         try {
-            FiguraMod.LOGGER.info(String.format("Registered custom sound: \"%s\"\n", name));
+            FiguraMod.LOGGER.info(String.format("\"%s\" registered custom sound: \"%s\"\n", script.playerData.playerName.getString(), name));
+
             OggAudioStream oggAudioStream = new OggAudioStream(new ByteArrayInputStream(source));
             StaticSound sound = new StaticSound(oggAudioStream.getBuffer(), oggAudioStream.getFormat());
             script.customSounds.put(name, new FiguraSound(sound, name, source, local));

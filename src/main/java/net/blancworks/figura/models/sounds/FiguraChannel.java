@@ -7,13 +7,12 @@ import net.blancworks.figura.mixin.ChannelAccessorMixin;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
-import net.minecraft.client.sound.Channel;
-import net.minecraft.client.sound.SoundEngine;
-import net.minecraft.client.sound.Source;
+import net.minecraft.client.sound.*;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.Vec3d;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
+import org.lwjgl.openal.AL10;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -22,7 +21,7 @@ import static org.luaj.vm2.LuaValue.NIL;
 
 public class FiguraChannel extends Channel {
 
-    private final HashSet<UUID> playersToRemove = new HashSet<>();
+    private final HashSet<StopSoundRequest> stopSoundRequests = new HashSet<>();
     private boolean stopAllSounds = false;
 
     public FiguraChannel() {
@@ -33,11 +32,16 @@ public class FiguraChannel extends Channel {
         return ((ChannelAccessorMixin) this).getSources();
     }
 
-    public Source getSource(SourceManager sourceManager) {
+    public static Source getSource(SourceManager sourceManager) {
         return ((SourceManagerAccessor) sourceManager).getSource();
     }
-    public UUID getSourceOwner(SourceManager sourceManager) {
+
+    public static UUID getSourceOwner(SourceManager sourceManager) {
         return ((SourceManagerAccessor) sourceManager).getOwner();
+    }
+
+    public static String getSourceName(SourceManager sourceManager) {
+        return ((SourceManagerAccessor) sourceManager).getName();
     }
 
     @Override
@@ -54,8 +58,7 @@ public class FiguraChannel extends Channel {
             SourceManager sourceManager = iterator.next();
             Source src = getSource(sourceManager);
 
-            UUID owner = getSourceOwner(sourceManager);
-            boolean removePlayer = playersToRemove.contains(owner);
+            boolean removePlayer = stopSoundRequests.stream().anyMatch(req -> req.shouldStop(sourceManager));
             if (src == null || removePlayer || stopAllSounds) {
                 managersToRemove.add(sourceManager);
                 if (src != null) {
@@ -76,7 +79,7 @@ public class FiguraChannel extends Channel {
 
         managersToRemove.forEach(sources::remove);
         managersToRemove.clear();
-        playersToRemove.clear();
+        stopSoundRequests.clear();
     }
 
     public CompletableFuture<SourceManager> createSource(PlayerData soundOwner, String name, SoundEngine.RunMode mode) {
@@ -111,11 +114,44 @@ public class FiguraChannel extends Channel {
         return NIL;
     }
 
-    public void stopForPlayer(UUID id) {
-        playersToRemove.add(id);
-    }
-
     public void stopAllSounds() {
         stopAllSounds = true;
+        stopSoundRequests.clear();
+    }
+
+    public void stopSound(String soundName, UUID ownerId) {
+        stopSoundRequests.add(new StopSoundRequest(soundName, ownerId));
+    }
+
+    public void stopSound(String soundName) {
+        stopSoundRequests.add(new StopSoundRequest(soundName));
+    }
+
+    public void stopSound(UUID ownerId) {
+        stopSoundRequests.add(new StopSoundRequest(ownerId));
+    }
+
+    protected class StopSoundRequest {
+        private final String soundName;
+        private final UUID ownerId;
+
+        public StopSoundRequest(String soundName) {
+            this(soundName, null);
+        }
+
+        public StopSoundRequest(UUID ownerId) {
+            this(null, ownerId);
+        }
+
+        public StopSoundRequest(String soundName, UUID ownerId) {
+            this.soundName = soundName;
+            this.ownerId = ownerId;
+        }
+
+        protected boolean shouldStop(SourceManager sourceManager) {
+            boolean a = ownerId   != null && getSourceOwner(sourceManager).equals(ownerId);
+            boolean b = soundName != null && getSourceName(sourceManager).equals(soundName);
+            return a && b;
+        }
     }
 }

@@ -185,7 +185,7 @@ public final class PlayerDataManager {
     }
 
     public static void clearCache() {
-        LOADED_PLAYER_DATA.keySet().forEach(FiguraSoundManager.figuraChannel::stopForPlayer);
+        LOADED_PLAYER_DATA.keySet().forEach(FiguraSoundManager.getChannel()::stopSound);
         LOADED_PLAYER_DATA.clear();
         localPlayer = null;
         didInitLocalPlayer = false;
