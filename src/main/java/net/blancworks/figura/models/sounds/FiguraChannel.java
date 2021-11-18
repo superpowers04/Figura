@@ -4,6 +4,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.SourceManagerAccessor;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.mixin.ChannelAccessorMixin;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.sound.Channel;
@@ -90,6 +91,8 @@ public class FiguraChannel extends Channel {
     }
 
     public LuaValue playCustomSound(CustomScript script, String soundName, Vec3d pos, float pitch, float volume) {
+        if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0) return NIL;
+
         FiguraSound sound = script.customSounds.get(soundName);
         if (sound == null) {
             throw new LuaError("Custom sound \"" + soundName + "\" is not defined, or cannot be empty!");

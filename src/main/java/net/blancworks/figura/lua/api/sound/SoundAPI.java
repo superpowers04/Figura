@@ -73,8 +73,9 @@ public class SoundAPI {
             set("registerCustomSound", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    byte[] bytes;
+                    if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0) return NIL;
 
+                    byte[] bytes;
                     if (arg2.istable()) {
                         LuaTable bufTable = arg2.checktable();
                         bytes = new byte[bufTable.length()];
@@ -138,6 +139,13 @@ public class SoundAPI {
                 }
             });
 
+            set("stopCustomSound", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    //script.playerData.playerId arg.checkjstring();
+                    return NIL;
+                }
+            });
         }});
     }
 

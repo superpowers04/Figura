@@ -6,6 +6,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
@@ -99,31 +100,6 @@ public class RendererAPI {
                 }
             });
 
-            set("renderItem", new VarArgFunction() {
-                @Override
-                public Varargs onInvoke(Varargs args) {
-                    ItemStack stack = ItemStackAPI.checkItemStack(args.arg(1));
-                    CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
-                    ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
-                    boolean emissive = !args.arg(4).isnil() && args.arg(4).checkboolean();
-                    Vec3f pos = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
-                    Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
-
-                    FiguraRenderLayer customLayer = null;
-                    if (!args.arg(8).isnil()) {
-                        if (script.playerData.customVCP != null) {
-                            customLayer = script.playerData.customVCP.getRenderLayer(args.arg(8).checkjstring());
-                        } else
-                            throw new LuaError("The player has no custom VCP!");
-                    }
-
-                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale, customLayer));
-
-                    return NIL;
-                }
-            });
-
             set("setUniform", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue layerName, LuaValue uniformName, LuaValue value) {
@@ -157,13 +133,35 @@ public class RendererAPI {
                 }
             });
 
+            set("renderItem", new VarArgFunction() {
+                @Override
+                public Varargs onInvoke(Varargs args) {
+                    ItemStack stack = ItemStackAPI.checkOrCreateItemStack(args.arg(1));
+                    CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
+                    ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
+                    boolean emissive = !args.arg(4).isnil() && args.arg(4).checkboolean();
+                    Vec3f pos = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vec3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                    Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
+
+                    FiguraRenderLayer customLayer = null;
+                    if (!args.arg(8).isnil()) {
+                        if (script.playerData.customVCP != null) {
+                            customLayer = script.playerData.customVCP.getRenderLayer(args.arg(8).checkjstring());
+                        } else
+                            throw new LuaError("The player has no custom VCP!");
+                    }
+
+                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale, customLayer));
+
+                    return NIL;
+                }
+            });
+
             set("renderBlock", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-                    BlockState state = (BlockState) args.arg(1).get("state").touserdata(BlockState.class);
-                    if (state == null)
-                        throw new LuaError("Not a BlockState table!");
-
+                    BlockState state = BlockStateAPI.checkOrCreateBlockState(args.arg(1));
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
                     Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();

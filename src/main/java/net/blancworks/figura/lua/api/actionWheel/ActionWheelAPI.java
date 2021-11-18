@@ -7,11 +7,9 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
-import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -139,11 +137,7 @@ public class ActionWheelAPI {
                         return NIL;
                     }
 
-                    ItemStack item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
-                    if (item == null)
-                        throw new LuaError("Not a ItemStack table!");
-
-                    targetScript.getOrMakeActionWheelCustomization(accessor).item = item;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).item = ItemStackAPI.checkOrCreateItemStack(arg1);
                     return NIL;
                 }
             });
@@ -163,11 +157,7 @@ public class ActionWheelAPI {
                         return NIL;
                     }
 
-                    ItemStack hoverItem = (ItemStack) arg.get("stack").touserdata(ItemStack.class);
-                    if (hoverItem == null)
-                        throw new LuaError("Not a ItemStack table!");
-
-                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = hoverItem;
+                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = ItemStackAPI.checkOrCreateItemStack(arg);
                     return NIL;
                 }
             });

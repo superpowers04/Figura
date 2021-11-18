@@ -26,10 +26,10 @@ import java.util.HashMap;
 
 public class CustomModel extends FiguraAsset {
     public PlayerData owner;
-    public ArrayList<CustomModelPart> allParts = new ArrayList<>();
     public NbtCompound modelNbt = new NbtCompound();
 
-    public HashMap<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new HashMap<>();
+    public final ArrayList<CustomModelPart> allParts = new ArrayList<>();
+    public final HashMap<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new HashMap<>();
 
     public Vec2f defaultTextureSize = new Vec2f(0f, 0f);
 
@@ -46,8 +46,10 @@ public class CustomModel extends FiguraAsset {
     public HashMap<Identifier, VanillaModelPartCustomization> originModifications = new HashMap<>();
 
     public ArrayList<CustomModelPart> getSpecialParts(CustomModelPart.ParentType type) {
-        ArrayList<CustomModelPart> list = specialParts.get(type);
-        return list == null ? new ArrayList<>() : list;
+        synchronized (specialParts) {
+            ArrayList<CustomModelPart> list = specialParts.get(type);
+            return list == null ? new ArrayList<>() : list;
+        }
     }
 
     public void removeSpecialPart(CustomModelPart part) {
@@ -64,8 +66,10 @@ public class CustomModel extends FiguraAsset {
         lastComplexity = 0;
 
         try {
-            for (CustomModelPart part : new ArrayList<>(this.allParts)) {
-                lastComplexity += part.getComplexity();
+            synchronized (this.allParts) {
+                for (CustomModelPart part : this.allParts) {
+                    lastComplexity += part.getComplexity();
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -92,36 +96,38 @@ public class CustomModel extends FiguraAsset {
         if (owner.script != null)
             owner.script.render(FiguraMod.deltaTime);
 
-        for (CustomModelPart part : new ArrayList<>(this.allParts)) {
-            if (part.isSpecial() || !part.visible)
-                continue;
+        synchronized (this.allParts) {
+            for (CustomModelPart part : this.allParts) {
+                if (part.isSpecial() || !part.visible)
+                    continue;
 
-            matrices.push();
+                matrices.push();
 
-            try {
-                if (entity_model instanceof PlayerEntityModel player_model) {
-                    player_model.setVisible(false);
+                try {
+                    if (entity_model instanceof PlayerEntityModel player_model) {
+                        player_model.setVisible(false);
+                    }
+
+                    //By default, use blockbench rotation.
+                    part.rotationType = CustomModelPart.RotationType.BlockBench;
+
+                    //render only heads in spectator
+                    if (owner.lastEntity != null && owner.lastEntity.isSpectator())
+                        renderOnly = CustomModelPart.ParentType.Head;
+
+                    //hitboxes :p
+                    CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+
+                    leftToRender = part.render(owner, matrices, transformStack, vcp, light, overlay, alpha);
+                    lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
+
+                    CustomModelPart.canRenderHitBox = false;
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
 
-                //By default, use blockbench rotation.
-                part.rotationType = CustomModelPart.RotationType.BlockBench;
-
-                //render only heads in spectator
-                if (owner.lastEntity != null && owner.lastEntity.isSpectator())
-                    renderOnly = CustomModelPart.ParentType.Head;
-
-                //hitboxes :p
-                CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
-
-                leftToRender = part.render(owner, matrices, transformStack, vcp, light, overlay, alpha);
-                lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
-
-                CustomModelPart.canRenderHitBox = false;
-            } catch (Exception e) {
-                e.printStackTrace();
+                matrices.pop();
             }
-
-            matrices.pop();
         }
     }
 
@@ -133,16 +139,18 @@ public class CustomModel extends FiguraAsset {
         int prevCount = playerData.model.leftToRender;
         playerData.model.leftToRender = Integer.MAX_VALUE - 100;
 
-        //applyHiddenTransforms = !(boolean) Config.FIX_FIRST_PERSON_HANDS.value;
-        for (CustomModelPart part : new ArrayList<>(playerData.model.allParts)) {
-            if (arm == model.rightArm)
-                renderOnly = CustomModelPart.ParentType.RightArm;
-            else if (arm == model.leftArm)
-                renderOnly = CustomModelPart.ParentType.LeftArm;
+        synchronized (playerData.model.allParts) {
+            //applyHiddenTransforms = !(boolean) Config.FIX_FIRST_PERSON_HANDS.value;
+            for (CustomModelPart part : playerData.model.allParts) {
+                if (arm == model.rightArm)
+                    renderOnly = CustomModelPart.ParentType.RightArm;
+                else if (arm == model.leftArm)
+                    renderOnly = CustomModelPart.ParentType.LeftArm;
 
-            playerData.model.leftToRender = part.render(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+                playerData.model.leftToRender = part.render(playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+            }
+            //applyHiddenTransforms = true;
         }
-        //applyHiddenTransforms = true;
 
         playerData.model.leftToRender = prevCount;
     }
@@ -150,7 +158,7 @@ public class CustomModel extends FiguraAsset {
     public boolean renderSkull(PlayerData data, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
         data.model.leftToRender = getMaxRenderAmount();
 
-        ArrayList<CustomModelPart> skullParts = new ArrayList<>(data.model.getSpecialParts(CustomModelPart.ParentType.Skull));
+        ArrayList<CustomModelPart> skullParts = data.model.getSpecialParts(CustomModelPart.ParentType.Skull);
         if (!skullParts.isEmpty()) {
             for (CustomModelPart modelPart : skullParts) {
                 data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
@@ -162,15 +170,17 @@ public class CustomModel extends FiguraAsset {
             return true;
         }
         else {
-            applyHiddenTransforms = false;
-            for (CustomModelPart modelPart : new ArrayList<>(data.model.allParts)) {
-                renderOnly = CustomModelPart.ParentType.Head;
-                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+            synchronized (this.allParts) {
+                applyHiddenTransforms = false;
+                for (CustomModelPart modelPart : data.model.allParts) {
+                    renderOnly = CustomModelPart.ParentType.Head;
+                    data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
-                if (data.model.leftToRender <= 0)
-                    break;
+                    if (data.model.leftToRender <= 0)
+                        break;
+                }
+                applyHiddenTransforms = true;
             }
-            applyHiddenTransforms = true;
 
             if (data.script != null) {
                 VanillaModelPartCustomization customization = data.script.allCustomizations.get(VanillaModelAPI.VANILLA_HEAD);
@@ -187,7 +197,7 @@ public class CustomModel extends FiguraAsset {
 
         CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-        for (CustomModelPart part : new ArrayList<>(data.model.getSpecialParts(CustomModelPart.ParentType.WORLD))) {
+        for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
             data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
         }
 
@@ -218,8 +228,10 @@ public class CustomModel extends FiguraAsset {
     public void sortAllParts() {
         specialParts.clear();
 
-        for (CustomModelPart part : allParts)
-            sortPart(part);
+        synchronized (this.allParts) {
+            for (CustomModelPart part : this.allParts)
+                sortPart(part);
+        }
     }
 
     public void sortPart(CustomModelPart part) {

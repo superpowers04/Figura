@@ -46,7 +46,7 @@ public class BlockStateAPI {
                         BlockPos pos = arg2.isnil() ? ((LuaVector) LuaVector.of(Vec3f.ZERO)).asBlockPos() : LuaVector.checkOrNew(arg2).asBlockPos();
                         return getTable(block, MinecraftClient.getInstance().world, pos);
                     } catch (CommandSyntaxException e) {
-                        throw new LuaError("Could not create blockstate\n" + e.getMessage());
+                        throw new LuaError("Could not create block state\n" + e.getMessage());
                     }
                 }
             });
@@ -55,16 +55,6 @@ public class BlockStateAPI {
 
     public static ReadOnlyLuaTable getTable(BlockState state, World world, BlockPos pos) {
         return new BlockStateTable(state, world, pos).getTable();
-    }
-
-    private static LuaValue voxelShapeToTable(VoxelShape shape) {
-        ReadOnlyLuaTable shapes = new ReadOnlyLuaTable();
-        List<Box> boxes = shape.getBoundingBoxes();
-        for (int i = 0; i < boxes.size(); i++) {
-            Box box = boxes.get(i);
-            shapes.javaRawSet(i+1, new LuaVector((float)box.minX,(float)box.minY,(float)box.minZ,(float)box.maxX,(float)box.maxY,(float)box.maxZ));
-        }
-        return shapes;
     }
 
     private static class BlockStateTable extends ReadOnlyLuaTable {
@@ -275,5 +265,28 @@ public class BlockStateAPI {
 
             return tbl;
         }
+    }
+
+    private static LuaValue voxelShapeToTable(VoxelShape shape) {
+        ReadOnlyLuaTable shapes = new ReadOnlyLuaTable();
+        List<Box> boxes = shape.getBoundingBoxes();
+        for (int i = 0; i < boxes.size(); i++) {
+            Box box = boxes.get(i);
+            shapes.javaRawSet(i + 1, new LuaVector((float) box.minX, (float) box.minY, (float) box.minZ, (float) box.maxX, (float) box.maxY, (float) box.maxZ));
+        }
+        return shapes;
+    }
+
+    public static BlockState checkOrCreateBlockState(LuaValue arg1) {
+        BlockState block = (BlockState) arg1.get("state").touserdata(BlockState.class);
+        if (block == null) {
+            try {
+                return BlockStateArgumentType.blockState().parse(new StringReader(arg1.checkjstring())).getBlockState();
+            } catch (CommandSyntaxException e) {
+                throw new LuaError("Could not create block state\n" + e.getMessage());
+            }
+        }
+
+        return block;
     }
 }

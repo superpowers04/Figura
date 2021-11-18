@@ -325,20 +325,17 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
             //field
             Text fieldText;
-            if (inputType == InputTypes.HEX_COLOR) {
-                String hex = Integer.toHexString((int) config.configValue);
-                hex = "0".repeat(6 - hex.length()) + hex;
-                fieldText = new LiteralText("#" + hex);
-            } else {
+            if (inputType == InputTypes.HEX_COLOR)
+                fieldText = new LiteralText(String.format("#%06X", config.configValue));
+            else
                 fieldText = new LiteralText(config.configValue + "");
-            }
 
             this.field = new TextFieldWidget(ConfigListWidget.this.client.textRenderer, 0, 0, 70, 16, fieldText);
             this.field.setChangedListener((text) -> {
                 // Only write config value if it's valid
                 if (inputType.validator.test(text)) {
                     if (inputType == InputTypes.HEX_COLOR)
-                        config.configValue = parseHex(text);
+                        config.configValue = hexToInt(text);
                     else
                         config.configValue = text;
                 }
@@ -350,7 +347,10 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {
                 config.configValue = config.defaultValue;
-                this.field.setText(config.configValue + "");
+                if (inputType == InputTypes.HEX_COLOR)
+                    this.field.setText(String.format("#%06X", config.configValue));
+                else
+                    this.field.setText(config.configValue + "");
             });
         }
 
@@ -391,7 +391,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
             if (!this.config.configValue.equals(this.initValue + ""))
                 if (this.inputType == InputTypes.HEX_COLOR)
-                    color = parseHex(this.field.getText());
+                    color = hexToInt(this.field.getText());
                 else
                     color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
 
@@ -442,7 +442,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return this.field.charTyped(chr, modifiers);
         }
 
-        public static int parseHex(String hexString) {
+        public static int hexToInt(String hexString) {
             //parse hex color
             StringBuilder hex = new StringBuilder(hexString);
 
@@ -460,7 +460,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             try {
                 return Integer.parseInt(hex.toString(), 16);
             } catch (Exception ignored) {
-                return 0xFF5555;
+                return ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
             }
         }
     }

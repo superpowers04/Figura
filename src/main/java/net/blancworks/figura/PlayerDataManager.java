@@ -34,13 +34,6 @@ public final class PlayerDataManager {
     public static String lastLoadedFileName;
 
     public static PlayerData getDataForPlayer(UUID id) {
-        try {
-            if (TO_CLEAR.remove(id))
-                LOADED_PLAYER_DATA.remove(id);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
         if (OFFLINE_SWAP_DATA.containsKey(id)) {
             PlayerData data = LOADED_PLAYER_DATA.get(OFFLINE_SWAP_DATA.get(id));
             if (data != null) {
@@ -86,15 +79,16 @@ public final class PlayerDataManager {
                 PlayerListEntry playerEntry = client.getNetworkHandler().getPlayerListEntry(id);
                 if (playerEntry != null && playerEntry.getProfile() != null) {
                     String name = playerEntry.getProfile().getName();
+                    if (!name.isBlank()) {
+                        GameProfile gameProfile = new GameProfile(null, name);
+                        SkullBlockEntity.loadProperties(gameProfile, profile -> {
+                            UUID profileID = profile.getId();
+                            if (id.compareTo(profileID) == 0) return;
 
-                    GameProfile gameProfile = new GameProfile(null, name);
-                    SkullBlockEntity.loadProperties(gameProfile, profile -> {
-                        UUID profileID = profile.getId();
-                        if (id.compareTo(profileID) == 0) return;
-
-                        getPlayerAvatarFromServerOrCache(profileID, getData);
-                        OFFLINE_SWAP_DATA.put(id, profileID);
-                    });
+                            getPlayerAvatarFromServerOrCache(profileID, getData);
+                            OFFLINE_SWAP_DATA.put(id, profileID);
+                        });
+                    }
                 }
             }
 
@@ -221,13 +215,17 @@ public final class PlayerDataManager {
         if (MinecraftClient.getInstance().world == null)
             return;
 
-        for (UUID uuid : TO_CLEAR) {
-            getDataForPlayer(uuid).clearData();
-            LOADED_PLAYER_DATA.remove(uuid);
+        synchronized(TO_CLEAR) {
+            TO_CLEAR.forEach(uuid -> {
+                getDataForPlayer(uuid).clearData();
+                LOADED_PLAYER_DATA.remove(uuid);
+            });
+            TO_CLEAR.clear();
         }
-        TO_CLEAR.clear();
 
-        LOADED_PLAYER_DATA.values().forEach(PlayerData::tick);
+        synchronized(LOADED_PLAYER_DATA) {
+            LOADED_PLAYER_DATA.values().forEach(PlayerData::tick);
+        }
     }
 
     //Reloads all textures, used for asset reloads in vanilla.
