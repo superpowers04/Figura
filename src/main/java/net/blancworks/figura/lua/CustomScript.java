@@ -927,7 +927,7 @@ public class CustomScript extends FiguraAsset {
     //--Misc--
     public void clearSounds() {
         if (playerData != null) {
-            FiguraSoundManager.figuraChannel.stopForPlayer(playerData.playerId);
+            FiguraSoundManager.getChannel().stopSound(playerData.playerId);
         }
 
         customSounds.values().forEach(FiguraSound::close);

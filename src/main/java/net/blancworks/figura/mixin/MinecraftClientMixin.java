@@ -44,7 +44,7 @@ public class MinecraftClientMixin {
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {
         try {
-            FiguraSoundManager.figuraChannel.stopAllSounds();
+            FiguraSoundManager.getChannel().stopAllSounds();
             PlayerDataManager.clearCache();
         } catch (Exception ignored) {}
     }

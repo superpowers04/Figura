@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.mixin.SoundManagerAccessorMixin;
 import net.blancworks.figura.mixin.SoundSystemAccessorMixin;
+import net.blancworks.figura.models.sounds.FiguraChannel;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
@@ -16,6 +17,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
+import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -92,6 +94,14 @@ public class SoundAPI {
                 }
             });
 
+            set("isCustomSoundRegistered", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    final String name = arg.checkjstring();
+                    return LuaBoolean.valueOf(script.customSounds.keySet().stream().anyMatch(str -> str.equals(name)));
+                }
+            });
+
             set("playCustomSound", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
@@ -100,7 +110,7 @@ public class SoundAPI {
                     script.soundSpawnCount++;
 
                     LuaVector pitchVol = LuaVector.checkOrNew(arg3);
-                    return FiguraSoundManager.figuraChannel.playCustomSound(script, arg1.checkjstring(), LuaVector.checkOrNew(arg2).asV3d(), pitchVol.x(), pitchVol.y());
+                    return FiguraSoundManager.getChannel().playCustomSound(script, arg1.checkjstring(), LuaVector.checkOrNew(arg2).asV3d(), pitchVol.x(), pitchVol.y());
                 }
             });
 
@@ -111,13 +121,13 @@ public class SoundAPI {
 
                     ReadOnlyLuaTable tbl = new ReadOnlyLuaTable();
                     int i = 1;
-                    for (Channel.SourceManager sourceManager : FiguraSoundManager.figuraChannel.getSourceManagers()) {
+                    for (Channel.SourceManager sourceManager : FiguraSoundManager.getChannel().getSourceManagers()) {
                         String soundName = ((SourceManagerAccessor)sourceManager).getName();
                         tbl.javaRawSet(i, LuaString.valueOf(soundName));
                         i++;
 
                         if (showUUIDs) {
-                            UUID owner = FiguraSoundManager.figuraChannel.getSourceOwner(sourceManager);
+                            UUID owner = FiguraChannel.getSourceOwner(sourceManager);
                             tbl.javaRawSet(i, LuaString.valueOf(owner.toString()));
                             i++;
                         }
@@ -142,7 +152,7 @@ public class SoundAPI {
             set("stopCustomSound", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    //script.playerData.playerId arg.checkjstring();
+                    FiguraSoundManager.getChannel().stopSound(arg.checkjstring(), script.playerData.playerId);
                     return NIL;
                 }
             });
