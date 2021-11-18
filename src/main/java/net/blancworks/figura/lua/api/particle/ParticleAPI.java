@@ -2,6 +2,8 @@ package net.blancworks.figura.lua.api.particle;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.block.BlockStateAPI;
+import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -60,16 +62,16 @@ public class ParticleAPI {
                             particle = new DustParticleEffect(color.asV3f(), color.w());
                         }
                         case "minecraft:falling_dust" -> {
-                            BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
-                            particle = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, blockState);
+                            BlockState state = BlockStateAPI.checkOrCreateBlockState(arg3);
+                            particle = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, state);
                         }
                         case "minecraft:block" -> {
-                            BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
-                            particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, blockState);
+                            BlockState state = BlockStateAPI.checkOrCreateBlockState(arg3);
+                            particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, state);
                         }
                         case "minecraft:item" -> {
-                            ItemStack itemStack = Registry.ITEM.get(Identifier.tryParse(arg3.checkjstring())).getDefaultStack();
-                            particle = new ItemStackParticleEffect(ParticleTypes.ITEM, itemStack);
+                            ItemStack stack = ItemStackAPI.checkOrCreateItemStack(arg3);
+                            particle = new ItemStackParticleEffect(ParticleTypes.ITEM, stack);
                         }
                         //4 argos
                         case "minecraft:dust_color_transition" -> {

@@ -124,6 +124,8 @@ public class CustomScript extends FiguraAsset {
 
     public HashMap<String, FiguraSound> customSounds = new HashMap<>();
 
+    public boolean allowPlayerTargeting = false;
+
     public static final UnaryOperator<Style> LUA_COLOR = (s) -> s.withColor(0x5555FF);
     public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").styled(LUA_COLOR));
 
@@ -332,14 +334,14 @@ public class CustomScript extends FiguraAsset {
         });
     }
 
-    public void onDamage(float amount) {
+    public void onDamage(float amount, DamageSource source) {
         if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
             return;
 
         queueTask(() -> {
             setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
             try {
-                allEvents.get("onDamage").call(LuaNumber.valueOf(amount));
+                allEvents.get("onDamage").call(LuaNumber.valueOf(amount), LuaString.valueOf(source.name));
             } catch (Exception error) {
                 handleError(error);
             }
@@ -442,6 +444,15 @@ public class CustomScript extends FiguraAsset {
             public LuaValue call(LuaValue arg1, LuaValue arg2) {
                 String key = arg1.checkjstring();
                 SHARED_VALUES.put(key, arg2);
+                return NIL;
+            }
+        });
+
+        //player targeting
+        scriptGlobals.set("setPlayerTargeting", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg) {
+                allowPlayerTargeting = arg.checkboolean();
                 return NIL;
             }
         });

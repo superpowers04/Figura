@@ -5,6 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundTag;
@@ -15,7 +16,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ItemStackAPI {
@@ -27,15 +27,15 @@ public class ItemStackAPI {
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
 
-            set("createItem", new TwoArgFunction() {
+            set("createItem", new OneArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    ItemStack item = Registry.ITEM.get(Identifier.tryParse(arg1.checkjstring())).getDefaultStack();
-
-                    if (!arg2.isnil())
-                        setItemNbt(item, arg2.checkjstring());
-
-                    return getTable(item);
+                public LuaValue call(LuaValue arg1) {
+                    try {
+                        ItemStack item = ItemStackArgumentType.itemStack().parse(new StringReader(arg1.checkjstring())).createStack(1, false);
+                        return getTable(item);
+                    } catch (CommandSyntaxException e) {
+                        throw new LuaError("Could not create item stack\n" + e.getMessage());
+                    }
                 }
             });
 
@@ -161,10 +161,15 @@ public class ItemStackAPI {
         }
     }
 
-    public static ItemStack checkItemStack(LuaValue arg1) {
+    public static ItemStack checkOrCreateItemStack(LuaValue arg1) {
         ItemStack item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
-        if (item == null)
-            throw new LuaError("Not a ItemStack table!");
+        if (item == null) {
+            try {
+                return  ItemStackArgumentType.itemStack().parse(new StringReader(arg1.checkjstring())).createStack(1, false);
+            } catch (CommandSyntaxException e) {
+                throw new LuaError("Could not create item stack\n" + e.getMessage());
+            }
+        }
 
         return item;
     }

@@ -9,6 +9,7 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
@@ -237,12 +238,13 @@ public class WorldAPI {
                 public LuaValue call() {
                     LuaTable playerList = new LuaTable();
 
-                    getWorld().getPlayers().forEach(entity -> {
+                    for (PlayerEntity entity : getWorld().getPlayers()) {
                         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
+                        if (data == null || data.script == null || !data.script.allowPlayerTargeting)
+                            continue;
 
-                        if (data != null && data.model != null)
-                            playerList.insert(0, new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> entity).getTable());
-                    });
+                        playerList.insert(0, new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> entity).getTable());
+                    }
 
                     return playerList;
                 }

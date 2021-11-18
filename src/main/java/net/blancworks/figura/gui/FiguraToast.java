@@ -29,13 +29,15 @@ public class FiguraToast implements Toast {
 
     @Override
     public Visibility draw(MatrixStack matrices, ToastManager manager, long startTime) {
+        long timeDiff = startTime - this.startTime;
+
         if (this.justUpdated) {
             this.startTime = startTime;
             this.justUpdated = false;
         }
 
         RenderSystem.setShaderTexture(0, TEXTURE);
-        DrawableHelper.drawTexture(matrices, 0, 0, 0f, cheese ? 32f : 0f, 160, 32, 160, 64);
+        DrawableHelper.drawTexture(matrices, 0, 0, 0f, cheese ? 0 : (int) ((timeDiff / (5000 / 24) % 4) + 1) * 32f, 160, 32, 160, 160);
 
         if (this.message == null) {
             manager.getGame().textRenderer.draw(matrices, this.title, 31f, 12f, 0xFFFFFF);
@@ -44,6 +46,6 @@ public class FiguraToast implements Toast {
             manager.getGame().textRenderer.draw(matrices, this.message, 31f, 18f, 0xFFFFFF);
         }
 
-        return startTime - this.startTime < 5000L ? Toast.Visibility.SHOW : Toast.Visibility.HIDE;
+        return timeDiff < 5000 ? Toast.Visibility.SHOW : Toast.Visibility.HIDE;
     }
 }
