@@ -388,7 +388,10 @@ public class PlayerData {
         nbt.getKeys().forEach(key -> FiguraSoundManager.registerCustomSound(script, key, nbt.getByteArray(key), false));
     }
 
-    public void clearSounds() {
-        if (script != null) script.clearSounds();
+    public void clearData() {
+        if (script != null) {
+            script.clearSounds();
+            script.clearPings();
+        }
     }
 }

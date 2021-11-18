@@ -142,32 +142,34 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         if (group.has("name")) {
             groupPart.name = group.get("name").getAsString();
             groupPart.parentType = CustomModelPart.ParentType.Model;
-            //Find parent type.
 
-            for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_MIMIC_TYPE_TAGS.entrySet()) {
-                if (groupPart.name.contains(entry.getKey())) {
-                    groupPart.isMimicMode = true;
-                    groupPart.parentType = entry.getValue();
-                    break;
-                }
-            }
-
-            //Only set group parent if not mimicking. We can't mimic and be parented.
-            if (!groupPart.isMimicMode) {
-                //Check for parent parts
-                for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_PARENT_TYPE_TAGS.entrySet()) {
+            if (!group.has("ignoreKeyword") || !group.get("ignoreKeyword").getAsBoolean()) {
+                //Find parent type.
+                for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_MIMIC_TYPE_TAGS.entrySet()) {
                     if (groupPart.name.contains(entry.getKey())) {
+                        groupPart.isMimicMode = true;
                         groupPart.parentType = entry.getValue();
                         break;
                     }
                 }
-                //Check for player model parts.
-                if (overrideAsPlayerModel) {
-                    for (Map.Entry<String, PlayerSkinRemap> entry : PLAYER_SKIN_REMAPS.entrySet()) {
+
+                //Only set group parent if not mimicking. We can't mimic and be parented.
+                if (!groupPart.isMimicMode) {
+                    //Check for parent parts
+                    for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_PARENT_TYPE_TAGS.entrySet()) {
                         if (groupPart.name.contains(entry.getKey())) {
-                            groupPart.parentType = entry.getValue().parentType;
-                            playerModelOffset = entry.getValue().offset.copy();
+                            groupPart.parentType = entry.getValue();
                             break;
+                        }
+                    }
+                    //Check for player model parts.
+                    if (overrideAsPlayerModel) {
+                        for (Map.Entry<String, PlayerSkinRemap> entry : PLAYER_SKIN_REMAPS.entrySet()) {
+                            if (groupPart.name.contains(entry.getKey())) {
+                                groupPart.parentType = entry.getValue().parentType;
+                                playerModelOffset = entry.getValue().offset.copy();
+                                break;
+                            }
                         }
                     }
                 }

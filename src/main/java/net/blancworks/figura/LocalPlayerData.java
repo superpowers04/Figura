@@ -490,7 +490,7 @@ public class LocalPlayerData extends PlayerData {
     public void reloadAvatar() {
         watchKeys.clear();
 
-        super.clearSounds();
+        super.clearData();
         PlayerDataManager.lastLoadedFileName = loadedName;
         loadModelFile(loadedPath);
         isLocalAvatar = true;

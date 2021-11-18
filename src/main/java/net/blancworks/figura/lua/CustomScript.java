@@ -907,6 +907,12 @@ public class CustomScript extends FiguraAsset {
         public LuaValue args;
     }
 
+    public void clearPings() {
+        lastPingID = Short.MIN_VALUE;
+        functionIDMap.clear();
+        newFunctionIDMap.clear();
+    }
+
     //--Misc--
     public void clearSounds() {
         if (playerData != null) {
