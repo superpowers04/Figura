@@ -64,6 +64,11 @@ public class CustomScript extends FiguraAsset {
     //Updated as things are added to it.
     public CompletableFuture<Void> currTask;
 
+    public RenderType renderMode = RenderType.RENDER;
+    public enum RenderType {
+        RENDER,
+        WORLD_RENDER
+    }
 
     //How many instructions the last tick/render event used.
     public int tickInstructionCount = 0;
@@ -324,6 +329,7 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
+            renderMode = RenderType.WORLD_RENDER;
             setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
             try {
                 allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
@@ -569,10 +575,13 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onRender(float deltaTime) {
-        for (CustomModelPart part : this.playerData.model.allParts) {
-            CustomModelPart.clearExtraRendering(part);
+        synchronized (this.playerData.model.allParts) {
+            for (CustomModelPart part : this.playerData.model.allParts) {
+                CustomModelPart.clearExtraRendering(part);
+            }
         }
 
+        renderMode = RenderType.RENDER;
         setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
