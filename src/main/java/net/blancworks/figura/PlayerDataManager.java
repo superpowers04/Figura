@@ -206,7 +206,7 @@ public final class PlayerDataManager {
             KeyBinding.updateKeysByCode();
         }
 
-        localPlayer.clearSounds();
+        localPlayer.clearData();
 
         LOADED_PLAYER_DATA.remove(localPlayer.playerId);
         localPlayer = null;
@@ -222,7 +222,7 @@ public final class PlayerDataManager {
             return;
 
         for (UUID uuid : TO_CLEAR) {
-            getDataForPlayer(uuid).clearSounds();
+            getDataForPlayer(uuid).clearData();
             LOADED_PLAYER_DATA.remove(uuid);
         }
         TO_CLEAR.clear();
