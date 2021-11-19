@@ -4,6 +4,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -39,6 +40,11 @@ public class MinecraftClientMixin {
 
     @Unique public boolean actionWheelActive = false;
     @Unique public boolean playerPopupActive = false;
+
+    @Inject(at = @At("RETURN"), method = "render")
+    public void copyFramebuffer(boolean tick, CallbackInfo ci) {
+        FiguraVertexConsumerProvider.blitFramebuffer();
+    }
 
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {

@@ -10,6 +10,7 @@ import net.blancworks.figura.mixin.RenderPhaseInvokerMixin;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.Program;
+import net.minecraft.client.gl.WindowFramebuffer;
 import net.minecraft.client.render.*;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
@@ -42,6 +43,7 @@ import java.util.zip.ZipFile;
 public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immediate {
 
     private static final ArrayList<String> defaultTextures;
+    private static Framebuffer mainFramebufferCopy;
     private final Map<String, FiguraRenderLayer> stringLayerMap = new HashMap<>();
     private final NbtList nbtData = new NbtList();
     //If this is non-null, then it will always be used. The value can be set to non-null for a short time, then reset to null after the operation.
@@ -170,6 +172,8 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                     //The chosen shader is a vanilla shader, so get it from this map.
                     shader.complete(vanillaShaderMap.get(shaderStr).get());
                 } else {
+                    if (!shaderStr.equals(shaderStr.toLowerCase()))
+                        throw new IOException("Shader has capital letters, invalid name");
                     //This shader is not a vanilla shader, so create a new one.
                     if (root instanceof ZipFile)
                         localShaderFactory = new FiguraLocalShaderResourceFactory((ZipFile) root);
@@ -293,6 +297,11 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
                 String textureStr = textures.get(i);
                 if (textureStr.equals("MY_TEXTURE")) {
                     RenderSystem.setShaderTexture(i, playerData.texture.id);
+                } else if (textureStr.equals("MAIN_FRAMEBUFFER")) {
+                    blitFramebuffer();
+                    RenderSystem.setShaderTexture(i, mainFramebufferCopy.getColorAttachment());
+                } else if (textureStr.equals("LAST_FRAMEBUFFER")) {
+                    RenderSystem.setShaderTexture(i, mainFramebufferCopy.getColorAttachment());
                 } else if (!textureStr.equals("SKIP")) { //If there is no texture, then don't set the shader texture
                     RenderSystem.setShaderTexture(i, new Identifier(textureStr));
                 }
@@ -436,7 +445,7 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
             NbtList nbtTextures = nbtParams.getList("textures", NbtElement.STRING_TYPE);
             ArrayList<String> textures = new ArrayList<>();
             for(NbtElement nbtStr : nbtTextures)
-                textures.add(((NbtString) nbtStr).asString());
+                textures.add(nbtStr.asString());
             boolean enableLightmap = nbtParams.getBoolean("lightmap");
             boolean enableOverlay = nbtParams.getBoolean("overlay");
             boolean enableCull = nbtParams.getBoolean("cull");
@@ -669,5 +678,21 @@ public class FiguraVertexConsumerProvider extends VertexConsumerProvider.Immedia
         texturingModesMap.put("GLINT_TEXTURING", () -> RenderPhaseInvokerMixin.setupGlintTexturing(8.0F));
         texturingModesMap.put("ENTITY_GLINT_TEXTURING", () -> RenderPhaseInvokerMixin.setupGlintTexturing(0.16F));
 
+        RenderSystem.recordRenderCall(()->{
+            Framebuffer mainFramebuffer = MinecraftClient.getInstance().getFramebuffer();
+            mainFramebufferCopy = new WindowFramebuffer(mainFramebuffer.textureWidth, mainFramebuffer.textureHeight);
+            mainFramebufferCopy.setClearColor(0,0,0,0);
+        });
+    }
+
+    public static void blitFramebuffer() {
+        if (mainFramebufferCopy == null) return;
+        Framebuffer mainFramebuffer = MinecraftClient.getInstance().getFramebuffer();
+        mainFramebufferCopy.resize(mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, MinecraftClient.IS_SYSTEM_MAC);
+        RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+        GlStateManager._glBindFramebuffer(36008, mainFramebuffer.fbo);
+        GlStateManager._glBindFramebuffer(36009, mainFramebufferCopy.fbo);
+        GlStateManager._glBlitFrameBuffer(0, 0, mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, 0, 0, mainFramebufferCopy.textureWidth, mainFramebufferCopy.textureHeight, 16384, 9728);
+        GlStateManager._glBindFramebuffer(36160, mainFramebuffer.fbo);
     }
 }
