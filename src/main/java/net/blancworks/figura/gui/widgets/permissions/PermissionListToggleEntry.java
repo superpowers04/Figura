@@ -5,6 +5,7 @@ import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.gui.widgets.CustomListWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.trust.TrustContainer;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.widget.ToggleButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
@@ -44,12 +45,12 @@ public class PermissionListToggleEntry extends PermissionListEntry{
                 //overlay
                 if (this.toggled) {
                     int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
-                    RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >> 8) & 0xFF) / 255f, (color & 0xFF) / 255f, this.alpha);
+                    RenderSystem.color4f(((color >> 16) & 0xFF) / 255f, ((color >> 8) & 0xFF) / 255f, (color & 0xFF) / 255f, this.alpha);
                 }
                 drawTexture(matrices, this.x, this.y, this.toggled ? 32f : 0f, 16f, 32, 16, 128, 32);
 
                 RenderSystem.enableDepthTest();
-                RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+                RenderSystem.color4f(1f, 1f, 1f, 1f);
             }
         };
         

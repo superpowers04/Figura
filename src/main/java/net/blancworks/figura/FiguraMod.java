@@ -23,17 +23,18 @@ import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
@@ -42,10 +43,12 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -63,7 +66,7 @@ public class FiguraMod implements ClientModInitializer {
     public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 
     public static final boolean IS_CHEESE = LocalDate.now().getDayOfMonth() == 1 && LocalDate.now().getMonthValue() == 4;
-    public static NbtCompound cheese;
+    public static CompoundTag cheese;
 
     public static KeyBinding actionWheel;
     public static KeyBinding playerPopup;
@@ -176,7 +179,7 @@ public class FiguraMod implements ClientModInitializer {
             }
 
             @Override
-            public void reload(ResourceManager manager) {
+            public void apply(ResourceManager manager) {
                 PlayerDataManager.reloadAllTextures();
 
                 try {
@@ -209,7 +212,7 @@ public class FiguraMod implements ClientModInitializer {
     public static Path getModContentDirectory() {
         String userPath = (String) Config.MODEL_FOLDER_PATH.value;
         try {
-            Path p = userPath.isEmpty() ? getDefaultDirectory() : Path.of(userPath);
+            Path p = userPath.isEmpty() ? getDefaultDirectory() : new File(userPath).toPath();;
             if (!Files.exists(p))
                 Files.createDirectories(p);
 
@@ -294,18 +297,23 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static void sendToast(Object title, Object message) {
-        Text text = title instanceof Text t ? t : new TranslatableText(title.toString());
-        Text text2 = message instanceof Text m ? m : new TranslatableText(message.toString());
+        Text text, text2;
+
+        if (title instanceof Text) text = (Text) title;
+        else text = new TranslatableText(title.toString());
+
+        if (message instanceof Text) text2 = (Text) message;
+        else text2 = new TranslatableText(message.toString());
 
         MinecraftClient.getInstance().getToastManager().clear();
         MinecraftClient.getInstance().getToastManager().add(new FiguraToast(text, text2));
     }
 
     public static Style getAccentColor(Style style) {
-        return style.withColor((int) Config.ACCENT_COLOR.value);
+        return style.withColor(TextColor.fromRgb((int) Config.ACCENT_COLOR.value));
     }
 
-    public final static List<UUID> VIP = List.of(
+    public final static List<UUID> VIP = Arrays.asList(
             UUID.fromString("aa0e3391-e497-4e8e-8afe-b69dfaa46afa"), //salad
             UUID.fromString("da53c608-d17c-4759-94fe-a0317ed63876"), //zandra
             UUID.fromString("66a6c5c4-963b-4b73-a0d9-162faedd8b7f"), //fran

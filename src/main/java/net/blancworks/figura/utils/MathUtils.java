@@ -3,12 +3,14 @@ package net.blancworks.figura.utils;
 import net.blancworks.figura.access.GameRendererAccess;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.math.*;
 
 public class MathUtils {
 
     //yoinked from wikipedia
-    public static Vec3f quaternionToEulerXYZ(Quaternion q) {
+    public static Vector3f quaternionToEulerXYZ(Quaternion q) {
         double pitch, yaw, roll;
 
         float x = q.getX();
@@ -33,7 +35,7 @@ public class MathUtils {
         double cosy_cosp = 1 - 2 * (y * y + z * z);
         yaw = Math.atan2(siny_cosp, cosy_cosp);
 
-        return new Vec3f((float) Math.toDegrees(roll), (float) Math.toDegrees(pitch), (float) Math.toDegrees(yaw));
+        return new Vector3f((float) Math.toDegrees(roll), (float) Math.toDegrees(pitch), (float) Math.toDegrees(yaw));
     }
 
     /**
@@ -41,18 +43,18 @@ public class MathUtils {
      * @param worldSpace position in the world
      * @return screenSpaceAndDistance
      */
-    public static Vector4f worldToScreenSpace(Vec3f worldSpace) {
+    public static Vector4f worldToScreenSpace(Vector3f worldSpace) {
         MinecraftClient client = MinecraftClient.getInstance();
         Camera camera = client.gameRenderer.getCamera();
         Matrix3f transformMatrix = new Matrix3f(camera.getRotation());
         transformMatrix.invert();
-        Vec3f camSpace = new Vec3f(worldSpace.getX(), worldSpace.getY(), worldSpace.getZ());
-        camSpace.subtract(new Vec3f(camera.getPos()));
+        Vector3f camSpace = new Vector3f(worldSpace.getX(), worldSpace.getY(), worldSpace.getZ());
+        camSpace.subtract(new Vector3f(camera.getPos()));
         camSpace.transform(transformMatrix);
         double dist = Math.sqrt(camSpace.dot(camSpace));
 
         Vector4f projectiveCamSpace = new Vector4f(camSpace);
-        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(((GameRendererAccess) client.gameRenderer).figura$getFov(camera, true));
+        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(camera, (float) ((GameRendererAccess) client.gameRenderer).figura$getFov(camera, true), false);
         projectiveCamSpace.transform(projMat);
         float x = projectiveCamSpace.getX();
         float y = projectiveCamSpace.getY();

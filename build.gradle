@@ -77,7 +77,7 @@ dependencies {
 	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
 
 	//Iris
-	modImplementation "maven.modrinth:iris:${project.iris_version}"
+	//modImplementation "maven.modrinth:iris:${project.iris_version}"
 
 	//WebSocket library
 	modImplementation 'com.neovisionaries:nv-websocket-client:2.14'

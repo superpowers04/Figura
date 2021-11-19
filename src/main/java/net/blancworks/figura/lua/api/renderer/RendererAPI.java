@@ -1,8 +1,6 @@
 package net.blancworks.figura.lua.api.renderer;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.brigadier.StringReader;
-import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
@@ -11,22 +9,19 @@ import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.shaders.FiguraRenderLayer;
-import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.models.tasks.BlockRenderTask;
 import net.blancworks.figura.models.tasks.ItemRenderTask;
 import net.blancworks.figura.models.tasks.TextRenderTask;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.Shader;
 import net.minecraft.client.render.model.json.ModelTransformation;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
@@ -103,32 +98,6 @@ public class RendererAPI {
             set("setUniform", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue layerName, LuaValue uniformName, LuaValue value) {
-                    if (!script.playerData.canRenderCustomLayers())
-                        return NIL;
-                    RenderSystem.recordRenderCall(() -> {
-                        try {
-                            Shader customShader;
-                            if (script.playerData.customVCP != null) {
-                                FiguraRenderLayer customLayer = script.playerData.customVCP.getRenderLayer(layerName.checkjstring());
-                                if (customLayer != null)
-                                    customShader = customLayer.getShader();
-                                else
-                                    throw new LuaError("There is no custom layer with that name!");
-                            } else
-                                throw new LuaError("The player has no custom VCP!");
-
-                            if (customShader != null) {
-                                if (customShader instanceof FiguraShader)
-                                    ((FiguraShader) customShader).setUniformFromLua(uniformName, value);
-                                else
-                                    throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
-                            }
-                        } catch (Exception e) {
-                            PlayerData local = PlayerDataManager.localPlayer;
-                            if (local == null || script.playerData.playerId != local.playerId || script.equals(local.script))
-                                script.handleError(e);
-                        }
-                    });
                     return NIL;
                 }
             });
@@ -143,19 +112,11 @@ public class RendererAPI {
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
                     boolean emissive = !args.arg(4).isnil() && args.arg(4).checkboolean();
-                    Vec3f pos = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
-                    Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
+                    Vector3f pos = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vector3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                    Vector3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
 
-                    FiguraRenderLayer customLayer = null;
-                    if (!args.arg(8).isnil()) {
-                        if (script.playerData.customVCP != null) {
-                            customLayer = script.playerData.customVCP.getRenderLayer(args.arg(8).checkjstring());
-                        } else
-                            throw new LuaError("The player has no custom VCP!");
-                    }
-
-                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale, customLayer));
+                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale));
 
                     return NIL;
                 }
@@ -170,18 +131,11 @@ public class RendererAPI {
                     BlockState state = BlockStateAPI.checkOrCreateBlockState(args.arg(1));
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
-                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
-                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
-                    FiguraRenderLayer customLayer = null;
-                    if (!args.arg(7).isnil()) {
-                        if (script.playerData.customVCP != null) {
-                            customLayer = script.playerData.customVCP.getRenderLayer(args.arg(7).checkjstring());
-                        } else
-                            throw new LuaError("The player has no custom VCP!");
-                    }
+                    Vector3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
+                    Vector3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vector3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
 
-                    parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale, customLayer));
+                    parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale));
 
                     return NIL;
                 }
@@ -210,9 +164,9 @@ public class RendererAPI {
 
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
-                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
-                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                    Vector3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
+                    Vector3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vector3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
 
                     parent.renderTasks.add(new TextRenderTask(text, emissive, pos, rot, scale));
 

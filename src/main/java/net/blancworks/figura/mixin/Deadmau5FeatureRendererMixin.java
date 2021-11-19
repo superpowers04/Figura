@@ -15,8 +15,8 @@ import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRendererContext;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -42,8 +42,8 @@ public class Deadmau5FeatureRendererMixin extends FeatureRenderer<AbstractClient
         try {
             VertexConsumer vertexConsumer = vertexConsumerProvider.getBuffer(RenderLayer.getEntitySolid(entity.getSkinTexture()));
             int m = LivingEntityRenderer.getOverlay(entity, 0f);
-            float o = MathHelper.lerp(tickDelta, entity.prevYaw, entity.getYaw()) - MathHelper.lerp(tickDelta, entity.prevBodyYaw, entity.bodyYaw);
-            float p = MathHelper.lerp(tickDelta, entity.prevPitch, entity.getPitch());
+            float o = MathHelper.lerp(tickDelta, entity.prevYaw, entity.yaw) - MathHelper.lerp(tickDelta, entity.prevBodyYaw, entity.bodyYaw);
+            float p = MathHelper.lerp(tickDelta, entity.prevPitch, entity.pitch);
             float q = 1.3333f;
 
             for (int i = 0; i < 2; ++i) {
@@ -80,13 +80,13 @@ public class Deadmau5FeatureRendererMixin extends FeatureRenderer<AbstractClient
                             matrices.translate(customization.pos.getX() / 16f, customization.pos.getY() / 16f, customization.pos.getZ() / 16f);
 
                         if (customization.rot != null) {
-                            matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(customization.rot.getZ()));
-                            matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(customization.rot.getY()));
-                            matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(customization.rot.getX()));
+                            matrices.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(customization.rot.getZ()));
+                            matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(customization.rot.getY()));
+                            matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(customization.rot.getX()));
                         }
 
                         if (customization.scale != null) {
-                            Vec3f scale = customization.scale;
+                            Vector3f scale = customization.scale;
                             matrices.scale(scale.getX(), scale.getY(), scale.getZ());
                         }
                     }
@@ -94,12 +94,12 @@ public class Deadmau5FeatureRendererMixin extends FeatureRenderer<AbstractClient
 
                 //apply vanilla data
                 matrices.push();
-                matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(o));
-                matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(p));
+                matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(o));
+                matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(p));
                 matrices.translate(0.375f * (float) (i * 2 - 1), 0f, 0f);
                 matrices.translate(0f, -0.375f, 0f);
-                matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-p));
-                matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-o));
+                matrices.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-p));
+                matrices.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-o));
                 matrices.scale(q, q, q);
                 this.getContextModel().renderEars(matrices, vertexConsumer, light, m);
                 matrices.pop();

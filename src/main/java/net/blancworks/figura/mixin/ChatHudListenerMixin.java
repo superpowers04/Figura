@@ -12,7 +12,6 @@ import net.minecraft.network.MessageType;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Util;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -75,8 +74,8 @@ public class ChatHudListenerMixin {
                     if (NamePlateAPI.applyFormattingRecursive((LiteralText) arg, playerName, nameplateData, currentData))
                         break;
                 }
-            } else if (message instanceof LiteralText literal) {
-                NamePlateAPI.applyFormattingRecursive(literal, playerName, nameplateData, currentData);
+            } else if (message instanceof LiteralText) {
+                NamePlateAPI.applyFormattingRecursive((LiteralText) message, playerName, nameplateData, currentData);
             }
         } catch (Exception e) {
             e.printStackTrace();

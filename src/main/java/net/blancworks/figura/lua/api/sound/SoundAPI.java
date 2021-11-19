@@ -33,7 +33,7 @@ import java.util.UUID;
 
 public class SoundAPI {
 
-    public static HashMap<String, SoundEvent> soundEvents = new HashMap<>() {{
+    public static HashMap<String, SoundEvent> soundEvents = new HashMap<String, SoundEvent>() {{
         for (Identifier id : Registry.SOUND_EVENT.getIds()) {
             SoundEvent type = Registry.SOUND_EVENT.get(id);
 
@@ -105,10 +105,6 @@ public class SoundAPI {
             set("playCustomSound", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                    if (script.soundSpawnCount > script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS))
-                        return NIL;
-                    script.soundSpawnCount++;
-
                     LuaVector pitchVol = LuaVector.checkOrNew(arg3);
                     return FiguraSoundManager.getChannel().playCustomSound(script, arg1.checkjstring(), LuaVector.checkOrNew(arg2).asV3d(), pitchVol.x(), pitchVol.y());
                 }

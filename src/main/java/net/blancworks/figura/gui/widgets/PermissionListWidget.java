@@ -30,8 +30,8 @@ public class PermissionListWidget extends CustomListWidget<TrustContainer.Trust,
     public boolean mouseClicked(double double_1, double double_2, int int_1) {
         boolean r = super.mouseClicked(double_1, double_2, int_1);
 
-        if (r && getFocused() instanceof PermissionListEntry focused)
-            getParent().focusOn(focused.matchingElement);
+        if (r && getFocused() instanceof PermissionListEntry)
+            getParent().focusOn(((PermissionListEntry) getFocused()).matchingElement);
 
         return r;
     }
@@ -47,10 +47,10 @@ public class PermissionListWidget extends CustomListWidget<TrustContainer.Trust,
     public TrustContainer getCurrentContainer() {
         FiguraTrustScreen trustScreen = (FiguraTrustScreen) getParent();
 
-        if (trustScreen.playerListState.selected instanceof Identifier groupId) {
-            return PlayerTrustManager.getContainer(groupId);
-        } else if (trustScreen.playerListState.selected instanceof PlayerListEntry listEntry) {
-            Identifier id = new Identifier("player", listEntry.getProfile().getId().toString());
+        if (trustScreen.playerListState.selected instanceof Identifier) {
+            return PlayerTrustManager.getContainer((Identifier) trustScreen.playerListState.selected);
+        } else if (trustScreen.playerListState.selected instanceof PlayerListEntry) {
+            Identifier id = new Identifier("player", ((PlayerListEntry) trustScreen.playerListState.selected).getProfile().getId().toString());
             return PlayerTrustManager.getContainer(id);
         }
 

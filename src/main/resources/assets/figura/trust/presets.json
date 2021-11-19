@@ -9,7 +9,6 @@
     "VANILLA_MODEL_EDIT": 0,
     "NAMEPLATE_EDIT": 0,
     "OFFSCREEN_RENDERING": 0,
-    "CUSTOM_RENDER_LAYER": 0,
     "CUSTOM_SOUNDS": 0
   },
   "untrusted": {
@@ -22,7 +21,6 @@
     "VANILLA_MODEL_EDIT": 0,
     "NAMEPLATE_EDIT": 0,
     "OFFSCREEN_RENDERING": 0,
-    "CUSTOM_RENDER_LAYER": 0,
     "CUSTOM_SOUNDS": 0
   },
   "trusted": {
@@ -35,7 +33,6 @@
     "VANILLA_MODEL_EDIT": 1,
     "NAMEPLATE_EDIT": 1,
     "OFFSCREEN_RENDERING": 1,
-    "CUSTOM_RENDER_LAYER": 1,
     "CUSTOM_SOUNDS": 1
   },
   "friend": {
@@ -48,7 +45,6 @@
     "VANILLA_MODEL_EDIT": 1,
     "NAMEPLATE_EDIT": 1,
     "OFFSCREEN_RENDERING": 1,
-    "CUSTOM_RENDER_LAYER": 1,
     "CUSTOM_SOUNDS": 1
   },
   "local": {
@@ -61,7 +57,6 @@
     "VANILLA_MODEL_EDIT": 1,
     "NAMEPLATE_EDIT": 1,
     "OFFSCREEN_RENDERING": 1,
-    "CUSTOM_RENDER_LAYER": 1,
     "CUSTOM_SOUNDS": 1
   }
 }

@@ -98,30 +98,30 @@ public class FiguraTrustScreen extends Screen {
         );
         permissionList.setLeftPos(rightPaneX);
 
-        this.addSelectableChild(this.playerList);
-        this.addSelectableChild(this.permissionList);
-        this.addSelectableChild(this.searchBox);
+        this.addChild(this.playerList);
+        this.addChild(this.permissionList);
+        this.addChild(this.searchBox);
         this.setInitialFocus(this.searchBox);
 
-        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> {
 
             PlayerTrustManager.saveToDisk();
 
-            this.client.setScreen(parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
-        this.addDrawableChild(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
+        this.addButton(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
             //Open the trust menu from the Figura Wiki
             if (bl)
                 Util.getOperatingSystem().open("https://github.com/Blancworks/Figura/wiki/Trust-Menu");
-            this.client.setScreen(this);
+            this.client.openScreen(this);
         }, "https://github.com/Blancworks/Figura/wiki/Trust-Menu", true))));
 
-        this.addDrawableChild(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> PlayerDataManager.clearCache()));
+        this.addButton(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> PlayerDataManager.clearCache()));
 
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.reloadavatar"), (btx) -> {
-            if (playerListState.selected instanceof PlayerListEntry entry) {
-                PlayerDataManager.clearPlayer(entry.getProfile().getId());
+        this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.reloadavatar"), (btx) -> {
+            if (playerListState.selected instanceof PlayerListEntry) {
+                PlayerDataManager.clearPlayer(((PlayerListEntry) playerListState.selected).getProfile().getId());
             }
         }));
 
@@ -157,15 +157,15 @@ public class FiguraTrustScreen extends Screen {
         });
         resetAllPermissionsButton.visible = false;
 
-        this.addDrawableChild(resetPermissionButton);
-        this.addDrawableChild(resetAllPermissionsButton);
+        this.addButton(resetPermissionButton);
+        this.addButton(resetAllPermissionsButton);
 
         this.uuidBox = new CustomTextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new LiteralText("UUID").formatted(Formatting.ITALIC));
         this.uuidBox.setMaxLength(36);
         /*
-        this.addSelectableChild(uuidBox);
+        this.addChild(uuidBox);
 
-        this.addDrawableChild(new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("Get Avatar"), (btx) -> {
+        this.addButton(new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("Get Avatar"), (btx) -> {
             try {
                 UUID uuid = UUID.fromString(uuidBox.getText());
                 PlayerDataManager.getDataForPlayer(uuid);
@@ -186,7 +186,8 @@ public class FiguraTrustScreen extends Screen {
         this.searchBox.render(matrices, mouseX, mouseY, delta);
         //this.uuidBox.render(matrices, mouseX, mouseY, delta);
 
-        if (playerListState.selected instanceof PlayerListEntry entry) {
+        if (playerListState.selected instanceof PlayerListEntry) {
+            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
             UUID id = entry.getProfile().getId();
             String name = entry.getProfile().getName();
 
@@ -330,7 +331,7 @@ public class FiguraTrustScreen extends Screen {
     @Override
     public void onClose() {
         PlayerTrustManager.saveToDisk();
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     int tickCount = 0;
@@ -413,7 +414,8 @@ public class FiguraTrustScreen extends Screen {
         if (playerList.isMouseOver(mouseX, mouseY) && playerList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
             return true;
 
-        if (playerList.isMouseOver(mouseX, mouseY) && playerListState.selected instanceof PlayerListEntry entry) {
+        if (playerList.isMouseOver(mouseX, mouseY) && playerListState.selected instanceof PlayerListEntry) {
+            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
             if (draggedId == null) {
                 if (Math.abs(mouseX - pressStartX) + Math.abs(mouseY - pressStartY) > 2) {
                     draggedId = entry.getProfile().getId();
@@ -444,7 +446,8 @@ public class FiguraTrustScreen extends Screen {
                 if (listEntry != null) {
                     Object obj = listEntry.getEntryObject();
 
-                    if (obj instanceof Identifier id) {
+                    if (obj instanceof Identifier) {
+                        Identifier id = (Identifier) obj;
                         Identifier playerID = new Identifier("player", draggedId.toString());
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
 

@@ -2,7 +2,9 @@ package net.blancworks.figura.network;
 
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketFactory;
-import net.blancworks.figura.*;
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.LocalPlayerData;
+import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.messages.MessageRegistry;
@@ -14,7 +16,7 @@ import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarHashMessa
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarMessageSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
@@ -25,7 +27,7 @@ import net.minecraft.text.Text;
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.net.InetSocketAddress;
+import java.net.InetAddress;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -181,7 +183,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 data.isLocalAvatar = false;
 
                 //get nbt
-                NbtCompound nbt = new NbtCompound();
+                CompoundTag nbt = new CompoundTag();
                 data.writeNbt(nbt);
 
                 try {
@@ -388,10 +390,10 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             connectionStatus = 2;
 
             String address = authServerURL();
-            InetSocketAddress inetAddress = new InetSocketAddress(address, 25565);
+            InetAddress inetAddress = InetAddress.getByName(address);
 
             //Create new connection
-            ClientConnection connection = ClientConnection.connect(inetAddress, true);
+            ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
 
             CompletableFuture<Void> disconnectedFuture = new CompletableFuture<>();
 

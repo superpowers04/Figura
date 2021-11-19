@@ -11,10 +11,10 @@ import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.util.Identifier;
+import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.nio.file.*;
@@ -74,7 +74,6 @@ public class LocalPlayerData extends PlayerData {
         this.model = null;
         this.texture = null;
         this.script = null;
-        this.customVCP = null;
 
         extraTextures.clear();
         watchedFiles.clear();
@@ -90,7 +89,7 @@ public class LocalPlayerData extends PlayerData {
         loadedName = file.getName();
 
         //set root directory
-        Path contentDirectory = Path.of(file.getParent());
+        Path contentDirectory = file.toPath().getParent();
 
         //check file type
         boolean isZip = path.endsWith(".zip");
@@ -192,9 +191,6 @@ public class LocalPlayerData extends PlayerData {
 
         //try to load script
         if ((data & 8) == 8) loadScript(avatarPaths.get("script"), isZip, modelZip);
-
-        //try to load render_layers
-        if ((data & 16) == 16) loadRenderLayers(avatarPaths.get("render_layers"), isZip, modelZip, file.toPath());
 
         //try to load custom sounds (requires a script)
         if ((data & 32) == 32 && (data & 8) == 8) loadCustomSounds(avatarPaths.get("sounds"), isZip, modelZip, file);
@@ -335,49 +331,6 @@ public class LocalPlayerData extends PlayerData {
         }
     }
 
-    public void loadRenderLayers(Path renderLayersPath, boolean isZip, ZipFile modelZip, Path avatarFolder) {
-        //Code mostly copied from above function, loadScript()
-        InputStream inputStream = null;
-        try {
-            if (isZip) {
-                ZipEntry fileEntry = modelZip.getEntry("render_layers.json");
-                inputStream = modelZip.getInputStream(fileEntry);
-            } else if (Files.exists(renderLayersPath)) {
-                inputStream = new FileInputStream(renderLayersPath.toFile());
-            }
-
-            if (inputStream != null) {
-                //Make a copy of the input stream so we can read it asynchronously
-                ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
-                inputStream.transferTo(byteArrayStream);
-                InputStream finalInputStream = new ByteArrayInputStream(byteArrayStream.toByteArray());
-                FiguraMod.doTask(() -> {
-                    if (isZip)
-                        FiguraVertexConsumerProvider.parseLocal(this, finalInputStream, modelZip);
-                    else
-                        FiguraVertexConsumerProvider.parseLocal(this, finalInputStream, avatarFolder);
-                    try {
-                        //Close the copy of the input stream
-                        finalInputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-            } else
-                FiguraMod.LOGGER.warn("InputStream was null when loading render layers.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        //Close the original input stream regardless of what it was (zip or filestream)
-        if (inputStream != null) {
-            try {
-                inputStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public void loadCustomSounds(Path sounds, boolean isZip, ZipFile zip, File modelFile) {
         try {
             JsonElement soundsJson;
@@ -392,7 +345,7 @@ public class LocalPlayerData extends PlayerData {
                 String path = "sounds/" + name + ".ogg";
                 try {
                     InputStream str = isZip ? zip.getInputStream(zip.getEntry(path)) : new FileInputStream(modelFile.toPath().resolve(path).toFile());
-                    FiguraSoundManager.registerCustomSound(script, name, str.readAllBytes(), false);
+                    FiguraSoundManager.registerCustomSound(script, name, IOUtils.toByteArray(str), false);
                 } catch (Exception ignored) {
                     FiguraMod.LOGGER.error("failed to load custom song \"" + path + "\"");
                 }

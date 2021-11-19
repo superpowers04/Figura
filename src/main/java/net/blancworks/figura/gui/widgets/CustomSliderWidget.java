@@ -31,7 +31,7 @@ public abstract class CustomSliderWidget extends SliderWidget {
     }
 
     @Override
-    protected void renderBackground(MatrixStack matrices, MinecraftClient client, int mouseX, int mouseY) {
+    protected void renderBg(MatrixStack matrices, MinecraftClient client, int mouseX, int mouseY) {
         int len = (int) (this.value * (double) (this.width - 8));
         int x = MathHelper.clamp(Math.abs(this.x + len), this.x, this.x + this.width - 8);
 
@@ -39,13 +39,13 @@ public abstract class CustomSliderWidget extends SliderWidget {
         len = MathHelper.clamp(Math.abs(len + 4), 0, this.width);
         int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
 
-        RenderSystem.setShaderTexture(0, SLIDER_TEXTURE);
-        RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, this.alpha);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(SLIDER_TEXTURE);
+        RenderSystem.color4f(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, this.alpha);
         drawTexture(matrices, this.x, this.y, 0, 0, len, 20, 200, 20);
 
         //button
-        RenderSystem.setShaderTexture(0, WIDGETS_TEXTURE);
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(WIDGETS_LOCATION);
+        RenderSystem.color4f(1f, 1f, 1f, 1f);
         int i = (!this.active ? 0 : this.isHovered() ? 2 : 1) * 20;
         this.drawTexture(matrices, x, this.y, 0, 46 + i, 4, 20);
         this.drawTexture(matrices, x + 4, this.y, 196, 46 + i, 4, 20);

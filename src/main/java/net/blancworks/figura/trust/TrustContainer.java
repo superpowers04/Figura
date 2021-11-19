@@ -1,9 +1,9 @@
 package net.blancworks.figura.trust;
 
-import net.minecraft.nbt.NbtByte;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtInt;
-import net.minecraft.nbt.NbtString;
+import net.minecraft.nbt.ByteTag;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntTag;
+import net.minecraft.nbt.StringTag;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
@@ -29,7 +29,6 @@ public class TrustContainer {
         VANILLA_MODEL_EDIT("allowvanillaedit"),
         NAMEPLATE_EDIT("allownameplateedit"),
         OFFSCREEN_RENDERING("allowoffscreenrendering"),
-        CUSTOM_RENDER_LAYER("allowcustomrenderlayers"),
         CUSTOM_SOUNDS("allowcustomsounds");
 
         public final String id;
@@ -60,7 +59,7 @@ public class TrustContainer {
         }
     }
 
-    public TrustContainer(String name, Identifier parentID, NbtCompound nbt) {
+    public TrustContainer(String name, Identifier parentID, CompoundTag nbt) {
         this.name = name;
         this.parentID = parentID;
 
@@ -74,19 +73,19 @@ public class TrustContainer {
         this.trustSettings = new HashMap<>(trust);
     }
 
-    public void writeNbt(NbtCompound nbt) {
-        nbt.put("name", NbtString.of(this.name));
-        nbt.put("locked", NbtByte.of(this.locked));
-        nbt.put("expanded", NbtByte.of(this.expanded));
-        nbt.put("parent", NbtString.of(this.parentID.toString()));
+    public void writeNbt(CompoundTag nbt) {
+        nbt.put("name", StringTag.of(this.name));
+        nbt.put("locked", ByteTag.of(this.locked));
+        nbt.put("expanded", ByteTag.of(this.expanded));
+        nbt.put("parent", StringTag.of(this.parentID.toString()));
 
-        NbtCompound trust = new NbtCompound();
-        this.trustSettings.forEach((key, value) -> trust.put(key.name(), NbtInt.of(value)));
+        CompoundTag trust = new CompoundTag();
+        this.trustSettings.forEach((key, value) -> trust.put(key.name(), IntTag.of(value)));
 
         nbt.put("trust", trust);
     }
 
-    private void setTrustFromNbt(NbtCompound nbt) {
+    private void setTrustFromNbt(CompoundTag nbt) {
         for (Trust setting : Trust.values()) {
             String trustName = setting.name();
 

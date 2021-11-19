@@ -4,8 +4,8 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -45,7 +45,7 @@ public class CameraAPI {
             ret.set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vec3f pos = targetScript.getOrMakeCameraCustomization(accessor).position;
+                    Vector3f pos = targetScript.getOrMakeCameraCustomization(accessor).position;
                     return pos == null ? NIL : LuaVector.of(pos);
                 }
             });
@@ -61,7 +61,7 @@ public class CameraAPI {
             ret.set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vec3f rot = targetScript.getOrMakeCameraCustomization(accessor).rotation;
+                    Vector3f rot = targetScript.getOrMakeCameraCustomization(accessor).rotation;
                     return rot == null ? NIL : LuaVector.of(rot);
                 }
             });
@@ -77,7 +77,7 @@ public class CameraAPI {
             ret.set("getPivot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vec3f piv = targetScript.getOrMakeCameraCustomization(accessor).pivot;
+                    Vector3f piv = targetScript.getOrMakeCameraCustomization(accessor).pivot;
                     return piv == null ? NIL : LuaVector.of(piv);
                 }
             });

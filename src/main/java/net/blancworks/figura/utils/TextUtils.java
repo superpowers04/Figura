@@ -1,5 +1,6 @@
 package net.blancworks.figura.utils;
 
+import com.google.common.collect.Lists;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
@@ -8,6 +9,7 @@ import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class TextUtils {
     public static String noBadges4U(String string) {
@@ -17,8 +19,17 @@ public class TextUtils {
     public static List<Text> splitText(Text text, String regex) {
         ArrayList<Text> textList = new ArrayList<>();
 
+        List<Text> list = Lists.newArrayList();
+        text.visit((styleOverride, text2) -> {
+            if (!text2.isEmpty()) {
+                list.add((new LiteralText(text2)).fillStyle(styleOverride));
+            }
+
+            return Optional.empty();
+        }, text.getStyle());
+
         MutableText currentText = new LiteralText("");
-        for (Text entry : text.getWithStyle(text.getStyle())) {
+        for (Text entry : list) {
             String entryString = entry.getString();
             String[] lines = entryString.split(regex);
             for (int i = 0; i < lines.length; i++) {

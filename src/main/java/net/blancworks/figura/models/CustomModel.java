@@ -15,8 +15,9 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
@@ -26,7 +27,7 @@ import java.util.HashMap;
 
 public class CustomModel extends FiguraAsset {
     public PlayerData owner;
-    public NbtCompound modelNbt = new NbtCompound();
+    public CompoundTag modelNbt = new CompoundTag();
 
     public final ArrayList<CustomModelPart> allParts = new ArrayList<>();
     public final HashMap<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new HashMap<>();
@@ -104,8 +105,8 @@ public class CustomModel extends FiguraAsset {
                 matrices.push();
 
                 try {
-                    if (entity_model instanceof PlayerEntityModel player_model) {
-                        player_model.setVisible(false);
+                    if (entity_model instanceof PlayerEntityModel) {
+                        ((PlayerEntityModel<?>) entity_model).setVisible(false);
                     }
 
                     //By default, use blockbench rotation.
@@ -204,12 +205,12 @@ public class CustomModel extends FiguraAsset {
         CustomModelPart.canRenderHitBox = false;
     }
 
-    public void readNbt(NbtCompound tag) {
-        NbtList partList = (NbtList) tag.get("parts");
+    public void readNbt(CompoundTag tag) {
+        ListTag partList = (ListTag) tag.get("parts");
 
         if (partList != null) {
-            for (net.minecraft.nbt.NbtElement nbtElement : partList) {
-                NbtCompound partTag = (NbtCompound) nbtElement;
+            for (Tag nbtElement : partList) {
+                CompoundTag partTag = (CompoundTag) nbtElement;
 
                 CustomModelPart part = CustomModelPart.fromNbt(partTag);
 

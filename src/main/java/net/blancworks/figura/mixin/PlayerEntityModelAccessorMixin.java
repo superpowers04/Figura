@@ -8,9 +8,9 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(PlayerEntityModel.class)
 public interface PlayerEntityModelAccessorMixin {
 
-    @Accessor("cloak")
+    @Accessor("cape")
     ModelPart getCloak();
 
-    @Accessor("ear")
+    @Accessor("ears")
     ModelPart getEar();
 }

@@ -19,13 +19,13 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -92,7 +92,7 @@ public class PlayerListHudMixin {
             PlayerPopup.renderMini(matrices);
             matrices.pop();
 
-            RenderSystem.setShaderTexture(0, playerListEntry2.getSkinTexture());
+            MinecraftClient.getInstance().getTextureManager().bindTexture(playerListEntry2.getSkinTexture());
         }
     }
 
@@ -120,14 +120,14 @@ public class PlayerListHudMixin {
 
         stack.translate(x + 4, y + 8, 0);
         stack.scale(-16, 16, 16);
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180));
 
         if (!data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 0xF000F0)) {
             matrices.push();
             matrices.translate(0f, 0f, 4f);
 
             RenderSystem.enableDepthTest();
-            RenderSystem.setShaderTexture(0, MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(playerEntity.getUuid()).getSkinTexture());
+            MinecraftClient.getInstance().getTextureManager().bindTexture(MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(playerEntity.getUuid()).getSkinTexture());
             DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
 
             matrices.pop();

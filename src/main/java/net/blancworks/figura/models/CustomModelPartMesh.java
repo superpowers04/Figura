@@ -2,18 +2,19 @@ package net.blancworks.figura.models;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
+import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3f;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class CustomModelPartMesh extends CustomModelPart {
-    public NbtCompound meshProperties;
+    public CompoundTag meshProperties;
 
     @Override
     public void rebuild() {
@@ -24,33 +25,33 @@ public class CustomModelPartMesh extends CustomModelPart {
         if (texSize == null)
             texSize = new Vec2f(meshProperties.getFloat("tw"), meshProperties.getFloat("th"));
 
-        NbtCompound verticesNbt = meshProperties.getCompound("vertices");
-        NbtList facesNbt = meshProperties.getList("faces", NbtElement.COMPOUND_TYPE);
+        CompoundTag verticesNbt = meshProperties.getCompound("vertices");
+        ListTag facesNbt = meshProperties.getList("faces", NbtType.COMPOUND);
 
         if (facesNbt == null || verticesNbt == null || facesNbt.size() == 0 || verticesNbt.getSize() == 0)
             return;
 
-        for (NbtElement faceData : facesNbt) {
-            NbtList vertices = ((NbtCompound) faceData).getList("vertices", NbtElement.STRING_TYPE);
-            NbtCompound uvs = ((NbtCompound) faceData).getCompound("uvs");
+        for (Tag faceData : facesNbt) {
+            ListTag vertices = ((CompoundTag) faceData).getList("vertices", NbtType.STRING);
+            CompoundTag uvs = ((CompoundTag) faceData).getCompound("uvs");
 
             if (uvs == null || vertices == null) continue;
 
             int size = vertices.size();
 
             if (size > 3) {
-                List<Vec3f> vectors = new ArrayList<>();
+                List<Vector3f> vectors = new ArrayList<>();
                 for (int i = 0; i < size; i++) {
-                    vectors.add(vec3fFromNbt(verticesNbt.getList(vertices.getString(i), NbtElement.FLOAT_TYPE)));
+                    vectors.add(vec3fFromNbt(verticesNbt.getList(vertices.getString(i), NbtType.FLOAT)));
                 }
 
                 if (testOppositeSides(vectors.get(1), vectors.get(2), vectors.get(0) ,vectors.get(3))) {
-                    NbtElement temp = vertices.get(2);
+                    Tag temp = vertices.get(2);
                     vertices.remove(2);
                     vertices.add(0, temp);
                 }
                 else if (testOppositeSides(vectors.get(0), vectors.get(1), vectors.get(2) ,vectors.get(3))) {
-                    NbtElement temp = vertices.get(1);
+                    Tag temp = vertices.get(1);
                     vertices.set(1, vertices.get(2));
                     vertices.set(2, temp);
                 }
@@ -59,15 +60,15 @@ public class CustomModelPartMesh extends CustomModelPart {
             for (int i = 0; i < 4; i++) {
                 String vertexName = vertices.getString(i % size);
 
-                Vec2f uv = v2fFromNbtList(uvs.getList(vertexName, NbtElement.FLOAT_TYPE));
-                Vec3f vertex = vec3fFromNbt(verticesNbt.getList(vertexName, NbtElement.FLOAT_TYPE));
+                Vec2f uv = v2fFromNbtList(uvs.getList(vertexName, NbtType.FLOAT));
+                Vector3f vertex = vec3fFromNbt(verticesNbt.getList(vertexName, NbtType.FLOAT));
 
-                Vec3f previous = vec3fFromNbt(verticesNbt.getList(vertices.getString((i - 1 + size) % size), NbtElement.FLOAT_TYPE));
-                Vec3f next = vec3fFromNbt(verticesNbt.getList(vertices.getString((i + 1) % size), NbtElement.FLOAT_TYPE));
+                Vector3f previous = vec3fFromNbt(verticesNbt.getList(vertices.getString((i - 1 + size) % size), NbtType.FLOAT));
+                Vector3f next = vec3fFromNbt(verticesNbt.getList(vertices.getString((i + 1) % size), NbtType.FLOAT));
 
-                Vec3f normal = previous.copy();
+                Vector3f normal = previous.copy();
                 normal.subtract(vertex);
-                Vec3f normalTwo = next.copy();
+                Vector3f normalTwo = next.copy();
                 normalTwo.subtract(vertex);
 
                 normal.cross(normalTwo);
@@ -85,27 +86,27 @@ public class CustomModelPartMesh extends CustomModelPart {
     }
 
     @Override
-    public void rotate(MatrixStack stack, Vec3f rot) {
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+    public void rotate(MatrixStack stack, Vector3f rot) {
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
     }
 
     @Override
-    public void vanillaRotate(MatrixStack stack, Vec3f rot) {
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+    public void vanillaRotate(MatrixStack stack, Vector3f rot) {
+        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
+        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
+        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
     }
 
     @Override
-    public void writeNbt(NbtCompound partNbt) {
+    public void writeNbt(CompoundTag partNbt) {
         super.writeNbt(partNbt);
         partNbt.put("props", meshProperties.copy());
     }
 
     @Override
-    public void readNbt(NbtCompound partNbt) {
+    public void readNbt(CompoundTag partNbt) {
         super.readNbt(partNbt);
         this.meshProperties = partNbt.getCompound("props");
     }
@@ -116,14 +117,14 @@ public class CustomModelPartMesh extends CustomModelPart {
     }
 
     @Override
-    public void applyTrueOffset(Vec3f offset) {
+    public void applyTrueOffset(Vector3f offset) {
         super.applyTrueOffset(offset);
 
         pivot.add(offset);
         rebuild();
     }
 
-    private static boolean testOppositeSides(Vec3f linePoint1, Vec3f linePoint2, Vec3f point1, Vec3f point2) {
+    private static boolean testOppositeSides(Vector3f linePoint1, Vector3f linePoint2, Vector3f point1, Vector3f point2) {
         linePoint1 = linePoint1.copy();
         linePoint2 = linePoint2.copy();
         point1 = point1.copy();
@@ -133,7 +134,7 @@ public class CustomModelPartMesh extends CustomModelPart {
         point1.subtract(linePoint1);
         point2.subtract(linePoint1);
 
-        Vec3f crossProduct1 = linePoint2.copy();
+        Vector3f crossProduct1 = linePoint2.copy();
         crossProduct1.cross(point1);
         linePoint2.cross(point2);
 

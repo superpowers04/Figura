@@ -1,9 +1,9 @@
 package net.blancworks.figura.lua.api.camera;
 
-import net.minecraft.util.math.Vec3f;
+import net.minecraft.client.util.math.Vector3f;
 
 public class CameraCustomization {
-    public Vec3f position;
-    public Vec3f pivot;
-    public Vec3f rotation;
+    public Vector3f position;
+    public Vector3f pivot;
+    public Vector3f rotation;
 }

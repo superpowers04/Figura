@@ -6,13 +6,12 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.mixin.ChannelAccessorMixin;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.options.GameOptions;
 import net.minecraft.client.sound.*;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.Vec3d;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaValue;
-import org.lwjgl.openal.AL10;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -94,7 +93,8 @@ public class FiguraChannel extends Channel {
     }
 
     public LuaValue playCustomSound(CustomScript script, String soundName, Vec3d pos, float pitch, float volume) {
-        if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0) return NIL;
+        if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0 || script.soundSpawnCount < 1) return NIL;
+        script.soundSpawnCount--;
 
         FiguraSound sound = script.customSounds.get(soundName);
         if (sound == null) {

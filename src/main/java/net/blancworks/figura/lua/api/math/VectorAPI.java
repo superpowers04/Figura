@@ -5,8 +5,12 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
 import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Matrix3f;
+import net.minecraft.util.math.Quaternion;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -125,7 +129,8 @@ public class VectorAPI {
             set("toQuaternion", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    Quaternion q = Quaternion.fromEulerXyzDegrees(LuaVector.checkOrNew(arg).asV3f());
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    Quaternion q = new Quaternion(vec.x(), vec.y(), vec.z(), true);
                     return LuaVector.of(new Vector4f(q.getX(), q.getY(), q.getZ(), q.getW()));
                 }
             });
@@ -183,8 +188,8 @@ public class VectorAPI {
     }
 
     public static LuaValue rotateWithQuaternion(LuaVector vector, LuaVector rotation) {
-        Quaternion quat = Quaternion.fromEulerXyzDegrees(vector.asV3f());
-        Quaternion rot = Quaternion.fromEulerXyzDegrees(rotation.asV3f());
+        Quaternion quat = new Quaternion(vector.x(), vector.y(), vector.z(), true);
+        Quaternion rot = new Quaternion(rotation.x(), rotation.y(), rotation.z(), true);
         quat.hamiltonProduct(rot);
 
         //we cant use the quaternion to euler from the quaternion class because NaN and weird rotations
@@ -202,8 +207,8 @@ public class VectorAPI {
     public static LuaValue toCameraSpace(LuaVector vec) {
         Matrix3f transformMatrix = new Matrix3f(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
         transformMatrix.invert();
-        Vec3f target = new Vec3f(vec.x(), vec.y(), vec.z());
-        target.subtract(new Vec3f(MinecraftClient.getInstance().gameRenderer.getCamera().getPos()));
+        Vector3f target = new Vector3f(vec.x(), vec.y(), vec.z());
+        target.subtract(new Vector3f(MinecraftClient.getInstance().gameRenderer.getCamera().getPos()));
         target.transform(transformMatrix);
         target.set(-target.getX(), target.getY(), target.getZ());
         return LuaVector.of(target);

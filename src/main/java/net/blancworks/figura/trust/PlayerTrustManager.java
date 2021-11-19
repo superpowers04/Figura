@@ -3,6 +3,7 @@ package net.blancworks.figura.trust;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.FiguraMod;
+import net.fabricmc.fabric.api.util.NbtType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.nbt.*;
@@ -38,12 +39,12 @@ public class PlayerTrustManager {
             rootObject.entrySet().forEach(entry -> {
                 String name = entry.getKey();
 
-                NbtCompound nbt = new NbtCompound();
-                entry.getValue().getAsJsonObject().entrySet().forEach(trust -> nbt.put(trust.getKey(), NbtInt.of(trust.getValue().getAsInt())));
+                CompoundTag nbt = new CompoundTag();
+                entry.getValue().getAsJsonObject().entrySet().forEach(trust -> nbt.put(trust.getKey(), IntTag.of(trust.getValue().getAsInt())));
 
                 Identifier parentID = new Identifier("default_group", name);
                 TrustContainer parent = new TrustContainer(name, null, nbt);
-                TrustContainer container = new TrustContainer(name, parentID, new NbtCompound());
+                TrustContainer container = new TrustContainer(name, parentID, new CompoundTag());
 
                 if (name.equals("local")) {
                     parent.locked = true;
@@ -81,19 +82,19 @@ public class PlayerTrustManager {
         return trust;
     }
 
-    public static void writeNbt(NbtCompound nbt) {
-        NbtList groupList = new NbtList();
-        NbtList playerList = new NbtList();
+    public static void writeNbt(CompoundTag nbt) {
+        ListTag groupList = new ListTag();
+        ListTag playerList = new ListTag();
 
         groups.forEach((key, value) -> {
-            NbtCompound container = new NbtCompound();
+            CompoundTag container = new CompoundTag();
             value.writeNbt(container);
             groupList.add(container);
         });
 
         players.forEach((key, value) -> {
             if (!key.getPath().equals(getClientPlayerID()) && !value.parentID.getPath().equals("local") && (!value.isTrustEmpty() || !value.parentID.getPath().equals("untrusted"))) {
-                NbtCompound container = new NbtCompound();
+                CompoundTag container = new CompoundTag();
                 value.writeNbt(container);
                 playerList.add(container);
             }
@@ -103,12 +104,12 @@ public class PlayerTrustManager {
         nbt.put("players", playerList);
     }
 
-    public static void readNbt(NbtCompound nbt) {
-        NbtList groupList = nbt.getList("groups", NbtElement.COMPOUND_TYPE);
-        NbtList playerList = nbt.getList("players", NbtElement.COMPOUND_TYPE);
+    public static void readNbt(CompoundTag nbt) {
+        ListTag groupList = nbt.getList("groups", NbtType.COMPOUND);
+        ListTag playerList = nbt.getList("players", NbtType.COMPOUND);
 
         groupList.forEach(value -> {
-            NbtCompound compound = (NbtCompound) value;
+            CompoundTag compound = (CompoundTag) value;
 
             String name = compound.getString("name");
             Identifier parentID = new Identifier(compound.getString("parent"));
@@ -121,7 +122,7 @@ public class PlayerTrustManager {
         });
 
         playerList.forEach(value -> {
-            NbtCompound compound = (NbtCompound) value;
+            CompoundTag compound = (CompoundTag) value;
 
             String name = compound.getString("name");
             Identifier parentID = new Identifier(compound.getString("parent"));
@@ -138,7 +139,7 @@ public class PlayerTrustManager {
 
     public static void saveToDisk() {
         try {
-            NbtCompound targetTag = new NbtCompound();
+            CompoundTag targetTag = new CompoundTag();
             writeNbt(targetTag);
 
             Path targetPath = FiguraMod.getModContentDirectory();
@@ -164,7 +165,7 @@ public class PlayerTrustManager {
                 return;
 
             FileInputStream fis = new FileInputStream(targetPath.toFile());
-            NbtCompound getTag = NbtIo.readCompressed(fis);
+            CompoundTag getTag = NbtIo.readCompressed(fis);
             readNbt(getTag);
             fis.close();
         } catch (Exception e) {

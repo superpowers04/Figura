@@ -80,13 +80,6 @@ public class MetaAPI {
                 }
             });
 
-            set("getCanHaveCustomRenderLayer", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1);
-                }
-            });
-
             set("getCanHaveCustomSounds", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {

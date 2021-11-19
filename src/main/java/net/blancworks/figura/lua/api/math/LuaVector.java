@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.*;
@@ -71,7 +73,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ(), vec.getW());
     }
 
-    public static LuaValue of(Vec3f vec) {
+    public static LuaValue of(Vector3f vec) {
         if (vec == null) return NIL;
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ());
     }
@@ -142,8 +144,8 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new Vector4f(x(), y(), z(), w());
     }
 
-    public Vec3f asV3f() {
-        return new Vec3f(x(), y(), z());
+    public Vector3f asV3f() {
+        return new Vector3f(x(), y(), z());
     }
 
     public Vec3d asV3d() {
@@ -460,15 +462,32 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public Integer _getIndex(String name) {
-        return switch (name) {
-            case "x", "r", "u", "pitch" -> 1;
-            case "y", "g", "v", "yaw", "volume" -> 2;
-            case "z", "b", "roll" -> 3;
-            case "w", "a" -> 4;
-            case "t" -> 5;
-            case "h" -> 6;
-            default -> null;
-        };
+        switch (name) {
+            case "x":
+            case "r":
+            case "u":
+            case "pitch":
+                return 1;
+            case "y":
+            case "g":
+            case "v":
+            case "yaw":
+            case "volume":
+                return 2;
+            case "z":
+            case "b":
+            case "roll":
+                return 3;
+            case "w":
+            case "a":
+                return 4;
+            case "t":
+                return 5;
+            case "h":
+                return 6;
+            default:
+                return null;
+        }
     }
 
     @NotNull

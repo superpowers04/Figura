@@ -1,5 +1,6 @@
 package net.blancworks.figura;
 
+import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.nbt.*;
 
 import java.io.File;
@@ -33,12 +34,12 @@ public class LocalAvatarManager {
                 return;
 
             FileInputStream fis = new FileInputStream(targetPath.toFile());
-            NbtCompound nbt = NbtIo.readCompressed(fis);
+            CompoundTag nbt = NbtIo.readCompressed(fis);
 
             //loading
-            NbtList groupList = nbt.getList("folders", NbtElement.COMPOUND_TYPE);
+            ListTag groupList = nbt.getList("folders", NbtType.COMPOUND);
             groupList.forEach(value -> {
-                NbtCompound compound = (NbtCompound) value;
+                CompoundTag compound = (CompoundTag) value;
 
                 String path = compound.getString("path");
                 boolean expanded = compound.getBoolean("expanded");
@@ -54,14 +55,14 @@ public class LocalAvatarManager {
     public static void saveFolderNbt() {
         try {
             //writing
-            NbtCompound nbt = new NbtCompound();
-            NbtList folderList = new NbtList();
+            CompoundTag nbt = new CompoundTag();
+            ListTag folderList = new ListTag();
 
             FOLDER_DATA.forEach((key, value) -> {
                 if (!value) {
-                    NbtCompound container = new NbtCompound();
-                    container.put("path", NbtString.of(key));
-                    container.put("expanded", NbtByte.of(false));
+                    CompoundTag container = new CompoundTag();
+                    container.put("path", StringTag.of(key));
+                    container.put("expanded", ByteTag.of(false));
 
                     folderList.add(container);
                 }
@@ -134,7 +135,9 @@ public class LocalAvatarManager {
             } else {
                 LocalAvatar entry = parent.get(path);
 
-                if (entry instanceof LocalAvatarFolder folderEntry) {
+                if (entry instanceof LocalAvatarFolder) {
+                    LocalAvatarFolder folderEntry = (LocalAvatarFolder) entry;
+
                     //load avatars from subfolder
                     loadAvatars(file, folderEntry.children);
 

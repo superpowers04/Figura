@@ -10,8 +10,8 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -44,7 +44,7 @@ public class EntityAPI {
                     @Override
                     public LuaValue call(LuaValue arg) {
                         if (!arg.isnil())
-                            return LuaVector.of(targetEntity.get().getLerpedPos(arg.tofloat()));
+                            return LuaVector.of(targetEntity.get().getCameraPosVec(arg.tofloat()));
 
                         return LuaVector.of(targetEntity.get().getPos());
                     }
@@ -55,8 +55,8 @@ public class EntityAPI {
                     public LuaValue call(LuaValue arg) {
                         Entity e = targetEntity.get();
 
-                        float pitch = e.getPitch();
-                        float yaw = e.getYaw();
+                        float pitch = e.pitch;
+                        float yaw = e.yaw;
 
                         if (!arg.isnil()) {
                             pitch = MathHelper.lerp(arg.tofloat(), e.prevPitch, pitch);
@@ -105,7 +105,7 @@ public class EntityAPI {
                 set("getFrozenTicks", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaNumber.valueOf(targetEntity.get().getFrozenTicks());
+                        return LuaNumber.valueOf(0);
                     }
                 });
 
@@ -278,15 +278,15 @@ public class EntityAPI {
 
                         String[] path = pathArg.split("\\.");
 
-                        NbtCompound tag = new NbtCompound();
-                        targetEntity.get().writeNbt(tag);
+                        CompoundTag tag = new CompoundTag();
+                        targetEntity.get().toTag(tag);
 
-                        NbtElement current = tag;
+                        Tag current = tag;
                         for (String key : path) {
                             if (current == null)
                                 current = tag.get(key);
-                            else if (current instanceof NbtCompound)
-                                current = ((NbtCompound)current).get(key);
+                            else if (current instanceof CompoundTag)
+                                current = ((CompoundTag) current).get(key);
                             else current = null;
                         }
 

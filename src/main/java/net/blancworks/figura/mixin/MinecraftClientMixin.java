@@ -10,7 +10,7 @@ import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.options.GameOptions;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -68,9 +68,9 @@ public class MinecraftClientMixin {
                 if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
                     playerPopupActive = true;
                     PlayerPopup.miniEnabled = true;
-                } else if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
+                } else if (target instanceof PlayerEntity && !target.isInvisibleTo(this.player)) {
                     playerPopupActive = true;
-                    PlayerPopup.data = PlayerDataManager.getDataForPlayer(player.getUuid());
+                    PlayerPopup.data = PlayerDataManager.getDataForPlayer(target.getUuid());
                 } else if (!this.options.getPerspective().isFirstPerson()) {
                     playerPopupActive = true;
                     PlayerPopup.data = PlayerDataManager.localPlayer;

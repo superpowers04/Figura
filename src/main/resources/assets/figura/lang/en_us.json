@@ -17,7 +17,6 @@
   "gui.figura.allowvanillaedit": "Vanilla Avatar Changes",
   "gui.figura.allownameplateedit": "Nameplate/Chat Name Changes",
   "gui.figura.allowoffscreenrendering": "Offscreen Rendering",
-  "gui.figura.allowcustomrenderlayers": "Custom Render Layers",
   "gui.figura.allowcustomsounds": "Custom Sounds",
   "gui.figura.maxparticles": "Maximum Particles Per Second",
   "gui.figura.maxsfx": "Maximum Sounds Per Second",

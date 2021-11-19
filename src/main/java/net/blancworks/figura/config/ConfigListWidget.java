@@ -4,11 +4,10 @@ import net.blancworks.figura.config.ConfigManager.Config;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
@@ -17,7 +16,7 @@ import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 
-import java.nio.file.Path;
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -38,9 +37,9 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         FLOAT(s -> s.matches("[\\-+]?[0-9]*(\\.[0-9]+)?") || s.endsWith(".") || s.isEmpty()),
         HEX_COLOR(s -> s.matches("^[#]?[0-9A-Fa-f]{0,6}$")),
         FOLDER_PATH(s -> {
-            if (!s.isBlank()) {
+            if (!s.equals("")) {
                 try {
-                    return Path.of(s.trim()).toFile().isDirectory();
+                    return new File(s.trim()).isDirectory();
                 } catch (Exception ignored) {
                     return false;
                 }
@@ -71,12 +70,24 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     public void addEntry(EntryType type, Object... data) {
         Entry entry;
         switch (type) {
-            case CATEGORY -> entry = new CategoryEntry((Text) data[0]);
-            case BOOLEAN -> entry = new BooleanEntry((Text) data[0], (Text) data[1], (Config) data[2]);
-            case ENUM -> entry = new EnumEntry((Text) data[0], (Text) data[1], (Config) data[2], (List<Text>) data[3]);
-            case INPUT -> entry = new InputEntry((Text) data[0], (Text) data[1], (Config) data[2], (InputTypes) data[3]);
-            case KEYBIND -> entry = new KeyBindEntry((Text) data[0], (Text) data[1], (Config) data[2], (KeyBinding) data[3]);
-            default -> entry = null;
+            case CATEGORY:
+                entry = new CategoryEntry((Text) data[0]);
+                break;
+            case BOOLEAN:
+                entry = new BooleanEntry((Text) data[0], (Text) data[1], (Config) data[2]);
+                break;
+            case ENUM:
+                entry = new EnumEntry((Text) data[0], (Text) data[1], (Config) data[2], (List<Text>) data[3]);
+                break;
+            case INPUT:
+                entry = new InputEntry((Text) data[0], (Text) data[1], (Config) data[2], (InputTypes) data[3]);
+                break;
+            case KEYBIND:
+                entry = new KeyBindEntry((Text) data[0], (Text) data[1], (Config) data[2], (KeyBinding) data[3]);
+                break;
+            default:
+                entry = null;
+                break;
         }
 
         this.addEntry(entry);
@@ -95,7 +106,8 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         this.children().forEach(entry -> {
-            if (entry instanceof InputEntry inputEntry) {
+            if (entry instanceof InputEntry) {
+                InputEntry inputEntry = (InputEntry) entry;
                 inputEntry.field.setTextFieldFocused(inputEntry.field.isMouseOver(mouseX, mouseY));
                 if (inputEntry.field.isFocused())
                     inputEntry.field.setSelectionEnd(0);
@@ -130,11 +142,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Collections.emptyList();
         }
     }
@@ -200,11 +207,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -282,11 +284,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -379,7 +376,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
             //focused size
             int extraWidth = 0;
-            if (this.field.isFocused() && !field.getText().isBlank())
+            if (this.field.isFocused() && !field.getText().equals(""))
                 extraWidth = MathHelper.clamp(textRenderer.getWidth(field.getText()) - 50, 0, 167);
 
             //set size
@@ -418,11 +415,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
-        public List<? extends Selectable> selectableChildren() {
-            return Arrays.asList(this.field, this.reset);
-        }
-
-        @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             return this.field.mouseClicked(mouseX, mouseY, button) || this.reset.mouseClicked(mouseX, mouseY, button);
         }
@@ -442,7 +434,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return this.field.charTyped(chr, modifiers);
         }
 
-        public static int hexToInt(String hexString) {
+        public int hexToInt(String hexString) {
             //parse hex color
             StringBuilder hex = new StringBuilder(hexString);
 
@@ -453,8 +445,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
                 //special catch for 3
                 if (hex.length() == 3)
                     hex = new StringBuilder("" + bgChar[0] + bgChar[0] + bgChar[1] + bgChar[1] + bgChar[2] + bgChar[2]);
-                else
-                    hex.append("0".repeat(Math.max(0, 6 - hex.toString().length())));
+                else {
+                    for (int i = 0; i < Math.max(0, 6 - hex.toString().length()); i++) {
+                        hex.append("0");
+                    }
+                }
             }
 
             try {
@@ -537,11 +532,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
