@@ -6,18 +6,25 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.FiguraMod;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.util.InputUtil;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import org.lwjgl.glfw.GLFW;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.util.HashMap;
-import java.util.Map;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
-public class ConfigManager {
+public final class ConfigManager {
 
     //accent color
     public static final UnaryOperator<Style> ACCENT_COLOR = FiguraMod.ACCENT_COLOR;
@@ -26,61 +33,104 @@ public class ConfigManager {
     public static final String MOD_NAME = "figura";
 
     //mod config version
-    //change this only if you edit old configs
+    //only change this if you rename old configs
     public static final int CONFIG_VERSION = 1;
-    private static final Map<Config, String> V0_CONFIG = new HashMap<Config, String>() {{
-        put(Config.PREVIEW_NAMEPLATE, "previewNameTag");
-        put(Config.FIGURA_BUTTON_LOCATION, "buttonLocation");
-        put(Config.USE_LOCAL_SERVER, "useLocalServer");
-        put(Config.SCRIPT_LOG_LOCATION, "scriptLog");
-        put(Config.PLAYERLIST_MODIFICATIONS, "listMods");
-        put(Config.CHAT_MODIFICATIONS, "chatMods");
-        put(Config.NAMEPLATE_MODIFICATIONS, "nameTagMods");
-        put(Config.BADGE_AS_ICONS, "nameTagIcon");
-        put(Config.BADGES, "showBadges");
-        put(Config.RENDER_OWN_NAMEPLATE, "ownNameTag");
-        put(Config.LOG_OTHERS_SCRIPT, "logOthers");
-        put(Config.ACTION_WHEEL_BUTTON, "actionWheel");
-        put(Config.FORMAT_SCRIPT_ON_UPLOAD, "formatScript");
-        put(Config.ACTION_WHEEL_TITLE_POS, "actionWheelPos");
-        put(Config.RENDER_DEBUG_PARTS_PIVOT, "partsHitBox");
-    }};
 
     //configs!!
     public enum Config {
+        NameTag,
+
         PREVIEW_NAMEPLATE(true),
-        FIGURA_BUTTON_LOCATION(4, 5),
-        USE_LOCAL_SERVER(false),
-        SCRIPT_LOG_LOCATION(0, 3),
-        PLAYERLIST_MODIFICATIONS(true),
-        CHAT_MODIFICATIONS(true),
         NAMEPLATE_MODIFICATIONS(true),
-        BADGE_AS_ICONS(true),
+        CHAT_MODIFICATIONS(true),
+        PLAYERLIST_MODIFICATIONS(true),
         BADGES(true),
-        RENDER_OWN_NAMEPLATE(false),
-        LOG_OTHERS_SCRIPT(false),
-        ACTION_WHEEL_BUTTON(GLFW.GLFW_KEY_B),
-        FORMAT_SCRIPT_ON_UPLOAD(true),
+        BADGE_AS_ICONS(true) {{
+            this.tooltip = new TranslatableText("figura.config.badge_as_icons.tooltip",
+                    new LiteralText("△").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)));
+        }},
+
+        Misc,
+
+        FIGURA_BUTTON_LOCATION(4, 5),
+        SCRIPT_LOG_LOCATION(0, 3),
+        PLAYER_POPUP_BUTTON(GLFW.GLFW_KEY_R, FiguraMod.PLAYER_POPUP_BUTTON),
+        ACCENT_COLOR(0x55FFFF, InputType.HEX_COLOR),
+
+        ActionWheel,
+
+        ACTION_WHEEL_BUTTON(GLFW.GLFW_KEY_B, FiguraMod.ACTION_WHEEL_BUTTON),
         ACTION_WHEEL_TITLE_POS(0, 4),
-        RENDER_DEBUG_PARTS_PIVOT(true),
-        MODEL_FOLDER_PATH(""),
-        PLAYER_POPUP_BUTTON(GLFW.GLFW_KEY_R),
-        ACCENT_COLOR(0x55FFFF);
+
+        Dev {{this.name = new TranslatableText("figura.config.dev").formatted(Formatting.RED);}},
+
+        USE_LOCAL_SERVER(false),
+        FORMAT_SCRIPT_ON_UPLOAD(true),
+        LOG_OTHERS_SCRIPT(false),
+        RENDER_DEBUG_PARTS_PIVOT(true) {{
+            this.tooltip = new TranslatableText("figura.config.render_debug_parts_pivot.tooltip",
+                    new TranslatableText("figura.config.render_debug_parts_pivot.tooltip.cubes").setStyle(Style.EMPTY.withColor(0xff72b7)),
+                    new TranslatableText("figura.config.render_debug_parts_pivot.tooltip.groups").setStyle(Style.EMPTY.withColor(0xaff2ff)));
+        }},
+        RENDER_OWN_NAMEPLATE(false),
+        MODEL_FOLDER_PATH("", InputType.FOLDER_PATH),
+        PANIC_BUTTON(GLFW.GLFW_KEY_UNKNOWN, FiguraMod.PANIC_BUTTON);
 
         //config data
         public Object value;
-        public Object defaultValue;
         public Object configValue;
-        public Object modValue;
 
-        Config(Object value, Object modValue) {
+        public Text name;
+        public Text tooltip;
+        public List<Text> enumList;
+
+        public final ConfigType type;
+        public final Object defaultValue;
+
+        public final Integer modValue;
+        public KeyBinding keyBind;
+        public final InputType inputType;
+
+        //type constructors
+        Config() {
+            this(ConfigType.CATEGORY, null, null, null, null);
+        }
+        Config(Object value) {
+            this(ConfigType.BOOLEAN, value, null, null, null);
+        }
+        Config(Object value, Integer modValue) {
+            this(ConfigType.ENUM, value, modValue, null, null);
+        }
+        Config(Object value, InputType inputType) {
+            this(ConfigType.INPUT, value, null, null, inputType);
+        }
+        Config(Object value, KeyBinding keyBind) {
+            this(ConfigType.KEYBIND, value, null, keyBind, null);
+        }
+
+        //global constructor
+        Config(ConfigType type, Object value, Integer modValue, KeyBinding keyBind, InputType inputType) {
+            //set values
+            this.type = type;
             this.value = value;
             this.defaultValue = value;
             this.configValue = value;
             this.modValue = modValue;
-        }
-        Config(Object value) {
-            this(value, null);
+            this.keyBind = keyBind;
+            this.inputType = inputType;
+
+            //generate names
+            String name = MOD_NAME + ".config." + this.name().toLowerCase();
+            this.name = new TranslatableText(name);
+            this.tooltip = new TranslatableText(name + ".tooltip");
+
+            //generate enum list
+            if (modValue != null) {
+                List<Text> enumList = new ArrayList<>();
+                for (int i = 1; i <= modValue; i++)
+                    enumList.add(new TranslatableText(name + "." + i));
+                this.enumList = enumList;
+            }
         }
 
         public void setValue(String text) {
@@ -103,7 +153,7 @@ public class ConfigManager {
                     value = Short.valueOf(text);
 
                 if (modValue != null)
-                    value = (Integer.parseInt(text) + (int) modValue) % (int) modValue;
+                    value = (Integer.parseInt(text) + modValue) % modValue;
             } catch (Exception e) {
                 value = defaultValue;
             }
@@ -112,7 +162,63 @@ public class ConfigManager {
         }
     }
 
+    public enum ConfigType {
+        CATEGORY,
+        BOOLEAN,
+        ENUM,
+        INPUT,
+        KEYBIND
+    }
+
+    public enum InputType {
+        ANY(s -> true),
+        INT(s -> s.matches("^[\\-+]?[0-9]*$")),
+        FLOAT(s -> s.matches("[\\-+]?[0-9]*(\\.[0-9]+)?") || s.endsWith(".") || s.isEmpty()),
+        HEX_COLOR(s -> s.matches("^[#]?[0-9A-Fa-f]{0,6}$")),
+        FOLDER_PATH(s -> {
+            if (!s.isBlank()) {
+                try {
+                    return Path.of(s.trim()).toFile().isDirectory();
+                } catch (Exception ignored) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        public final Predicate<String> validator;
+        InputType(Predicate<String> predicate) {
+            this.validator = predicate;
+        }
+    }
+
+    //old config -> used on migration
+    private static final Map<Config, String> V0_CONFIG = new HashMap<>() {{
+        put(Config.PREVIEW_NAMEPLATE, "previewNameTag");
+        put(Config.FIGURA_BUTTON_LOCATION, "buttonLocation");
+        put(Config.USE_LOCAL_SERVER, "useLocalServer");
+        put(Config.SCRIPT_LOG_LOCATION, "scriptLog");
+        put(Config.PLAYERLIST_MODIFICATIONS, "listMods");
+        put(Config.CHAT_MODIFICATIONS, "chatMods");
+        put(Config.NAMEPLATE_MODIFICATIONS, "nameTagMods");
+        put(Config.BADGE_AS_ICONS, "nameTagIcon");
+        put(Config.BADGES, "showBadges");
+        put(Config.RENDER_OWN_NAMEPLATE, "ownNameTag");
+        put(Config.LOG_OTHERS_SCRIPT, "logOthers");
+        put(Config.ACTION_WHEEL_BUTTON, "actionWheel");
+        put(Config.FORMAT_SCRIPT_ON_UPLOAD, "formatScript");
+        put(Config.ACTION_WHEEL_TITLE_POS, "actionWheelPos");
+        put(Config.RENDER_DEBUG_PARTS_PIVOT, "partsHitBox");
+    }};
+
     private static final File FILE = new File(FabricLoader.getInstance().getConfigDir().resolve(MOD_NAME + ".json").toString());
+    private static final List<Config> CONFIG_ENTRIES = new ArrayList<>() {{
+        for (Config value : Config.values()) {
+            if (value.type != ConfigType.CATEGORY)
+                this.add(value);
+        }
+    }};
 
     public static void initialize() {
         loadConfig();
@@ -130,7 +236,7 @@ public class ConfigManager {
                     update(json, version == null ? 0 : version.getAsInt());
                 }
                 else {
-                    for (Config config : Config.values()) {
+                    for (Config config : CONFIG_ENTRIES) {
                         JsonElement object = json.get(config.name().toLowerCase());
                         if (object == null)
                             continue;
@@ -153,7 +259,7 @@ public class ConfigManager {
         try {
             JsonObject configJson = new JsonObject();
 
-            for(Config config : Config.values()) {
+            for(Config config : CONFIG_ENTRIES) {
                 if (config.value instanceof Number)
                     configJson.addProperty(config.name().toLowerCase(), (Number) config.value);
                 if (config.value instanceof Character)
@@ -177,19 +283,19 @@ public class ConfigManager {
     }
 
     public static void applyConfig() {
-        for(Config config : Config.values()) {
+        for(Config config : CONFIG_ENTRIES) {
             config.setValue(String.valueOf(config.configValue));
         }
     }
 
     public static void discardConfig() {
-        for(Config config : Config.values()) {
+        for(Config config : CONFIG_ENTRIES) {
             config.configValue = config.value;
         }
     }
 
     public static void setDefaults() {
-        for(Config config : Config.values()) {
+        for(Config config : CONFIG_ENTRIES) {
             config.value = config.defaultValue;
         }
     }
@@ -212,6 +318,23 @@ public class ConfigManager {
 
             String jsonValue = object.getAsString();
             Config.valueOf(config.getKey().toString()).setValue(jsonValue);
+        }
+    }
+
+    public static class ConfigKeyBind extends KeyBinding {
+        private final Config config;
+
+        public ConfigKeyBind(String translationKey, int code, String category, Config config) {
+            super(translationKey, code, category);
+            this.config = config;
+            config.keyBind = this;
+        }
+
+        @Override
+        public void setBoundKey(InputUtil.Key boundKey) {
+            super.setBoundKey(boundKey);
+            config.value = boundKey.getCode();
+            saveConfig();
         }
     }
 

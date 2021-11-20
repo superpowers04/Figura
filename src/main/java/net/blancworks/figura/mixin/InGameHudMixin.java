@@ -21,13 +21,13 @@ public abstract class InGameHudMixin {
 
     @Inject(at = @At ("HEAD"), method = "render")
     public void preRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        if (FiguraMod.playerPopup.isPressed())
+        if (FiguraMod.PLAYER_POPUP_BUTTON.isPressed())
             PlayerPopup.render(matrices);
     }
 
     @Inject(at = @At ("RETURN"), method = "render")
     public void postRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        if (FiguraMod.actionWheel.isPressed())
+        if (FiguraMod.ACTION_WHEEL_BUTTON.isPressed())
             ActionWheel.render(matrices);
     }
 
@@ -38,7 +38,7 @@ public abstract class InGameHudMixin {
 
     @Inject(at = @At ("HEAD"), method = "renderCrosshair", cancellable = true)
     private void renderCrosshair(MatrixStack matrices, CallbackInfo ci) {
-        if (FiguraMod.actionWheel.isPressed() && ActionWheel.enabled)
+        if (FiguraMod.ACTION_WHEEL_BUTTON.isPressed() && ActionWheel.enabled)
             ci.cancel();
 
         //do not render crosshair

@@ -33,7 +33,11 @@ public final class PlayerDataManager {
 
     public static String lastLoadedFileName;
 
+    public static boolean panic = false;
+
     public static PlayerData getDataForPlayer(UUID id) {
+        if (panic) return null;
+
         if (OFFLINE_SWAP_DATA.containsKey(id)) {
             PlayerData data = LOADED_PLAYER_DATA.get(OFFLINE_SWAP_DATA.get(id));
             if (data != null) {
