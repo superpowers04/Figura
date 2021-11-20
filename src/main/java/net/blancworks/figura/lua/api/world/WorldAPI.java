@@ -4,11 +4,12 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.world.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
@@ -47,11 +48,9 @@ public class WorldAPI {
                     BlockPos pos = new BlockPos(vec.asV3iFloored());
 
                     World w = getWorld();
-
                     if (w.getChunk(pos) == null) return NIL;
 
                     BlockState state = w.getBlockState(pos);
-
                     return BlockStateAPI.getTable(state, w, pos);
                 }
             });
@@ -239,12 +238,13 @@ public class WorldAPI {
                 public LuaValue call() {
                     LuaTable playerList = new LuaTable();
 
-                    getWorld().getPlayers().forEach(entity -> {
+                    for (PlayerEntity entity : getWorld().getPlayers()) {
                         PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
+                        if (data == null || data.script == null || !data.script.allowPlayerTargeting)
+                            continue;
 
-                        if (data != null && data.model != null)
-                            playerList.insert(0, new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> entity).getTable());
-                    });
+                        playerList.insert(0, new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> entity).getTable());
+                    }
 
                     return playerList;
                 }

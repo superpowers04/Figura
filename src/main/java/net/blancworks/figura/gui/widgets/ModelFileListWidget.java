@@ -30,7 +30,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
 
         //add empty entry
         if (searchTerm.equals("")) {
-            addEntry(new ModelFileListWidgetEntry("", this, LocalAvatarManager.init ? "models.figura.unselect" : "models.figura.loading", null, 0) {
+            addEntry(new ModelFileListWidgetEntry("", this, LocalAvatarManager.init ? "figura.models.unselect" : "figura.models.loading", null, 0) {
                 @Override
                 public Text getDisplayText() {
                     return new TranslatableText(this.getName()).formatted(Formatting.ITALIC, Formatting.DARK_GRAY);

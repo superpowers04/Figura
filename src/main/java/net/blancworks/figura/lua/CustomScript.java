@@ -19,13 +19,19 @@ import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.models.sounds.FiguraSound;
+import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.*;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
@@ -60,6 +66,11 @@ public class CustomScript extends FiguraAsset {
     //Updated as things are added to it.
     public CompletableFuture<Void> currTask;
 
+    public RenderType renderMode = RenderType.RENDER;
+    public enum RenderType {
+        RENDER,
+        WORLD_RENDER
+    }
 
     //How many instructions the last tick/render event used.
     public int tickInstructionCount = 0;
@@ -116,21 +127,27 @@ public class CustomScript extends FiguraAsset {
 
     public String commandPrefix = "\u0000";
 
+    public final Map<String, LuaValue> SHARED_VALUES = new HashMap<>();
+
+    public HashMap<String, FiguraSound> customSounds = new HashMap<>();
+
+    public boolean allowPlayerTargeting = false;
+
     public static final UnaryOperator<Style> LUA_COLOR = (s) -> s.withColor(0x5555FF);
     public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").styled(LUA_COLOR));
-
-    public final Map<String, LuaValue> SHARED_VALUES = new HashMap<>();
 
     //Custom Rendering
     public static final int maxShaders = 16;
     public Map<String, FiguraShader> shaders = new HashMap<>();
     public FiguraVertexConsumerProvider customVCP = null;
 
-
     //----PINGS!----
 
     //Maps functions from lua to shorts for data saving.
+    @Deprecated
     public BiMap<Short, String> functionIDMap = HashBiMap.create();
+
+    public BiMap<Short, LuaValue> newFunctionIDMap = HashBiMap.create();
 
     private short lastPingID = Short.MIN_VALUE;
 
@@ -319,6 +336,7 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
+            renderMode = RenderType.WORLD_RENDER;
             setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
             try {
                 allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
@@ -329,14 +347,14 @@ public class CustomScript extends FiguraAsset {
         });
     }
 
-    public void onDamage(float amount) {
+    public void onDamage(float amount, DamageSource source) {
         if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
             return;
 
         queueTask(() -> {
             setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
             try {
-                allEvents.get("onDamage").call(LuaNumber.valueOf(amount));
+                allEvents.get("onDamage").call(LuaNumber.valueOf(amount), LuaString.valueOf(source.name));
             } catch (Exception error) {
                 handleError(error);
             }
@@ -377,6 +395,8 @@ public class CustomScript extends FiguraAsset {
 
                                 if (log == null)
                                     throw new Exception("Error parsing JSON string");
+
+                                TextUtils.removeClickableObjects((MutableText) log);
                             } catch (Exception ignored) {
                                 log = new LiteralText(arg.toString());
                             }
@@ -441,6 +461,15 @@ public class CustomScript extends FiguraAsset {
             }
         });
 
+        //player targeting
+        scriptGlobals.set("setPlayerTargeting", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg) {
+                allowPlayerTargeting = arg.checkboolean();
+                return NIL;
+            }
+        });
+
         LuaTable globalMetaTable = new LuaTable();
 
         //When creating a new variable.
@@ -495,7 +524,6 @@ public class CustomScript extends FiguraAsset {
                 )
         );
     }
-
 
     //--Events--
 
@@ -554,10 +582,13 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onRender(float deltaTime) {
-        for (CustomModelPart part : this.playerData.model.allParts) {
-            CustomModelPart.clearExtraRendering(part);
+        synchronized (this.playerData.model.allParts) {
+            for (CustomModelPart part : this.playerData.model.allParts) {
+                CustomModelPart.clearExtraRendering(part);
+            }
         }
 
+        renderMode = RenderType.RENDER;
         setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
@@ -896,22 +927,25 @@ public class CustomScript extends FiguraAsset {
     }
 
     //--Pings--
+    @Deprecated
     public void registerPingName(String s) {
         functionIDMap.put(lastPingID++, s);
+    }
+
+    public void registerPing(LuaValue func) {
+        newFunctionIDMap.put(lastPingID++, func);
     }
 
     public void handlePing(short id, LuaValue args) {
         try {
             String functionName = functionIDMap.get(id);
+            LuaValue function = newFunctionIDMap.get(id);
 
-            if (functionName != null) {
-                LuaValue function = scriptGlobals.get(functionName);
-                LuaPing p = new LuaPing();
-                p.function = function.checkfunction();
-                p.args = args;
-                p.functionID = id;
-
-                incomingPingQueue.add(p);
+            if (function != null) {
+                addPing(function, args, id);
+            } else if (functionName != null) {
+                LuaValue func = scriptGlobals.get(functionName);
+                addPing(func, args, id);
             }
         } catch (Exception error) {
             if (error instanceof LuaError err)
@@ -921,9 +955,34 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
+    public void addPing(LuaValue function, LuaValue args, short id) {
+        LuaPing p = new LuaPing();
+        p.function = function.checkfunction();
+        p.args = args;
+        p.functionID = id;
+
+        incomingPingQueue.add(p);
+    }
+
     public static class LuaPing {
         public short functionID;
         public LuaFunction function;
         public LuaValue args;
+    }
+
+    public void clearPings() {
+        lastPingID = Short.MIN_VALUE;
+        functionIDMap.clear();
+        newFunctionIDMap.clear();
+    }
+
+    //--Misc--
+    public void clearSounds() {
+        if (playerData != null) {
+            FiguraSoundManager.getChannel().stopSound(playerData.playerId);
+        }
+
+        customSounds.values().forEach(FiguraSound::close);
+        customSounds.clear();
     }
 }

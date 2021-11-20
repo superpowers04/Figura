@@ -5,6 +5,7 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -26,19 +27,14 @@ public class ItemStackAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-
             set("createItem", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    ItemStack item = Registry.ITEM.get(Identifier.tryParse(arg1.checkjstring())).getDefaultStack();
-
-                    if (!arg2.isnil())
-                        setItemNbt(item, arg2.checkjstring());
-
+                    ItemStack item = checkOrCreateItemStack(arg1);
+                    if (!arg2.isnil()) setItemNbt(item, arg2.checkjstring());
                     return getTable(item);
                 }
             });
-
         }});
     }
 
@@ -161,10 +157,15 @@ public class ItemStackAPI {
         }
     }
 
-    public static ItemStack checkItemStack(LuaValue arg1) {
+    public static ItemStack checkOrCreateItemStack(LuaValue arg1) {
         ItemStack item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
-        if (item == null)
-            throw new LuaError("Not a ItemStack table!");
+        if (item == null) {
+            try {
+                return  ItemStackArgumentType.itemStack().parse(new StringReader(arg1.checkjstring())).createStack(1, false);
+            } catch (CommandSyntaxException e) {
+                throw new LuaError("Could not create item stack\n" + e.getMessage());
+            }
+        }
 
         return item;
     }

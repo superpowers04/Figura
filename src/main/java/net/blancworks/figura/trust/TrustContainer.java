@@ -29,7 +29,8 @@ public class TrustContainer {
         VANILLA_MODEL_EDIT("allowvanillaedit"),
         NAMEPLATE_EDIT("allownameplateedit"),
         OFFSCREEN_RENDERING("allowoffscreenrendering"),
-        CUSTOM_RENDER_LAYER("allowcustomrenderlayers");
+        CUSTOM_RENDER_LAYER("allowcustomrenderlayers"),
+        CUSTOM_SOUNDS("allowcustomsounds");
 
         public final String id;
         public final boolean isBool;

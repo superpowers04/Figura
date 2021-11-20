@@ -4,10 +4,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.config.ConfigManager.Config;
+import net.blancworks.figura.config.ConfigManager.ConfigKeyBind;
 import net.blancworks.figura.gui.FiguraToast;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
+import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.network.IFiguraNetwork;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -22,7 +24,6 @@ import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
@@ -64,8 +65,9 @@ public class FiguraMod implements ClientModInitializer {
     public static final boolean IS_CHEESE = LocalDate.now().getDayOfMonth() == 1 && LocalDate.now().getMonthValue() == 4;
     public static NbtCompound cheese;
 
-    public static KeyBinding actionWheel;
-    public static KeyBinding playerPopup;
+    public static final ConfigKeyBind ACTION_WHEEL_BUTTON = new ConfigKeyBind("figura.config.action_wheel_button", GLFW.GLFW_KEY_B, "key.categories.misc", Config.ACTION_WHEEL_BUTTON);
+    public static final ConfigKeyBind PLAYER_POPUP_BUTTON = new ConfigKeyBind("figura.config.player_popup_button", GLFW.GLFW_KEY_R, "key.categories.misc", Config.PLAYER_POPUP_BUTTON);
+    public static final ConfigKeyBind PANIC_BUTTON = new ConfigKeyBind("figura.config.panic_button", GLFW.GLFW_KEY_UNKNOWN, "key.categories.misc", Config.PANIC_BUTTON);
 
     public static int ticksElapsed;
 
@@ -116,6 +118,7 @@ public class FiguraMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        //initialise managers
         ConfigManager.initialize();
         FiguraLuaManager.initialize();
         PlayerTrustManager.init();
@@ -127,37 +130,14 @@ public class FiguraMod implements ClientModInitializer {
             e.printStackTrace();
         }
 
-        //action wheel keybind
-        actionWheel = new KeyBinding(
-                "key.figura.actionwheel",
-                GLFW.GLFW_KEY_B,
-                "key.categories.misc"
-        ){
-            @Override
-            public void setBoundKey(InputUtil.Key boundKey) {
-                super.setBoundKey(boundKey);
-                Config.ACTION_WHEEL_BUTTON.value = boundKey.getCode();
-                ConfigManager.saveConfig();
-        }};
+        //set keybinds based on config
+        ACTION_WHEEL_BUTTON.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.ACTION_WHEEL_BUTTON.value));
+        PLAYER_POPUP_BUTTON.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.PLAYER_POPUP_BUTTON.value));
+        PANIC_BUTTON.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.PANIC_BUTTON.value));
 
-        actionWheel.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.ACTION_WHEEL_BUTTON.value));
-        KeyBindingRegistryImpl.registerKeyBinding(actionWheel);
-
-        //reload avatar keybind
-        playerPopup = new KeyBinding(
-                "key.figura.playerpopup",
-                GLFW.GLFW_KEY_R,
-                "key.categories.misc"
-        ){
-            @Override
-            public void setBoundKey(InputUtil.Key boundKey) {
-                super.setBoundKey(boundKey);
-                Config.PLAYER_POPUP_BUTTON.value = boundKey.getCode();
-                ConfigManager.saveConfig();
-            }};
-
-        playerPopup.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.PLAYER_POPUP_BUTTON.value));
-        KeyBindingRegistryImpl.registerKeyBinding(playerPopup);
+        KeyBindingRegistryImpl.registerKeyBinding(ACTION_WHEEL_BUTTON);
+        KeyBindingRegistryImpl.registerKeyBinding(PLAYER_POPUP_BUTTON);
+        KeyBindingRegistryImpl.registerKeyBinding(PANIC_BUTTON);
 
         //Set up network
         newNetworkManager = new NewFiguraNetworkManager();
@@ -193,6 +173,7 @@ public class FiguraMod implements ClientModInitializer {
     public static void ClientEndTick(MinecraftClient client) {
         try {
             PlayerDataManager.tick();
+            FiguraSoundManager.tick();
 
             networkManager = newNetworkManager;
 

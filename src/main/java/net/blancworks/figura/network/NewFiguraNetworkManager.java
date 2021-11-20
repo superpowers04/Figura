@@ -193,9 +193,6 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
                     byte[] result = baos.toByteArray();
 
-                    //since this version of mod only support ONE avatar per user
-                    //delete old avatar then upload the new one
-                    new UserDeleteCurrentAvatarMessageSender().sendMessage(currWebSocket);
                     new AvatarUploadMessageSender(result).sendMessage(currWebSocket);
 
                     nbtDataStream.close();

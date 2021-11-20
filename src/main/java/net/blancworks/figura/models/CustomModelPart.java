@@ -7,9 +7,9 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.*;
-import net.blancworks.figura.lua.api.renderer.RenderTask;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.models.tasks.RenderTask;
 import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
@@ -77,7 +77,7 @@ public class CustomModelPart {
     public Matrix3f lastNormalMatrixInverse = new Matrix3f();
 
     //Extra special rendering for this part
-    public ArrayList<RenderTask> renderTasks = new ArrayList<>();
+    public final ArrayList<RenderTask> renderTasks = new ArrayList<>();
 
     public static boolean canRenderHitBox = false;
 
@@ -364,9 +364,11 @@ public class CustomModelPart {
 
     public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
         //Render extra parts
-        for (RenderTask task : this.renderTasks) {
-            leftToRender -= task.render(matrices, vcp, light);
-            if (leftToRender <= 0) break;
+        synchronized (this.renderTasks) {
+            for (RenderTask task : this.renderTasks) {
+                leftToRender -= task.render(matrices, vcp, light);
+                if (leftToRender <= 0) break;
+            }
         }
 
         //Render hit box

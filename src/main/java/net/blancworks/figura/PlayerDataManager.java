@@ -1,6 +1,9 @@
 package net.blancworks.figura;
 
+import com.mojang.authlib.GameProfile;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
+import net.blancworks.figura.models.sounds.FiguraSoundManager;
+import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.option.KeyBinding;
@@ -16,6 +19,7 @@ import java.util.*;
 public final class PlayerDataManager {
     public static boolean didInitLocalPlayer = false;
     public static final Map<UUID, PlayerData> LOADED_PLAYER_DATA = new HashMap<>();
+    public static final Map<UUID, UUID> OFFLINE_SWAP_DATA = new HashMap<>();
 
     //Players that we're currently queued up to grab data for.
     private static final Set<UUID> SERVER_REQUESTED_PLAYERS = new HashSet<>();
@@ -29,12 +33,18 @@ public final class PlayerDataManager {
 
     public static String lastLoadedFileName;
 
+    public static boolean panic = false;
+
     public static PlayerData getDataForPlayer(UUID id) {
-        try {
-            if (TO_CLEAR.remove(id))
-                LOADED_PLAYER_DATA.remove(id);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (panic) return null;
+
+        if (OFFLINE_SWAP_DATA.containsKey(id)) {
+            PlayerData data = LOADED_PLAYER_DATA.get(OFFLINE_SWAP_DATA.get(id));
+            if (data != null) {
+                data.playerId = id;
+                LOADED_PLAYER_DATA.put(id, data);
+                OFFLINE_SWAP_DATA.remove(id);
+            }
         }
 
         MinecraftClient client = MinecraftClient.getInstance();
@@ -69,6 +79,23 @@ public final class PlayerDataManager {
             getData = new PlayerData();
             getData.playerId = id;
 
+            if (client.getNetworkHandler() != null) {
+                PlayerListEntry playerEntry = client.getNetworkHandler().getPlayerListEntry(id);
+                if (playerEntry != null && playerEntry.getProfile() != null) {
+                    String name = playerEntry.getProfile().getName();
+                    if (!name.isBlank()) {
+                        GameProfile gameProfile = new GameProfile(null, name);
+                        SkullBlockEntity.loadProperties(gameProfile, profile -> {
+                            UUID profileID = profile.getId();
+                            if (id.compareTo(profileID) == 0) return;
+
+                            getPlayerAvatarFromServerOrCache(profileID, getData);
+                            OFFLINE_SWAP_DATA.put(id, profileID);
+                        });
+                    }
+                }
+            }
+
             getPlayerAvatarFromServerOrCache(id, getData);
 
             LOADED_PLAYER_DATA.put(id, getData);
@@ -83,7 +110,7 @@ public final class PlayerDataManager {
                 if (playerEntry != null && playerEntry.getProfile() != null)
                     playerName = new LiteralText(playerEntry.getProfile().getName());
 
-                getData.playerListEntry = client.getNetworkHandler().getPlayerListEntry(id);
+                getData.playerListEntry = playerEntry;
             }
             getData.playerName = playerName;
         }
@@ -144,7 +171,6 @@ public final class PlayerDataManager {
         }
     }
 
-
     //Loads the model off of the network.
     public static void loadFromNetwork(UUID id, PlayerData targetData) {
         FiguraMod.networkManager.getAvatarData(id);
@@ -163,6 +189,7 @@ public final class PlayerDataManager {
     }
 
     public static void clearCache() {
+        LOADED_PLAYER_DATA.keySet().forEach(FiguraSoundManager.getChannel()::stopSound);
         LOADED_PLAYER_DATA.clear();
         localPlayer = null;
         didInitLocalPlayer = false;
@@ -177,6 +204,8 @@ public final class PlayerDataManager {
             KeyBinding.updateKeysByCode();
         }
 
+        localPlayer.clearData();
+
         LOADED_PLAYER_DATA.remove(localPlayer.playerId);
         localPlayer = null;
         didInitLocalPlayer = false;
@@ -190,12 +219,17 @@ public final class PlayerDataManager {
         if (MinecraftClient.getInstance().world == null)
             return;
 
-        for (UUID uuid : TO_CLEAR) {
-            LOADED_PLAYER_DATA.remove(uuid);
+        synchronized(TO_CLEAR) {
+            TO_CLEAR.forEach(uuid -> {
+                getDataForPlayer(uuid).clearData();
+                LOADED_PLAYER_DATA.remove(uuid);
+            });
+            TO_CLEAR.clear();
         }
-        TO_CLEAR.clear();
 
-        LOADED_PLAYER_DATA.values().forEach(PlayerData::tick);
+        synchronized(LOADED_PLAYER_DATA) {
+            LOADED_PLAYER_DATA.values().forEach(PlayerData::tick);
+        }
     }
 
     //Reloads all textures, used for asset reloads in vanilla.

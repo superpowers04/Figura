@@ -10,6 +10,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 
+@Deprecated
 public class NetworkAPI {
     public static Identifier getID() {
         return new Identifier("default", "network");
@@ -22,7 +23,7 @@ public class NetworkAPI {
     public static class NetworkAPILuaTable extends ReadOnlyLuaTable {
         public CustomScript targetScript;
         
-        public NetworkAPILuaTable(CustomScript script){
+        public NetworkAPILuaTable(CustomScript script) {
             this.targetScript = script;
 
             LuaTable table = new LuaTable();
@@ -60,7 +61,8 @@ public class NetworkAPI {
 
                         if (!targetScript.playerData.isLocalAvatar)
                             targetScript.outgoingPingQueue.add(lp);
-                    } catch (Exception ignored) {
+                    } catch (Exception e) {
+                        e.printStackTrace();
                         throw new LuaError("Failed to send ping! Make sure the ping is registered before sending it!");
                     }
 

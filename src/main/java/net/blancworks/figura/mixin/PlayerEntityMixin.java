@@ -26,7 +26,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
 
             if (data != null && data.script != null) {
                 data.script.lastDamageSource = source;
-                data.script.onDamage(amount);
+                data.script.onDamage(amount, source);
             }
         }
     }

@@ -87,6 +87,13 @@ public class ChatAPI {
                 }
             });
 
+            set("isOpen", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(MinecraftClient.getInstance().currentScreen instanceof ChatScreen);
+                }
+            });
+
         }});
     }
 }

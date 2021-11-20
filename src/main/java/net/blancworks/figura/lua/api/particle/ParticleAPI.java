@@ -2,8 +2,9 @@ package net.blancworks.figura.lua.api.particle;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.lua.api.block.BlockStateAPI;
+import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
@@ -41,54 +42,6 @@ public class ParticleAPI {
         return new ReadOnlyLuaTable(new LuaTable() {{
             set("addParticle", new VarArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    //setup particle
-                    AbstractMap.Entry<Identifier, ParticleType<?>> particleType = particleSetup(script, arg1);
-                    if (particleType == null || !(particleType.getValue() instanceof DefaultParticleType type)) return NIL;
-
-                    //particle
-                    summonParticle(type, LuaVector.checkOrNew(arg2));
-
-                    return NIL;
-                }
-
-                @Override
-                public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                    //setup particle
-                    AbstractMap.Entry<Identifier, ParticleType<?>> particleType = particleSetup(script, arg1);
-                    if (particleType == null || particleType.getValue() instanceof DefaultParticleType) return NIL;
-
-                    //particle special args
-                    ParticleEffect particle;
-                    switch (particleType.getKey().toString()) {
-                        case "minecraft:dust" -> {
-                            LuaVector color = LuaVector.checkOrNew(arg3);
-                            particle = new DustParticleEffect(color.asV3f(), color.w());
-                        }
-                        case "minecraft:falling_dust" -> {
-                            BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
-                            particle = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, blockState);
-                        }
-                        case "minecraft:block" -> {
-                            BlockState blockState = Registry.BLOCK.get(Identifier.tryParse(arg3.checkjstring())).getDefaultState();
-                            particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, blockState);
-                        }
-                        case "minecraft:item" -> {
-                            ItemStack itemStack = Registry.ITEM.get(Identifier.tryParse(arg3.checkjstring())).getDefaultStack();
-                            particle = new ItemStackParticleEffect(ParticleTypes.ITEM, itemStack);
-                        }
-                        default -> {
-                            return NIL;
-                        }
-                    }
-
-                    //add particle
-                    summonParticle(particle, LuaVector.checkOrNew(arg2));
-
-                    return NIL;
-                }
-
-                @Override
                 public Varargs onInvoke(Varargs args) {
                     //argos
                     LuaValue arg1 = args.arg(1);
@@ -98,11 +51,29 @@ public class ParticleAPI {
 
                     //setup particle
                     AbstractMap.Entry<Identifier, ParticleType<?>> particleType = particleSetup(script, arg1);
-                    if (particleType == null || particleType.getValue() instanceof DefaultParticleType) return NIL;
+                    if (particleType == null) return NIL;
 
-                    //particle special args
+                    //particle special argos
                     ParticleEffect particle;
                     switch (particleType.getKey().toString()) {
+                        //3 argos
+                        case "minecraft:dust" -> {
+                            LuaVector color = LuaVector.checkOrNew(arg3);
+                            particle = new DustParticleEffect(color.asV3f(), color.w());
+                        }
+                        case "minecraft:falling_dust" -> {
+                            BlockState state = BlockStateAPI.checkOrCreateBlockState(arg3);
+                            particle = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, state);
+                        }
+                        case "minecraft:block" -> {
+                            BlockState state = BlockStateAPI.checkOrCreateBlockState(arg3);
+                            particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, state);
+                        }
+                        case "minecraft:item" -> {
+                            ItemStack stack = ItemStackAPI.checkOrCreateItemStack(arg3);
+                            particle = new ItemStackParticleEffect(ParticleTypes.ITEM, stack);
+                        }
+                        //4 argos
                         case "minecraft:dust_color_transition" -> {
                             LuaVector fromColor = LuaVector.checkOrNew(arg3);
                             LuaVector toColor = LuaVector.checkOrNew(arg4);
@@ -116,8 +87,11 @@ public class ParticleAPI {
 
                             particle = new VibrationParticleEffect(new Vibration(startPos, endPos, (int) start.w()));
                         }
+                        //default particle type
                         default -> {
-                            return NIL;
+                            if (particleType.getValue() instanceof DefaultParticleType type)
+                                particle = type;
+                            else return NIL;
                         }
                     }
 
