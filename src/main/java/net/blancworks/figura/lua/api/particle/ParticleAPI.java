@@ -10,8 +10,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.*;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.world.Vibration;
 import net.minecraft.world.World;
+import net.minecraft.world.event.BlockPositionSource;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
@@ -22,7 +25,7 @@ import java.util.HashMap;
 
 public class ParticleAPI {
 
-    public static HashMap<String, ParticleType<?>> particleTypes = new HashMap<String, ParticleType<?>>() {{
+    public static HashMap<String, ParticleType<?>> particleTypes = new HashMap<>() {{
         for (Identifier id : Registry.PARTICLE_TYPE.getIds()) {
             ParticleType<?> type = Registry.PARTICLE_TYPE.get(id);
 
@@ -44,6 +47,7 @@ public class ParticleAPI {
                     LuaValue arg1 = args.arg(1);
                     LuaValue arg2 = args.arg(2);
                     LuaValue arg3 = args.arg(3);
+                    LuaValue arg4 = args.arg(4);
 
                     //setup particle
                     AbstractMap.Entry<Identifier, ParticleType<?>> particleType = particleSetup(script, arg1);
@@ -51,30 +55,44 @@ public class ParticleAPI {
 
                     //particle special argos
                     ParticleEffect particle;
-                    //3 argos
-                    //default particle type
                     switch (particleType.getKey().toString()) {
-                        case "minecraft:dust":
+                        //3 argos
+                        case "minecraft:dust" -> {
                             LuaVector color = LuaVector.checkOrNew(arg3);
-                            particle = new DustParticleEffect(color.x(), color.y(), color.z(), color.w());
-                            break;
-                        case "minecraft:falling_dust":
+                            particle = new DustParticleEffect(color.asV3f(), color.w());
+                        }
+                        case "minecraft:falling_dust" -> {
                             BlockState state = BlockStateAPI.checkOrCreateBlockState(arg3);
                             particle = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, state);
-                            break;
-                        case "minecraft:block":
-                            BlockState state2 = BlockStateAPI.checkOrCreateBlockState(arg3);
-                            particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, state2);
-                            break;
-                        case "minecraft:item":
+                        }
+                        case "minecraft:block" -> {
+                            BlockState state = BlockStateAPI.checkOrCreateBlockState(arg3);
+                            particle = new BlockStateParticleEffect(ParticleTypes.BLOCK, state);
+                        }
+                        case "minecraft:item" -> {
                             ItemStack stack = ItemStackAPI.checkOrCreateItemStack(arg3);
                             particle = new ItemStackParticleEffect(ParticleTypes.ITEM, stack);
-                            break;
-                        default:
-                            if (particleType.getValue() instanceof DefaultParticleType)
-                                particle = (DefaultParticleType) particleType.getValue();
+                        }
+                        //4 argos
+                        case "minecraft:dust_color_transition" -> {
+                            LuaVector fromColor = LuaVector.checkOrNew(arg3);
+                            LuaVector toColor = LuaVector.checkOrNew(arg4);
+                            particle = new DustColorTransitionParticleEffect(fromColor.asV3f(), toColor.asV3f(), fromColor.w());
+                        }
+                        case "minecraft:vibration" -> {
+                            LuaVector start = LuaVector.checkOrNew(arg3);
+                            LuaVector end = LuaVector.checkOrNew(arg4);
+                            BlockPos startPos = new BlockPos(start.asV3d());
+                            BlockPositionSource endPos = new BlockPositionSource(new BlockPos(end.asV3d()));
+
+                            particle = new VibrationParticleEffect(new Vibration(startPos, endPos, (int) start.w()));
+                        }
+                        //default particle type
+                        default -> {
+                            if (particleType.getValue() instanceof DefaultParticleType type)
+                                particle = type;
                             else return NIL;
-                            break;
+                        }
                     }
 
                     //add particle

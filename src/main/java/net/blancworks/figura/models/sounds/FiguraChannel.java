@@ -6,7 +6,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.mixin.ChannelAccessorMixin;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.options.GameOptions;
+import net.minecraft.client.option.GameOptions;
 import net.minecraft.client.sound.*;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.Vec3d;

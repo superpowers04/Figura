@@ -6,7 +6,7 @@ import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.text.LiteralText;
 
@@ -83,14 +83,15 @@ public final class PlayerDataManager {
                 PlayerListEntry playerEntry = client.getNetworkHandler().getPlayerListEntry(id);
                 if (playerEntry != null && playerEntry.getProfile() != null) {
                     String name = playerEntry.getProfile().getName();
-                    if (!name.equals("")) {
+                    if (!name.isBlank()) {
                         GameProfile gameProfile = new GameProfile(null, name);
-                        GameProfile newID = SkullBlockEntity.loadProperties(gameProfile);
+                        SkullBlockEntity.loadProperties(gameProfile, profile -> {
+                            UUID profileID = profile.getId();
+                            if (id.compareTo(profileID) == 0) return;
 
-                        if (newID != null && id.compareTo(newID.getId()) != 0) {
-                            getPlayerAvatarFromServerOrCache(newID.getId(), getData);
-                            OFFLINE_SWAP_DATA.put(id, newID.getId());
-                        }
+                            getPlayerAvatarFromServerOrCache(profileID, getData);
+                            OFFLINE_SWAP_DATA.put(id, profileID);
+                        });
                     }
                 }
             }

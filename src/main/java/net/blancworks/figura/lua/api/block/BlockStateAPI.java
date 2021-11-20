@@ -10,7 +10,6 @@ import net.blancworks.figura.mixin.AbstractBlockAccessorMixin;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Material;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.command.argument.BlockStateArgumentType;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.sound.BlockSoundGroup;
@@ -18,6 +17,7 @@ import net.minecraft.tag.BlockTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaError;
@@ -42,7 +42,7 @@ public class BlockStateAPI {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     BlockState block = checkOrCreateBlockState(arg1);
-                    BlockPos pos = arg2.isnil() ? ((LuaVector) LuaVector.of(new Vector3f(0f, 0f, 0f))).asBlockPos() : LuaVector.checkOrNew(arg2).asBlockPos();
+                    BlockPos pos = arg2.isnil() ? ((LuaVector) LuaVector.of(Vec3f.ZERO)).asBlockPos() : LuaVector.checkOrNew(arg2).asBlockPos();
                     return getTable(block, MinecraftClient.getInstance().world, pos);
                 }
             });
@@ -104,7 +104,7 @@ public class BlockStateAPI {
             tbl.javaRawSet(LuaValue.valueOf("getMapColor"), new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(state.getBlock().getDefaultMaterialColor().color);
+                    return LuaValue.valueOf(state.getBlock().getDefaultMapColor().color);
                 }
             });
 
@@ -125,7 +125,7 @@ public class BlockStateAPI {
             tbl.javaRawSet(LuaValue.valueOf("hasBlockEntity"), new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(state.getBlock().hasBlockEntity());
+                    return LuaValue.valueOf(state.hasBlockEntity());
                 }
             });
 

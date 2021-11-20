@@ -5,6 +5,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
+import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -49,6 +50,7 @@ public class MinecraftClientMixin {
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {
         try {
+            FiguraSoundManager.getChannel().stopAllSounds();
             PlayerDataManager.clearCache();
         } catch (Exception ignored) {}
     }

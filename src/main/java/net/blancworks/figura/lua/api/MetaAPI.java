@@ -87,6 +87,13 @@ public class MetaAPI {
                 }
             });
 
+            set("getCanHaveCustomSounds", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 1);
+                }
+            });
+
 
             set("getCurrentTickCount", new ZeroArgFunction() {
                 @Override

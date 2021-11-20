@@ -3,6 +3,7 @@ package net.blancworks.figura;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
+import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -121,6 +122,14 @@ public class PlayerData {
             NbtCompound scriptNbt = new NbtCompound();
             script.toNBT(scriptNbt);
             nbt.put("script", scriptNbt);
+
+            try {
+                if (!script.customSounds.isEmpty()) {
+                    nbt.put("sounds", writeCustomSoundsNBT());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
 
         if (!extraTextures.isEmpty()) {
@@ -197,6 +206,14 @@ public class PlayerData {
                 if (scriptNbt != null) FiguraMod.doTask(() -> {
                     script = new CustomScript();
                     script.fromNBT(this, scriptNbt);
+
+                    try {
+                        if (nbt.contains("sounds")) {
+                            readCustomSoundsNBT(nbt.getCompound("sounds"));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 });
             }
         } catch (Exception e) {
@@ -327,5 +344,26 @@ public class PlayerData {
 
     public boolean isAvatarLoaded() {
         return (model == null || model.isDone) && (script == null || script.isDone) && (texture == null || texture.isDone);
+    }
+
+    private NbtElement writeCustomSoundsNBT() {
+        NbtCompound nbt = new NbtCompound();
+
+        for (String key : script.customSounds.keySet()) {
+            script.customSounds.get(key).writeNbt(nbt);
+        }
+
+        return nbt;
+    }
+
+    private void readCustomSoundsNBT(NbtCompound nbt) {
+        nbt.getKeys().forEach(key -> FiguraSoundManager.registerCustomSound(script, key, nbt.getByteArray(key), false));
+    }
+
+    public void clearData() {
+        if (script != null) {
+            script.clearSounds();
+            script.clearPings();
+        }
     }
 }

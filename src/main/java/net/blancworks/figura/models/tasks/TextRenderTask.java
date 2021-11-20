@@ -4,14 +4,14 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.Vec3f;
 
 public class TextRenderTask extends RenderTask {
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
     private final Text text;
 
-    public TextRenderTask(Text text, boolean emissive, Vector3f pos, Vector3f rot, Vector3f scale) {
+    public TextRenderTask(Text text, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {
         super(emissive, pos, rot, scale);
         this.text = text;
     }
