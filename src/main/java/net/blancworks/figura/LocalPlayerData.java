@@ -8,7 +8,6 @@ import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.Identifier;
 
@@ -70,7 +69,6 @@ public class LocalPlayerData extends PlayerData {
         this.model = null;
         this.texture = null;
         this.script = null;
-        this.customVCP = null;
 
         extraTextures.clear();
         watchedFiles.clear();
@@ -92,7 +90,7 @@ public class LocalPlayerData extends PlayerData {
         boolean isZip = path.endsWith(".zip");
 
         //loading stuff
-        //1 - model | 2 - player model | 4 - texture | 8 - script | 16 - render layers
+        //1 - model | 2 - player model | 4 - texture | 8 - script
         byte data = 0;
         HashMap<String, Path> avatarPaths = new HashMap<>();
 
@@ -108,7 +106,6 @@ public class LocalPlayerData extends PlayerData {
                 if (zipFile.getEntry("player_model.bbmodel") != null) data = (byte) (data | 2);
                 if (zipFile.getEntry("texture.png") != null) data = (byte) (data | 4);
                 if (zipFile.getEntry("script.lua") != null) data = (byte) (data | 8);
-                if (zipFile.getEntry("render_layers.json") != null) data = (byte) (data | 16);
             } catch (Exception e) {
                 e.printStackTrace();
                 data = 0;
@@ -124,28 +121,24 @@ public class LocalPlayerData extends PlayerData {
             Path playerModelPath = contentDirectory.resolve("player_model.bbmodel");
             Path texturePath = contentDirectory.resolve("texture.png");
             Path scriptPath = contentDirectory.resolve("script.lua");
-            Path renderLayersPath = contentDirectory.resolve("render_layers.json");
 
             //add watchedfiles
             watchedFiles.add(modelPath.toString());
             watchedFiles.add(playerModelPath.toString());
             watchedFiles.add(texturePath.toString());
             watchedFiles.add(scriptPath.toString());
-            watchedFiles.add(renderLayersPath.toString());
 
             //load!
             if (Files.exists(modelPath)) data = (byte) (data | 1);
             if (Files.exists(playerModelPath)) data = (byte) (data | 2);
             if (Files.exists(texturePath)) data = (byte) (data | 4);
             if (Files.exists(scriptPath)) data = (byte) (data | 8);
-            if (Files.exists(renderLayersPath)) data = (byte) (data | 16);
 
             //add to hash map
             avatarPaths.put("model", modelPath);
             avatarPaths.put("player_model", playerModelPath);
             avatarPaths.put("texture", texturePath);
             avatarPaths.put("script", scriptPath);
-            avatarPaths.put("render_layers", renderLayersPath);
         }
 
         //log and clear player model
@@ -184,15 +177,12 @@ public class LocalPlayerData extends PlayerData {
         //try to load script
         if ((data & 8) == 8) loadScript(avatarPaths.get("script"), isZip, modelZip);
 
-        //try to load render_layers
-        if ((data & 16) == 16) loadRenderLayers(avatarPaths.get("render_layers"), isZip, modelZip, file.toPath());
-
         //try to load extra textures
         loadExtraTextures(file, isZip, modelZip);
 
         //Close ZIP stream.
         try {
-            if (isZip && (data & 16) != 16)
+            if (isZip)
                 modelZip.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -314,49 +304,6 @@ public class LocalPlayerData extends PlayerData {
         }
 
         //Close previously used stream, regardless of what it was (zip or filestream)
-        if (inputStream != null) {
-            try {
-                inputStream.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public void loadRenderLayers(Path renderLayersPath, boolean isZip, ZipFile modelZip, Path avatarFolder) {
-        //Code mostly copied from above function, loadScript()
-        InputStream inputStream = null;
-        try {
-            if (isZip) {
-                ZipEntry fileEntry = modelZip.getEntry("render_layers.json");
-                inputStream = modelZip.getInputStream(fileEntry);
-            } else if (Files.exists(renderLayersPath)) {
-                inputStream = new FileInputStream(renderLayersPath.toFile());
-            }
-
-            if (inputStream != null) {
-                //Make a copy of the input stream so we can read it asynchronously
-                ByteArrayOutputStream byteArrayStream = new ByteArrayOutputStream();
-                inputStream.transferTo(byteArrayStream);
-                InputStream finalInputStream = new ByteArrayInputStream(byteArrayStream.toByteArray());
-                FiguraMod.doTask(() -> {
-                    if (isZip)
-                        FiguraVertexConsumerProvider.parseLocal(this, finalInputStream, modelZip);
-                    else
-                        FiguraVertexConsumerProvider.parseLocal(this, finalInputStream, avatarFolder);
-                    try {
-                        //Close the copy of the input stream
-                        finalInputStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                });
-            } else
-                FiguraMod.LOGGER.warn("InputStream was null when loading render layers.");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        //Close the original input stream regardless of what it was (zip or filestream)
         if (inputStream != null) {
             try {
                 inputStream.close();

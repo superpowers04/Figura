@@ -114,47 +114,16 @@ public class RendererAPI {
 
                     FiguraRenderLayer customLayer = null;
                     if (!args.arg(8).isnil() && script.playerData.canRenderCustomLayers()) {
-                        if (script.playerData.customVCP != null) {
-                            customLayer = script.playerData.customVCP.getRenderLayer(args.arg(8).checkjstring());
+                        if (script.customVCP != null) {
+                            customLayer = script.customVCP.getLayer(args.arg(8).checkjstring());
+                            if (customLayer == null)
+                                throw new LuaError("No custom layer named: " + args.arg(8).checkjstring());
                         } else
                             throw new LuaError("The player has no custom VCP!");
                     }
 
                     parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale, customLayer));
 
-                    return NIL;
-                }
-            });
-
-            set("setUniform", new ThreeArgFunction() {
-                @Override
-                public LuaValue call(LuaValue layerName, LuaValue uniformName, LuaValue value) {
-                    if (!script.playerData.canRenderCustomLayers())
-                        return NIL;
-                    RenderSystem.recordRenderCall(() -> {
-                        try {
-                            Shader customShader;
-                            if (script.playerData.customVCP != null) {
-                                FiguraRenderLayer customLayer = script.playerData.customVCP.getRenderLayer(layerName.checkjstring());
-                                if (customLayer != null)
-                                    customShader = customLayer.getShader();
-                                else
-                                    throw new LuaError("There is no custom layer with that name!");
-                            } else
-                                throw new LuaError("The player has no custom VCP!");
-
-                            if (customShader != null) {
-                                if (customShader instanceof FiguraShader)
-                                    ((FiguraShader) customShader).setUniformFromLua(uniformName, value);
-                                else
-                                    throw new LuaError("Either your shader syntax is incorrect, or you're trying to setUniform on a vanilla shader. Either one is bad!");
-                            }
-                        } catch (Exception e) {
-                            PlayerData local = PlayerDataManager.localPlayer;
-                            if (local == null || script.playerData.playerId != local.playerId || script.equals(local.script))
-                                script.handleError(e);
-                        }
-                    });
                     return NIL;
                 }
             });
@@ -172,8 +141,8 @@ public class RendererAPI {
 
                         FiguraRenderLayer customLayer = null;
                         if (!args.arg(7).isnil() && script.playerData.canRenderCustomLayers()) {
-                            if (script.playerData.customVCP != null) {
-                                customLayer = script.playerData.customVCP.getRenderLayer(args.arg(7).checkjstring());
+                            if (script.customVCP != null) {
+                                customLayer = script.customVCP.getLayer(args.arg(7).checkjstring());
                             } else
                                 throw new LuaError("The player has no custom VCP!");
                         }

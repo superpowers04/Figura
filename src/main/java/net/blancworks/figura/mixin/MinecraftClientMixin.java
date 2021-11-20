@@ -4,7 +4,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
-import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -43,7 +43,7 @@ public class MinecraftClientMixin {
 
     @Inject(at = @At("RETURN"), method = "render")
     public void copyFramebuffer(boolean tick, CallbackInfo ci) {
-        FiguraVertexConsumerProvider.blitFramebuffer();
+        RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
     }
 
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")

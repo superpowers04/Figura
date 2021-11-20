@@ -12,20 +12,16 @@ import java.util.concurrent.CompletableFuture;
  * There are practically no other features.
  */
 
-public class FiguraRenderLayer extends RenderLayer {
+public class FiguraRenderLayer extends RenderLayer implements Comparable<FiguraRenderLayer> {
 
-    //Set at the end of the parse method in FiguraVertexConsumerProvider
-    private CompletableFuture<net.minecraft.client.render.Shader> customShader;
+    //Low priority happens earlier
+    public int priority = 0;
 
-    public FiguraRenderLayer(String name, VertexFormat vertexFormat, VertexFormat.DrawMode drawMode, int expectedSize, boolean crumbling, boolean translucent, Runnable preDraw, Runnable postDraw, CompletableFuture<net.minecraft.client.render.Shader> customShader) {
+    public FiguraRenderLayer(String name, VertexFormat vertexFormat, VertexFormat.DrawMode drawMode, int expectedSize, boolean crumbling, boolean translucent, Runnable preDraw, Runnable postDraw) {
         super(name, vertexFormat, drawMode, expectedSize, crumbling, translucent, preDraw, postDraw);
-        this.customShader = customShader;
     }
 
-    @Nullable
-    public net.minecraft.client.render.Shader getShader() {
-        if (customShader == null)
-            return null;
-        return customShader.getNow(null);
+    public int compareTo(FiguraRenderLayer other) {
+        return priority - other.priority;
     }
 }

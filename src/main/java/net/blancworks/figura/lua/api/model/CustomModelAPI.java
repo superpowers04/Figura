@@ -7,6 +7,7 @@ import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
@@ -309,8 +310,8 @@ public class CustomModelAPI {
                     if (!partOwner.canRenderCustomLayers())
                         return NIL;
                     String layerName = arg1.checkjstring();
-                    if (partOwner.customVCP != null)
-                        targetPart.customLayer = partOwner.customVCP.getRenderLayer(layerName);
+                    if (partOwner.getVCP() instanceof FiguraVertexConsumerProvider)
+                        targetPart.customLayer = ((FiguraVertexConsumerProvider)partOwner.getVCP()).getLayer(layerName);
                     else
                         partOwner.script.logLuaError(new LuaError("The player has no custom VCP!"));
                     return NIL;
