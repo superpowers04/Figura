@@ -313,15 +313,14 @@ public class WorldAPI {
                     Entity e = new MarkerEntity(EntityType.MARKER, getWorld());
                     Vec3d start = LuaVector.checkOrNew(startPos).asV3d();
                     Vec3d end = LuaVector.checkOrNew(endPos).asV3d();
-                    LuaFunction predicate;
+                    Predicate<Entity> pred;
                     if (func.isnil())
-                        predicate = returnTrue;
+                        pred = entity -> true;
                     else
-                        predicate = func.checkfunction();
-                    Predicate<Entity> pred = (Entity entity) -> {
-                        LuaTable entityTable = EntityAPI.getTableForEntity(entity);
-                        return predicate.call(entityTable).toboolean();
-                    };
+                        pred = (Entity entity) -> {
+                            LuaTable entityTable = EntityAPI.getTableForEntity(entity);
+                            return func.checkfunction().call(entityTable).toboolean();
+                        };
                     EntityHitResult result = ProjectileUtil.raycast(e, start, end, new Box(start, end), pred, Double.MAX_VALUE);
                     if (result == null) return NIL;
                     return EntityAPI.getTableForEntity(result.getEntity());
