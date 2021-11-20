@@ -105,15 +105,7 @@ public class PlayerEntityAPI {
                         Entity lookingAt = MinecraftClient.getInstance().targetedEntity;
 
                         if (lookingAt != null && !lookingAt.isInvisibleTo(targetEntity.get())) {
-                            if (lookingAt instanceof PlayerEntity) {
-                                return new PlayerEntityLuaAPITable(() -> (PlayerEntity) lookingAt).getTable();
-                            }
-                            else if (lookingAt instanceof LivingEntity) {
-                                return new LivingEntityAPI.LivingEntityAPITable<>(() -> (LivingEntity) lookingAt).getTable();
-                            }
-                            else {
-                                return new EntityAPI.EntityLuaAPITable<>(() -> lookingAt).getTable();
-                            }
+                            return EntityAPI.getTableForEntity(lookingAt);
                         }
                     }
 
