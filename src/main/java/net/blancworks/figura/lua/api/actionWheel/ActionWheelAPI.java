@@ -86,9 +86,18 @@ public class ActionWheelAPI {
             set("isOpen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(FiguraMod.actionWheel.isPressed() && ActionWheel.enabled);
+                    return LuaValue.valueOf(FiguraMod.ACTION_WHEEL_BUTTON.isPressed() && ActionWheel.enabled);
                 }
             });
+
+            set("runAction", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    ActionWheel.play();
+                    return NIL;
+                }
+            });
+
         }});
     }
 

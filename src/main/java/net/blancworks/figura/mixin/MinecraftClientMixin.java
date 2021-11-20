@@ -51,7 +51,7 @@ public class MinecraftClientMixin {
 
     @Inject(at = @At("RETURN"), method = "handleInputEvents")
     public void handleInputEvents(CallbackInfo ci) {
-        if (FiguraMod.actionWheel.isPressed()) {
+        if (FiguraMod.ACTION_WHEEL_BUTTON.isPressed()) {
             if (ActionWheel.enabled) {
                 this.mouse.unlockCursor();
                 actionWheelActive = true;
@@ -62,7 +62,7 @@ public class MinecraftClientMixin {
             actionWheelActive = false;
         }
 
-        if (FiguraMod.playerPopup.isPressed()) {
+        if (FiguraMod.PLAYER_POPUP_BUTTON.isPressed()) {
             if (PlayerPopup.data == null) {
                 Entity target = getTargetedEntity();
                 if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
@@ -86,6 +86,9 @@ public class MinecraftClientMixin {
                 PlayerPopup.hotbarKeyPressed(i);
             }
         }
+
+        if (FiguraMod.PANIC_BUTTON.wasPressed())
+            PlayerDataManager.panic = !PlayerDataManager.panic;
     }
 
     @Inject(at = @At("HEAD"), method = "setScreen")
