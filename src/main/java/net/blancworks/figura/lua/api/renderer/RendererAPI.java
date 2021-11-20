@@ -105,7 +105,7 @@ public class RendererAPI {
                 @Override
                 public Varargs onInvoke(Varargs args) {
 
-                    ItemStack stack = ItemStackAPI.checkItemStack(args.arg(1));
+                    ItemStack stack = ItemStackAPI.checkOrCreateItemStack(args.arg(1));
                     CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
                     ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
                     boolean emissive = !args.arg(4).isnil() && args.arg(4).checkboolean();
@@ -143,7 +143,7 @@ public class RendererAPI {
                     FiguraRenderLayer customLayer = null;
                     if (!args.arg(7).isnil()) {
                         if (script.customVCP != null) {
-                            customLayer = script.customVCP.getRenderLayer(args.arg(7).checkjstring());
+                            customLayer = script.customVCP.getLayer(args.arg(7).checkjstring());
                             if (customLayer == null)
                                 throw new LuaError("No custom layer named: " + args.arg(7).checkjstring());
                         } else
