@@ -4,7 +4,6 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelAPI;
-import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.chat.ChatAPI;
 import net.blancworks.figura.lua.api.client.ClientAPI;
 import net.blancworks.figura.lua.api.data.DataAPI;
@@ -12,13 +11,13 @@ import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.keybind.KeyBindAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.lua.api.network.PingsAPI;
 import net.blancworks.figura.lua.api.renderer.RendererAPI;
 import net.blancworks.figura.lua.api.camera.CameraAPI;
 import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.network.NetworkAPI;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
+import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.lua.api.world.WorldAPI;
 import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
@@ -26,7 +25,6 @@ import net.minecraft.util.Identifier;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
 import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.PackageLib;
 import org.luaj.vm2.lib.StringLib;
@@ -39,7 +37,7 @@ import java.util.function.Function;
 
 public class FiguraLuaManager {
 
-    public static HashMap<Identifier, Function<CustomScript, ? extends LuaTable>> apiSuppliers = new HashMap<>();
+    public static HashMap<Identifier, Function<CustomScript, ? extends ReadOnlyLuaTable>> apiSuppliers = new HashMap<>();
     public static Map<String, Function<String, LuaEvent>> registeredEvents = new HashMap<>();
 
     //The globals for the entire lua system.
@@ -85,8 +83,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(ChatAPI.getID(), ChatAPI::getForScript);
         apiSuppliers.put(ClientAPI.getID(), ClientAPI::getForScript);
         apiSuppliers.put(DataAPI.getID(), DataAPI::getForScript);
-        apiSuppliers.put(PingsAPI.getID(), PingsAPI::getForScript);
-        apiSuppliers.put(BlockStateAPI.getID(), BlockStateAPI::getForScript);
+        apiSuppliers.put(RenderLayerAPI.getId(), RenderLayerAPI::getForScript);
     }
 
     public static void registerEvents() {
@@ -103,7 +100,7 @@ public class FiguraLuaManager {
     }
 
     public static void setupScriptAPI(CustomScript script) {
-        for (Map.Entry<Identifier, Function<CustomScript, ? extends LuaTable>> entry : apiSuppliers.entrySet()) {
+        for (Map.Entry<Identifier, Function<CustomScript, ? extends ReadOnlyLuaTable>> entry : apiSuppliers.entrySet()) {
             try {
                 script.scriptGlobals.set(entry.getKey().getPath(), entry.getValue().apply(script));
             } catch (Exception e) {
