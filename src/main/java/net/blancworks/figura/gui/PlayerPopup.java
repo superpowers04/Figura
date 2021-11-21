@@ -15,16 +15,15 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.math.Vector4f;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class PlayerPopup extends DrawableHelper {
@@ -40,11 +39,11 @@ public class PlayerPopup extends DrawableHelper {
 
     public static PlayerData data;
 
-    private static final List<Text> buttons = Arrays.asList(
-            new TranslatableText("gui.figura.playerpopup.cancel"),
-            new TranslatableText("gui.figura.playerpopup.reload"),
-            new TranslatableText("gui.figura.playerpopup.increasetrust"),
-            new TranslatableText("gui.figura.playerpopup.decreasetrust")
+    private static final List<Text> buttons = List.of(
+            new TranslatableText("figura.playerpopup.cancel"),
+            new TranslatableText("figura.playerpopup.reload"),
+            new TranslatableText("figura.playerpopup.increasetrust"),
+            new TranslatableText("figura.playerpopup.decreasetrust")
     );
 
     public static void renderMini(MatrixStack matrices) {
@@ -52,13 +51,13 @@ public class PlayerPopup extends DrawableHelper {
             return;
 
         matrices.push();
-        MinecraftClient.getInstance().getTextureManager().bindTexture(POPUP_TEXTURE_MINI);
+        RenderSystem.setShaderTexture(0, POPUP_TEXTURE_MINI);
         matrices.translate(-51f, -2f, 0f);
 
         drawTexture(matrices, 0, 0, 0f, 0f, 49, 13, 49, 48);
 
         int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
-        RenderSystem.color4f(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
+        RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
 
         drawTexture(matrices, 0, 0, 0f, 13f, 49, 13, 49, 48);
 
@@ -67,7 +66,7 @@ public class PlayerPopup extends DrawableHelper {
         }
 
         matrices.pop();
-        RenderSystem.color4f(1f, 1f, 1f, 1f);
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         miniEnabled = true;
     }
 
@@ -87,8 +86,8 @@ public class PlayerPopup extends DrawableHelper {
         matrices.push();
 
         //world to screen space
-        Vector3f worldPos = new Vector3f(entity.getCameraPosVec(client.getTickDelta()));
-        worldPos.add(0f, 0.1f, 0f);
+        Vec3f worldPos = new Vec3f(entity.getLerpedPos(client.getTickDelta()));
+        worldPos.add(0f, entity.getHeight() + 0.1f, 0f);
 
         Vector4f vec = MathUtils.worldToScreenSpace(worldPos);
         if (vec.getZ() < 1) return;
@@ -107,10 +106,10 @@ public class PlayerPopup extends DrawableHelper {
         int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
 
         //background
-        MinecraftClient.getInstance().getTextureManager().bindTexture(POPUP_TEXTURE);
+        RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
         drawTexture(matrices, -36, -30, 72, 30, 0f, 0f, 72, 30, 72, 96);
 
-        RenderSystem.color4f(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
+        RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
         drawTexture(matrices, -36, -30, 72, 30, 0f, 30f, 72, 30, 72, 96);
 
         //icons
@@ -124,7 +123,7 @@ public class PlayerPopup extends DrawableHelper {
         Text badges = NamePlateAPI.getBadges(data);
         if (badges != null) name.append(badges);
 
-        Text trust = new TranslatableText("gui.figura." + data.getTrustContainer().parentID.getPath()).formatted(Formatting.BLACK);
+        Text trust = new TranslatableText("figura.trust." + data.getTrustContainer().parentID.getPath()).formatted(Formatting.BLACK);
 
         matrices.scale(0.5f, 0.5f, 0.5f);
         matrices.translate(0f, 0f, -1f);
@@ -133,7 +132,7 @@ public class PlayerPopup extends DrawableHelper {
 
         //return
         matrices.pop();
-        RenderSystem.color4f(1f, 1f, 1f, 1f);
+        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         data.hasPopup = true;
         enabled = true;
     }
@@ -159,22 +158,22 @@ public class PlayerPopup extends DrawableHelper {
             if (badges != null) playerName.append(badges);
 
             switch (index) {
-                case 1:
+                case 1 -> {
                     if (data.hasAvatar() && data.isAvatarLoaded()) {
                         PlayerDataManager.clearPlayer(data.playerId);
-                        FiguraMod.sendToast(playerName, "gui.figura.toast.avatar.reload.title");
+                        FiguraMod.sendToast(playerName, "figura.toast.avatar.reload.title");
                     }
-                    break;
-                case 2:
+                }
+                case 2 -> {
                     TrustContainer tc = data.getTrustContainer();
                     if (PlayerTrustManager.increaseTrust(tc))
-                        FiguraMod.sendToast(playerName, new TranslatableText("gui.figura.toast.avatar.trust.title").append(new TranslatableText("gui.figura." + tc.parentID.getPath())));
-                    break;
-                case 3:
-                    TrustContainer tc2 = data.getTrustContainer();
-                    if (PlayerTrustManager.decreaseTrust(tc2))
-                        FiguraMod.sendToast(playerName, new TranslatableText("gui.figura.toast.avatar.trust.title").append(new TranslatableText("gui.figura." + tc2.parentID.getPath())));
-                    break;
+                        FiguraMod.sendToast(playerName, new TranslatableText("figura.toast.avatar.trust.title").append(new TranslatableText("figura.trust." + tc.parentID.getPath())));
+                }
+                case 3 -> {
+                    TrustContainer tc = data.getTrustContainer();
+                    if (PlayerTrustManager.decreaseTrust(tc))
+                        FiguraMod.sendToast(playerName, new TranslatableText("figura.toast.avatar.trust.title").append(new TranslatableText("figura.trust." + tc.parentID.getPath())));
+                }
             }
         }
 

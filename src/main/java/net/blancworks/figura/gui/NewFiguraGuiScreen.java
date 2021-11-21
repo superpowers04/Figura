@@ -17,7 +17,7 @@ public class NewFiguraGuiScreen extends Screen {
     private final Identifier BOOK_TEXTURE = new Identifier("figura", "textures/gui/book.png");
 
     public NewFiguraGuiScreen(Screen parentScreen) {
-        super(new TranslatableText("gui.figura.menutitle"));
+        super(new TranslatableText("figura.gui.menu.title"));
         this.parentScreen = parentScreen;
     }
 

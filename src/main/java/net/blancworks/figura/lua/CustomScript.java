@@ -188,6 +188,7 @@ public class CustomScript extends FiguraAsset {
         scriptGlobals.load(new DebugLib());
         //Yoink sethook from debug so we can use it later.
         setHook = scriptGlobals.get("debug").get("sethook");
+
         //Yeet debug library so nobody can access it.
         scriptGlobals.set("debug", LuaValue.NIL);
         scriptGlobals.set("dofile", LuaValue.NIL);
@@ -215,6 +216,16 @@ public class CustomScript extends FiguraAsset {
 
         //then yeet the package library
         scriptGlobals.set("package", LuaValue.NIL);
+
+        scriptGlobals.set("loadstring", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg) {
+                if (data == null || !data.isLocalAvatar)
+                    throw new LuaError("loadstring is only available for debugging local avatars!");
+
+                return FiguraLuaManager.modGlobals.load(arg.checkjstring(), scriptName, scriptGlobals);
+            }
+        });
 
         try {
             //Load the script source, name defaults to "main" for scripts for other players.

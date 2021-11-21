@@ -103,7 +103,7 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
                         if (isMouseOver(mouseX, mouseY)) {
                             matrices.push();
                             matrices.translate(0, 0, 599);
-                            parent.renderTooltip(matrices, new TranslatableText("gui.figura.keybinds.warning").formatted(Formatting.RED), mouseX, mouseY);
+                            parent.renderTooltip(matrices, new TranslatableText("figura.keybinds.warning").formatted(Formatting.RED), mouseX, mouseY);
                             matrices.pop();
                         }
 
