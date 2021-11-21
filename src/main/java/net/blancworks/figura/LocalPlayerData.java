@@ -393,8 +393,9 @@ public class LocalPlayerData extends PlayerData {
                 try {
                     InputStream str = isZip ? zip.getInputStream(zip.getEntry(path)) : new FileInputStream(modelFile.toPath().resolve(path).toFile());
                     FiguraSoundManager.registerCustomSound(script, name, str.readAllBytes(), false);
-                } catch (Exception ignored) {
+                } catch (Exception e) {
                     FiguraMod.LOGGER.error("failed to load custom song \"" + path + "\"");
+                    e.printStackTrace();
                 }
             });
 
