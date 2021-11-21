@@ -14,7 +14,7 @@ public class FiguraKeyBindsScreen extends Screen {
     private KeyBindingsWidget keyBindingsWidget;
 
     public FiguraKeyBindsScreen(Screen parentScreen) {
-        super(new TranslatableText("gui.figura.keybindstitle"));
+        super(new TranslatableText("figura.gui.keybinds.title"));
         this.parentScreen = parentScreen;
     }
 

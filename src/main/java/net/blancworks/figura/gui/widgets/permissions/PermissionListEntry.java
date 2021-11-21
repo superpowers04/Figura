@@ -88,9 +88,9 @@ public class PermissionListEntry extends CustomListEntry {
         PermissionListWidget realList = (PermissionListWidget) list;
 
         if(realList.isDifferent(getEntrySetting()))
-            return new TranslatableText("gui.figura." + getEntrySetting().id).append("*").styled(FiguraMod.ACCENT_COLOR);
+            return new TranslatableText("figura.trust." + getEntrySetting().id).append("*").styled(FiguraMod.ACCENT_COLOR);
 
-        return new TranslatableText("gui.figura." + getEntrySetting().id);
+        return new TranslatableText("figura.trust." + getEntrySetting().id);
     }
 
     @Override

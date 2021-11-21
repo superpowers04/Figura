@@ -47,7 +47,7 @@ public class AvatarUploadResponseHandler extends MessageHandler {
         UUID id = readUUID(stream);
 
         FiguraMod.LOGGER.info("Uploaded avatar sucessfully, UUID is " + id);
-        FiguraMod.sendToast("gui.figura.toast.upload.success.title", "");
+        FiguraMod.sendToast("figura.toast.upload.success.title", "");
 
         new UserSetAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
         new ChannelAvatarUpdateMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
@@ -55,16 +55,16 @@ public class AvatarUploadResponseHandler extends MessageHandler {
 
     public void handleTooManyAvatars() {
         FiguraMod.LOGGER.error("Failed to upload avatar : User Has Too Many Avatars");
-        FiguraMod.sendToast("gui.figura.toast.upload.error.title", "gui.figura.toast.upload.error.many");
+        FiguraMod.sendToast("figura.toast.upload.error.title", "figura.toast.upload.error.many");
     }
 
     public void handleEmptyAvatar() {
         FiguraMod.LOGGER.error("Failed to upload avatar : Attempted Empty Avatar Upload");
-        FiguraMod.sendToast("gui.figura.toast.upload.error.title", "gui.figura.toast.upload.error.empty");
+        FiguraMod.sendToast("figura.toast.upload.error.title", "figura.toast.upload.error.empty");
     }
 
     public void handleNotEnoughSpace() {
         FiguraMod.LOGGER.error("Failed to upload avatar : Not Enough Space On Server");
-        FiguraMod.sendToast("gui.figura.toast.upload.error.title", "gui.figura.toast.upload.error.space");
+        FiguraMod.sendToast("figura.toast.upload.error.title", "figura.toast.upload.error.space");
     }
 }

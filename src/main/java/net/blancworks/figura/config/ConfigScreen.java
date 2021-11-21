@@ -14,7 +14,7 @@ public class ConfigScreen extends Screen {
     private ConfigListWidget configListWidget;
 
     public ConfigScreen(Screen parentScreen) {
-        super(new TranslatableText("gui.figura.configtitle"));
+        super(new TranslatableText(ConfigManager.MOD_NAME + ".gui.config.title"));
         this.parentScreen = parentScreen;
     }
 

@@ -33,7 +33,7 @@ public class ActionWheel extends DrawableHelper {
     private static final Identifier ACTION_WHEEL = new Identifier("figura", "textures/gui/action_wheel.png");
     private static final Identifier ACTION_WHEEL_SELECTED = new Identifier("figura", "textures/gui/action_wheel_selected.png");
     private static final Vec3f ERROR_COLOR = new Vec3f(1.0f, 0.28f, 0.28f);
-    private static final List<Text> NO_FUNCTION_MESSAGE = ImmutableList.of(new TranslatableText("gui.figura.actionwheel.nofunction"));
+    private static final List<Text> NO_FUNCTION_MESSAGE = ImmutableList.of(new TranslatableText("figura.actionwheel.nofunction"));
 
     public static int selectedSlot = -1;
     public static boolean enabled = false;
@@ -106,13 +106,13 @@ public class ActionWheel extends DrawableHelper {
             //draw warning texts
             drawCenteredTextWithShadow(
                     matrices, MinecraftClient.getInstance().textRenderer,
-                    new TranslatableText("gui.figura.actionwheel.warning").formatted(Formatting.UNDERLINE).asOrderedText(),
+                    new TranslatableText("figura.actionwheel.warning").formatted(Formatting.UNDERLINE).asOrderedText(),
                     (int) wheelPos.x, (int) wheelPos.y - 4,
                     16733525
             );
             drawCenteredTextWithShadow(
                     matrices, MinecraftClient.getInstance().textRenderer,
-                    new TranslatableText("gui.figura.actionwheel.warninginfo").asOrderedText(),
+                    new TranslatableText("figura.actionwheel.warninginfo").asOrderedText(),
                     (int) wheelPos.x, (int) Math.max(wheelPos.y - wheelSize / 2.0 - 10, 4),
                     16733525
             );
