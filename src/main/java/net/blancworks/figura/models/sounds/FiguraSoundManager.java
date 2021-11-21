@@ -33,8 +33,6 @@ public class FiguraSoundManager {
 
     public static void registerCustomSound(CustomScript script, String name, byte[] source, boolean local) {
         try {
-            FiguraMod.LOGGER.info(String.format("\"%s\" registered custom sound: \"%s\"\n", script.playerData.playerName.getString(), name));
-
             OggAudioStream oggAudioStream = new OggAudioStream(new ByteArrayInputStream(source));
             StaticSound sound = new StaticSound(oggAudioStream.getBuffer(), oggAudioStream.getFormat());
             script.customSounds.put(name, new FiguraSound(sound, name, source, local));
