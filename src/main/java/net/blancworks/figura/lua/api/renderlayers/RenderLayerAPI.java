@@ -45,7 +45,6 @@ public class RenderLayerAPI {
                     if (script.shaders.size() >= CustomScript.maxShaders)
                         throw new LuaError("You've registered too many (" + CustomScript.maxShaders + ") shaders. Ignoring further ones.");
                     String name = args.checkjstring(1);
-                    checkValidId(name, "Invalid shader name: ");
 
                     VertexFormat vertexFormat;
                     if (args.isnil(2)) {
