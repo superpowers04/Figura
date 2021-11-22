@@ -313,11 +313,8 @@ public class CustomModelAPI {
 
                     FiguraRenderLayer layer = null;
 
-                    if (!arg1.isnil())
-                        if (partOwner.getVCP() instanceof FiguraVertexConsumerProvider)
-                            layer = ((FiguraVertexConsumerProvider)partOwner.getVCP()).getLayer(arg1.checkjstring());
-                        else
-                            partOwner.script.logLuaError(new LuaError("The player has no custom VCP!"));
+                    if (!arg1.isnil() && partOwner.getVCP() instanceof FiguraVertexConsumerProvider)
+                        layer = ((FiguraVertexConsumerProvider)partOwner.getVCP()).getLayer(arg1.checkjstring());
 
                     targetPart.customLayer = layer;
                     return NIL;
