@@ -65,14 +65,15 @@ public class RenderLayerAPI {
                     ArrayList<String> uniformTypes = new ArrayList<>();
                     if (!args.isnil(6)) {
                         LuaTable customUniforms = args.checktable(6);
-                        int k = 1;
-                        LuaValue current;
-                        while(!(current = customUniforms.get(k++)).isnil())
-                            if (current.istable()) {
-                                uniformNames.add(current.get(1).checkjstring());
-                                uniformTypes.add(current.get(2).checkjstring());
-                            } else
-                                throw new LuaError("Invalid format for custom uniforms.");
+                        LuaValue k = LuaValue.NIL;
+                        while ( true ) {
+                            Varargs n = customUniforms.next(k);
+                            if ( (k = n.arg1()).isnil() )
+                                break;
+                            LuaValue v = n.arg(2);
+                            uniformNames.add(k.checkjstring());
+                            uniformTypes.add(v.checkjstring());
+                        }
                     }
 
                     RenderSystem.recordRenderCall(()->{
