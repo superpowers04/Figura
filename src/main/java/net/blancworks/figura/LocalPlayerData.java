@@ -66,7 +66,7 @@ public class LocalPlayerData extends PlayerData {
     public void loadModelFile(String path) {
         //clear keybinds
         if (this.script != null) {
-            script.keyBindings.forEach(keyBinding -> KeyBindingAccessorMixin.getKeysById().remove(keyBinding.getTranslationKey()));
+            script.keyBindings.clear();
             KeyBinding.updateKeysByCode();
         }
 
