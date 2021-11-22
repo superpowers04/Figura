@@ -19,6 +19,7 @@ import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.network.NetworkAPI;
 import net.blancworks.figura.lua.api.particle.ParticleAPI;
+import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.lua.api.world.WorldAPI;
 import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
@@ -85,6 +86,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(ChatAPI.getID(), ChatAPI::getForScript);
         apiSuppliers.put(ClientAPI.getID(), ClientAPI::getForScript);
         apiSuppliers.put(DataAPI.getID(), DataAPI::getForScript);
+        apiSuppliers.put(RenderLayerAPI.getId(), RenderLayerAPI::getForScript);
         apiSuppliers.put(PingsAPI.getID(), PingsAPI::getForScript);
         apiSuppliers.put(BlockStateAPI.getID(), BlockStateAPI::getForScript);
     }

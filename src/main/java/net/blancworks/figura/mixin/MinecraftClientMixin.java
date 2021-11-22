@@ -4,6 +4,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
+import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
@@ -40,6 +41,11 @@ public class MinecraftClientMixin {
 
     @Unique public boolean actionWheelActive = false;
     @Unique public boolean playerPopupActive = false;
+
+    @Inject(at = @At("RETURN"), method = "render")
+    public void copyFramebuffer(boolean tick, CallbackInfo ci) {
+        RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
+    }
 
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {

@@ -8,6 +8,7 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.models.tasks.RenderTask;
 import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
@@ -55,7 +56,7 @@ public class CustomModelPart {
 
     public ShaderType shaderType = ShaderType.None;
 
-    public RenderLayer customLayer = null;
+    public FiguraRenderLayer customLayer = null;
 
     public TextureType textureType = TextureType.Custom;
     public Identifier textureVanilla = FiguraTexture.DEFAULT_ID;
@@ -290,7 +291,8 @@ public class CustomModelPart {
     }
 
     public void draw(VertexConsumerProvider vcp) {
-        if (vcp instanceof VertexConsumerProvider.Immediate immediate) immediate.draw();
+        if (vcp instanceof FiguraVertexConsumerProvider customVCP) customVCP.draw();
+        else if (vcp instanceof VertexConsumerProvider.Immediate immediate) immediate.draw();
         else if (vcp instanceof OutlineVertexConsumerProvider outline) outline.draw();
     }
 

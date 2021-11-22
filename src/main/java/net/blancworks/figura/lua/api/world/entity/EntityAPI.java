@@ -167,18 +167,8 @@ public class EntityAPI {
                     @Override
                     public LuaValue call() {
                         if (targetEntity.get().getVehicle() == null) return NIL;
-
                         Entity vehicle = targetEntity.get().getVehicle();
-
-                        if (vehicle instanceof PlayerEntity) {
-                            return new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> (PlayerEntity) vehicle).getTable();
-                        }
-                        else if (vehicle instanceof LivingEntity) {
-                            return new LivingEntityAPI.LivingEntityAPITable<>(() -> (LivingEntity) vehicle).getTable();
-                        }
-                        else {
-                            return new EntityLuaAPITable<>(() -> vehicle).getTable();
-                        }
+                        return getTableForEntity(vehicle);
                     }
                 });
 
@@ -330,6 +320,12 @@ public class EntityAPI {
             if(targetEntity.get() == null)
                 throw new LuaError("Entity does not exist!");
         }
-        
+
+    }
+
+    public static LuaTable getTableForEntity(Entity entity) {
+        if (entity instanceof PlayerEntity) return new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> (PlayerEntity) entity).getTable();
+        if (entity instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable<>(() -> (LivingEntity) entity).getTable();
+        return new EntityAPI.EntityLuaAPITable<>(() -> entity).getTable();
     }
 }

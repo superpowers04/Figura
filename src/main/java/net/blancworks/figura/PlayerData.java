@@ -3,7 +3,6 @@ package net.blancworks.figura;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
-import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -49,8 +48,6 @@ public class PlayerData {
     public FiguraTexture texture;
     //The custom script for the model.
     public CustomScript script;
-    //The custom VCP for the model.
-    public FiguraVertexConsumerProvider customVCP;
 
     //Vanilla model for the player, in case we need it for something.
     public PlayerEntityModel<?> vanillaModel;
@@ -78,7 +75,7 @@ public class PlayerData {
     public static final int FILESIZE_LARGE_THRESHOLD = 102400;
 
     public VertexConsumerProvider getVCP() {
-        if (customVCP != null) return customVCP;
+        if (script != null && script.customVCP != null) return script.customVCP;
         else if (FiguraMod.vertexConsumerProvider != null) return FiguraMod.vertexConsumerProvider;
         else return MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
     }
@@ -135,13 +132,6 @@ public class PlayerData {
             }
         }
 
-        //Put Render Layers.
-        if (customVCP != null) {
-            NbtCompound vcpNbt = new NbtCompound();
-            customVCP.writeNbt(vcpNbt);
-            nbt.put("customVCP", vcpNbt);
-        }
-
         if (!extraTextures.isEmpty()) {
             NbtList texList = new NbtList();
 
@@ -169,7 +159,6 @@ public class PlayerData {
         model = null;
         texture = null;
         script = null;
-        customVCP = null;
 
         extraTextures.clear();
 
@@ -205,23 +194,6 @@ public class PlayerData {
                 texture.id = new Identifier("figura", playerId.toString());
                 getTextureManager().registerTexture(texture.id, texture);
                 FiguraMod.doTask(() -> texture.readNbt(textureNbt));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        try {
-            if (getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1) {
-                if (nbt.contains("customVCP")) {
-                    NbtCompound vcpNbt = nbt.getCompound("customVCP");
-
-                    if (vcpNbt != null) FiguraMod.doTask(() -> {
-                        FiguraVertexConsumerProvider.parseFromNbt(this, vcpNbt);
-                        FiguraMod.LOGGER.info("Render Layer Parsing Finished");
-                    });
-                }
-            } else {
-                FiguraMod.LOGGER.info("Blocked Custom Render Layer");
             }
         } catch (Exception e) {
             e.printStackTrace();

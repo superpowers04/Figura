@@ -18,6 +18,8 @@ import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.models.shaders.FiguraShader;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.models.sounds.FiguraSound;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
@@ -134,6 +136,11 @@ public class CustomScript extends FiguraAsset {
 
     public static final UnaryOperator<Style> LUA_COLOR = (s) -> s.withColor(0x5555FF);
     public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").styled(LUA_COLOR));
+
+    //Custom Rendering
+    public static final int maxShaders = 16;
+    public Map<String, FiguraShader> shaders = new HashMap<>();
+    public FiguraVertexConsumerProvider customVCP = null;
 
     //----PINGS!----
 
@@ -637,7 +644,7 @@ public class CustomScript extends FiguraAsset {
 
         boolean inString = false;
         boolean inChar = false;
-        boolean inBlockString = false;
+        int blockStringLevel = -1;
         boolean inComment = false;
         boolean inBlock = false;
 
@@ -646,7 +653,7 @@ public class CustomScript extends FiguraAsset {
         for (int i = 0; i < s.length(); i++) {
             char curr = s.charAt(i);
 
-            if (!inString && !inChar && !inBlockString && !inComment && !inBlock) {
+            if (!inString && !inChar && blockStringLevel == -1 && !inComment && !inBlock) {
                 //check for string
                 if (curr == '"') {
                     inString = true;
@@ -658,8 +665,7 @@ public class CustomScript extends FiguraAsset {
                     queue.append(curr);
                 }
                 //check for block strings
-                else if (curr == '[' && i < s.length() - 1 && s.charAt(i + 1) == '[') {
-                    inBlockString = true;
+                else if ((blockStringLevel = checkBlockStringStart(s, i))!=-1) {
                     queue.append(curr);
                 }
                 //check single line comments
@@ -702,9 +708,9 @@ public class CustomScript extends FiguraAsset {
                 ret.append(curr);
             }
             //add block string contents
-            else if (inBlockString) {
+            else if (curr == ']' && blockStringLevel != -1) {
                 //check for end of block and append
-                inBlockString = !(curr == ']' && i < s.length() - 1 && s.charAt(i + 1) == ']');
+                blockStringLevel = checkBlockStringEnd(s, i, blockStringLevel);
                 ret.append(curr);
             }
             //skip block comments
@@ -727,6 +733,43 @@ public class CustomScript extends FiguraAsset {
         }
 
         return ret.toString();
+    }
+
+    /**
+     * Checks if the portion of the string starting at startIndex is the beginning of a block string, i.e. [==(some number of equals signs)=[
+     * @return The number of equals signs, or -1 if this is not the start of a block string.
+     */
+    private static int checkBlockStringStart(String s, int startIndex) {
+        char curr = s.charAt(startIndex);
+        if (curr == '[' && startIndex < s.length()-1) {
+            curr = s.charAt(startIndex + 1);
+            int count = 0;
+            while (curr == '=') {
+                int index = startIndex + 1 + count++;
+                if (index >= s.length())
+                    break;
+                curr = s.charAt(index);
+            }
+            if (curr == '[')
+                return count;
+        }
+        return -1;
+    }
+
+    /**
+     * Checks if this section of the string is the end of a block string.
+     * @param s The string
+     * @param startIndex The start index to check for the end of the string
+     * @param numEquals The number of equals signs to look for
+     * @return -1 if it is the end of the block string, or numEquals if it isn't.
+     */
+    private static int checkBlockStringEnd(String s, int startIndex, int numEquals) {
+        if (startIndex+numEquals+2 > s.length())
+            return numEquals;
+        String end = "]" + "=".repeat(numEquals) + "]";
+        if (s.substring(startIndex, startIndex+numEquals+2).equals(end))
+            return -1;
+        return numEquals;
     }
 
     //--Debugging--
