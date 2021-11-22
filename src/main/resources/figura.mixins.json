@@ -26,6 +26,7 @@
     "HeadFeatureRendererMixin",
     "HeldItemFeatureRendererMixin",
     "InGameHudMixin",
+    "KeyboardMixin",
     "KeyBindingAccessorMixin",
     "LivingEntityRendererMixin",
     "MatrixStackMixin",

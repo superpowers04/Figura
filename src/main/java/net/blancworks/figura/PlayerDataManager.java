@@ -1,12 +1,10 @@
 package net.blancworks.figura;
 
 import com.mojang.authlib.GameProfile;
-import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.text.LiteralText;
 
@@ -198,10 +196,6 @@ public final class PlayerDataManager {
 
     public static void clearLocalPlayer() {
         if (localPlayer == null) return;
-
-        if (localPlayer.script != null) {
-            localPlayer.script.keyBindings.clear();
-        }
 
         localPlayer.clearData();
 

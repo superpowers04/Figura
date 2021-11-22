@@ -1,10 +1,8 @@
 package net.blancworks.figura.gui;
 
 import net.blancworks.figura.gui.widgets.FiguraKeybindWidget;
-import net.blancworks.figura.gui.widgets.KeyBindingsWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;

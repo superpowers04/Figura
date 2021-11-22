@@ -7,12 +7,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
@@ -63,12 +61,6 @@ public class LocalPlayerData extends PlayerData {
      * @param path - the full file path to load
      */
     public void loadModelFile(String path) {
-        //clear keybinds
-        if (this.script != null) {
-            script.keyBindings.clear();
-            KeyBinding.updateKeysByCode();
-        }
-
         //clear current data
         this.model = null;
         this.texture = null;
