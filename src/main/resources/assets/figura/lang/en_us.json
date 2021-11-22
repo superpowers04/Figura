@@ -17,6 +17,7 @@
   "figura.trust.maxparticles": "Maximum Particles Per Second",
   "figura.trust.maxsfx": "Maximum Sounds Per Second",
 
+
   "figura.gui.trustmenu.title": "Figura Trust Menu",
   "figura.gui.config.title": "Figura Config Menu",
   "figura.gui.menu.title": "Figura Menu",
@@ -153,9 +154,6 @@
 
   "figura.toast.avatar.reload.title": "Avatar Reloaded!",
   "figura.toast.avatar.trust.title": "is now: ",
-
-
-  "figura.keybinds.warning": "Figura cannot use keys already in use by Minecraft or other mods",
 
 
   "figura.actionwheel.warning": "No script found",

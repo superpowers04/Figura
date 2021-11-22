@@ -1,9 +1,10 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.gui.PlayerPopup;
-import net.blancworks.figura.lua.api.keybind.KeyBindAPI;
+import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.util.InputUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -14,11 +15,11 @@ public class MouseMixin {
 
     @Inject(method = "onMouseButton", at = @At("HEAD"))
     private void onMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
-        if (action == 1) {
-            KeyBindAPI.heldMouseButtons.add(button);
-        } else {
-            KeyBindAPI.heldMouseButtons.remove(button);
-        }
+        boolean pressed = action == 1;
+        FiguraKeybind.setKeyPressed(InputUtil.Type.MOUSE.createFromCode(button), pressed);
+
+        if (pressed)
+            FiguraKeybind.onKeyPressed(InputUtil.Type.MOUSE.createFromCode(button));
     }
 
     @Inject(method = "onMouseScroll", at = @At("HEAD"), cancellable = true)

@@ -11,27 +11,21 @@ import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class FiguraKeybindWidget extends ElementListWidget<KeyBindingsWidget.Entry> {
-
-    //screen
-    private final FiguraKeyBindsScreen parent;
+public class FiguraKeybindWidget extends ElementListWidget<FiguraKeybindWidget.Entry> {
 
     //focused binding
     public FiguraKeybind focusedBinding;
 
     public FiguraKeybindWidget(FiguraKeyBindsScreen parent, MinecraftClient client) {
         super(client, parent.width + 45, parent.height, 43, parent.height - 32, 20);
-        this.parent = parent;
     }
 
     @Override
@@ -53,7 +47,7 @@ public class FiguraKeybindWidget extends ElementListWidget<KeyBindingsWidget.Ent
         }
     }
 
-    public class FiguraKeybindEntry extends KeyBindingsWidget.Entry {
+    public class FiguraKeybindEntry extends FiguraKeybindWidget.Entry {
         //values
         private final Text display;
         private final FiguraKeybind binding;
@@ -70,9 +64,7 @@ public class FiguraKeybindWidget extends ElementListWidget<KeyBindingsWidget.Ent
             this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> focusedBinding = binding);
 
             //reset button
-            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {
-                binding.resetToDefault();
-            });
+            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> binding.resetToDefault());
         }
 
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
@@ -120,7 +112,7 @@ public class FiguraKeybindWidget extends ElementListWidget<KeyBindingsWidget.Ent
         }
     }
 
-    public abstract static class Entry extends ElementListWidget.Entry<KeyBindingsWidget.Entry> {
+    public abstract static class Entry extends ElementListWidget.Entry<FiguraKeybindWidget.Entry> {
         public Entry() {}
     }
 }
