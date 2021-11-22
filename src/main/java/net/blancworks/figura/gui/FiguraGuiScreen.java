@@ -1,11 +1,7 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.LocalPlayerData;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.LocalAvatarManager;
+import net.blancworks.figura.*;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.config.ConfigScreen;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
@@ -109,6 +105,9 @@ public class FiguraGuiScreen extends Screen {
     public static final TranslatableText RELOAD_TOOLTIP = new TranslatableText("figura.gui.button.reloadavatar.tooltip");
     public static final TranslatableText KEYBIND_TOOLTIP = new TranslatableText("figura.gui.button.keybinds.tooltip");
     public static final TranslatableText MODEL_FOLDER_TOOLTIP = new TranslatableText("figura.gui.button.openfolder.tooltip");
+
+    private static final int[] OvO = {265, 265, 264, 264, 263, 262, 263, 262, 66, 65, 257};
+    private static int ovo = 0;
 
     public TexturedButtonWidget uploadButton;
     public TexturedButtonWidget reloadButton;
@@ -701,6 +700,16 @@ public class FiguraGuiScreen extends Screen {
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == OvO[ovo]) {
+            ovo++;
+            if (ovo >= OvO.length) {
+                ovo = 0;
+                this.client.setScreen(new NewFiguraGuiScreen(this));
+            }
+        } else if (ovo != 2 || keyCode != 265) {
+            ovo = 0;
+        }
+
         if (keyCode == GLFW.GLFW_KEY_ESCAPE && expand) {
             expand = false;
             updateExpand();
