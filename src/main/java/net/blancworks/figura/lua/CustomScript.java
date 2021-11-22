@@ -12,6 +12,7 @@ import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
+import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -103,7 +104,7 @@ public class CustomScript extends FiguraAsset {
     public int actionWheelRightSize = 4;
 
     //scripting custom keybindings
-    public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
+    public ArrayList<FiguraKeybind> keyBindings = new ArrayList<>();
 
     //Keep track of these because we want to apply data to them later.
     public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();
@@ -588,6 +589,7 @@ public class CustomScript extends FiguraAsset {
                 ((NewFiguraNetworkManager) FiguraMod.networkManager).sendPing(outgoingPingQueue);
         } catch (Exception error) {
             handleError(error);
+            error.printStackTrace();
         }
         tickInstructionCount = scriptGlobals.running.state.bytecodes;
     }

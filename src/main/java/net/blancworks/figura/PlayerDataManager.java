@@ -200,8 +200,7 @@ public final class PlayerDataManager {
         if (localPlayer == null) return;
 
         if (localPlayer.script != null) {
-            localPlayer.script.keyBindings.forEach(keyBinding -> KeyBindingAccessorMixin.getKeysById().remove(keyBinding.getTranslationKey()));
-            KeyBinding.updateKeysByCode();
+            localPlayer.script.keyBindings.clear();
         }
 
         localPlayer.clearData();

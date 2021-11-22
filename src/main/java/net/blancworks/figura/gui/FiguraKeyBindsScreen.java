@@ -1,9 +1,10 @@
 package net.blancworks.figura.gui;
 
+import net.blancworks.figura.gui.widgets.FiguraKeybindWidget;
 import net.blancworks.figura.gui.widgets.KeyBindingsWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.options.KeyBinding;
+import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
@@ -11,7 +12,7 @@ import net.minecraft.text.TranslatableText;
 public class FiguraKeyBindsScreen extends Screen {
 
     public Screen parentScreen;
-    private KeyBindingsWidget keyBindingsWidget;
+    private FiguraKeybindWidget keyBindingsWidget;
 
     public FiguraKeyBindsScreen(Screen parentScreen) {
         super(new TranslatableText("figura.gui.keybinds.title"));
@@ -22,15 +23,15 @@ public class FiguraKeyBindsScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.addButton(new ButtonWidget(this.width / 2 - 75, this.height - 29, 150, 20, new TranslatableText("gui.back"), (buttonWidgetx) -> this.client.openScreen(parentScreen)));
+        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height - 29, 150, 20, new TranslatableText("gui.back"), (buttonWidgetx) -> this.client.setScreen(parentScreen)));
 
-        this.keyBindingsWidget = new KeyBindingsWidget(this, this.client);
-        this.children.add(this.keyBindingsWidget);
+        this.keyBindingsWidget = new FiguraKeybindWidget(this, this.client);
+        this.addSelectableChild(this.keyBindingsWidget);
     }
 
     @Override
     public void onClose() {
-        this.client.openScreen(parentScreen);
+        this.client.setScreen(parentScreen);
     }
 
     @Override
@@ -57,10 +58,8 @@ public class FiguraKeyBindsScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (keyBindingsWidget.focusedBinding != null) {
-            keyBindingsWidget.focusedBinding.setBoundKey(InputUtil.Type.MOUSE.createFromCode(button));
+            keyBindingsWidget.focusedBinding.keycode = InputUtil.Type.MOUSE.createFromCode(button).getCode();
             keyBindingsWidget.focusedBinding = null;
-
-            KeyBinding.updateKeysByCode();
 
             return true;
         } else {
@@ -71,10 +70,8 @@ public class FiguraKeyBindsScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyBindingsWidget.focusedBinding != null) {
-            keyBindingsWidget.focusedBinding.setBoundKey(keyCode == 256 ? InputUtil.UNKNOWN_KEY: InputUtil.fromKeyCode(keyCode, scanCode));
+            keyBindingsWidget.focusedBinding.keycode = (keyCode == 256 ? InputUtil.UNKNOWN_KEY: InputUtil.fromKeyCode(keyCode, scanCode)).getCode();
             keyBindingsWidget.focusedBinding = null;
-
-            KeyBinding.updateKeysByCode();
 
             return true;
         }
