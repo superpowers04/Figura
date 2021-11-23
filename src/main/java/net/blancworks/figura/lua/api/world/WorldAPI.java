@@ -1,8 +1,10 @@
 package net.blancworks.figura.lua.api.world;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -278,6 +280,8 @@ public class WorldAPI {
                 public LuaValue invoke(Varargs args) {
                     Vec3d start = LuaVector.checkOrNew(args.arg(1)).asV3d();
                     Vec3d end = LuaVector.checkOrNew(args.arg(2)).asV3d();
+                    int instructionPenalty = (int) end.subtract(start).length() * 2;
+                    FiguraMod.currentData.script.scriptGlobals.running.state.bytecodes += instructionPenalty;
                     String shapeType;
                     String fluidHandling;
                     LuaFunction func;
@@ -313,6 +317,8 @@ public class WorldAPI {
                     Entity e = new MarkerEntity(EntityType.MARKER, getWorld());
                     Vec3d start = LuaVector.checkOrNew(startPos).asV3d();
                     Vec3d end = LuaVector.checkOrNew(endPos).asV3d();
+                    int instructionPenalty = (int) end.subtract(start).length() * 2;
+                    FiguraMod.currentData.script.scriptGlobals.running.state.bytecodes += instructionPenalty;
                     Predicate<Entity> pred;
                     if (func.isnil())
                         pred = entity -> true;
@@ -356,6 +362,10 @@ public class WorldAPI {
             Vec3d vec3d = contextx.getStart().subtract(contextx.getEnd());
             return BlockHitResult.createMissed(contextx.getEnd(), Direction.getFacing(vec3d.x, vec3d.y, vec3d.z), new BlockPos(contextx.getEnd()));
         });
+    }
+
+    public static void applyInstructionPenalty(int penalty) {
+        int current = FiguraMod.currentData.script.scriptGlobals.running.state.bytecodes;
     }
 
     public static class FiguraRaycastContext extends RaycastContext {
