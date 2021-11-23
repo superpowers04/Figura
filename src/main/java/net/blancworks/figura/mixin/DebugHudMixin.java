@@ -18,7 +18,7 @@ public class DebugHudMixin {
         if (PlayerDataManager.localPlayer != null) {
             CustomScript script = PlayerDataManager.localPlayer.script;
             if (script != null) {
-                cir.getReturnValue().add(4, String.format("§b[FIGURA]§r tick instructions: %d, render instructions: %d", script.tickInstructionCount + script.damageInstructionCount, script.renderInstructionCount + script.worldRenderInstructionCount));
+                cir.getReturnValue().add(4, String.format("§b[FIGURA]§r tick instructions: %d, render instructions: %d", script.tickInstructionCount + script.damageInstructionCount, script.renderInstructionCount + script.worldRenderInstructionCount + script.renderLayerInstructionCount));
                 cir.getReturnValue().add(5, String.format("§b[FIGURA]§r pings sent: %d, pings received: %d", script.pingSent, script.pingReceived));
             }
         }
