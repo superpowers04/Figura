@@ -12,6 +12,7 @@ import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
+import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -103,7 +104,7 @@ public class CustomScript extends FiguraAsset {
     public int actionWheelRightSize = 4;
 
     //scripting custom keybindings
-    public ArrayList<KeyBinding> keyBindings = new ArrayList<>();
+    public ArrayList<FiguraKeybind> keyBindings = new ArrayList<>();
 
     //Keep track of these because we want to apply data to them later.
     public ArrayList<VanillaModelAPI.ModelPartTable> vanillaModelPartTables = new ArrayList<>();
@@ -188,6 +189,7 @@ public class CustomScript extends FiguraAsset {
         scriptGlobals.load(new DebugLib());
         //Yoink sethook from debug so we can use it later.
         setHook = scriptGlobals.get("debug").get("sethook");
+
         //Yeet debug library so nobody can access it.
         scriptGlobals.set("debug", LuaValue.NIL);
         scriptGlobals.set("dofile", LuaValue.NIL);
@@ -215,6 +217,16 @@ public class CustomScript extends FiguraAsset {
 
         //then yeet the package library
         scriptGlobals.set("package", LuaValue.NIL);
+
+        scriptGlobals.set("loadstring", new OneArgFunction() {
+            @Override
+            public LuaValue call(LuaValue arg) {
+                if (data == null || !data.isLocalAvatar)
+                    throw new LuaError("loadstring is only available for debugging local avatars!");
+
+                return FiguraLuaManager.modGlobals.load(arg.checkjstring(), scriptName, scriptGlobals);
+            }
+        });
 
         try {
             //Load the script source, name defaults to "main" for scripts for other players.
@@ -577,6 +589,7 @@ public class CustomScript extends FiguraAsset {
                 ((NewFiguraNetworkManager) FiguraMod.networkManager).sendPing(outgoingPingQueue);
         } catch (Exception error) {
             handleError(error);
+            error.printStackTrace();
         }
         tickInstructionCount = scriptGlobals.running.state.bytecodes;
     }

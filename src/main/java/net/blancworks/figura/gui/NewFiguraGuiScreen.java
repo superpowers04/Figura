@@ -1,24 +1,58 @@
 package net.blancworks.figura.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.FiguraMod;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec2f;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class NewFiguraGuiScreen extends Screen {
 
     public Screen parentScreen;
-    private boolean hudHidden;
 
-    private final Identifier BOOK_TEXTURE = new Identifier("figura", "textures/gui/book.png");
+    //scores
+    private static final HashMap<String, Integer> SCORES = new HashMap<>() {{
+        put("zandra", 0);
+        put("fran", 1); //petty
+        put("omo", 0);
+        put("lily", 0);
+        put("devnull", 0);
+    }};
+
+    //buttons
+    private final ArrayList<ButtonWidget> buttons = new ArrayList<>() {{
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Zandra"), button -> {
+            SCORES.put("zandra", SCORES.get("zandra") + 1);
+            shuffle();
+        }));
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Fran ❤"), button -> {
+            SCORES.put("fran", SCORES.get("fran") + 1);
+            shuffle();
+            FiguraMod.sendToast("figura.toast.upload.success.title", "10.187.4.229");
+        }));
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for omoflop"), button -> {
+            SCORES.put("omo", SCORES.get("omo") + 1);
+            shuffle();
+        }));
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Lily"), button -> {
+            SCORES.put("lily", SCORES.get("lily") + 1);
+            shuffle();
+        }));
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for devnull"), button -> {
+            SCORES.put("devnull", SCORES.get("devnull") + 1);
+            shuffle();
+        }));
+        add(new ButtonWidget(0, 0, 160, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> MinecraftClient.getInstance().setScreen(parentScreen)));
+    }};
 
     public NewFiguraGuiScreen(Screen parentScreen) {
-        super(new TranslatableText("gui.figura.menutitle"));
+        super(new TranslatableText("figura.gui.menu.title"));
         this.parentScreen = parentScreen;
     }
 
@@ -26,51 +60,45 @@ public class NewFiguraGuiScreen extends Screen {
     public void init() {
         super.init();
 
-        //hide hud
-        this.hudHidden = this.client.options.hudHidden;
-        this.client.options.hudHidden = true;
-
-        int x = this.width;
-        int y = this.height;
-        this.addDrawableChild(new ButtonWidget(x / 2 - 80, y / 2 - 25, 160, 20, new LiteralText("Simp for Zandra"), button -> {}));
-        this.addDrawableChild(new ButtonWidget(x / 2 - 80, y / 2 + 5, 160, 20, new LiteralText("Simp for Fran"), button -> {}));
+        //simp
+        shuffle();
+        for (ButtonWidget button : buttons) {
+            this.addDrawableChild(button);
+        }
     }
 
     @Override
     public void onClose() {
-        this.client.options.hudHidden = this.hudHidden;
-        this.client.setScreen(parentScreen);
+        MinecraftClient.getInstance().setScreen(parentScreen);
     }
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        this.renderBackground(matrices);
-
-        //variables
-        Vec2f screen = new Vec2f(this.width, this.height);
-        Vec2f offset = new Vec2f(Math.max(30f, 5f), screen.y / 2.0f - 90);
-
-        //texture
-        RenderSystem.setShaderTexture(0, BOOK_TEXTURE);
-
-        //middle
-        matrices.push();
-        matrices.translate(screen.x / 2.0 - 11.5 - offset.x, offset.y, 0f);
-        drawTexture(matrices, 0, 0, 23, 180, 8.0f, 0.0f, 4, 16, 32, 16);
-        matrices.pop();
-
-        //left side
-        matrices.push();
-        matrices.translate(10, offset.y, 0f);
-        drawTexture(matrices, 0, 0, 23, 180, 0.0f, 0.0f, 4, 16, 32, 16);
-        matrices.pop();
-
-        //right side
-        matrices.push();
-        matrices.translate(screen.x - 10 - 23 - 11.5 - offset.x, offset.y, 0f);
-        drawTexture(matrices, 0, 0, 23, 180, 12.0f, 0.0f, 4, 16, 32, 16);
-        matrices.pop();
-
+        this.renderBackgroundTexture(0);
         super.render(matrices, mouseX, mouseY, delta);
+
+        int y = -10;
+        for (Map.Entry<String, Integer> entry : SCORES.entrySet()) {
+            this.textRenderer.draw(matrices, new LiteralText(entry.getKey() + ": " + entry.getValue()), 2, y += 15, 0xFFFFFF);
+        }
+    }
+
+    private void shuffle() {
+        int size = buttons.size();
+        for (int i = 0; i < size; i++) {
+            int old = (int) (Math.random() * size);
+            int mew = (int) (Math.random() * size);
+
+            ButtonWidget temp = buttons.get(old);
+            buttons.set(old, buttons.get(mew));
+            buttons.set(mew, temp);
+        }
+
+        //update sizes
+        int y = -20;
+        for (ButtonWidget button : buttons) {
+            button.x = this.width / 2 - 80;
+            button.y = y += 25;
+        }
     }
 }

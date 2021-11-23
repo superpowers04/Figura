@@ -63,7 +63,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         for (Map.Entry<Identifier, TrustContainer> entry : PlayerTrustManager.groups.entrySet()) {
             addEntry(new GroupListWidgetEntry(entry.getKey(), this) {{
                 identifier = entry.getKey().toString();
-                Text text = new TranslatableText("gui.figura." + entry.getKey().getPath());
+                Text text = new TranslatableText("figura.trust." + entry.getKey().getPath());
                 displayText = new LiteralText("").append(new LiteralText(entry.getValue().expanded ? "V " : "> ")
                         .setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)))
                         .formatted(entry.getValue().expanded ? Formatting.GRAY : Formatting.DARK_GRAY)
@@ -169,7 +169,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             PlayerListEntry entry = (PlayerListEntry) getEntryObject();
             MutableText name;
             if (entry.getProfile().getId().compareTo(MinecraftClient.getInstance().player.getUuid()) == 0)
-                name = new LiteralText("  [").styled(FiguraMod.ACCENT_COLOR).append(new TranslatableText("gui.figura.local")).append("] " + entry.getProfile().getName());
+                name = new LiteralText("  [").styled(FiguraMod.ACCENT_COLOR).append(new TranslatableText("figura.trust.local")).append("] " + entry.getProfile().getName());
             else
                 name = new LiteralText("  " + entry.getProfile().getName());
 

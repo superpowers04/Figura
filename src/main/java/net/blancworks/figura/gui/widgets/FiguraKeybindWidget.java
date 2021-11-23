@@ -4,33 +4,28 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.FiguraKeyBindsScreen;
+import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
 import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
-import net.minecraft.util.Formatting;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry> {
-
-    //screen
-    private final FiguraKeyBindsScreen parent;
+public class FiguraKeybindWidget extends ElementListWidget<FiguraKeybindWidget.Entry> {
 
     //focused binding
-    public KeyBinding focusedBinding;
+    public FiguraKeybind focusedBinding;
 
-    public KeyBindingsWidget(FiguraKeyBindsScreen parent, MinecraftClient client) {
+    public FiguraKeybindWidget(FiguraKeyBindsScreen parent, MinecraftClient client) {
         super(client, parent.width + 45, parent.height, 43, parent.height - 32, 20);
-        this.parent = parent;
     }
 
     @Override
@@ -48,20 +43,20 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
 
         PlayerData data = PlayerDataManager.localPlayer;
         if (data != null && data.script != null) {
-            data.script.keyBindings.forEach(binding -> this.addEntry(new KeyBindEntry(new LiteralText(binding.getTranslationKey().split("\\$", 2)[1]), binding)));
+            data.script.keyBindings.forEach(binding -> this.addEntry(new FiguraKeybindEntry(Text.of(binding.name), binding)));
         }
     }
 
-    public class KeyBindEntry extends KeyBindingsWidget.Entry {
+    public class FiguraKeybindEntry extends FiguraKeybindWidget.Entry {
         //values
         private final Text display;
-        private final KeyBinding binding;
+        private final FiguraKeybind binding;
 
         //buttons
         private final ButtonWidget toggle;
         private final ButtonWidget reset;
 
-        public KeyBindEntry(Text display, KeyBinding binding) {
+        public FiguraKeybindEntry(Text display, FiguraKeybind binding) {
             this.display = display;
             this.binding = binding;
 
@@ -69,15 +64,12 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
             this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> focusedBinding = binding);
 
             //reset button
-            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {
-                binding.setBoundKey(binding.getDefaultKey());
-                KeyBinding.updateKeysByCode();
-            });
+            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> binding.resetToDefault());
         }
 
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //text
-            TextRenderer textRenderer = KeyBindingsWidget.this.client.textRenderer;
+            TextRenderer textRenderer = FiguraKeybindWidget.this.client.textRenderer;
             int posY = y + entryHeight / 2;
             textRenderer.draw(matrices, this.display, (float) x, (float) (posY - 9 / 2), 16777215);
 
@@ -90,27 +82,10 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
             //toggle button
             this.toggle.x = x + 165;
             this.toggle.y = y;
-            this.toggle.setMessage(this.binding.getBoundKeyLocalizedText());
+            this.toggle.setMessage(this.binding.getLocalizedText());
 
             if (focusedBinding == this.binding) {
                 this.toggle.setMessage(new LiteralText("> ").styled(FiguraMod.ACCENT_COLOR).append(this.toggle.getMessage()).append(" <"));
-            }
-            else if (!this.binding.isUnbound()) {
-                for (KeyBinding key : MinecraftClient.getInstance().options.keysAll) {
-                    if (key != this.binding && this.binding.equals(key)) {
-                        this.toggle.setMessage(this.toggle.getMessage().shallowCopy().formatted(Formatting.RED));
-
-                        //render overlay
-                        if (isMouseOver(mouseX, mouseY)) {
-                            matrices.push();
-                            matrices.translate(0, 0, 599);
-                            parent.renderTooltip(matrices, new TranslatableText("gui.figura.keybinds.warning").formatted(Formatting.RED), mouseX, mouseY);
-                            matrices.pop();
-                        }
-
-                        break;
-                    }
-                }
             }
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
@@ -137,7 +112,7 @@ public class KeyBindingsWidget extends ElementListWidget<KeyBindingsWidget.Entry
         }
     }
 
-    public abstract static class Entry extends ElementListWidget.Entry<KeyBindingsWidget.Entry> {
+    public abstract static class Entry extends ElementListWidget.Entry<FiguraKeybindWidget.Entry> {
         public Entry() {}
     }
 }

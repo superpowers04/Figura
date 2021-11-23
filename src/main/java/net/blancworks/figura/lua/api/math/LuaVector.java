@@ -109,8 +109,11 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
                 LuaVector v = LuaVector.checkOrNew(l);
                 fal.addElements(fal.size(), v.values);
             }
-            else
-                throw new LuaError("Expected number, table or vector. got " + l.typename());
+            else {
+                LuaValue numb = l.tonumber();
+                if (numb.isnil()) fal.add(0f);
+                else fal.add(numb.tofloat());
+            }
 
             entry = t.next(entry.arg1());
         }
