@@ -21,15 +21,15 @@ public class FiguraKeyBindsScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 75, this.height - 29, 150, 20, new TranslatableText("gui.back"), (buttonWidgetx) -> this.client.setScreen(parentScreen)));
+        this.addButton(new ButtonWidget(this.width / 2 - 75, this.height - 29, 150, 20, new TranslatableText("gui.back"), (buttonWidgetx) -> this.client.openScreen(parentScreen)));
 
         this.keyBindingsWidget = new FiguraKeybindWidget(this, this.client);
-        this.addSelectableChild(this.keyBindingsWidget);
+        this.addChild(this.keyBindingsWidget);
     }
 
     @Override
     public void onClose() {
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     @Override

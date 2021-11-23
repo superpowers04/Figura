@@ -5,11 +5,10 @@ import net.blancworks.figura.config.ConfigManager.InputType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.Element;
-import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Style;
@@ -38,11 +37,21 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     public void addEntries(Config[] configs) {
         for (Config config : configs) {
             switch (config.type) {
-                case CATEGORY -> addEntry(new CategoryEntry(config.name));
-                case BOOLEAN -> addEntry(new BooleanEntry(config.name, config.tooltip, config));
-                case ENUM -> addEntry(new EnumEntry(config.name, config.tooltip, config, config.enumList));
-                case INPUT -> addEntry(new InputEntry(config.name, config.tooltip, config, config.inputType));
-                case KEYBIND -> addEntry(new KeyBindEntry(config.name, config.tooltip, config, config.keyBind));
+                case CATEGORY:
+                    addEntry(new CategoryEntry(config.name));
+                    break;
+                case BOOLEAN:
+                    addEntry(new BooleanEntry(config.name, config.tooltip, config));
+                    break;
+                case ENUM:
+                    addEntry(new EnumEntry(config.name, config.tooltip, config, config.enumList));
+                    break;
+                case INPUT:
+                    addEntry(new InputEntry(config.name, config.tooltip, config, config.inputType));
+                    break;
+                case KEYBIND:
+                    addEntry(new KeyBindEntry(config.name, config.tooltip, config, config.keyBind));
+                    break;
             }
         }
     }
@@ -60,7 +69,8 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         this.children().forEach(entry -> {
-            if (entry instanceof InputEntry inputEntry) {
+            if (entry instanceof InputEntry) {
+                InputEntry inputEntry = (InputEntry) entry;
                 inputEntry.field.setTextFieldFocused(inputEntry.field.isMouseOver(mouseX, mouseY));
                 if (inputEntry.field.isFocused())
                     inputEntry.field.setSelectionEnd(0);
@@ -95,11 +105,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Collections.emptyList();
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Collections.emptyList();
         }
     }
@@ -165,11 +170,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -247,11 +247,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 
@@ -344,7 +339,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
             //focused size
             int extraWidth = 0;
-            if (this.field.isFocused() && !field.getText().isBlank())
+            if (this.field.isFocused() && !field.getText().equals(""))
                 extraWidth = MathHelper.clamp(textRenderer.getWidth(field.getText()) - 50, 0, 167);
 
             //set size
@@ -383,11 +378,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         }
 
         @Override
-        public List<? extends Selectable> selectableChildren() {
-            return Arrays.asList(this.field, this.reset);
-        }
-
-        @Override
         public boolean mouseClicked(double mouseX, double mouseY, int button) {
             return this.field.mouseClicked(mouseX, mouseY, button) || this.reset.mouseClicked(mouseX, mouseY, button);
         }
@@ -407,21 +397,21 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             return this.field.charTyped(chr, modifiers);
         }
 
-        public static int hexToInt(String hexString) {
+        public int hexToInt(String hexString) {
             //parse hex color
             StringBuilder hex = new StringBuilder(hexString);
-
             if (hex.toString().startsWith("#")) hex = new StringBuilder(hex.substring(1));
             if (hex.length() < 6) {
                 char[] bgChar = hex.toString().toCharArray();
-
                 //special catch for 3
                 if (hex.length() == 3)
                     hex = new StringBuilder("" + bgChar[0] + bgChar[0] + bgChar[1] + bgChar[1] + bgChar[2] + bgChar[2]);
-                else
-                    hex.append("0".repeat(Math.max(0, 6 - hex.toString().length())));
+                else {
+                    for (int i = 0; i < Math.max(0, 6 - hex.toString().length()); i++) {
+                        hex.append("0");
+                    }
+                }
             }
-
             try {
                 return Integer.parseInt(hex.toString(), 16);
             } catch (Exception ignored) {
@@ -502,11 +492,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
         @Override
         public List<? extends Element> children() {
-            return Arrays.asList(this.toggle, this.reset);
-        }
-
-        @Override
-        public List<? extends Selectable> selectableChildren() {
             return Arrays.asList(this.toggle, this.reset);
         }
 

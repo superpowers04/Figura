@@ -6,12 +6,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.FiguraMod;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import org.lwjgl.glfw.GLFW;
 
@@ -19,8 +16,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
-import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
@@ -69,8 +68,8 @@ public final class ConfigManager {
         LOG_OTHERS_SCRIPT(false),
         RENDER_DEBUG_PARTS_PIVOT(true) {{
             this.tooltip = new TranslatableText("figura.config.render_debug_parts_pivot.tooltip",
-                    new TranslatableText("figura.config.render_debug_parts_pivot.tooltip.cubes").setStyle(Style.EMPTY.withColor(0xff72b7)),
-                    new TranslatableText("figura.config.render_debug_parts_pivot.tooltip.groups").setStyle(Style.EMPTY.withColor(0xaff2ff)));
+                    new TranslatableText("figura.config.render_debug_parts_pivot.tooltip.cubes").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xff72b7))),
+                    new TranslatableText("figura.config.render_debug_parts_pivot.tooltip.groups").setStyle(Style.EMPTY.withColor(TextColor.fromRgb(0xaff2ff))));
         }},
         RENDER_OWN_NAMEPLATE(false),
         MODEL_FOLDER_PATH("", InputType.FOLDER_PATH),
@@ -176,14 +175,13 @@ public final class ConfigManager {
         FLOAT(s -> s.matches("[\\-+]?[0-9]*(\\.[0-9]+)?") || s.endsWith(".") || s.isEmpty()),
         HEX_COLOR(s -> s.matches("^[#]?[0-9A-Fa-f]{0,6}$")),
         FOLDER_PATH(s -> {
-            if (!s.isBlank()) {
+            if (!s.equals("")) {
                 try {
-                    return Path.of(s.trim()).toFile().isDirectory();
+                    return new File(s.trim()).isDirectory();
                 } catch (Exception ignored) {
                     return false;
                 }
             }
-
             return true;
         });
 
@@ -194,7 +192,7 @@ public final class ConfigManager {
     }
 
     //old config -> used on migration
-    private static final Map<Config, String> V0_CONFIG = new HashMap<>() {{
+    private static final Map<Config, String> V0_CONFIG = new HashMap<Config, String>() {{
         put(Config.PREVIEW_NAMEPLATE, "previewNameTag");
         put(Config.FIGURA_BUTTON_LOCATION, "buttonLocation");
         put(Config.USE_LOCAL_SERVER, "useLocalServer");
@@ -213,7 +211,7 @@ public final class ConfigManager {
     }};
 
     private static final File FILE = new File(FabricLoader.getInstance().getConfigDir().resolve(MOD_NAME + ".json").toString());
-    private static final List<Config> CONFIG_ENTRIES = new ArrayList<>() {{
+    private static final List<Config> CONFIG_ENTRIES = new ArrayList<Config>() {{
         for (Config value : Config.values()) {
             if (value.type != ConfigType.CATEGORY)
                 this.add(value);

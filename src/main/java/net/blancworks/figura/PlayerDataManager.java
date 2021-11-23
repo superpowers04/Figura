@@ -81,15 +81,13 @@ public final class PlayerDataManager {
                 PlayerListEntry playerEntry = client.getNetworkHandler().getPlayerListEntry(id);
                 if (playerEntry != null && playerEntry.getProfile() != null) {
                     String name = playerEntry.getProfile().getName();
-                    if (!name.isBlank()) {
+                    if (!name.equals("")) {
                         GameProfile gameProfile = new GameProfile(null, name);
-                        SkullBlockEntity.loadProperties(gameProfile, profile -> {
-                            UUID profileID = profile.getId();
-                            if (id.compareTo(profileID) == 0) return;
-
-                            getPlayerAvatarFromServerOrCache(profileID, getData);
-                            OFFLINE_SWAP_DATA.put(id, profileID);
-                        });
+                        GameProfile newID = SkullBlockEntity.loadProperties(gameProfile);
+                        if (newID != null && id.compareTo(newID.getId()) != 0) {
+                            getPlayerAvatarFromServerOrCache(newID.getId(), getData);
+                            OFFLINE_SWAP_DATA.put(id, newID.getId());
+                        }
                     }
                 }
             }

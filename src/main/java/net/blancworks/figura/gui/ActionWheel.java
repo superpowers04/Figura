@@ -13,6 +13,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
@@ -22,7 +23,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3f;
 import net.minecraft.util.registry.Registry;
 
 import java.util.List;
@@ -32,7 +32,7 @@ public class ActionWheel extends DrawableHelper {
 
     private static final Identifier ACTION_WHEEL = new Identifier("figura", "textures/gui/action_wheel.png");
     private static final Identifier ACTION_WHEEL_SELECTED = new Identifier("figura", "textures/gui/action_wheel_selected.png");
-    private static final Vec3f ERROR_COLOR = new Vec3f(1.0f, 0.28f, 0.28f);
+    private static final Vector3f ERROR_COLOR = new Vector3f(1.0f, 0.28f, 0.28f);
     private static final List<Text> NO_FUNCTION_MESSAGE = ImmutableList.of(new TranslatableText("figura.actionwheel.nofunction"));
 
     public static int selectedSlot = -1;
@@ -104,15 +104,15 @@ public class ActionWheel extends DrawableHelper {
             renderWheel(matrices, wheelPos, wheelSize, 4, 4);
 
             //draw warning texts
-            drawCenteredTextWithShadow(
+            drawCenteredText(
                     matrices, MinecraftClient.getInstance().textRenderer,
-                    new TranslatableText("figura.actionwheel.warning").formatted(Formatting.UNDERLINE).asOrderedText(),
+                    new TranslatableText("figura.actionwheel.warning").formatted(Formatting.UNDERLINE),
                     (int) wheelPos.x, (int) wheelPos.y - 4,
                     16733525
             );
-            drawCenteredTextWithShadow(
+            drawCenteredText(
                     matrices, MinecraftClient.getInstance().textRenderer,
-                    new TranslatableText("figura.actionwheel.warninginfo").asOrderedText(),
+                    new TranslatableText("figura.actionwheel.warninginfo"),
                     (int) wheelPos.x, (int) Math.max(wheelPos.y - wheelSize / 2.0 - 10, 4),
                     16733525
             );
@@ -129,7 +129,7 @@ public class ActionWheel extends DrawableHelper {
 
     public static void renderWheel(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments) {
         //texture
-        RenderSystem.setShaderTexture(0, ACTION_WHEEL);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(ACTION_WHEEL);
 
         //draw right side
         matrices.push();
@@ -143,7 +143,7 @@ public class ActionWheel extends DrawableHelper {
         matrices.push();
 
         matrices.translate(Math.round(pos.x), Math.round(pos.y + size / 2.0d), 0.0d);
-        Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(180);
+        Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(180);
         matrices.multiply(quaternion);
 
         drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (leftSegments - 1), 0.0f, 8, 16, 32, 16);
@@ -159,7 +159,7 @@ public class ActionWheel extends DrawableHelper {
         boolean hasColor = false;
         boolean hasHoverColor = false;
         boolean isSelected = selectedSlot == slot;
-        Vec3f overlayColor = new Vec3f(1.0f, 1.0f, 1.0f);
+        Vector3f overlayColor = new Vector3f(1.0f, 1.0f, 1.0f);
 
         if (customization != null) {
             hasFunction = customization.function != null;
@@ -203,17 +203,17 @@ public class ActionWheel extends DrawableHelper {
         int regionHeight = 8;
 
         switch (segments) {
-            case 1 -> {
+            case 1:
                 y = selected % 2 == 1 ? pos.y + size / 2.0d : pos.y - size / 2.0d;
                 angle = 180f * selected;
                 height = size;
                 regionHeight = 16;
-            }
-            case 2 -> {
+                break;
+            case 2:
                 angle = 90f * (selected - 1f);
                 u = 8.0f;
-            }
-            case 3 -> {
+                break;
+            case 3:
                 if (selected % 3 != 2) {
                     y += (selected < 3 ? -1 : 1) * size / 2.0d;
 
@@ -223,32 +223,30 @@ public class ActionWheel extends DrawableHelper {
                     }
 
                     u = 16.0f;
-                }
-                else {
+                } else {
                     u = 8.0f;
                     v = 8.0f;
                 }
-
                 angle = 180f * MathHelper.floor(selected / 3.0d);
-            }
-            case 4 -> {
+                break;
+            case 4:
                 angle = 90f * (MathHelper.floor(selected / 2.0d) + 3f);
                 u = 24.0f;
                 v = selected % 2 == 1 ? 8.0f : 0.0f;
-            }
+                break;
         }
 
         //texture
-        RenderSystem.setShaderTexture(0, ACTION_WHEEL_SELECTED);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(ACTION_WHEEL_SELECTED);
 
         //draw
         matrices.push();
 
         matrices.translate(Math.round(pos.x), Math.round(y), 0.0d);
-        Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(angle);
+        Quaternion quaternion = Vector3f.POSITIVE_Z.getDegreesQuaternion(angle);
         matrices.multiply(quaternion);
 
-        RenderSystem.setShaderColor(overlayColor.getX(), overlayColor.getY(), overlayColor.getZ(), 1.0f);
+        RenderSystem.color4f(overlayColor.getX(), overlayColor.getY(), overlayColor.getZ(), 1.0f);
         drawTexture(matrices, 0, 0, size / 2, height, u, v, 8, regionHeight, 32, 16);
 
         matrices.pop();
@@ -276,16 +274,32 @@ public class ActionWheel extends DrawableHelper {
                 //texture
                 Identifier textureId;
                 switch (cust.texture) {
-                    case Cape -> textureId = Objects.requireNonNullElse(data.playerListEntry.getCapeTexture(), FiguraTexture.DEFAULT_ID);
-                    case Elytra -> textureId = Objects.requireNonNullElse(data.playerListEntry.getElytraTexture(), new Identifier("minecraft", "textures/entity/elytra.png"));
-                    case Resource -> textureId = MinecraftClient.getInstance().getResourceManager().containsResource(cust.texturePath) ? cust.texturePath : MissingSprite.getMissingSpriteId();
-                    case Skin -> textureId = data.playerListEntry.getSkinTexture();
-                    case Custom -> textureId = data.texture != null ? data.texture.id : MissingSprite.getMissingSpriteId();
-                    default -> textureId = FiguraTexture.DEFAULT_ID;
+                    case Cape:
+                        textureId = data.playerListEntry.getCapeTexture();
+                        if (textureId == null)
+                            textureId = FiguraTexture.DEFAULT_ID;
+                        break;
+                    case Elytra:
+                        textureId = data.playerListEntry.getElytraTexture();
+                        if (textureId == null)
+                            textureId = new Identifier("minecraft", "textures/entity/elytra.png");
+                        break;
+                    case Resource:
+                        textureId = MinecraftClient.getInstance().getResourceManager().containsResource(cust.texturePath) ? cust.texturePath : MissingSprite.getMissingSpriteId();
+                        break;
+                    case Skin:
+                        textureId = data.playerListEntry.getSkinTexture();
+                        break;
+                    case Custom:
+                        textureId = data.texture != null ? data.texture.id : MissingSprite.getMissingSpriteId();
+                        break;
+                    default:
+                        textureId = FiguraTexture.DEFAULT_ID;
+                        break;
                 }
 
-                RenderSystem.setShaderTexture(0, textureId);
-                RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+                MinecraftClient.getInstance().getTextureManager().bindTexture(textureId);
+                RenderSystem.color4f(1f, 1f, 1f, 1f);
                 matrices.push();
                 matrices.scale(1.5f, 1.5f, 1.5f);
 
@@ -330,15 +344,23 @@ public class ActionWheel extends DrawableHelper {
         Vec2f textPos;
         int titleLen = client.textRenderer.getWidth(lines.get(0)) / 2;
 
+        //top
+        //bottom
+        //center
+        //default mouse
         switch ((int) Config.ACTION_WHEEL_TITLE_POS.value) {
-            //top
-            case 1 -> textPos = new Vec2f(pos.x - titleLen, (float) Math.max(pos.y - size / 2.0 - 10, 4));
-            //bottom
-            case 2 -> textPos = new Vec2f(pos.x - titleLen, (float) Math.min(pos.y + size / 2.0 + 4, client.getWindow().getHeight() - 12));
-            //center
-            case 3 -> textPos = new Vec2f(pos.x - titleLen, pos.y - 4);
-            //default mouse
-            default -> textPos = new Vec2f((float) client.mouse.getX() / scale, (float) client.mouse.getY() / scale - 10);
+            case 1:
+                textPos = new Vec2f(pos.x - titleLen, (float) Math.max(pos.y - size / 2.0 - 10, 4));
+                break;
+            case 2:
+                textPos = new Vec2f(pos.x - titleLen, (float) Math.min(pos.y + size / 2.0 + 4, client.getWindow().getHeight() - 12));
+                break;
+            case 3:
+                textPos = new Vec2f(pos.x - titleLen, pos.y - 4);
+                break;
+            default:
+                textPos = new Vec2f((float) client.mouse.getX() / scale, (float) client.mouse.getY() / scale - 10);
+                break;
         }
 
         //draw
@@ -384,13 +406,10 @@ public class ActionWheel extends DrawableHelper {
             }
 
             //render
-            MatrixStack matrixStack = RenderSystem.getModelViewStack();
-            matrixStack.push();
-            matrixStack.scale(1.5f, 1.5f, 1.5f);
-
+            RenderSystem.pushMatrix();
+            RenderSystem.scalef(1.5f, 1.5f, 1.5f);
             client.getItemRenderer().renderGuiItemIcon(item, (int) pos.x, (int) pos.y);
-
-            matrixStack.pop();
+            RenderSystem.popMatrix();
         }
     }
 

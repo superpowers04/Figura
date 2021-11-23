@@ -18,21 +18,15 @@ import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.shaders.FiguraShader;
-import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.models.sounds.FiguraSound;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
@@ -134,13 +128,8 @@ public class CustomScript extends FiguraAsset {
 
     public boolean allowPlayerTargeting = false;
 
-    public static final UnaryOperator<Style> LUA_COLOR = (s) -> s.withColor(0x5555FF);
+    public static final UnaryOperator<Style> LUA_COLOR = (s) -> s.withColor(TextColor.fromRgb(0x5555FF));
     public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").styled(LUA_COLOR));
-
-    //Custom Rendering
-    public static final int maxShaders = 16;
-    public Map<String, FiguraShader> shaders = new HashMap<>();
-    public FiguraVertexConsumerProvider customVCP = null;
 
     //----PINGS!----
 
@@ -272,7 +261,7 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
-    public void toNBT(NbtCompound tag) {
+    public void toNBT(CompoundTag tag) {
         if (source.length() <= 65000) {
             tag.putString("src", cleanScriptSource(source));
         } else {
@@ -284,7 +273,7 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
-    public void fromNBT(PlayerData data, NbtCompound tag) {
+    public void fromNBT(PlayerData data, CompoundTag tag) {
         Set<String> keys = tag.getKeys();
         if (keys.size() <= 1) {
             source = tag.getString("src");
@@ -399,8 +388,8 @@ public class CustomScript extends FiguraAsset {
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
 
                         Text log;
-                        if (arg instanceof LuaVector logText) {
-                            log = logText.toJsonText();
+                        if (arg instanceof LuaVector) {
+                            log = ((LuaVector) arg).toJsonText();
                         } else {
                             try {
                                 log = Text.Serializer.fromJson(new StringReader(arg.toString()));
@@ -616,8 +605,8 @@ public class CustomScript extends FiguraAsset {
 
         tickLuaEvent = null;
         renderLuaEvent = null;
-        if (error instanceof LuaError err)
-            logLuaError(err);
+        if (error instanceof LuaError)
+            logLuaError((LuaError) error);
         else
             error.printStackTrace();
     }
@@ -764,10 +753,15 @@ public class CustomScript extends FiguraAsset {
      * @return -1 if it is the end of the block string, or numEquals if it isn't.
      */
     private static int checkBlockStringEnd(String s, int startIndex, int numEquals) {
-        if (startIndex+numEquals+2 > s.length())
+        if (startIndex + numEquals + 2 > s.length())
             return numEquals;
-        String end = "]" + "=".repeat(numEquals) + "]";
-        if (s.substring(startIndex, startIndex+numEquals+2).equals(end))
+
+        StringBuilder end = new StringBuilder("]");
+        for (int i = 0; i < numEquals; i++)
+            end.append("=");
+        end.append("]");
+
+        if (s.substring(startIndex, startIndex+numEquals+2).equals(end.toString()))
             return -1;
         return numEquals;
     }
@@ -961,8 +955,8 @@ public class CustomScript extends FiguraAsset {
                 addPing(func, args, id);
             }
         } catch (Exception error) {
-            if (error instanceof LuaError err)
-                logLuaError(err);
+            if (error instanceof LuaError)
+                logLuaError((LuaError) error);
             else
                 error.printStackTrace();
         }

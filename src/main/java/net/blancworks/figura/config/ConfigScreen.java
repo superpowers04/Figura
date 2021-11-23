@@ -3,7 +3,7 @@ package net.blancworks.figura.config;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.option.KeyBinding;
+import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.TranslatableText;
@@ -22,19 +22,19 @@ public class ConfigScreen extends Screen {
     protected void init() {
         super.init();
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 - 154, this.height - 29, 150, 20, new TranslatableText("gui.cancel"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width / 2 - 154, this.height - 29, 150, 20, new TranslatableText("gui.cancel"), (buttonWidgetx) -> {
             ConfigManager.discardConfig();
-            this.client.setScreen(parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
-        this.addDrawableChild(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
+        this.addButton(new ButtonWidget(this.width / 2 + 4, this.height - 29, 150, 20, new TranslatableText("gui.done"), (buttonWidgetx) -> {
             ConfigManager.applyConfig();
             ConfigManager.saveConfig();
-            this.client.setScreen(parentScreen);
+            this.client.openScreen(parentScreen);
         }));
 
         this.configListWidget = new ConfigListWidget(this, this.client);
-        this.addSelectableChild(this.configListWidget);
+        this.addChild(this.configListWidget);
 
         //generate configs...
         configListWidget.addEntries(Config.values());
@@ -44,7 +44,7 @@ public class ConfigScreen extends Screen {
     public void onClose() {
         ConfigManager.applyConfig();
         ConfigManager.saveConfig();
-        this.client.setScreen(parentScreen);
+        this.client.openScreen(parentScreen);
     }
 
     @Override

@@ -20,7 +20,6 @@
     "ElytraFeatureRendererMixin",
     "EntityRenderDispatcherMixin",
     "FiguraTextImplMixin",
-    "FramebufferMixin",
     "GameMenuScreenMixin",
     "GameRendererMixin",
     "HeadFeatureRendererMixin",

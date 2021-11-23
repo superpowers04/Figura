@@ -4,14 +4,13 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.options.GameOptions;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -42,11 +41,6 @@ public class MinecraftClientMixin {
     @Unique public boolean actionWheelActive = false;
     @Unique public boolean playerPopupActive = false;
 
-    @Inject(at = @At("RETURN"), method = "render")
-    public void copyFramebuffer(boolean tick, CallbackInfo ci) {
-        RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
-    }
-
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {
         try {
@@ -74,9 +68,9 @@ public class MinecraftClientMixin {
                 if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
                     playerPopupActive = true;
                     PlayerPopup.miniEnabled = true;
-                } else if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
+                } else if (target instanceof PlayerEntity && !target.isInvisibleTo(this.player)) {
                     playerPopupActive = true;
-                    PlayerPopup.data = PlayerDataManager.getDataForPlayer(player.getUuid());
+                    PlayerPopup.data = PlayerDataManager.getDataForPlayer(target.getUuid());
                 } else if (!this.options.getPerspective().isFirstPerson()) {
                     playerPopupActive = true;
                     PlayerPopup.data = PlayerDataManager.localPlayer;
@@ -97,8 +91,8 @@ public class MinecraftClientMixin {
             PlayerDataManager.panic = !PlayerDataManager.panic;
     }
 
-    @Inject(at = @At("HEAD"), method = "setScreen")
-    public void setScreen(Screen screen, CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "openScreen")
+    public void openScreen(Screen screen, CallbackInfo ci) {
         if (actionWheelActive) {
             ActionWheel.play();
             actionWheelActive = false;

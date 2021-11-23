@@ -1,11 +1,12 @@
 package net.blancworks.figura.utils;
 
-import net.blancworks.figura.access.GameRendererAccess;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.Camera;
 import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.Matrix3f;
+import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.Quaternion;
 
 public class MathUtils {
 
@@ -54,7 +55,7 @@ public class MathUtils {
         double dist = Math.sqrt(camSpace.dot(camSpace));
 
         Vector4f projectiveCamSpace = new Vector4f(camSpace);
-        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(camera, (float) ((GameRendererAccess) client.gameRenderer).figura$getFov(camera, true), false);
+        Matrix4f projMat = client.gameRenderer.getBasicProjectionMatrix(camera, client.getTickDelta(), true);
         projectiveCamSpace.transform(projMat);
         float x = projectiveCamSpace.getX();
         float y = projectiveCamSpace.getY();

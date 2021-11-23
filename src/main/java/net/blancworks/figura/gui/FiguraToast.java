@@ -1,13 +1,14 @@
 package net.blancworks.figura.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.toast.Toast;
 import net.minecraft.client.toast.ToastManager;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.text.TextColor;
 import net.minecraft.util.Identifier;
 
 public class FiguraToast implements Toast {
@@ -23,7 +24,7 @@ public class FiguraToast implements Toast {
 
     public FiguraToast(Text title, Text message) {
         this.cheese = FiguraMod.IS_CHEESE || Math.random() < 0.0001;
-        this.title = title.shallowCopy().fillStyle(Style.EMPTY.withColor(cheese ? 0xF8C53A : 0x55FFFF));
+        this.title = title.shallowCopy().fillStyle(Style.EMPTY.withColor(TextColor.fromRgb(cheese ? 0xF8C53A : 0x55FFFF)));
         this.message = message;
     }
 
@@ -36,7 +37,7 @@ public class FiguraToast implements Toast {
             this.justUpdated = false;
         }
 
-        RenderSystem.setShaderTexture(0, TEXTURE);
+        MinecraftClient.getInstance().getTextureManager().bindTexture(TEXTURE);
         DrawableHelper.drawTexture(matrices, 0, 0, 0f, cheese ? 0 : (int) ((timeDiff / (5000 / 24) % 4) + 1) * 32f, 160, 32, 160, 160);
 
         if (this.message == null) {

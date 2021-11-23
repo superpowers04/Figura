@@ -1,6 +1,5 @@
 package net.blancworks.figura.models.sounds;
 
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.mixin.SoundManagerAccessorMixin;
 import net.blancworks.figura.mixin.SoundSystemAccessorMixin;

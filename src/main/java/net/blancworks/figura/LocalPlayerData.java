@@ -12,6 +12,7 @@ import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.util.Identifier;
+import org.apache.commons.io.IOUtils;
 
 import java.io.*;
 import java.nio.file.*;
@@ -80,7 +81,7 @@ public class LocalPlayerData extends PlayerData {
         loadedName = file.getName();
 
         //set root directory
-        Path contentDirectory = Path.of(file.getParent());
+        Path contentDirectory = file.toPath().getParent();
 
         //check file type
         boolean isZip = path.endsWith(".zip");
@@ -333,7 +334,7 @@ public class LocalPlayerData extends PlayerData {
                 String path = "sounds/" + name + ".ogg";
                 try {
                     InputStream str = isZip ? zip.getInputStream(zip.getEntry(path)) : new FileInputStream(modelFile.toPath().resolve(path).toFile());
-                    FiguraSoundManager.registerCustomSound(script, name, str.readAllBytes(), false);
+                    FiguraSoundManager.registerCustomSound(script, name, IOUtils.toByteArray(str), false);
                 } catch (Exception e) {
                     FiguraMod.LOGGER.error("failed to load custom song \"" + path + "\"");
                     e.printStackTrace();
