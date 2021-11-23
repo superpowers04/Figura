@@ -161,7 +161,7 @@ public class FiguraShader extends Shader {
         }
         json = json.substring(0, json.length()-1) + "]}";
 
-        System.out.println(json);
+        //System.out.println(json);
 
         //Pass all 3 strings to create a special factory that just returns them back as InputStreams
         ResourceFactory factory = new FiguraShaderFactory(json, vertexSource, fragmentSource);

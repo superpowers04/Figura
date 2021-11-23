@@ -349,6 +349,14 @@ public class RenderLayerAPI {
                     return NIL;
                 }
             });
+            set("defaultBlendFunc", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    checkValidCall();
+                    RenderSystem.defaultBlendFunc();
+                    return NIL;
+                }
+            });
             set("blendEquation", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
