@@ -329,7 +329,7 @@ public class WorldAPI {
         }});
     }
 
-    private static LuaFunction returnTrue = new ZeroArgFunction() {
+    private static final LuaFunction returnTrue = new ZeroArgFunction() {
         @Override
         public LuaValue call() {
             return TRUE;
@@ -365,7 +365,7 @@ public class WorldAPI {
         public static FiguraRaycastContext of(Vec3d start, Vec3d end, String shapeType, String fluidHandling, LuaFunction predicate) {
             //Need some random entity for some reason, it doesn't affect anything in the actual method calls
             FiguraRaycastContext result = new FiguraRaycastContext(start, end, ShapeType.valueOf(shapeType), FluidHandling.valueOf(fluidHandling), new MarkerEntity(EntityType.MARKER, getWorld()));
-            result.predicate = (state, pos) -> predicate.call(LuaValue.userdataOf(state), LuaVector.of(pos)).toboolean();
+            result.predicate = (state, pos) -> predicate.call(BlockStateAPI.getTable(state,getWorld(),pos)).toboolean();
             return result;
         }
 

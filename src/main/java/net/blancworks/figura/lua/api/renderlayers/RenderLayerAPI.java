@@ -7,6 +7,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.WindowFramebuffer;
@@ -112,12 +113,28 @@ public class RenderLayerAPI {
                         throw new LuaError("Invalid draw mode!");
                     Runnable preDraw = () -> {
                         canCallGLFunctions = true;
-                        startFunc.call();
+                        script.setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, script.worldRenderInstructionCount + script.renderInstructionCount + script.renderLayerInstructionCount);
+                        try {
+                            startFunc.call();
+                        } catch (Exception err) {
+                            script.handleError(err);
+                            if (script.customVCP != null)
+                                if (script.customVCP.getLayer(name) != null) //These shouldn't ever be null, putting this here just in case
+                                    script.customVCP.getLayer(name).disabled = true;
+                        }
                         canCallGLFunctions = false;
                     };
                     Runnable postDraw = () -> {
                         canCallGLFunctions = true;
-                        endFunc.call();
+                        try {
+                            endFunc.call();
+                        } catch (Exception err) {
+                            script.handleError(err);
+                            if (script.customVCP != null)
+                                if (script.customVCP.getLayer(name) != null)
+                                    script.customVCP.getLayer(name).disabled = true;
+                        }
+                        script.renderLayerInstructionCount += script.scriptGlobals.running.state.bytecodes;
                         canCallGLFunctions = false;
                     };
                     FiguraRenderLayer newLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw);
@@ -489,6 +506,14 @@ public class RenderLayerAPI {
                     return NIL;
                 }
             });
+            set("restoreDefaults", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    checkValidCall();
+                    restoreDefaults();
+                    return NIL;
+                }
+            });
 
             //Constants
             set("GL_NEVER", GL30.GL_NEVER);
@@ -518,6 +543,22 @@ public class RenderLayerAPI {
             set("GL_DECR_WRAP", GL30.GL_DECR_WRAP);
             set("GL_INVERT", GL30.GL_INVERT);
         }});
+    }
+
+    public static void restoreDefaults() {
+        RenderSystem.disableDepthTest();
+        RenderSystem.depthFunc(GL30.GL_LEQUAL);
+        RenderSystem.enableCull();
+        MinecraftClient.getInstance().gameRenderer.getLightmapTextureManager().disable();
+        MinecraftClient.getInstance().gameRenderer.getOverlayTexture().teardownOverlayColor();
+        RenderSystem.resetTextureMatrix();
+        RenderSystem.depthMask(true);
+        RenderSystem.colorMask(true, true, true, true);
+        RenderSystem.disableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.disableColorLogicOp();
+        RenderSystem.disableScissor();
+        RenderSystem.lineWidth(1.0F);
     }
 
     private static void checkValidId(String toCheck, String message) {

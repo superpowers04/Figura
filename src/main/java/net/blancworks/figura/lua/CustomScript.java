@@ -77,6 +77,7 @@ public class CustomScript extends FiguraAsset {
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
     public int worldRenderInstructionCount = 0;
+    public int renderLayerInstructionCount = 0;
     public int damageInstructionCount = 0;
     public int pingSent = 0;
     public int pingReceived = 0;
@@ -349,6 +350,10 @@ public class CustomScript extends FiguraAsset {
 
         queueTask(() -> {
             renderMode = RenderType.WORLD_RENDER;
+            worldRenderInstructionCount = 0;
+            renderInstructionCount = 0;
+            renderLayerInstructionCount = 0;
+
             setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
             try {
                 allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
@@ -520,7 +525,11 @@ public class CustomScript extends FiguraAsset {
     //Sets the instruction limit of the next function we'll call, and resets the bytecode count to 0
     //Uses the permission at permissionID to set it.
     public void setInstructionLimitPermission(TrustContainer.Trust permissionID) {
-        int count = playerData.getTrustContainer().getTrust(permissionID);
+        setInstructionLimitPermission(permissionID, 0);
+    }
+
+    public void setInstructionLimitPermission(TrustContainer.Trust permissionID, int subtract) {
+        int count = playerData.getTrustContainer().getTrust(permissionID) - subtract;
         setInstructionLimit(count);
     }
 
@@ -602,7 +611,7 @@ public class CustomScript extends FiguraAsset {
         }
 
         renderMode = RenderType.RENDER;
-        setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
+        setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, worldRenderInstructionCount);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
         } catch (Exception error) {

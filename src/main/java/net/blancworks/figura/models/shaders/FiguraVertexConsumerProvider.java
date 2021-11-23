@@ -7,7 +7,8 @@ import java.util.*;
 
 public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
 
-    private TreeMap<FiguraRenderLayer, BufferBuilder> bufferBuilders = new TreeMap<>();
+    private ArrayList<FiguraRenderLayer> sortedLayers = new ArrayList<>();
+    private HashMap<FiguraRenderLayer, BufferBuilder> bufferBuilders = new HashMap<>();
     private Map<String, FiguraRenderLayer> stringLayerMap = new HashMap<>();
     private Set<BufferBuilder> activeConsumers = new HashSet<>();
     //If this is non-null, then it will always be used. The value can be set to non-null for a short time, then reset to null after the operation.
@@ -31,13 +32,15 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
         if (!canAddLayer())
             System.out.println("Warning: Adding new render layer when you're not supposed to be able to!");
         BufferBuilder bufferBuilder = new BufferBuilder(layer.getExpectedBufferSize());
+        sortedLayers.add(layer);
+        Collections.sort(sortedLayers);
         bufferBuilders.put(layer, bufferBuilder);
         stringLayerMap.put(layer.toString(), layer);
     }
 
     public void setPriority(FiguraRenderLayer layer, int newPriority) {
         layer.priority = newPriority;
-        bufferBuilders.put(layer, bufferBuilders.remove(layer)); //Keep it sorted
+        Collections.sort(sortedLayers);
     }
 
     public FiguraRenderLayer getLayer(String name) {
@@ -58,7 +61,7 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
     }
 
     public void draw() {
-        Iterator<FiguraRenderLayer> iterator = bufferBuilders.keySet().iterator();
+        Iterator<FiguraRenderLayer> iterator = sortedLayers.iterator();
         while(iterator.hasNext()) {
             FiguraRenderLayer layer = iterator.next();
             draw(layer);
