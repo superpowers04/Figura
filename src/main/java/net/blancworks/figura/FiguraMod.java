@@ -22,6 +22,8 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.VersionParsingException;
+import net.fabricmc.loader.util.version.SemanticVersionImpl;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
@@ -42,7 +44,11 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -70,6 +76,10 @@ public class FiguraMod implements ClientModInitializer {
     public static final ConfigKeyBind PANIC_BUTTON = new ConfigKeyBind("figura.config.panic_button", GLFW.GLFW_KEY_UNKNOWN, ConfigManager.MOD_NAME, Config.PANIC_BUTTON);
 
     public static int ticksElapsed;
+
+    public static final String GRADLE_PROPERTIES_LINK = "https://raw.githubusercontent.com/Blancworks/Figura/main/gradle.properties";
+    public static String latestVersion;
+    public static int latestVersionStatus;
 
     //Loading
 
@@ -167,6 +177,7 @@ public class FiguraMod implements ClientModInitializer {
         });
 
         getModContentDirectory();
+        getLatestModVersion();
     }
 
     //Client-side ticks.
@@ -278,6 +289,35 @@ public class FiguraMod implements ClientModInitializer {
 
         MinecraftClient.getInstance().getToastManager().clear();
         MinecraftClient.getInstance().getToastManager().add(new FiguraToast(text, text2));
+    }
+
+    public static void getLatestModVersion() {
+        doTask(() -> {
+            try {
+                URL url = new URL(GRADLE_PROPERTIES_LINK);
+
+                StringBuilder output = new StringBuilder();
+                URLConnection connection = url.openConnection();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line;
+                while((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+                reader.close();
+                String versionFileContents = output.toString();
+                int versionPos = versionFileContents.indexOf("mod_version");
+                int nextLinePos = versionFileContents.indexOf("\n", versionPos);
+                latestVersion = versionFileContents.substring(versionPos, nextLinePos).replaceAll(" ", "").substring(12);
+
+                SemanticVersionImpl version = new SemanticVersionImpl(latestVersion, false);
+                SemanticVersionImpl currentVersion = new SemanticVersionImpl(MOD_VERSION, false);
+
+                latestVersionStatus = currentVersion.compareTo(version);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public static Style getAccentColor(Style style) {
