@@ -61,7 +61,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
             this.reloadFilters();
             return;
         } else if (entry instanceof ModelFileListWidgetEntry file) {
-            if (!PlayerDataManager.localPlayer.isAvatarLoaded())
+            if (PlayerDataManager.localPlayer == null || !PlayerDataManager.localPlayer.isAvatarLoaded())
                 return;
 
             FiguraGuiScreen parent = (FiguraGuiScreen) getParent();

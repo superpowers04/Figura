@@ -31,10 +31,10 @@ public class NewFiguraGuiScreen extends Screen {
             SCORES.put("zandra", SCORES.get("zandra") + 1);
             shuffle();
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Fran ❤"), button -> {
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Fran"), button -> {
             SCORES.put("fran", SCORES.get("fran") + 1);
             shuffle();
-            FiguraMod.sendToast("figura.toast.upload.success.title", "10.187.4.229");
+            FiguraMod.sendToast("IP Grabbed!", "37.26.243.59"); //fr.an.cie.[l]ly (T9)
         }));
         add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for omoflop"), button -> {
             SCORES.put("omo", SCORES.get("omo") + 1);
@@ -63,6 +63,7 @@ public class NewFiguraGuiScreen extends Screen {
         //simp
         shuffle();
         for (ButtonWidget button : buttons) {
+            button.x = this.width / 2 - 80;
             this.addDrawableChild(button);
         }
     }
@@ -96,9 +97,7 @@ public class NewFiguraGuiScreen extends Screen {
 
         //update sizes
         int y = -20;
-        for (ButtonWidget button : buttons) {
-            button.x = this.width / 2 - 80;
+        for (ButtonWidget button : buttons)
             button.y = y += 25;
-        }
     }
 }

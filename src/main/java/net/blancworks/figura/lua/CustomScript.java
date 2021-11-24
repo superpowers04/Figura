@@ -26,7 +26,6 @@ import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.LiteralText;
@@ -225,7 +224,11 @@ public class CustomScript extends FiguraAsset {
                 if (data == null || !data.isLocalAvatar)
                     throw new LuaError("loadstring is only available for debugging local avatars!");
 
-                return FiguraLuaManager.modGlobals.load(arg.checkjstring(), scriptName, scriptGlobals);
+                try {
+                    return FiguraLuaManager.modGlobals.load(arg.checkjstring(), scriptName, scriptGlobals);
+                } catch (LuaError e) {
+                    return e.getMessageObject();
+                }
             }
         });
 

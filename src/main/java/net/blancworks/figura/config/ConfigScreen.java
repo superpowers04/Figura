@@ -60,6 +60,17 @@ public class ConfigScreen extends Screen {
 
         //screen title
         drawCenteredText(matrices, this.textRenderer, this.title, this.width / 2, 12, 16777215);
+
+        //render tooltip
+        for (ConfigListWidget.Entry entry : this.configListWidget.children()) {
+            if (entry.tooltip != null && mouseX < this.width / 2 && entry.isMouseOver(mouseX, mouseY)) {
+                matrices.push();
+                matrices.translate(0, 0, 599);
+                this.renderTooltip(matrices, entry.tooltip, mouseX, mouseY);
+                matrices.pop();
+                break;
+            }
+        }
     }
 
     @Override

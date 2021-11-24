@@ -31,8 +31,8 @@ public class PlayerPopup extends DrawableHelper {
     private static final Identifier POPUP_TEXTURE = new Identifier("figura", "textures/gui/popup.png");
     private static final Identifier POPUP_TEXTURE_MINI = new Identifier("figura", "textures/gui/popup_mini.png");
     private static int index = 0;
-    private static boolean enabled = false;
 
+    public static boolean enabled = false;
     public static boolean miniEnabled = false;
     public static int miniSelected = 0;
     public static int miniSize = 1;

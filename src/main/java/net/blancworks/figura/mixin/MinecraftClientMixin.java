@@ -39,9 +39,6 @@ public class MinecraftClientMixin {
     @Shadow @Nullable public ClientPlayerEntity player;
     @Shadow @Nullable public Entity cameraEntity;
 
-    @Unique public boolean actionWheelActive = false;
-    @Unique public boolean playerPopupActive = false;
-
     @Inject(at = @At("RETURN"), method = "render")
     public void copyFramebuffer(boolean tick, CallbackInfo ci) {
         RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
@@ -58,33 +55,27 @@ public class MinecraftClientMixin {
     @Inject(at = @At("RETURN"), method = "handleInputEvents")
     public void handleInputEvents(CallbackInfo ci) {
         if (FiguraMod.ACTION_WHEEL_BUTTON.isPressed()) {
-            if (ActionWheel.enabled) {
-                this.mouse.unlockCursor();
-                actionWheelActive = true;
-            }
-        } else if (actionWheelActive) {
-            ActionWheel.play();
+            this.mouse.unlockCursor();
+        } else if (ActionWheel.enabled) {
             this.mouse.lockCursor();
-            actionWheelActive = false;
+
+            ActionWheel.play();
+            ActionWheel.enabled = false;
         }
 
         if (FiguraMod.PLAYER_POPUP_BUTTON.isPressed()) {
             if (PlayerPopup.data == null) {
                 Entity target = getTargetedEntity();
                 if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
-                    playerPopupActive = true;
                     PlayerPopup.miniEnabled = true;
                 } else if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
-                    playerPopupActive = true;
                     PlayerPopup.data = PlayerDataManager.getDataForPlayer(player.getUuid());
                 } else if (!this.options.getPerspective().isFirstPerson()) {
-                    playerPopupActive = true;
                     PlayerPopup.data = PlayerDataManager.localPlayer;
                 }
             }
-        } else if (playerPopupActive) {
+        } else if (PlayerPopup.enabled || PlayerPopup.miniEnabled) {
             PlayerPopup.execute();
-            playerPopupActive = false;
         }
 
         for (int i = 0; i < 4; ++i) {
@@ -97,19 +88,12 @@ public class MinecraftClientMixin {
             RenderLayerAPI.restoreDefaults();
             PlayerDataManager.panic = !PlayerDataManager.panic;
         }
-
     }
 
     @Inject(at = @At("HEAD"), method = "setScreen")
     public void setScreen(Screen screen, CallbackInfo ci) {
-        if (actionWheelActive) {
+        if (ActionWheel.enabled)
             ActionWheel.play();
-            actionWheelActive = false;
-        }
-        else if (playerPopupActive) {
-            PlayerPopup.execute();
-            playerPopupActive = false;
-        }
     }
 
     @Unique
