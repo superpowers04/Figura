@@ -308,7 +308,6 @@ public class FiguraMod implements ClientModInitializer {
                 int versionPos = versionFileContents.indexOf("mod_version");
                 int nextLinePos = versionFileContents.indexOf("\n", versionPos);
                 latestVersion = versionFileContents.substring(versionPos, nextLinePos).replaceAll(" ", "").substring(12);
-                System.out.printf("%s\n",latestVersion);
 
             } catch (IOException e) {
                 e.printStackTrace();
