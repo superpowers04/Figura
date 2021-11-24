@@ -87,8 +87,11 @@ public class MinecraftClientMixin {
             }
         }
 
-        if (FiguraMod.PANIC_BUTTON.wasPressed())
+        if (FiguraMod.PANIC_BUTTON.wasPressed()) {
+            RenderLayerAPI.restoreDefaults();
             PlayerDataManager.panic = !PlayerDataManager.panic;
+        }
+
     }
 
     @Inject(at = @At("HEAD"), method = "openScreen")

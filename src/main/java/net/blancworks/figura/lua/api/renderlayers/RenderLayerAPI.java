@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
+import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
@@ -25,6 +26,7 @@ import org.lwjgl.opengl.GL30;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -152,8 +154,14 @@ public class RenderLayerAPI {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
                     FiguraShader shader = script.shaders.get(arg1.checkjstring());
-                    if (shader != null)
-                        RenderSystem.recordRenderCall(()->shader.setUniformFromLua(arg2, arg3));
+                    if (shader != null) {
+                        if (shader.hasUniform(arg2.checkjstring())) {
+                            arg3.checknotnil();
+                            RenderSystem.recordRenderCall(()->shader.setUniformFromLua(arg2, arg3));
+                        } else {
+                            throw new LuaError("No uniform with name: " + arg2.checkjstring());
+                        }
+                    }
                     return NIL;
                 }
             });
@@ -203,6 +211,14 @@ public class RenderLayerAPI {
                     RenderSystem.enableTexture();
                     switch (textureStr) {
                         case "MY_TEXTURE" -> RenderSystem.setShaderTexture(loc, script.playerData.texture.id);
+                        case "MY_TEXTURE_EMISSIVE" -> {
+                            List<FiguraTexture> textureList = script.playerData.extraTextures;
+                            if (textureList.size() > 0) {
+                                RenderSystem.setShaderTexture(loc, textureList.get(0).id);
+                            } else {
+                                throw new LuaError("Emissive texture doesn't exist!");
+                            }
+                        }
                         case "MAIN_FRAMEBUFFER" -> {
                             blitMainFramebuffer(mainFramebufferCopy);
                             RenderSystem.setShaderTexture(loc, mainFramebufferCopy.getColorAttachment());
@@ -423,7 +439,7 @@ public class RenderLayerAPI {
                 @Override
                 public LuaValue call() {
                     checkValidCall();
-                    GL11.glEnable(GL11.GL_STENCIL_TEST);
+                    GL11.glEnable(GL30.GL_STENCIL_TEST);
                     return NIL;
                 }
             });
@@ -431,7 +447,7 @@ public class RenderLayerAPI {
                 @Override
                 public LuaValue call() {
                     checkValidCall();
-                    GL11.glDisable(GL11.GL_STENCIL_TEST);
+                    GL11.glDisable(GL30.GL_STENCIL_TEST);
                     return NIL;
                 }
             });
@@ -484,8 +500,8 @@ public class RenderLayerAPI {
                     int y = args.checkint(2);
                     int w = args.checkint(3);
                     int h = args.checkint(4);
-                    checkInRange(w, -Integer.MAX_VALUE, -1, "Negative width not allowed");
-                    checkInRange(h, -Integer.MAX_VALUE, -1, "Negative height not allowed");
+                    checkInRange(w, 0, Integer.MAX_VALUE, "Negative width not allowed");
+                    checkInRange(h, 0, Integer.MAX_VALUE, "Negative height not allowed");
                     RenderSystem.enableScissor(x, y, w, h);
                     return NIL;
                 }
@@ -559,6 +575,7 @@ public class RenderLayerAPI {
         RenderSystem.disableColorLogicOp();
         RenderSystem.disableScissor();
         RenderSystem.lineWidth(1.0F);
+        GL11.glDisable(GL30.GL_STENCIL_TEST);
     }
 
     private static void checkValidId(String toCheck, String message) {
