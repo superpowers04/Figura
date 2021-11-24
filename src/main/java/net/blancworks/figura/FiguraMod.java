@@ -78,8 +78,8 @@ public class FiguraMod implements ClientModInitializer {
     public static int ticksElapsed;
 
     public static final String GRADLE_PROPERTIES_LINK = "https://raw.githubusercontent.com/Blancworks/Figura/main/gradle.properties";
-    public static final String FIGURA_VERSION = "0.0.7-rc.5";
     public static String latestVersion;
+    public static int latestVersionStatus;
 
     //Loading
 
@@ -309,17 +309,15 @@ public class FiguraMod implements ClientModInitializer {
                 int nextLinePos = versionFileContents.indexOf("\n", versionPos);
                 latestVersion = versionFileContents.substring(versionPos, nextLinePos).replaceAll(" ", "").substring(12);
 
-            } catch (IOException e) {
+                SemanticVersionImpl version = new SemanticVersionImpl(latestVersion, false);
+                SemanticVersionImpl currentVersion = new SemanticVersionImpl(MOD_VERSION, false);
+
+                latestVersionStatus = currentVersion.compareTo(version);
+
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-    }
-
-    public static int getVersionStatus() throws VersionParsingException {
-        SemanticVersionImpl version = new SemanticVersionImpl(latestVersion, false);
-        SemanticVersionImpl currentVersion = new SemanticVersionImpl(FIGURA_VERSION, false);
-
-        return currentVersion.compareTo(version);
     }
 
     public static Style getAccentColor(Style style) {

@@ -364,6 +364,8 @@ public class PlayerData {
         if (script != null) {
             script.clearSounds();
             script.clearPings();
+        } else {
+            FiguraSoundManager.getChannel().stopSound(playerId);
         }
     }
 }
