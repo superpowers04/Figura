@@ -1,6 +1,8 @@
 package net.blancworks.figura;
 
 import com.mojang.authlib.GameProfile;
+import net.blancworks.figura.models.sounds.FiguraChannel;
+import net.blancworks.figura.models.sounds.FiguraSound;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
@@ -185,7 +187,7 @@ public final class PlayerDataManager {
     }
 
     public static void clearCache() {
-        LOADED_PLAYER_DATA.keySet().forEach(FiguraSoundManager.getChannel()::stopSound);
+        FiguraSoundManager.getChannel().stopAllSounds();
         LOADED_PLAYER_DATA.clear();
         localPlayer = null;
         didInitLocalPlayer = false;
@@ -194,7 +196,7 @@ public final class PlayerDataManager {
 
     public static void clearLocalPlayer() {
         if (localPlayer == null) return;
-
+        FiguraSoundManager.getChannel().stopSound(localPlayer.playerId);
         localPlayer.clearData();
 
         LOADED_PLAYER_DATA.remove(localPlayer.playerId);
@@ -212,7 +214,9 @@ public final class PlayerDataManager {
 
         synchronized(TO_CLEAR) {
             TO_CLEAR.forEach(uuid -> {
-                getDataForPlayer(uuid).clearData();
+                PlayerData data = getDataForPlayer(uuid);
+                if (data != null) data.clearData();
+                else FiguraSoundManager.getChannel().stopSound(uuid);
                 LOADED_PLAYER_DATA.remove(uuid);
             });
             TO_CLEAR.clear();

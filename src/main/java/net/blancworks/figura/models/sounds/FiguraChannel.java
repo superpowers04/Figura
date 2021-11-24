@@ -149,8 +149,8 @@ public class FiguraChannel extends Channel {
         }
 
         protected boolean shouldStop(SourceManager sourceManager) {
-            boolean a = ownerId   != null && getSourceOwner(sourceManager).equals(ownerId);
-            boolean b = soundName != null && getSourceName(sourceManager).equals(soundName);
+            boolean a = ownerId   == null || getSourceOwner(sourceManager).equals(ownerId);
+            boolean b = soundName == null || getSourceName(sourceManager).equals(soundName);
             return a && b;
         }
     }
