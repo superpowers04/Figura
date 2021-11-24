@@ -573,6 +573,8 @@ public class CustomScript extends FiguraAsset {
             return;
 
         setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
+        PlayerData tempData = FiguraMod.currentData;
+        FiguraMod.currentData = playerData;
         try {
             tickLuaEvent.call();
 
@@ -592,6 +594,8 @@ public class CustomScript extends FiguraAsset {
         } catch (Exception error) {
             handleError(error);
             error.printStackTrace();
+        } finally {
+            FiguraMod.currentData = tempData;
         }
         tickInstructionCount = scriptGlobals.running.state.bytecodes;
     }
