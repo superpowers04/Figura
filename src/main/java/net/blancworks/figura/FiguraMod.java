@@ -22,19 +22,20 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.VersionParsingException;
+import net.fabricmc.loader.util.version.SemanticVersionImpl;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextColor;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
@@ -43,12 +44,14 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.io.File;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -66,13 +69,17 @@ public class FiguraMod implements ClientModInitializer {
     public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 
     public static final boolean IS_CHEESE = LocalDate.now().getDayOfMonth() == 1 && LocalDate.now().getMonthValue() == 4;
-    public static CompoundTag cheese;
+    public static NbtCompound cheese;
 
-    public static final ConfigKeyBind ACTION_WHEEL_BUTTON = new ConfigKeyBind("figura.config.action_wheel_button", GLFW.GLFW_KEY_B, ConfigManager.MOD_NAME, Config.ACTION_WHEEL_BUTTON);
-    public static final ConfigKeyBind PLAYER_POPUP_BUTTON = new ConfigKeyBind("figura.config.player_popup_button", GLFW.GLFW_KEY_R, ConfigManager.MOD_NAME, Config.PLAYER_POPUP_BUTTON);
-    public static final ConfigKeyBind PANIC_BUTTON = new ConfigKeyBind("figura.config.panic_button", GLFW.GLFW_KEY_UNKNOWN, ConfigManager.MOD_NAME, Config.PANIC_BUTTON);
+    public static final ConfigKeyBind ACTION_WHEEL_BUTTON = new ConfigKeyBind("figura.config.action_wheel_button", GLFW.GLFW_KEY_B, "key.categories.misc", Config.ACTION_WHEEL_BUTTON);
+    public static final ConfigKeyBind PLAYER_POPUP_BUTTON = new ConfigKeyBind("figura.config.player_popup_button", GLFW.GLFW_KEY_R, "key.categories.misc", Config.PLAYER_POPUP_BUTTON);
+    public static final ConfigKeyBind PANIC_BUTTON = new ConfigKeyBind("figura.config.panic_button", GLFW.GLFW_KEY_UNKNOWN, "key.categories.misc", Config.PANIC_BUTTON);
 
     public static int ticksElapsed;
+
+    public static final String GRADLE_PROPERTIES_LINK = "https://raw.githubusercontent.com/Blancworks/Figura/main/gradle.properties";
+    public static final String FIGURA_VERSION = "0.0.7-rc.5";
+    public static String latestVersion;
 
     //Loading
 
@@ -158,7 +165,7 @@ public class FiguraMod implements ClientModInitializer {
             }
 
             @Override
-            public void apply(ResourceManager manager) {
+            public void reload(ResourceManager manager) {
                 PlayerDataManager.reloadAllTextures();
 
                 try {
@@ -170,6 +177,7 @@ public class FiguraMod implements ClientModInitializer {
         });
 
         getModContentDirectory();
+        getLatestModVersion();
     }
 
     //Client-side ticks.
@@ -191,7 +199,7 @@ public class FiguraMod implements ClientModInitializer {
     public static Path getModContentDirectory() {
         String userPath = (String) Config.MODEL_FOLDER_PATH.value;
         try {
-            Path p = userPath.isEmpty() ? getDefaultDirectory() : new File(userPath).toPath();
+            Path p = userPath.isEmpty() ? getDefaultDirectory() : Path.of(userPath);
             if (!Files.exists(p))
                 Files.createDirectories(p);
 
@@ -276,21 +284,50 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static void sendToast(Object title, Object message) {
-        Text text, text2;
-        if (title instanceof Text) text = (Text) title;
-        else text = new TranslatableText(title.toString());
-        if (message instanceof Text) text2 = (Text) message;
-        else text2 = new TranslatableText(message.toString());
+        Text text = title instanceof Text t ? t : new TranslatableText(title.toString());
+        Text text2 = message instanceof Text m ? m : new TranslatableText(message.toString());
 
         MinecraftClient.getInstance().getToastManager().clear();
         MinecraftClient.getInstance().getToastManager().add(new FiguraToast(text, text2));
     }
 
-    public static Style getAccentColor(Style style) {
-        return style.withColor(TextColor.fromRgb((int) Config.ACCENT_COLOR.value));
+    public static void getLatestModVersion() {
+        doTask(() -> {
+            try {
+                URL url = new URL(GRADLE_PROPERTIES_LINK);
+
+                StringBuilder output = new StringBuilder();
+                URLConnection connection = url.openConnection();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String line;
+                while((line = reader.readLine()) != null) {
+                    output.append(line).append("\n");
+                }
+                reader.close();
+                String versionFileContents = output.toString();
+                int versionPos = versionFileContents.indexOf("mod_version");
+                int nextLinePos = versionFileContents.indexOf("\n", versionPos);
+                latestVersion = versionFileContents.substring(versionPos, nextLinePos).replaceAll(" ", "").substring(12);
+                System.out.printf("%s\n",latestVersion);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
-    public final static List<UUID> VIP = Arrays.asList(
+    public static int getVersionStatus() throws VersionParsingException {
+        SemanticVersionImpl version = new SemanticVersionImpl(latestVersion, false);
+        SemanticVersionImpl currentVersion = new SemanticVersionImpl(FIGURA_VERSION, false);
+
+        return currentVersion.compareTo(version);
+    }
+
+    public static Style getAccentColor(Style style) {
+        return style.withColor((int) Config.ACCENT_COLOR.value);
+    }
+
+    public final static List<UUID> VIP = List.of(
             UUID.fromString("aa0e3391-e497-4e8e-8afe-b69dfaa46afa"), //salad
             UUID.fromString("da53c608-d17c-4759-94fe-a0317ed63876"), //zandra
             UUID.fromString("66a6c5c4-963b-4b73-a0d9-162faedd8b7f"), //fran
