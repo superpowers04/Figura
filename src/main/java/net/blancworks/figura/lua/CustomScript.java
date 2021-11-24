@@ -214,7 +214,11 @@ public class CustomScript extends FiguraAsset {
                 if (data == null || !data.isLocalAvatar)
                     throw new LuaError("loadstring is only available for debugging local avatars!");
 
-                return FiguraLuaManager.modGlobals.load(arg.checkjstring(), scriptName, scriptGlobals);
+                try {
+                    return FiguraLuaManager.modGlobals.load(arg.checkjstring(), scriptName, scriptGlobals);
+                } catch (LuaError e) {
+                    return e.getMessageObject();
+                }
             }
         });
 

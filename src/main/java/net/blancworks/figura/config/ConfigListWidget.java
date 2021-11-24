@@ -23,15 +23,11 @@ import java.util.List;
 
 public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> {
 
-    //screen
-    private final ConfigScreen parent;
-
     //focused binding
     public KeyBinding focusedBinding;
 
     public ConfigListWidget(ConfigScreen parent, MinecraftClient client) {
         super(client, parent.width + 45, parent.height, 43, parent.height - 32, 20);
-        this.parent = parent;
     }
 
     public void addEntries(Config[] configs) {
@@ -80,22 +76,19 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     }
 
     public class CategoryEntry extends Entry {
-        //properties
-        private final Text text;
 
-        public CategoryEntry(Text text) {
-            this.text = text;
+        public CategoryEntry(Text title) {
+            super(null, title, null);
         }
 
         @Override
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
             //render text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
-            Text text = this.text;
-            int textWidth = ConfigListWidget.this.client.textRenderer.getWidth(this.text);
-            float xPos = (float) (ConfigListWidget.this.client.currentScreen.width / 2 - textWidth / 2);
+            int textWidth = ConfigListWidget.this.client.textRenderer.getWidth(this.title);
+            float xPos = ConfigListWidget.this.client.currentScreen.width / 2f - textWidth / 2f;
             int yPos = y + entryHeight;
-            textRenderer.draw(matrices, text, xPos, (float)(yPos - 9 - 1), 16777215);
+            textRenderer.draw(matrices, this.title, xPos, (float)(yPos - 9 - 1), 0xFFFFFF);
         }
 
         @Override
@@ -110,26 +103,19 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     }
 
     public class BooleanEntry extends Entry {
-        //entry
-        private final Config config;
-
         //values
-        private final Text display;
-        private final Text tooltip;
         private final boolean initValue;
 
         //buttons
         private final ButtonWidget toggle;
         private final ButtonWidget reset;
 
-        public BooleanEntry(Text display, Text tooltip, Config config) {
-            this.display = display;
-            this.tooltip = tooltip;
-            this.config = config;
+        public BooleanEntry(Text title, Text tooltip, Config config) {
+            super(config, title, tooltip);
             this.initValue = (boolean) config.value;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> config.configValue = !(boolean) config.configValue);
+            this.toggle = new ButtonWidget(0, 0, 75, 20, this.title, (button) -> config.configValue = !(boolean) config.configValue);
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
@@ -140,7 +126,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
             int posY = y + entryHeight / 2;
-            textRenderer.draw(matrices, this.display, (float) x, (float) (posY - 9 / 2), 16777215);
+            textRenderer.draw(matrices, this.title, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
 
             //reset button
             this.reset.x = x + 250;
@@ -158,14 +144,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
                 this.toggle.setMessage(new LiteralText("").styled(ConfigManager.ACCENT_COLOR).append(this.toggle.getMessage()));
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
-
-            //overlay text
-            if (isMouseOver(mouseX, mouseY) && mouseX < x + 165) {
-                matrices.push();
-                matrices.translate(0, 0, 599);
-                parent.renderTooltip(matrices, this.tooltip, mouseX, mouseY);
-                matrices.pop();
-            }
         }
 
         @Override
@@ -185,12 +163,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     }
 
     public class EnumEntry extends Entry {
-        //entry
-        private final Config config;
-
-        //values
-        private final Text display;
-        private final Text tooltip;
         private final int initValue;
         private final List<Text> states;
 
@@ -198,15 +170,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         private final ButtonWidget toggle;
         private final ButtonWidget reset;
 
-        public EnumEntry(Text display, Text tooltip, Config config, List<Text> states) {
-            this.display = display;
-            this.tooltip = tooltip;
-            this.config = config;
+        public EnumEntry(Text title, Text tooltip, Config config, List<Text> states) {
+            super(config, title, tooltip);
             this.initValue = (int) config.value;
             this.states = states;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> config.configValue = (int) config.configValue + 1);
+            this.toggle = new ButtonWidget(0, 0, 75, 20, this.title, (button) -> config.configValue = (int) config.configValue + 1);
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
@@ -217,7 +187,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
             int posY = y + entryHeight / 2;
-            textRenderer.draw(matrices, this.display, (float) x, (float)(posY - 9 / 2), 16777215);
+            textRenderer.draw(matrices, this.title, (float) x, (float)(posY - 9 / 2), 0xFFFFFF);
 
             //reset button
             this.reset.x = x + 250;
@@ -235,14 +205,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
                 this.toggle.setMessage(new LiteralText("").styled(ConfigManager.ACCENT_COLOR).append(this.toggle.getMessage()));
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
-
-            //overlay text
-            if (isMouseOver(mouseX, mouseY) && mouseX < x + 165) {
-                matrices.push();
-                matrices.translate(0, 0, 599);
-                parent.renderTooltip(matrices, this.tooltip, mouseX, mouseY);
-                matrices.pop();
-            }
         }
 
         @Override
@@ -262,24 +224,15 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     }
 
     public class InputEntry extends Entry {
-        //entry
-        private final Config config;
-
-        //values
-        private final Text display;
-        private final Text tooltip;
         private final Object initValue;
+        private final InputType inputType;
 
         //buttons
         private final TextFieldWidget field;
         private final ButtonWidget reset;
 
-        private final InputType inputType;
-
-        public InputEntry(Text display, Text tooltip, Config config, InputType inputType) {
-            this.display = display;
-            this.tooltip = tooltip;
-            this.config = config;
+        public InputEntry(Text title, Text tooltip, Config config, InputType inputType) {
+            super(config, title, tooltip);
             this.initValue = config.value;
             this.inputType = inputType;
 
@@ -321,11 +274,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             int posY = y + entryHeight / 2;
 
             if (this.field.isFocused() && this.inputType == InputType.HEX_COLOR) {
-                Text text = new LiteralText("").append(this.display).append(" (").append(this.field.getText()).append(")");
+                Text text = new LiteralText("").append(this.title).append(" (").append(this.field.getText()).append(")");
                 textRenderer.draw(matrices, text, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
             }
             else {
-                textRenderer.draw(matrices, this.display, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
+                textRenderer.draw(matrices, this.title, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
             }
 
             //reset button
@@ -362,14 +315,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
 
             //render
             this.field.render(matrices, mouseX, mouseY, tickDelta);
-
-            //render overlay text
-            if (isMouseOver(mouseX, mouseY) && mouseX < x + textRenderer.getWidth(this.display.getString())) {
-                matrices.push();
-                matrices.translate(0, 0, 599);
-                parent.renderTooltip(matrices, this.tooltip, mouseX, mouseY);
-                matrices.pop();
-            }
         }
 
         @Override
@@ -421,26 +366,18 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     }
 
     public class KeyBindEntry extends Entry {
-        //entry
-        private final Config config;
-
-        //values
-        private final Text display;
-        private final Text tooltip;
         private final KeyBinding binding;
 
         //buttons
         private final ButtonWidget toggle;
         private final ButtonWidget reset;
 
-        public KeyBindEntry(Text display, Text tooltip, Config config, KeyBinding binding) {
-            this.display = display;
-            this.tooltip = tooltip;
-            this.config = config;
+        public KeyBindEntry(Text title, Text tooltip, Config config, KeyBinding binding) {
+            super(config, title, tooltip);
             this.binding = binding;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> focusedBinding = binding);
+            this.toggle = new ButtonWidget(0, 0, 75, 20, this.title, (button) -> focusedBinding = binding);
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {
@@ -454,7 +391,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             //text
             TextRenderer textRenderer = ConfigListWidget.this.client.textRenderer;
             int posY = y + entryHeight / 2;
-            textRenderer.draw(matrices, this.display, (float) x, (float) (posY - 9 / 2), 16777215);
+            textRenderer.draw(matrices, this.title, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
 
             //reset button
             this.reset.x = x + 250;
@@ -480,14 +417,6 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
 
             this.toggle.render(matrices, mouseX, mouseY, tickDelta);
-
-            //overlay text
-            if (isMouseOver(mouseX, mouseY) && mouseX < x + 165) {
-                matrices.push();
-                matrices.translate(0, 0, 599);
-                parent.renderTooltip(matrices, this.tooltip, mouseX, mouseY);
-                matrices.pop();
-            }
         }
 
         @Override
@@ -507,6 +436,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
     }
 
     public abstract static class Entry extends ElementListWidget.Entry<Entry> {
-        public Entry() {}
+        public final Config config;
+        public final Text title;
+        public final Text tooltip;
+        public Entry(Config config, Text title, Text tooltip) {
+            this.config = config;
+            this.title = title;
+            this.tooltip = tooltip;
+        }
     }
 }

@@ -50,7 +50,6 @@ public class FiguraGuiScreen extends Screen {
     public Identifier reloadTexture = new Identifier("figura", "textures/gui/reload.png");
     public Identifier deleteTexture = new Identifier("figura", "textures/gui/delete.png");
     public Identifier expandTexture = new Identifier("figura", "textures/gui/expand.png");
-    public Identifier expandInverseTexture = new Identifier("figura", "textures/gui/expand_inverse.png");
     public Identifier keybindsTexture = new Identifier("figura", "textures/gui/keybinds.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier expandedBackgroundTexture = new Identifier("figura", "textures/gui/expanded_background.png");
@@ -295,7 +294,7 @@ public class FiguraGuiScreen extends Screen {
                 Math.max(this.width / 2 - modelBgSize / 2, paneWidth + 5), this.height / 2 - modelBgSize / 2 - 15,
                 15, 15,
                 0, 0, 15,
-                expandTexture, 15, 30,
+                expandTexture, 30, 30,
                 (bx) -> {
                     expand = !expand;
                     updateExpand();
@@ -370,13 +369,17 @@ public class FiguraGuiScreen extends Screen {
             drawTextWithShadow(matrices, this.textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY + 12, 0xFFFFFF);
 
         //mod version
-        drawCenteredText(matrices, client.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)), this.width / 2, this.height - 12, Formatting.DARK_GRAY.getColorValue());
+        drawCenteredText(matrices, this.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)).formatted(Formatting.DARK_GRAY), this.width / 2, this.height - 12, 0xFFFFFF);
+
+        //panic
+        if (PlayerDataManager.panic)
+            drawCenteredText(matrices, client.textRenderer, new TranslatableText("figura.gui.panic.warning").formatted(Formatting.YELLOW), this.width / 2, 3, 0xFFFFFF);
 
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
 
+        //tooltips
         boolean hasBackend = connectionStatus == 3;
-
         PlayerData local = PlayerDataManager.localPlayer;
         uploadButton.active = hasBackend && local != null && local.hasAvatar() && local.isAvatarLoaded() && local.isLocalAvatar;
 
@@ -526,7 +529,6 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public void updateExpand() {
-        expandButton.setTexture(expand ? expandInverseTexture : expandTexture);
         if (expand) {
             this.children().forEach(child -> {
                 if (child instanceof AbstractButtonWidget)
@@ -534,6 +536,7 @@ public class FiguraGuiScreen extends Screen {
             });
 
             expandButton.setPos(5, 5);
+            expandButton.setUV(0, 0);
             expandButton.visible = true;
 
             modelFileList.updateSize(0, 0, this.height, 0);
@@ -544,6 +547,7 @@ public class FiguraGuiScreen extends Screen {
             });
 
             expandButton.setPos(Math.max(this.width / 2 - modelBgSize / 2, paneWidth + 5), this.height / 2 - modelBgSize / 2 + 1);
+            expandButton.setUV(15, 0);
 
             modelFileList.updateSize(paneWidth, this.height, paneY + 19, this.height - 36);
             modelFileList.setLeftPos(5);

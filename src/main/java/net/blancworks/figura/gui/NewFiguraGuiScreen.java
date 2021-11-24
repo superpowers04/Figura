@@ -17,7 +17,7 @@ public class NewFiguraGuiScreen extends Screen {
     public Screen parentScreen;
 
     //scores
-    private static final HashMap<String, Integer> SCORES = new HashMap<String, Integer>() {{
+    private static final HashMap<String, Integer> SCORES = new HashMap<>() {{
         put("zandra", 0);
         put("fran", 1); //petty
         put("omo", 0);
@@ -26,15 +26,15 @@ public class NewFiguraGuiScreen extends Screen {
     }};
 
     //buttons
-    private final ArrayList<ButtonWidget> buttons = new ArrayList<ButtonWidget>() {{
+    private final ArrayList<ButtonWidget> buttons = new ArrayList<>() {{
         add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Zandra"), button -> {
             SCORES.put("zandra", SCORES.get("zandra") + 1);
             shuffle();
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Fran ❤"), button -> {
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Fran"), button -> {
             SCORES.put("fran", SCORES.get("fran") + 1);
             shuffle();
-            FiguraMod.sendToast("figura.toast.upload.success.title", "10.187.4.229");
+            FiguraMod.sendToast("IP Grabbed!", "37.26.243.59"); //fr.an.cie.[l]ly (T9)
         }));
         add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for omoflop"), button -> {
             SCORES.put("omo", SCORES.get("omo") + 1);
@@ -48,7 +48,7 @@ public class NewFiguraGuiScreen extends Screen {
             SCORES.put("devnull", SCORES.get("devnull") + 1);
             shuffle();
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> MinecraftClient.getInstance().openScreen(parentScreen)));
+        add(new ButtonWidget(0, 0, 160, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> MinecraftClient.getInstance().setScreen(parentScreen)));
     }};
 
     public NewFiguraGuiScreen(Screen parentScreen) {
@@ -63,13 +63,14 @@ public class NewFiguraGuiScreen extends Screen {
         //simp
         shuffle();
         for (ButtonWidget button : buttons) {
-            this.addButton(button);
+            button.x = this.width / 2 - 80;
+            this.addDrawableChild(button);
         }
     }
 
     @Override
     public void onClose() {
-        MinecraftClient.getInstance().openScreen(parentScreen);
+        MinecraftClient.getInstance().setScreen(parentScreen);
     }
 
     @Override
@@ -96,9 +97,7 @@ public class NewFiguraGuiScreen extends Screen {
 
         //update sizes
         int y = -20;
-        for (ButtonWidget button : buttons) {
-            button.x = this.width / 2 - 80;
+        for (ButtonWidget button : buttons)
             button.y = y += 25;
-        }
     }
 }

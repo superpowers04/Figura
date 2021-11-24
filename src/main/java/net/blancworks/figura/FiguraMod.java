@@ -68,9 +68,9 @@ public class FiguraMod implements ClientModInitializer {
     public static final boolean IS_CHEESE = LocalDate.now().getDayOfMonth() == 1 && LocalDate.now().getMonthValue() == 4;
     public static CompoundTag cheese;
 
-    public static final ConfigKeyBind ACTION_WHEEL_BUTTON = new ConfigKeyBind("figura.config.action_wheel_button", GLFW.GLFW_KEY_B, "key.categories.misc", Config.ACTION_WHEEL_BUTTON);
-    public static final ConfigKeyBind PLAYER_POPUP_BUTTON = new ConfigKeyBind("figura.config.player_popup_button", GLFW.GLFW_KEY_R, "key.categories.misc", Config.PLAYER_POPUP_BUTTON);
-    public static final ConfigKeyBind PANIC_BUTTON = new ConfigKeyBind("figura.config.panic_button", GLFW.GLFW_KEY_UNKNOWN, "key.categories.misc", Config.PANIC_BUTTON);
+    public static final ConfigKeyBind ACTION_WHEEL_BUTTON = new ConfigKeyBind("figura.config.action_wheel_button", GLFW.GLFW_KEY_B, ConfigManager.MOD_NAME, Config.ACTION_WHEEL_BUTTON);
+    public static final ConfigKeyBind PLAYER_POPUP_BUTTON = new ConfigKeyBind("figura.config.player_popup_button", GLFW.GLFW_KEY_R, ConfigManager.MOD_NAME, Config.PLAYER_POPUP_BUTTON);
+    public static final ConfigKeyBind PANIC_BUTTON = new ConfigKeyBind("figura.config.panic_button", GLFW.GLFW_KEY_UNKNOWN, ConfigManager.MOD_NAME, Config.PANIC_BUTTON);
 
     public static int ticksElapsed;
 

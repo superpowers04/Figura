@@ -18,7 +18,6 @@ import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.List;
-import java.util.Objects;
 
 public class ChatAPI {
 
@@ -28,19 +27,19 @@ public class ChatAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
+            boolean isHost = script.playerData == PlayerDataManager.localPlayer;
 
             set("sendMessage", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     //only send messages for local player
-                    if (script.playerData == PlayerDataManager.localPlayer) {
-                        ClientPlayerEntity player = MinecraftClient.getInstance().player;
+                    if (!isHost) return NIL;
 
-                        if (player != null) {
-                            //trim messages to mimic vanilla behaviour
-                            String message = arg.tojstring().trim();
-                            if (!message.isEmpty()) player.sendChatMessage(message);
-                        }
+                    ClientPlayerEntity player = MinecraftClient.getInstance().player;
+                    if (player != null) {
+                        //trim messages to mimic vanilla behaviour
+                        String message = arg.tojstring().trim();
+                        if (!message.isEmpty()) player.sendChatMessage(message);
                     }
 
                     return NIL;
@@ -50,6 +49,8 @@ public class ChatAPI {
             set("getMessage", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
+                    if (!isHost) return NIL;
+
                     //get message list
                     List<ChatHudLine<Text>> chat = ((ChatHudAccessorMixin) MinecraftClient.getInstance().inGameHud.getChatHud()).getMessages();
 
@@ -65,9 +66,9 @@ public class ChatAPI {
 
             set("getInputText", new ZeroArgFunction() {
                 public LuaValue call() {
-                    if (MinecraftClient.getInstance().currentScreen instanceof ChatScreen) {
-                        String message = ((ChatScreenAccessorMixin) MinecraftClient.getInstance().currentScreen).getChatField().getText();
-                        return message == null || Objects.equals(message, "") ? NIL : LuaString.valueOf(message);
+                    if (isHost && MinecraftClient.getInstance().currentScreen instanceof ChatScreen chatScreen) {
+                        String message = ((ChatScreenAccessorMixin) chatScreen).getChatField().getText();
+                        return message == null || message.equals("") ? NIL : LuaString.valueOf(message);
                     }
 
                     return NIL;
@@ -77,7 +78,7 @@ public class ChatAPI {
             set("setFiguraCommandPrefix", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (arg.isnil()) {
+                    if (!isHost || arg.isnil()) {
                         script.commandPrefix = "\u0000";
                         return NIL;
                     }
@@ -90,6 +91,7 @@ public class ChatAPI {
             set("isOpen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
+                    if (!isHost) return FALSE;
                     return LuaValue.valueOf(MinecraftClient.getInstance().currentScreen instanceof ChatScreen);
                 }
             });
