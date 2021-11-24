@@ -281,7 +281,7 @@ public class WorldAPI {
                     Vec3d start = LuaVector.checkOrNew(args.arg(1)).asV3d();
                     Vec3d end = LuaVector.checkOrNew(args.arg(2)).asV3d();
                     int instructionPenalty = (int) end.subtract(start).length() * 2;
-                    FiguraMod.currentData.script.scriptGlobals.running.state.bytecodes += instructionPenalty;
+                    applyInstructionPenalty(instructionPenalty);
                     String shapeType;
                     String fluidHandling;
                     LuaFunction func;
@@ -318,7 +318,7 @@ public class WorldAPI {
                     Vec3d start = LuaVector.checkOrNew(startPos).asV3d();
                     Vec3d end = LuaVector.checkOrNew(endPos).asV3d();
                     int instructionPenalty = (int) end.subtract(start).length() * 2;
-                    FiguraMod.currentData.script.scriptGlobals.running.state.bytecodes += instructionPenalty;
+                    applyInstructionPenalty(instructionPenalty);
                     Predicate<Entity> pred;
                     if (func.isnil())
                         pred = entity -> true;
@@ -344,7 +344,7 @@ public class WorldAPI {
 
     //Copied most of this function from BlockView.java, just had to change the lambda slightly
     public static BlockHitResult raycastBlocks(BlockView view, FiguraRaycastContext context) {
-        return (BlockHitResult)BlockView.raycast(context.getStart(), context.getEnd(), context, (contextx, pos) -> {
+        return BlockView.raycast(context.getStart(), context.getEnd(), context, (contextx, pos) -> {
             BlockState blockState = view.getBlockState(pos);
             FluidState fluidState = view.getFluidState(pos);
             Vec3d vec3d = contextx.getStart();
@@ -365,7 +365,11 @@ public class WorldAPI {
     }
 
     public static void applyInstructionPenalty(int penalty) {
-        int current = FiguraMod.currentData.script.scriptGlobals.running.state.bytecodes;
+        LuaThread.State state = FiguraMod.currentData.script.scriptGlobals.running.state;
+        if (state.bytecodes + penalty >= state.hookcount)
+            state.bytecodes = state.hookcount - 1;
+        else
+            state.bytecodes += penalty;
     }
 
     public static class FiguraRaycastContext extends RaycastContext {
@@ -373,8 +377,21 @@ public class WorldAPI {
         private BiPredicate<BlockState, BlockPos> predicate;
 
         public static FiguraRaycastContext of(Vec3d start, Vec3d end, String shapeType, String fluidHandling, LuaFunction predicate) {
+            ShapeType shapes;
+            FluidHandling fluids;
+            try {
+                shapes = ShapeType.valueOf(shapeType);
+            } catch (IllegalArgumentException e) {
+                throw new LuaError("Invalid shapeType: " + shapeType);
+            }
+            try {
+                fluids = FluidHandling.valueOf(fluidHandling);
+            } catch (IllegalArgumentException e) {
+                throw new LuaError("Invalid shapeType: " + shapeType);
+            }
+
             //Need some random entity for some reason, it doesn't affect anything in the actual method calls
-            FiguraRaycastContext result = new FiguraRaycastContext(start, end, ShapeType.valueOf(shapeType), FluidHandling.valueOf(fluidHandling), new MarkerEntity(EntityType.MARKER, getWorld()));
+            FiguraRaycastContext result = new FiguraRaycastContext(start, end, shapes, fluids, new MarkerEntity(EntityType.MARKER, getWorld()));
             result.predicate = (state, pos) -> predicate.call(BlockStateAPI.getTable(state,getWorld(),pos)).toboolean();
             return result;
         }
