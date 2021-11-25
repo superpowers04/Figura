@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.PlayerDataManager;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -56,6 +57,12 @@ public final class ConfigManager {
         SCRIPT_LOG_LOCATION(0, 3),
         PLAYER_POPUP_BUTTON(GLFW.GLFW_KEY_R, FiguraMod.PLAYER_POPUP_BUTTON),
         ACCENT_COLOR(0x55FFFF, InputType.HEX_COLOR),
+        RELEASE_CHANNEL(0, 3) {
+            @Override
+            public void runOnChange() {
+                FiguraMod.getLatestModVersion();
+            }
+        },
 
         ActionWheel,
 
@@ -65,7 +72,14 @@ public final class ConfigManager {
         Dev {{this.name = new TranslatableText("figura.config.dev").formatted(Formatting.RED);}},
 
         USE_LOCAL_SERVER(false),
-        FORMAT_SCRIPT_ON_UPLOAD(true),
+        FORMAT_SCRIPT_ON_UPLOAD(true) {
+            @Override
+            public void runOnChange() {
+                if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.isLocalAvatar) {
+                    PlayerDataManager.localPlayer.reloadAvatar();
+                }
+            }
+        },
         LOG_OTHERS_SCRIPT(false),
         RENDER_DEBUG_PARTS_PIVOT(true) {{
             this.tooltip = new TranslatableText("figura.config.render_debug_parts_pivot.tooltip",
@@ -87,7 +101,7 @@ public final class ConfigManager {
         public final ConfigType type;
         public final Object defaultValue;
 
-        public final Integer modValue;
+        public final Integer length;
         public KeyBinding keyBind;
         public final InputType inputType;
 
@@ -98,8 +112,8 @@ public final class ConfigManager {
         Config(Object value) {
             this(ConfigType.BOOLEAN, value, null, null, null);
         }
-        Config(Object value, Integer modValue) {
-            this(ConfigType.ENUM, value, modValue, null, null);
+        Config(Object value, Integer length) {
+            this(ConfigType.ENUM, value, length, null, null);
         }
         Config(Object value, InputType inputType) {
             this(ConfigType.INPUT, value, null, null, inputType);
@@ -109,13 +123,13 @@ public final class ConfigManager {
         }
 
         //global constructor
-        Config(ConfigType type, Object value, Integer modValue, KeyBinding keyBind, InputType inputType) {
+        Config(ConfigType type, Object value, Integer length, KeyBinding keyBind, InputType inputType) {
             //set values
             this.type = type;
             this.value = value;
             this.defaultValue = value;
             this.configValue = value;
-            this.modValue = modValue;
+            this.length = length;
             this.keyBind = keyBind;
             this.inputType = inputType;
 
@@ -125,9 +139,9 @@ public final class ConfigManager {
             this.tooltip = new TranslatableText(name + ".tooltip");
 
             //generate enum list
-            if (modValue != null) {
+            if (length != null) {
                 List<Text> enumList = new ArrayList<>();
-                for (int i = 1; i <= modValue; i++)
+                for (int i = 1; i <= length; i++)
                     enumList.add(new TranslatableText(name + "." + i));
                 this.enumList = enumList;
             }
@@ -152,14 +166,16 @@ public final class ConfigManager {
                 else if (value instanceof Short)
                     value = Short.valueOf(text);
 
-                if (modValue != null)
-                    value = (Integer.parseInt(text) + modValue) % modValue;
+                if (length != null)
+                    value = ((Integer.parseInt(text) % length) + length) % length;
             } catch (Exception e) {
                 value = defaultValue;
             }
 
             configValue = value;
         }
+
+        public void runOnChange() {}
     }
 
     public enum ConfigType {
@@ -284,7 +300,9 @@ public final class ConfigManager {
 
     public static void applyConfig() {
         for(Config config : CONFIG_ENTRIES) {
+            boolean change = !config.value.equals(config.configValue);
             config.setValue(String.valueOf(config.configValue));
+            if (change) config.runOnChange();
         }
     }
 

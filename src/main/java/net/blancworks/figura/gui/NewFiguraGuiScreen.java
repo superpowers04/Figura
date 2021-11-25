@@ -48,7 +48,7 @@ public class NewFiguraGuiScreen extends Screen {
             SCORES.put("devnull", SCORES.get("devnull") + 1);
             shuffle();
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> MinecraftClient.getInstance().setScreen(parentScreen)));
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for ").append(new TranslatableText("figura.gui.button.back")), (buttonWidgetx) -> MinecraftClient.getInstance().setScreen(parentScreen)));
     }};
 
     public NewFiguraGuiScreen(Screen parentScreen) {

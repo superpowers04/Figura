@@ -436,7 +436,5 @@ public class LocalPlayerData extends PlayerData {
         PlayerDataManager.lastLoadedFileName = loadedName;
         loadModelFile(loadedPath);
         isLocalAvatar = true;
-
-        FiguraSoundManager.getChannel().stopSound(playerId);
     }
 }
