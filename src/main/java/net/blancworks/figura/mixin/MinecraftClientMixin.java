@@ -86,6 +86,7 @@ public class MinecraftClientMixin {
 
         if (FiguraMod.PANIC_BUTTON.wasPressed()) {
             RenderLayerAPI.restoreDefaults();
+            FiguraSoundManager.getChannel().stopAllSounds();
             PlayerDataManager.panic = !PlayerDataManager.panic;
         }
     }
