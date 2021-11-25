@@ -44,12 +44,13 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
 
     @Override
     public void select(CustomListEntry entry) {
-        if (entry instanceof ModelFileListWidgetFolderEntry folder) {
+        if (entry instanceof ModelFileListWidgetFolderEntry) {
+            ModelFileListWidgetFolderEntry folder = (ModelFileListWidgetFolderEntry) entry;
             //change expanded value
             folder.expanded = !folder.expanded;
 
-            if (folder.avatar instanceof LocalAvatarFolder avatar)
-                avatar.expanded = folder.expanded;
+            if (folder.avatar instanceof LocalAvatarFolder)
+                ((LocalAvatarFolder) folder.avatar).expanded = folder.expanded;
 
             //update folder list
             if (folder.expanded)
@@ -60,7 +61,8 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
             //reload and cancel selection
             this.reloadFilters();
             return;
-        } else if (entry instanceof ModelFileListWidgetEntry file) {
+        } else if (entry instanceof ModelFileListWidgetEntry) {
+            ModelFileListWidgetEntry file = (ModelFileListWidgetEntry) entry;
             if (PlayerDataManager.localPlayer == null || !PlayerDataManager.localPlayer.isAvatarLoaded())
                 return;
 
@@ -76,14 +78,17 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
 
         //add to list
         list.forEach((key, value) -> {
-            if (value instanceof LocalAvatarFolder folder && hasMatchingChild(folder.children, search)) {
-                //add folder to list
-                ModelFileListWidgetFolderEntry widgetEntry = new ModelFileListWidgetFolderEntry(key, this, folder.name, value, offset, folder.expanded);
-                this.addEntry(widgetEntry);
+            if (value instanceof LocalAvatarFolder) {
+                LocalAvatarFolder folder = (LocalAvatarFolder) value;
+                if (hasMatchingChild(folder.children, search)) {
+                    //add folder to list
+                    ModelFileListWidgetFolderEntry widgetEntry = new ModelFileListWidgetFolderEntry(key, this, folder.name, value, offset, folder.expanded);
+                    this.addEntry(widgetEntry);
 
-                //add child to list
-                if (folder.expanded)
-                    addAvatarsToList(folder.children, search, offset + 1);
+                    //add child to list
+                    if (folder.expanded)
+                        addAvatarsToList(folder.children, search, offset + 1);
+                }
             } else if (value.name.toLowerCase().contains(search)) {
                 //add file to list if it matches the search
                 this.addEntry(new ModelFileListWidgetEntry(key, this, value.name, value, offset));
@@ -93,7 +98,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
 
     private static boolean hasMatchingChild(Map<String, LocalAvatar> child, String search) {
         for (LocalAvatar entry : child.values()) {
-            if (entry instanceof LocalAvatarFolder folder && hasMatchingChild(folder.children, search))
+            if (entry instanceof LocalAvatarFolder && hasMatchingChild(((LocalAvatarFolder) entry).children, search))
                 return true;
             else if (entry.name.toLowerCase().contains(search))
                 return true;
@@ -131,7 +136,11 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
 
         @Override
         public Text getDisplayText() {
-            return new LiteralText("  ".repeat(offset) + getName());
+            StringBuilder space = new StringBuilder();
+            for (int i = 0; i < offset; i++) {
+                space.append("  ");
+            }
+            return new LiteralText(space + getName());
         }
     }
 
@@ -145,7 +154,11 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
 
         @Override
         public Text getDisplayText() {
-            return new LiteralText("  ".repeat(offset)).append(new LiteralText(this.expanded ? "V " : "> ")
+            StringBuilder space = new StringBuilder();
+            for (int i = 0; i < offset; i++) {
+                space.append("  ");
+            }
+            return new LiteralText(space.toString()).append(new LiteralText(this.expanded ? "V " : "> ")
                     .setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)))
                     .formatted(this.expanded ? Formatting.GRAY : Formatting.DARK_GRAY)
                     .append(new LiteralText(getName()));

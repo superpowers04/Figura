@@ -66,8 +66,8 @@ public class ChatAPI {
 
             set("getInputText", new ZeroArgFunction() {
                 public LuaValue call() {
-                    if (isHost && MinecraftClient.getInstance().currentScreen instanceof ChatScreen chatScreen) {
-                        String message = ((ChatScreenAccessorMixin) chatScreen).getChatField().getText();
+                    if (isHost && MinecraftClient.getInstance().currentScreen instanceof ChatScreen) {
+                        String message = ((ChatScreenAccessorMixin) MinecraftClient.getInstance().currentScreen).getChatField().getText();
                         return message == null || message.equals("") ? NIL : LuaString.valueOf(message);
                     }
 

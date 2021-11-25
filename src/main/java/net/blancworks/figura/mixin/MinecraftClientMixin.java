@@ -4,14 +4,13 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.client.option.GameOptions;
+import net.minecraft.client.options.GameOptions;
 import net.minecraft.client.render.RenderTickCounter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
@@ -39,11 +38,6 @@ public class MinecraftClientMixin {
     @Shadow @Nullable public ClientPlayerEntity player;
     @Shadow @Nullable public Entity cameraEntity;
 
-    @Inject(at = @At("RETURN"), method = "render")
-    public void copyFramebuffer(boolean tick, CallbackInfo ci) {
-        RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
-    }
-
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {
         try {
@@ -68,8 +62,8 @@ public class MinecraftClientMixin {
                 Entity target = getTargetedEntity();
                 if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
                     PlayerPopup.miniEnabled = true;
-                } else if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
-                    PlayerPopup.data = PlayerDataManager.getDataForPlayer(player.getUuid());
+                } else if (target instanceof PlayerEntity && !target.isInvisibleTo(this.player)) {
+                    PlayerPopup.data = PlayerDataManager.getDataForPlayer(target.getUuid());
                 } else if (!this.options.getPerspective().isFirstPerson()) {
                     PlayerPopup.data = PlayerDataManager.localPlayer;
                 }
@@ -84,14 +78,12 @@ public class MinecraftClientMixin {
             }
         }
 
-        if (FiguraMod.PANIC_BUTTON.wasPressed()) {
-            RenderLayerAPI.restoreDefaults();
+        if (FiguraMod.PANIC_BUTTON.wasPressed())
             PlayerDataManager.panic = !PlayerDataManager.panic;
-        }
     }
 
-    @Inject(at = @At("HEAD"), method = "setScreen")
-    public void setScreen(Screen screen, CallbackInfo ci) {
+    @Inject(at = @At("HEAD"), method = "openScreen")
+    public void openScreen(Screen screen, CallbackInfo ci) {
         if (ActionWheel.enabled)
             ActionWheel.play();
     }
