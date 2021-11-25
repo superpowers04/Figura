@@ -381,7 +381,7 @@ public class FiguraGuiScreen extends Screen {
             //status tooltip
             int textWidth = this.textRenderer.getWidth(version);
             if (mouseX >= this.width / 2 - textWidth / 2 && mouseX < this.width / 2 + textWidth / 2 && mouseY >= this.height - 12 && mouseY < this.height - 1) {
-                List<Text> tooltipText = List.of(
+                List<Text> tooltipText = Arrays.asList(
                         new LiteralText("").append(new TranslatableText("figura.gui.newver.tooltip")).append(" ").append(new LiteralText(FiguraMod.latestVersion).formatted(Formatting.YELLOW, Formatting.UNDERLINE)),
                         new TranslatableText("figura.gui.newver.tooltip2")
                 );
