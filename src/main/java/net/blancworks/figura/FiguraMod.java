@@ -22,8 +22,8 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
-import net.fabricmc.loader.api.VersionParsingException;
-import net.fabricmc.loader.util.version.SemanticVersionImpl;
+import net.fabricmc.loader.api.SemanticVersion;
+import net.fabricmc.loader.api.Version;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
@@ -77,9 +77,9 @@ public class FiguraMod implements ClientModInitializer {
 
     public static int ticksElapsed;
 
-    public static final String GRADLE_PROPERTIES_LINK = "https://raw.githubusercontent.com/Blancworks/Figura/main/gradle.properties";
+    public static final String GRADLE_PROPERTIES_LINK = "https://raw.githubusercontent.com/Blancworks/Figura/1.17/gradle.properties";
     public static String latestVersion;
-    public static int latestVersionStatus;
+    public static int latestVersionStatus = 0;
 
     //Loading
 
@@ -292,12 +292,16 @@ public class FiguraMod implements ClientModInitializer {
     }
 
     public static void getLatestModVersion() {
+        //no updates pls
+        if ((int) (Config.RELEASE_CHANNEL.value) == 2) {
+            latestVersionStatus = 0;
+            return;
+        }
+
         doTask(() -> {
             try {
-                URL url = new URL(GRADLE_PROPERTIES_LINK);
-
                 StringBuilder output = new StringBuilder();
-                URLConnection connection = url.openConnection();
+                URLConnection connection = new URL(GRADLE_PROPERTIES_LINK).openConnection();
                 BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
                 String line;
                 while((line = reader.readLine()) != null) {
@@ -309,12 +313,16 @@ public class FiguraMod implements ClientModInitializer {
                 int nextLinePos = versionFileContents.indexOf("\n", versionPos);
                 latestVersion = versionFileContents.substring(versionPos, nextLinePos).replaceAll(" ", "").substring(12);
 
-                SemanticVersionImpl version = new SemanticVersionImpl(latestVersion, false);
-                SemanticVersionImpl currentVersion = new SemanticVersionImpl(MOD_VERSION, false);
+                //only full releases :3
+                if ((int) (Config.RELEASE_CHANNEL.value) == 1)
+                    latestVersion = latestVersion.split("-", 2)[0];
 
-                latestVersionStatus = currentVersion.compareTo(version);
+                SemanticVersion latest = SemanticVersion.parse(latestVersion);
+                SemanticVersion current = SemanticVersion.parse(MOD_VERSION);
 
+                latestVersionStatus = current.compareTo((Version) latest);
             } catch (Exception e) {
+                latestVersionStatus = 0;
                 e.printStackTrace();
             }
         });

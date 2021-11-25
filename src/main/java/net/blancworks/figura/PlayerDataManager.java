@@ -1,8 +1,6 @@
 package net.blancworks.figura;
 
 import com.mojang.authlib.GameProfile;
-import net.blancworks.figura.models.sounds.FiguraChannel;
-import net.blancworks.figura.models.sounds.FiguraSound;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
@@ -196,7 +194,6 @@ public final class PlayerDataManager {
 
     public static void clearLocalPlayer() {
         if (localPlayer == null) return;
-        FiguraSoundManager.getChannel().stopSound(localPlayer.playerId);
         localPlayer.clearData();
 
         LOADED_PLAYER_DATA.remove(localPlayer.playerId);

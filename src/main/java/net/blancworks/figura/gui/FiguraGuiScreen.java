@@ -103,9 +103,9 @@ public class FiguraGuiScreen extends Screen {
             new LiteralText("").append(STATUS_INDICATORS.get(3)).append(" ").append(new TranslatableText("figura.gui.button.statusfour.tooltip").setStyle(TEXT_COLORS.get(3)))
     ));
 
-    public static final TranslatableText RELOAD_TOOLTIP = new TranslatableText("figura.gui.button.reloadavatar.tooltip");
-    public static final TranslatableText KEYBIND_TOOLTIP = new TranslatableText("figura.gui.button.keybinds.tooltip");
-    public static final TranslatableText MODEL_FOLDER_TOOLTIP = new TranslatableText("figura.gui.button.openfolder.tooltip");
+    public static final Text RELOAD_TOOLTIP = new TranslatableText("figura.gui.button.reloadavatar.tooltip");
+    public static final Text KEYBIND_TOOLTIP = new TranslatableText("figura.gui.button.keybinds.tooltip");
+    public static final Text MODEL_FOLDER_TOOLTIP = new TranslatableText("figura.gui.button.openfolder.tooltip");
 
     private static final int[] OvO = {265, 265, 264, 264, 263, 262, 263, 262, 66, 65, 257};
     private static int ovo = 0;
@@ -368,15 +368,33 @@ public class FiguraGuiScreen extends Screen {
         if (modelComplexityText != null)
             drawTextWithShadow(matrices, this.textRenderer, modelComplexityText, this.width - this.textRenderer.getWidth(modelComplexityText) - 8, currY + 12, 0xFFFFFF);
 
+        //draw buttons
+        super.render(matrices, mouseX, mouseY, delta);
+
         //mod version
-        drawCenteredText(matrices, this.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)).formatted(Formatting.DARK_GRAY), this.width / 2, this.height - 12, 0xFFFFFF);
+        if (FiguraMod.latestVersionStatus >= 0)
+            drawCenteredText(matrices, this.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)).formatted(Formatting.DARK_GRAY), this.width / 2, this.height - 12, 0xFFFFFF);
+        else {
+            Text version = new LiteralText("").append(new LiteralText("Figura " + FiguraMod.MOD_VERSION).formatted(Formatting.YELLOW, Formatting.ITALIC)).append(new LiteralText(" =").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)));
+            drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
+
+            //status tooltip
+            int textWidth = this.textRenderer.getWidth(version);
+            if (mouseX >= this.width / 2 - textWidth / 2 && mouseX < this.width / 2 + textWidth / 2 && mouseY >= this.height - 12 && mouseY < this.height - 1) {
+                List<Text> tooltipText = List.of(
+                        new LiteralText("").append(new TranslatableText("figura.gui.newver.tooltip")).append(" ").append(new LiteralText(FiguraMod.latestVersion).formatted(Formatting.YELLOW, Formatting.UNDERLINE)),
+                        new TranslatableText("figura.gui.newver.tooltip2")
+                );
+                matrices.push();
+                matrices.translate(0, 0, 599);
+                renderTooltip(matrices, tooltipText, mouseX, mouseY);
+                matrices.pop();
+            }
+        }
 
         //panic
         if (PlayerDataManager.panic)
             drawCenteredText(matrices, client.textRenderer, new TranslatableText("figura.gui.panic.warning").formatted(Formatting.YELLOW), this.width / 2, 3, 0xFFFFFF);
-
-        //draw buttons
-        super.render(matrices, mouseX, mouseY, delta);
 
         //tooltips
         boolean hasBackend = connectionStatus == 3;
