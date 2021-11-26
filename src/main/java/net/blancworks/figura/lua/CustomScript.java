@@ -656,16 +656,17 @@ public class CustomScript extends FiguraAsset {
 
         boolean inString = false;
         boolean inChar = false;
-        int blockStringLevel = -1;
+        boolean inBlockString = false;
         boolean inComment = false;
         boolean inBlock = false;
+        int blockDepth = 0;
 
         StringBuilder queue = new StringBuilder();
 
         for (int i = 0; i < s.length(); i++) {
             char curr = s.charAt(i);
 
-            if (!inString && !inChar && blockStringLevel == -1 && !inComment && !inBlock) {
+            if (!inString && !inChar && !inBlockString && !inComment && !inBlock) {
                 //check for string
                 if (curr == '"') {
                     inString = true;
@@ -677,8 +678,20 @@ public class CustomScript extends FiguraAsset {
                     queue.append(curr);
                 }
                 //check for block strings
-                else if ((blockStringLevel = checkBlockStringStart(s, i))!=-1) {
-                    queue.append(curr);
+                else if (curr == '[' && i < s.length() - 1) {
+                    for (int j = i + 1; j < s.length(); j++) {
+                        if (s.charAt(j) == '=')
+                            blockDepth++;
+                        else if (s.charAt(j) == '[') {
+                            inBlockString = true;
+                            queue.append(curr);
+                            break;
+                        }
+                        else {
+                            queue.append(curr);
+                            break;
+                        }
+                    }
                 }
                 //check single line comments
                 else if (curr == '-' && i < s.length() - 1 && s.charAt(i + 1) == '-') {
@@ -686,9 +699,17 @@ public class CustomScript extends FiguraAsset {
                     i++;
 
                     //check for comment block
-                    if (i < s.length() - 2 && s.charAt(i + 1) == '[' && s.charAt(i + 2) == '[') {
-                        inBlock = true;
-                        i += 2;
+                    if (i < s.length() - 2 && s.charAt(i + 1) == '[') {
+                        for (int j = i + 2; j < s.length(); j++) {
+                            if (s.charAt(j) == '=')
+                                blockDepth++;
+                            else if (s.charAt(j) == '[') {
+                                inBlock = true;
+                                i += 2;
+                                break;
+                            }
+                            else break;
+                        }
                     }
                 }
                 else {
@@ -720,21 +741,34 @@ public class CustomScript extends FiguraAsset {
                 ret.append(curr);
             }
             //add block string contents
-            else if (curr == ']' && blockStringLevel != -1) {
-                //check for end of block and append
-                blockStringLevel = checkBlockStringEnd(s, i, blockStringLevel);
-                ret.append(curr);
+            else if (inBlockString) {
+                //check for end of block
+                String append = "=".repeat(blockDepth) + "]";
+                inBlockString = !(curr == ']' && s.startsWith(append, i + 1));
+
+                //block string ended, so reset the depth counter
+                if (!inBlockString) {
+                    blockDepth = 0;
+                    i += append.length();
+                    ret.append(curr);
+                    ret.append(append);
+                } else {
+                    //append text
+                    ret.append(curr);
+                }
             }
             //skip block comments
             else if (inBlock) {
                 //check for end of block
-                inBlock = !(curr == ']' && i < s.length() - 1 && s.charAt(i + 1) == ']');
+                String append = "=".repeat(blockDepth) + "]";
+                inBlock = !(curr == ']' && s.startsWith(append, i + 1));
 
                 //if block ended
                 if (!inBlock) {
                     queue.append(" ");
                     inComment = false;
-                    i++;
+                    blockDepth = 0;
+                    i += append.length();
                 }
             }
             //skip comments
@@ -745,43 +779,6 @@ public class CustomScript extends FiguraAsset {
         }
 
         return ret.toString();
-    }
-
-    /**
-     * Checks if the portion of the string starting at startIndex is the beginning of a block string, i.e. [==(some number of equals signs)=[
-     * @return The number of equals signs, or -1 if this is not the start of a block string.
-     */
-    private static int checkBlockStringStart(String s, int startIndex) {
-        char curr = s.charAt(startIndex);
-        if (curr == '[' && startIndex < s.length()-1) {
-            curr = s.charAt(startIndex + 1);
-            int count = 0;
-            while (curr == '=') {
-                int index = startIndex + 1 + count++;
-                if (index >= s.length())
-                    break;
-                curr = s.charAt(index);
-            }
-            if (curr == '[')
-                return count;
-        }
-        return -1;
-    }
-
-    /**
-     * Checks if this section of the string is the end of a block string.
-     * @param s The string
-     * @param startIndex The start index to check for the end of the string
-     * @param numEquals The number of equals signs to look for
-     * @return -1 if it is the end of the block string, or numEquals if it isn't.
-     */
-    private static int checkBlockStringEnd(String s, int startIndex, int numEquals) {
-        if (startIndex+numEquals+2 > s.length())
-            return numEquals;
-        String end = "]" + "=".repeat(numEquals) + "]";
-        if (s.substring(startIndex, startIndex+numEquals+2).equals(end))
-            return -1;
-        return numEquals;
     }
 
     //--Debugging--

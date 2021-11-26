@@ -66,8 +66,8 @@ public class LocalPlayerData extends PlayerData {
         this.texture = null;
         this.script = null;
 
-        extraTextures.clear();
         watchedFiles.clear();
+        clearData();
 
         if (path == null || path.equals(""))
             return;
@@ -408,10 +408,8 @@ public class LocalPlayerData extends PlayerData {
                     continue;
                 }
 
-                // The filename is the
-                // context of the event.
-                WatchEvent<Path> ev = (WatchEvent<Path>) event;
-                Path filename = ev.context();
+                // The filename is the context of the event
+                Path filename = (Path) event.context();
 
                 Path parentPath = FileSystems.getDefault().getPath(entry.getKey());
                 Path child = parentPath.resolve(filename);
@@ -431,8 +429,8 @@ public class LocalPlayerData extends PlayerData {
 
     public void reloadAvatar() {
         watchKeys.clear();
+        clearData();
 
-        super.clearData();
         PlayerDataManager.lastLoadedFileName = loadedName;
         loadModelFile(loadedPath);
         isLocalAvatar = true;

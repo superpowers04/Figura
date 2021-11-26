@@ -222,8 +222,18 @@ public class FiguraGuiScreen extends Screen {
         });
         this.addDrawableChild(openFolderButton);
 
+        /*
+        //export nbt
+        this.addDrawableChild(new ButtonWidget(this.width - 145, this.height - 50, 140, 20, new TranslatableText("Cache nbt"), (buttonWidgetx) -> {
+            if (PlayerDataManager.localPlayer != null) {
+                PlayerDataManager.localPlayer.saveToCache();
+                FiguraMod.sendToast("done", "");
+            }
+        }));
+        */
+
         //back button
-        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, this.height - 20 - 5, 140, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - 145, this.height - 25, 140, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> {
             this.client.setScreen(parentScreen);
             LocalAvatarManager.saveFolderNbt();
         }));
@@ -483,15 +493,23 @@ public class FiguraGuiScreen extends Screen {
 
     public void updateAvatarData() {
         if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.hasAvatar()) {
-            nameText = PlayerDataManager.lastLoadedFileName != null ? new TranslatableText("figura.gui.status.name").append(new LiteralText(" " + PlayerDataManager.lastLoadedFileName.substring(0, Math.min(20, PlayerDataManager.lastLoadedFileName.length()))).styled(FiguraMod.ACCENT_COLOR)) : null;
+            if (PlayerDataManager.lastLoadedFileName != null) {
+                nameText = new TranslatableText("figura.gui.status.name");
+                nameText.append(new LiteralText(this.textRenderer.trimToWidth(" " + PlayerDataManager.lastLoadedFileName, this.width / 2 - modelBgSize / 2 - 41 - this.textRenderer.getWidth(nameText))).styled(FiguraMod.ACCENT_COLOR));
+            } else {
+                nameText = null;
+            }
 
             if (PlayerDataManager.localPlayer.model != null) {
                 modelComplexityText = new TranslatableText("figura.gui.status.complexity").append(new LiteralText(" " + PlayerDataManager.localPlayer.model.getRenderComplexity()).styled(FiguraMod.ACCENT_COLOR));
-                FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
             }
             else {
                 modelComplexityText = new TranslatableText("figura.gui.status.complexity").append(new LiteralText(" " + 0).styled(FiguraMod.ACCENT_COLOR));
                 modelSizeStatus = 0;
+            }
+
+            if (PlayerDataManager.localPlayer.hasAvatar()) {
+                FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
             }
 
             scriptStatus = PlayerDataManager.localPlayer.script != null ? PlayerDataManager.localPlayer.script.scriptError ? 1 : 3 : 0;
@@ -540,7 +558,7 @@ public class FiguraGuiScreen extends Screen {
             modelSizeStatus = 3;
         }
 
-        modelSizeStatus = PlayerDataManager.localPlayer.model != null ? modelSizeStatus : 0;
+        modelSizeStatus = PlayerDataManager.localPlayer.hasAvatar() ? modelSizeStatus : 0;
 
         return fsText;
     }
