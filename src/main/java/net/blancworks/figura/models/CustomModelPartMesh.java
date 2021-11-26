@@ -26,45 +26,42 @@ public class CustomModelPartMesh extends CustomModelPart {
             texSize = new Vec2f(meshProperties.getFloat("tw"), meshProperties.getFloat("th"));
 
         CompoundTag verticesNbt = meshProperties.getCompound("vertices");
-        ListTag facesNbt = meshProperties.getList("faces", NbtType.COMPOUND);
+        ListTag facesNbt = meshProperties.getList("faces", NbtType.LIST);
 
         if (facesNbt == null || verticesNbt == null || facesNbt.size() == 0 || verticesNbt.getSize() == 0)
             return;
 
-        for (Tag faceData : facesNbt) {
-            ListTag vertices = ((CompoundTag) faceData).getList("vertices", NbtType.STRING);
-            CompoundTag uvs = ((CompoundTag) faceData).getCompound("uvs");
-
-            if (uvs == null || vertices == null) continue;
-
-            int size = vertices.size();
+        for (Tag faceElement : facesNbt) {
+            ListTag faceData = (ListTag) faceElement;
+            int size = faceData.size();
 
             if (size > 3) {
                 List<Vector3f> vectors = new ArrayList<>();
                 for (int i = 0; i < size; i++) {
-                    vectors.add(vec3fFromNbt(verticesNbt.getList(vertices.getString(i), NbtType.FLOAT)));
+                    vectors.add(vec3fFromNbt(verticesNbt.getList(faceData.getCompound(i).getString("id"), NbtType.FLOAT)));
                 }
 
                 if (testOppositeSides(vectors.get(1), vectors.get(2), vectors.get(0) ,vectors.get(3))) {
-                    Tag temp = vertices.get(2);
-                    vertices.remove(2);
-                    vertices.add(0, temp);
+                    Tag temp = faceData.get(2);
+                    faceData.remove(2);
+                    faceData.add(0, temp);
                 }
                 else if (testOppositeSides(vectors.get(0), vectors.get(1), vectors.get(2) ,vectors.get(3))) {
-                    Tag temp = vertices.get(1);
-                    vertices.set(1, vertices.get(2));
-                    vertices.set(2, temp);
+                    Tag temp = faceData.get(1);
+                    faceData.set(1, faceData.get(2));
+                    faceData.set(2, temp);
                 }
             }
 
             for (int i = 0; i < 4; i++) {
-                String vertexName = vertices.getString(i % size);
+                CompoundTag vertexNbt = faceData.getCompound(i % size);
+                String vertexName = vertexNbt.getString("id");
 
-                Vec2f uv = v2fFromNbtList(uvs.getList(vertexName, NbtType.FLOAT));
+                Vec2f uv = v2fFromNbtList(vertexNbt.getList("uv", NbtType.FLOAT));
                 Vector3f vertex = vec3fFromNbt(verticesNbt.getList(vertexName, NbtType.FLOAT));
 
-                Vector3f previous = vec3fFromNbt(verticesNbt.getList(vertices.getString((i - 1 + size) % size), NbtType.FLOAT));
-                Vector3f next = vec3fFromNbt(verticesNbt.getList(vertices.getString((i + 1) % size), NbtType.FLOAT));
+                Vector3f previous = vec3fFromNbt(verticesNbt.getList(faceData.getCompound((i - 1 + size) % size).getString("id"), NbtType.FLOAT));
+                Vector3f next = vec3fFromNbt(verticesNbt.getList(faceData.getCompound((i + 1) % size).getString("id"), NbtType.FLOAT));
 
                 Vector3f normal = previous.copy();
                 normal.subtract(vertex);

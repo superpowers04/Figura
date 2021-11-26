@@ -59,6 +59,19 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
                     return LuaValue.valueOf(_angleTo(arg));
                 }
             })
+            .put("toRad", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return _toRad();
+                }
+            })
+            .put("toDeg", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return _toDeg();
+                }
+            })
+
             .build();
 
     public LuaVector(float... values) {
@@ -442,6 +455,26 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         for (int j = 0; j < n; j++) {
             float v = this._get(j + 1);
             if (v != 0) vals[j] = v * r;
+        }
+        return new LuaVector(vals);
+    }
+
+    public LuaVector _toRad() {
+        int n = _size();
+        float[] vals = new float[n];
+        for (int i = 1; i <= n; i++) {
+            float v = this._get(i);
+            vals[i - 1] = (float) Math.toRadians(v);
+        }
+        return new LuaVector(vals);
+    }
+
+    public LuaVector _toDeg() {
+        int n = _size();
+        float[] vals = new float[n];
+        for (int i = 1; i <= n; i++) {
+            float v = this._get(i);
+            vals[i - 1] = (float) Math.toDegrees(v);
         }
         return new LuaVector(vals);
     }

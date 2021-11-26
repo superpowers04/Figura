@@ -165,10 +165,20 @@ public class FiguraTrustScreen extends Screen {
         /*
         this.addChild(uuidBox);
 
-        this.addButton(new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("Get Avatar"), (btx) -> {
+        this.addButton(new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("*yoink*"), (btx) -> {
             try {
                 UUID uuid = UUID.fromString(uuidBox.getText());
-                PlayerDataManager.getDataForPlayer(uuid);
+                PlayerData data = PlayerDataManager.getDataForPlayer(uuid);
+
+                if (data != null && data.hasAvatar() && PlayerDataManager.localPlayer != null) {
+                    net.minecraft.nbt.CompoundTag nbt = new net.minecraft.nbt.CompoundTag();
+                    data.writeNbt(nbt);
+                    nbt.putUuid("id", PlayerDataManager.localPlayer.playerId);
+                    PlayerDataManager.localPlayer.loadFromNbt(nbt);
+                    PlayerDataManager.localPlayer.isLocalAvatar = true;
+
+                    net.blancworks.figura.FiguraMod.sendToast("done", "");
+                }
             } catch (Exception ignored) {}
         }));
         */

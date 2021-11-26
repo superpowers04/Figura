@@ -126,7 +126,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                         
                         data.loadFromNbt(nbt);
                         data.lastHash = getAvatarHashSync(id);
-                        data.saveToCache(id);
+                        data.saveToCache();
                     }
                 }
             } catch (Exception e){

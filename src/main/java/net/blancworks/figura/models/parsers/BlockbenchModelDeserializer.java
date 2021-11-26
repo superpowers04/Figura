@@ -13,6 +13,7 @@ import net.minecraft.nbt.*;
 import net.minecraft.util.math.Vec2f;
 
 import java.lang.reflect.Type;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -72,18 +73,16 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     .put("RightLeg", new PlayerSkinRemap(CustomModelPart.ParentType.RightLeg, new Vector3f(-2, -12, 0)))
                     .put("LeftLeg", new PlayerSkinRemap(CustomModelPart.ParentType.LeftLeg, new Vector3f(2, -12, 0)))
                     .build();
-    
+
     @Override
     public CustomModel deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
         CustomModel retModel = new CustomModel();
 
         JsonObject root = json.getAsJsonObject();
         JsonObject meta = root.get("meta").getAsJsonObject();
-        String name = root.get("name").getAsString();
         JsonObject resolution = root.get("resolution").getAsJsonObject();
         JsonArray elements = root.get("elements").getAsJsonArray();
         JsonArray outliner = root.get("outliner").getAsJsonArray();
-        JsonArray textures = root.get("textures").getAsJsonArray();
 
         if (meta.has("model_format") && meta.get("model_format").getAsString().equals("skin"))
             overrideAsPlayerModel = true;
@@ -255,34 +254,35 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 List entry format: String name, float x, float y, float z
              */
             CompoundTag verticesList = new CompoundTag();
+            HashMap<String, String> verticesMap = new HashMap<>();
 
-            verticesObject.entrySet().forEach(entry -> {
+            long i = 0;
+            for (Map.Entry<String, JsonElement> entry : verticesObject.entrySet()) {
                 Vector3f pos = this.v3fFromJArray(entry.getValue().getAsJsonArray());
                 ListTag vertexPos = new ListTag();
                 vertexPos.add(FloatTag.of(-pos.getX()));
                 vertexPos.add(FloatTag.of(-pos.getY()));
                 vertexPos.add(FloatTag.of(pos.getZ()));
 
-                verticesList.put(entry.getKey(), vertexPos);
-            });
+                String key = Long.toHexString(i);
+                verticesList.put(key, vertexPos);
+                verticesMap.put(entry.getKey(), key);
+                i++;
+            }
+
             meshPropertiesTag.put("vertices", verticesList);
 
-            /*
-                Create data for each face of the mesh
-                List entry format: String name, HashMap<String,Vec2f> uvs, List<Vector3f> vertices
-             */
+            //create data for each face of the mesh
             ListTag meshFacesList = new ListTag();
 
             facesObject.entrySet().forEach(entry -> {
-                String faceName = entry.getKey();
                 JsonObject faceObject = entry.getValue().getAsJsonObject();
+                ListTag curFaceTag = new ListTag();
 
-                CompoundTag curFaceTag = new CompoundTag();
-
-                // Build vertex -> uv table
+                //build vertex -> uv map
                 CompoundTag uvs = new CompoundTag();
                 faceObject.getAsJsonObject("uv").entrySet().forEach(uvEntry -> {
-                    String vertexName = uvEntry.getKey();
+                    String vertexName = verticesMap.get(uvEntry.getKey());
                     JsonArray uvEntries = uvEntry.getValue().getAsJsonArray();
 
                     ListTag uvList = new ListTag();
@@ -291,14 +291,18 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                     uvs.put(vertexName, uvList);
                 });
 
-                // Build array of all named vertices used for this face
-                ListTag vertices = new ListTag();
+                //read vertex data then pack id and uv and add to this face nbt
                 faceObject.getAsJsonArray("vertices").forEach(element -> {
-                    vertices.add(StringTag.of(element.getAsString()));
+                    CompoundTag vertex = new CompoundTag();
+                    String key = verticesMap.get(element.getAsString());
+
+                    vertex.put("id", StringTag.of(key));
+                    vertex.put("uv", uvs.get(key));
+
+                    curFaceTag.add(vertex);
                 });
 
-                curFaceTag.put("uvs", uvs);
-                curFaceTag.put("vertices", vertices);
+                //add this face to the faces list
                 meshFacesList.add(curFaceTag);
             });
             meshPropertiesTag.put("faces", meshFacesList);
@@ -340,7 +344,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             cuboidPart.cuboidProperties = cuboidPropertiesTag;
         }
 
-        elementPart.writeNbt(new CompoundTag());
         elementPart.rebuild();
 
         return elementPart;

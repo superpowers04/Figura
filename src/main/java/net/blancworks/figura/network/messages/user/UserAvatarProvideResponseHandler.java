@@ -54,7 +54,7 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
             }
 
             pData.lastHash = hashString;
-            pData.saveToCache(targetUser);
+            //pData.saveToCache();
         } catch (Exception e) {
             e.printStackTrace();
         }

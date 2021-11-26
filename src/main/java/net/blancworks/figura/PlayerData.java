@@ -135,9 +135,9 @@ public class PlayerData {
             ListTag texList = new ListTag();
 
             for (FiguraTexture extraTexture : extraTextures) {
-                CompoundTag elytraTextureNbt = new CompoundTag();
-                extraTexture.writeNbt(elytraTextureNbt);
-                texList.add(elytraTextureNbt);
+                CompoundTag extraTextureNbt = new CompoundTag();
+                extraTexture.writeNbt(extraTextureNbt);
+                texList.add(extraTextureNbt);
             }
 
             nbt.put("exTexs", texList);
@@ -299,12 +299,12 @@ public class PlayerData {
     }
 
     //Saves this playerdata to the cache.
-    public void saveToCache(UUID id) {
+    public void saveToCache() {
         //We run this as a task to make sure all the previous load operations are done (since those are all also tasks)
         FiguraMod.doTask(() -> {
             Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
 
-            String[] splitID = id.toString().split("-");
+            String[] splitID = this.playerId.toString().split("-");
 
             for (int i = 0; i < splitID.length; i++) {
                 if (i != splitID.length - 1)
@@ -351,6 +351,8 @@ public class PlayerData {
     }
 
     public void clearData() {
+        extraTextures.clear();
+
         if (script != null) {
             script.clearSounds();
             script.clearPings();
