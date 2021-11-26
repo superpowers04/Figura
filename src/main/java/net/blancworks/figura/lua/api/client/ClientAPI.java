@@ -20,7 +20,6 @@ public class ClientAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        boolean local = script.playerData == PlayerDataManager.localPlayer;
         MinecraftClient client = MinecraftClient.getInstance();
 
         return new ReadOnlyLuaTable(new LuaTable() {{
@@ -28,7 +27,7 @@ public class ClientAPI {
                 @Override
                 public LuaValue call() {
                     //always return nil when not the local player
-                    if (!local || client.currentScreen == null)
+                    if (client.currentScreen == null)
                         return NIL;
 
                     //get the current screen
@@ -43,70 +42,70 @@ public class ClientAPI {
             set("getFPS", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.fpsDebugString) : NIL;
+                    return LuaValue.valueOf(client.fpsDebugString);
                 }
             });
 
             set("isPaused", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.isPaused()) : NIL;
+                    return LuaValue.valueOf(client.isPaused());
                 }
             });
 
             set("getVersion", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(SharedConstants.getGameVersion().getName()) : NIL;
+                    return LuaValue.valueOf(SharedConstants.getGameVersion().getName());
                 }
             });
 
             set("getVersionType", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.getVersionType()) : NIL;
+                    return LuaValue.valueOf(client.getVersionType());
                 }
             });
 
             set("getServerBrand", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.getServer() == null ? client.player.getServerBrand() : "Integrated") : NIL;
+                    return LuaValue.valueOf(client.getServer() == null ? client.player.getServerBrand() : "Integrated");
                 }
             });
 
             set("getChunksCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.worldRenderer.getChunksDebugString()) : NIL;
+                    return LuaValue.valueOf(client.worldRenderer.getChunksDebugString());
                 }
             });
 
             set("getEntityCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.worldRenderer.getEntitiesDebugString()) : NIL;
+                    return LuaValue.valueOf(client.worldRenderer.getEntitiesDebugString());
                 }
             });
 
             set("getParticleCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.particleManager.getDebugString()) : NIL;
+                    return LuaValue.valueOf(client.particleManager.getDebugString());
                 }
             });
 
             set("getSoundCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.getSoundManager().getDebugString()) : NIL;
+                    return LuaValue.valueOf(client.getSoundManager().getDebugString());
                 }
             });
 
             set("getActiveShader", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    if (!local || client.gameRenderer.getShader() == null)
+                    if (client.gameRenderer.getShader() == null)
                         return NIL;
 
                     return LuaValue.valueOf(client.gameRenderer.getShader().getName());
@@ -116,71 +115,70 @@ public class ClientAPI {
             set("getJavaVersion", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(System.getProperty("java.version")) : NIL;
+                    return LuaValue.valueOf(System.getProperty("java.version"));
                 }
             });
 
             set("getMemoryInUse", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    long mem = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-                    return local ? LuaValue.valueOf(mem) : NIL;
+                    return LuaValue.valueOf(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
                 }
             });
 
             set("getMaxMemory", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(Runtime.getRuntime().maxMemory()) : NIL;
+                    return LuaValue.valueOf(Runtime.getRuntime().maxMemory());
                 }
             });
 
             set("getAllocatedMemory", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(Runtime.getRuntime().totalMemory()) : NIL;
+                    return LuaValue.valueOf(Runtime.getRuntime().totalMemory());
                 }
             });
 
             set("isWindowFocused", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(client.isWindowFocused()) : NIL;
+                    return LuaValue.valueOf(client.isWindowFocused());
                 }
             });
 
             set("isHudEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(MinecraftClient.isHudEnabled()) : NIL;
+                    return LuaValue.valueOf(MinecraftClient.isHudEnabled());
                 }
             });
 
             set("getWindowSize", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaVector.of(new Vec2f(MinecraftClient.getInstance().getWindow().getWidth(), MinecraftClient.getInstance().getWindow().getHeight())) : NIL;
+                    return LuaVector.of(new Vec2f(MinecraftClient.getInstance().getWindow().getWidth(), MinecraftClient.getInstance().getWindow().getHeight()));
                 }
             });
 
             set("getGUIScale", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(MinecraftClient.getInstance().options.guiScale) : NIL;
+                    return LuaValue.valueOf(MinecraftClient.getInstance().options.guiScale);
                 }
             });
 
             set("getFov", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(MinecraftClient.getInstance().options.fov) : NIL;
+                    return LuaValue.valueOf(MinecraftClient.getInstance().options.fov);
                 }
             });
 
             set("setCrosshairPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (local) script.crossHairPos = LuaVector.checkOrNew(arg).asV2f();
+                    script.crossHairPos = LuaVector.checkOrNew(arg).asV2f();
                     return NIL;
                 }
             });
@@ -188,14 +186,14 @@ public class ClientAPI {
             set("getCrosshairPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaVector.of(script.crossHairPos) : NIL;
+                    return LuaVector.of(script.crossHairPos);
                 }
             });
 
             set("setCrosshairEnabled", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (local) script.crossHairEnabled = arg.checkboolean();
+                    script.crossHairEnabled = arg.checkboolean();
                     return NIL;
                 }
             });
@@ -203,14 +201,14 @@ public class ClientAPI {
             set("getCrosshairEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return local ? LuaValue.valueOf(script.crossHairEnabled) : NIL;
+                    return LuaValue.valueOf(script.crossHairEnabled);
                 }
             });
 
             set("isHost", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(local);
+                    return LuaValue.valueOf(script.playerData == PlayerDataManager.localPlayer);
                 }
             });
 

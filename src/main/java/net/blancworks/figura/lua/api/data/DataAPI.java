@@ -33,6 +33,8 @@ public class DataAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
+        final boolean isHost = script.playerData == PlayerDataManager.localPlayer;
+
         return new ReadOnlyLuaTable(new LuaTable() {{
             //script name
             set("setName", new OneArgFunction() {
@@ -54,7 +56,7 @@ public class DataAPI {
             set("save", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
-                    if (script.playerData != PlayerDataManager.localPlayer) return NIL;
+                    if (!isHost) return NIL;
 
                     if (arg2.isfunction()) throw new LuaError("Cannot save functions - sowwy!");
 
@@ -67,8 +69,7 @@ public class DataAPI {
             set("load", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    if (script.playerData != PlayerDataManager.localPlayer) return NIL;
-                    return loadElement(script, arg1.checkjstring());
+                    return isHost ? loadElement(script, arg1.checkjstring()) : NIL;
                 }
             });
 
@@ -76,7 +77,7 @@ public class DataAPI {
             set("loadAll", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    if (script.playerData != PlayerDataManager.localPlayer) return NIL;
+                    if (!isHost) return NIL;
 
                     Map<String, LuaValue> values = loadAllElements(script);
                     if (values.isEmpty()) return NIL;
@@ -91,9 +92,7 @@ public class DataAPI {
             set("remove", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (script.playerData != PlayerDataManager.localPlayer) return NIL;
-
-                    removeElement(script, arg.checkjstring());
+                    if (isHost) removeElement(script, arg.checkjstring());
                     return NIL;
                 }
             });
@@ -102,15 +101,14 @@ public class DataAPI {
             set("deleteFile", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (script.playerData != PlayerDataManager.localPlayer) return NIL;
-                    deleteFile(script);
+                    if (isHost) deleteFile(script);
                     return NIL;
                 }
             });
         }});
     }
 
-    public static JsonObject getOrCreateJsonFromFile(CustomScript script) {
+    private static JsonObject getOrCreateJsonFromFile(CustomScript script) {
         try {
             //create file
             Path contentDirectory = getContentDirectory();
@@ -138,7 +136,7 @@ public class DataAPI {
         return new JsonObject();
     }
 
-    public static void saveElementEntry(JsonObject json, String key, LuaValue value) {
+    private static void saveElementEntry(JsonObject json, String key, LuaValue value) {
         //do not add functions
         if (value.isfunction()) return;
 
@@ -182,7 +180,7 @@ public class DataAPI {
         }
     }
 
-    public static void saveElement(CustomScript script, String key, LuaValue value) {
+    private static void saveElement(CustomScript script, String key, LuaValue value) {
         try {
             //create or load file
             JsonObject json = getOrCreateJsonFromFile(script);
@@ -202,7 +200,7 @@ public class DataAPI {
         }
     }
 
-    public static LuaValue loadElementEntry(JsonElement element) {
+    private static LuaValue loadElementEntry(JsonElement element) {
         //default
         if (!element.isJsonObject()) return LuaValue.valueOf(element.getAsJsonPrimitive().getAsString());
 
@@ -233,7 +231,7 @@ public class DataAPI {
         return LuaValue.NIL;
     }
 
-    public static LuaValue loadElement(CustomScript script, String key) {
+    private static LuaValue loadElement(CustomScript script, String key) {
         //create or load file
         JsonObject json = getOrCreateJsonFromFile(script);
         if (!json.has(key)) return LuaValue.NIL;
@@ -249,7 +247,7 @@ public class DataAPI {
         return LuaValue.NIL;
     }
 
-    public static Map<String, LuaValue> loadAllElements(CustomScript script) {
+    private static Map<String, LuaValue> loadAllElements(CustomScript script) {
         //create or load file
         JsonObject json = getOrCreateJsonFromFile(script);
 
@@ -258,7 +256,7 @@ public class DataAPI {
         return entries;
     }
 
-    public static void removeElement(CustomScript script, String key) {
+    private static void removeElement(CustomScript script, String key) {
         //create or load file
         JsonObject json = getOrCreateJsonFromFile(script);
 
@@ -279,7 +277,7 @@ public class DataAPI {
         }
     }
 
-    public static void deleteFile(CustomScript script) {
+    private static void deleteFile(CustomScript script) {
         try {
             //delete file
             Path contentDirectory = getContentDirectory();

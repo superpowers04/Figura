@@ -18,8 +18,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.ThreeArgFunction;
-import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class WorldAPI {
@@ -252,19 +250,6 @@ public class WorldAPI {
                 }
             });
 
-            set("raycastBlocks", new VarArgFunction() {
-                @Override
-                public LuaValue invoke(Varargs args) {
-                    return NIL;
-                }
-            });
-
-            set("raycastEntities", new ThreeArgFunction() {
-                @Override
-                public LuaValue call(LuaValue startPos, LuaValue endPos, LuaValue func) {
-                    return NIL;
-                }
-            });
         }});
     }
 }

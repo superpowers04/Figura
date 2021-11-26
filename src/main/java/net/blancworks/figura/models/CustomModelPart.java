@@ -95,7 +95,7 @@ public class CustomModelPart {
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int render(PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         //no model to render
-        if (data.model == null || data.playerListEntry == null || vcp == null || !data.isAvatarLoaded())
+        if (FiguraMod.currentData == null || data.model == null || data.playerListEntry == null || vcp == null || !data.isAvatarLoaded())
             return 0;
 
         //lets render boys!!
@@ -113,7 +113,7 @@ public class CustomModelPart {
             Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
 
             if (renderLayerGetter != null) {
-                renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0,0, new Vector3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
+                renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vector3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
             }
         }
 

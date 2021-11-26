@@ -50,9 +50,6 @@ public class KeyBindAPI {
             set("getRegisteredKeybind", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (script.playerData != PlayerDataManager.localPlayer)
-                        return getTable(new KeyBinding("null", InputUtil.UNKNOWN_KEY.getCode(), "script_others"));
-
                     KeyBinding key = KeyBindingAccessorMixin.getKeysById().get(arg.checkjstring());
                     return key == null ? NIL : getTable(key);
                 }
