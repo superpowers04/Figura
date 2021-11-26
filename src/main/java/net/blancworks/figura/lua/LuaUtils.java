@@ -10,6 +10,7 @@ import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 
+@Deprecated
 public class LuaUtils {
 
     public static Vec3f getVectorFromTable(LuaTable table) {

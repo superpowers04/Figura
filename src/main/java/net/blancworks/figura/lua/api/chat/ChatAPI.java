@@ -27,7 +27,7 @@ public class ChatAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-            boolean isHost = script.playerData == PlayerDataManager.localPlayer;
+            final boolean isHost = script.playerData == PlayerDataManager.localPlayer;
 
             set("sendMessage", new OneArgFunction() {
                 @Override
@@ -49,8 +49,6 @@ public class ChatAPI {
             set("getMessage", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (!isHost) return NIL;
-
                     //get message list
                     List<ChatHudLine<Text>> chat = ((ChatHudAccessorMixin) MinecraftClient.getInstance().inGameHud.getChatHud()).getMessages();
 
@@ -66,7 +64,7 @@ public class ChatAPI {
 
             set("getInputText", new ZeroArgFunction() {
                 public LuaValue call() {
-                    if (isHost && MinecraftClient.getInstance().currentScreen instanceof ChatScreen chatScreen) {
+                    if (MinecraftClient.getInstance().currentScreen instanceof ChatScreen chatScreen) {
                         String message = ((ChatScreenAccessorMixin) chatScreen).getChatField().getText();
                         return message == null || message.equals("") ? NIL : LuaString.valueOf(message);
                     }
@@ -78,12 +76,7 @@ public class ChatAPI {
             set("setFiguraCommandPrefix", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (!isHost || arg.isnil()) {
-                        script.commandPrefix = "\u0000";
-                        return NIL;
-                    }
-
-                    script.commandPrefix = arg.checkjstring();
+                    script.commandPrefix = arg.isnil() ? "\u0000" : arg.checkjstring();
                     return NIL;
                 }
             });
@@ -91,8 +84,7 @@ public class ChatAPI {
             set("isOpen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    if (!isHost) return FALSE;
-                    return LuaValue.valueOf(MinecraftClient.getInstance().currentScreen instanceof ChatScreen);
+                    return isHost ? LuaValue.valueOf(MinecraftClient.getInstance().currentScreen instanceof ChatScreen) : FALSE;
                 }
             });
 
