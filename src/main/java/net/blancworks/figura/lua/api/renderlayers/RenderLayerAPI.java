@@ -157,7 +157,10 @@ public class RenderLayerAPI {
                     if (shader != null) {
                         if (shader.hasUniform(arg2.checkjstring())) {
                             arg3.checknotnil();
-                            RenderSystem.recordRenderCall(()->shader.setUniformFromLua(arg2, arg3));
+                            if (RenderSystem.isOnRenderThread())
+                                shader.setUniformFromLua(arg2, arg3);
+                            else
+                                RenderSystem.recordRenderCall(()->shader.setUniformFromLua(arg2, arg3));
                         } else {
                             throw new LuaError("No uniform with name: " + arg2.checkjstring());
                         }
