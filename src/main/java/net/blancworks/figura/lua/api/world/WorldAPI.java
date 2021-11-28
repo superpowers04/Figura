@@ -5,8 +5,8 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
+import net.blancworks.figura.lua.api.entity.PlayerEntityAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,7 +22,7 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class WorldAPI {
 
-    private static World getWorld(){
+    private static World getWorld() {
         return MinecraftClient.getInstance().world;
     }
 
@@ -34,7 +34,7 @@ public class WorldAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        if(globalLuaTable == null)
+        if (globalLuaTable == null)
             updateGlobalTable();
         return globalLuaTable;
     }
@@ -247,6 +247,13 @@ public class WorldAPI {
                     }
 
                     return playerList;
+                }
+            });
+
+            set("hasWorld", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return getWorld() == null ? FALSE : TRUE;
                 }
             });
 

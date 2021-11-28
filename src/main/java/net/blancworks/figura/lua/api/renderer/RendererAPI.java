@@ -8,7 +8,7 @@ import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.CustomModelAPI;
-import net.blancworks.figura.lua.api.world.entity.EntityAPI;
+import net.blancworks.figura.lua.api.entity.EntityAPI;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.tasks.BlockRenderTask;

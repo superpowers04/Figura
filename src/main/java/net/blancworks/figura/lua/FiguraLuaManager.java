@@ -22,7 +22,7 @@ import net.blancworks.figura.lua.api.particle.ParticleAPI;
 import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.SoundAPI;
 import net.blancworks.figura.lua.api.world.WorldAPI;
-import net.blancworks.figura.lua.api.world.entity.PlayerEntityAPI;
+import net.blancworks.figura.lua.api.entity.PlayerEntityAPI;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;

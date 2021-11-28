@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.world.entity;
+package net.blancworks.figura.lua.api.entity;
 
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.minecraft.entity.LivingEntity;
