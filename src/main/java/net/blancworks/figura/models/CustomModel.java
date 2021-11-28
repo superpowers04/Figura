@@ -8,6 +8,7 @@ import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
+import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.OverlayTexture;
@@ -17,6 +18,7 @@ import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
@@ -53,13 +55,17 @@ public class CustomModel extends FiguraAsset {
     }
 
     public void removeSpecialPart(CustomModelPart part) {
-        getSpecialParts(part.parentType).remove(part);
+        synchronized (specialParts) {
+            getSpecialParts(part.parentType).remove(part);
+        }
     }
 
     public void addSpecialPart(CustomModelPart part) {
-        ArrayList<CustomModelPart> list = getSpecialParts(part.parentType);
-        list.add(part);
-        specialParts.put(part.parentType, list);
+        synchronized (specialParts) {
+            ArrayList<CustomModelPart> list = getSpecialParts(part.parentType);
+            list.add(part);
+            specialParts.put(part.parentType, list);
+        }
     }
 
     public int getRenderComplexity() {
@@ -197,8 +203,10 @@ public class CustomModel extends FiguraAsset {
 
         CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-        for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
-            data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
+        synchronized (specialParts) {
+            for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
+                data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
+            }
         }
 
         CustomModelPart.canRenderHitBox = false;
@@ -207,15 +215,18 @@ public class CustomModel extends FiguraAsset {
     public void readNbt(CompoundTag tag) {
         ListTag partList = (ListTag) tag.get("parts");
 
+        ListTag uv = tag.getList("uv", NbtType.FLOAT);
+        if (uv != null) this.defaultTextureSize = new Vec2f(uv.getFloat(0), uv.getFloat(1));
+        else this.defaultTextureSize = new Vec2f(64f, 64f);
+
         if (partList != null) {
-            for (net.minecraft.nbt.Tag nbtElement : partList) {
+            for (Tag nbtElement : partList) {
                 CompoundTag partTag = (CompoundTag) nbtElement;
 
                 CustomModelPart part = CustomModelPart.fromNbt(partTag);
 
                 if (part != null) {
-                    part.rebuild();
-
+                    part.rebuildAll(this.defaultTextureSize);
                     allParts.add(part);
                 }
             }

@@ -184,7 +184,7 @@ public class CustomModelAPI {
                             data.setUVSize(size);
                         }
 
-                        targetPart.applyUVMods(null);
+                        targetPart.applyUVMods(targetPart.texSize);
                     } catch (Exception ignored) {
                         throw new LuaError("UV Face not found!");
                     }
@@ -203,7 +203,7 @@ public class CustomModelAPI {
             ret.set("setTextureSize", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    targetPart.applyUVMods(LuaVector.checkOrNew(arg));
+                    targetPart.applyUVMods(LuaVector.checkOrNew(arg).asV2f());
                     return NIL;
                 }
             });

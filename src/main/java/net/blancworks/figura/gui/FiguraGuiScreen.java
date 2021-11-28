@@ -225,8 +225,18 @@ public class FiguraGuiScreen extends Screen {
         this.addButton(openFolderButton);
 
         /*
+        //save model
+        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 75, width, 20, new TranslatableText("Save model"), (buttonWidgetx) -> {
+            PlayerData local = PlayerDataManager.localPlayer;
+            if (local != null && local.hasAvatar()) {
+                net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
+                local.writeNbt(nbt);
+                net.blancworks.figura.models.parsers.BlockbenchModelSerializer.toBlockbench(nbt);
+            }
+        }));
+
         //export nbt
-        this.addButton(new ButtonWidget(this.width - 145, this.height - 50, 140, 20, new TranslatableText("Cache nbt"), (buttonWidgetx) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 50, width, 20, new TranslatableText("Cache nbt"), (buttonWidgetx) -> {
             if (PlayerDataManager.localPlayer != null) {
                 PlayerDataManager.localPlayer.saveToCache();
                 FiguraMod.sendToast("done", "");

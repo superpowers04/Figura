@@ -5,7 +5,6 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.models.tasks.RenderTask;
 import net.blancworks.figura.utils.MathUtils;
@@ -38,7 +37,7 @@ public class CustomModelPart {
 
     //uv stuff
     public Map<UV, uvData> UVCustomizations = new HashMap<>();
-    public Vec2f texSize;
+    public Vec2f texSize = new Vec2f(64f, 64f);
     public Vec2f uvOffset = new Vec2f(0f, 0f);
 
     //model properties
@@ -642,7 +641,14 @@ public class CustomModelPart {
     }
 
     //Re-builds the mesh data for a custom model part.
-    public void rebuild() {}
+    public void rebuild(Vec2f texSize) {
+        this.texSize = texSize;
+    }
+
+    public void rebuildAll(Vec2f texSize) {
+        rebuild(texSize);
+        this.children.forEach(child -> child.rebuildAll(texSize));
+    }
 
     public void rotate(MatrixStack stack, Vector3f rot) {
         stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
@@ -715,8 +721,7 @@ public class CustomModelPart {
             for (Tag child : childrenNbt) {
                 CompoundTag childNbt = (CompoundTag) child;
                 CustomModelPart part = fromNbt(childNbt);
-                part.rebuild();
-                this.children.add(part);
+                if (part != null) this.children.add(part);
             }
         }
     }
@@ -865,9 +870,8 @@ public class CustomModelPart {
         }
     }
 
-    public void applyUVMods(LuaVector v) {
-        if (v != null) texSize = new Vec2f(v.x(), v.y());
-        rebuild();
+    public void applyUVMods(Vec2f v) {
+        rebuild(v);
 
         children.forEach(child -> {
             child.UVCustomizations = UVCustomizations;

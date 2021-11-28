@@ -126,6 +126,11 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
         });
         retModel.modelNbt.put("parts", partList);
 
+        ListTag uv = new ListTag();
+        uv.add(FloatTag.of(retModel.defaultTextureSize.x));
+        uv.add(FloatTag.of(retModel.defaultTextureSize.y));
+        retModel.modelNbt.put("uv", uv);
+
         //Reset this value.
         overrideAsPlayerModel = false;
         retModel.sortAllParts();
@@ -331,9 +336,6 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
                 add(FloatTag.of(to.getZ()));
             }});
 
-            cuboidPropertiesTag.put("tw", FloatTag.of(target.defaultTextureSize.x));
-            cuboidPropertiesTag.put("th", FloatTag.of(target.defaultTextureSize.y));
-
             cuboidPropertiesTag.put("n", getNbtElementFromJsonElement(facesObject.get("north")));
             cuboidPropertiesTag.put("s", getNbtElementFromJsonElement(facesObject.get("south")));
             cuboidPropertiesTag.put("e", getNbtElementFromJsonElement(facesObject.get("east")));
@@ -344,7 +346,7 @@ public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel
             cuboidPart.cuboidProperties = cuboidPropertiesTag;
         }
 
-        elementPart.rebuild();
+        elementPart.rebuild(elementPart.texSize);
 
         return elementPart;
     }

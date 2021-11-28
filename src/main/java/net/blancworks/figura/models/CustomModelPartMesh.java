@@ -17,13 +17,11 @@ public class CustomModelPartMesh extends CustomModelPart {
     public CompoundTag meshProperties;
 
     @Override
-    public void rebuild() {
+    public void rebuild(Vec2f texSize) {
+        super.rebuild(texSize);
+
         FloatList vertexData = new FloatArrayList();
         int vertexCount = 0;
-
-        Vec2f texSize = this.texSize;
-        if (texSize == null)
-            texSize = new Vec2f(meshProperties.getFloat("tw"), meshProperties.getFloat("th"));
 
         CompoundTag verticesNbt = meshProperties.getCompound("vertices");
         ListTag facesNbt = meshProperties.getList("faces", NbtType.LIST);
@@ -118,7 +116,7 @@ public class CustomModelPartMesh extends CustomModelPart {
         super.applyTrueOffset(offset);
 
         pivot.add(offset);
-        rebuild();
+        rebuild(this.texSize);
     }
 
     private static boolean testOppositeSides(Vector3f linePoint1, Vector3f linePoint2, Vector3f point1, Vector3f point2) {

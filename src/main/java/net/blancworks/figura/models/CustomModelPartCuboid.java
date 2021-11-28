@@ -19,7 +19,9 @@ public class CustomModelPartCuboid extends CustomModelPart {
     public CompoundTag cuboidProperties = new CompoundTag();
 
     @Override
-    public void rebuild() {
+    public void rebuild(Vec2f texSize) {
+        super.rebuild(texSize);
+
         FloatList vertexData = new FloatArrayList();
         int vertexCount = 0;
 
@@ -41,10 +43,6 @@ public class CustomModelPartCuboid extends CustomModelPart {
         to.subtract(mid);
         to.add(inflate, inflate, inflate);
         to.add(mid);
-
-        Vec2f texSize = this.texSize;
-        if (texSize == null)
-            texSize = new Vec2f(cuboidProperties.getFloat("tw"), cuboidProperties.getFloat("th"));
 
         //North
         if (cuboidProperties.contains("n")) {
@@ -314,7 +312,7 @@ public class CustomModelPartCuboid extends CustomModelPart {
         
         pivot.add(offset);
         
-        rebuild();
+        rebuild(this.texSize);
     }
 
     public void generateFace(Vector3f a, Vector3f b, Vector3f c, Vector3f d, List<Vec2f> uv, float texWidth, float texHeight, FloatList vertexData) {
