@@ -116,11 +116,13 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         matrices.push();
         getLeftWing().rotate(matrices);
 
-        for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.LeftElytra)) {
-            data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+        synchronized (data.model.specialParts) {
+            for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.LeftElytra)) {
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
 
-            if (data.model.leftToRender == 0)
-                break;
+                if (data.model.leftToRender == 0)
+                    break;
+            }
         }
 
         matrices.pop();
@@ -129,11 +131,13 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         matrices.push();
         getRightWing().rotate(matrices);
 
-        for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.RightElytra)) {
-            data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+        synchronized (data.model.specialParts) {
+            for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.RightElytra)) {
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
 
-            if (data.model.leftToRender == 0)
-                break;
+                if (data.model.leftToRender == 0)
+                    break;
+            }
         }
 
         matrices.pop();

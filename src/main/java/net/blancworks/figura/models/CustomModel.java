@@ -16,6 +16,7 @@ import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
@@ -53,13 +54,17 @@ public class CustomModel extends FiguraAsset {
     }
 
     public void removeSpecialPart(CustomModelPart part) {
-        getSpecialParts(part.parentType).remove(part);
+        synchronized (specialParts) {
+            getSpecialParts(part.parentType).remove(part);
+        }
     }
 
     public void addSpecialPart(CustomModelPart part) {
-        ArrayList<CustomModelPart> list = getSpecialParts(part.parentType);
-        list.add(part);
-        specialParts.put(part.parentType, list);
+        synchronized (specialParts) {
+            ArrayList<CustomModelPart> list = getSpecialParts(part.parentType);
+            list.add(part);
+            specialParts.put(part.parentType, list);
+        }
     }
 
     public int getRenderComplexity() {
@@ -197,8 +202,10 @@ public class CustomModel extends FiguraAsset {
 
         CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-        for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
-            data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
+        synchronized (specialParts) {
+            for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
+                data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
+            }
         }
 
         CustomModelPart.canRenderHitBox = false;
@@ -207,15 +214,17 @@ public class CustomModel extends FiguraAsset {
     public void readNbt(NbtCompound tag) {
         NbtList partList = (NbtList) tag.get("parts");
 
-        if (partList != null) {
-            for (net.minecraft.nbt.NbtElement nbtElement : partList) {
-                NbtCompound partTag = (NbtCompound) nbtElement;
+        NbtList uv = tag.getList("uv", NbtElement.FLOAT_TYPE);
+        if (uv != null) this.defaultTextureSize = new Vec2f(uv.getFloat(0), uv.getFloat(1));
+        else this.defaultTextureSize = new Vec2f(64f, 64f);
 
+        if (partList != null) {
+            for (NbtElement nbtElement : partList) {
+                NbtCompound partTag = (NbtCompound) nbtElement;
                 CustomModelPart part = CustomModelPart.fromNbt(partTag);
 
                 if (part != null) {
-                    part.rebuild();
-
+                    part.rebuildAll(this.defaultTextureSize);
                     allParts.add(part);
                 }
             }

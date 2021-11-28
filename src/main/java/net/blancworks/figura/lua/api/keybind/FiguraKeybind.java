@@ -55,6 +55,17 @@ public final class FiguraKeybind {
             ++keyBinding.timesPressed;
     }
 
+    public static void unpressAll() {
+        PlayerData data = PlayerDataManager.localPlayer;
+
+        if (data == null || data.script == null)
+            return;
+
+        data.script.keyBindings.forEach(keyBind -> {
+            if (!keyBind.ignoreScreen) keyBind.reset();
+        });
+    }
+
     public static InputUtil.Key getKey(String name) {
         Integer key = KEYS.get(name);
         if (key == null) return InputUtil.UNKNOWN_KEY;
@@ -108,5 +119,10 @@ public final class FiguraKeybind {
 
     public void setPressed(boolean pressed) {
         this.pressed = pressed;
+    }
+
+    public void reset() {
+        this.timesPressed = 0;
+        this.setPressed(false);
     }
 }

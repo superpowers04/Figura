@@ -4,6 +4,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
+import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.minecraft.client.MinecraftClient;
@@ -102,6 +103,8 @@ public class MinecraftClientMixin {
     public void setScreen(Screen screen, CallbackInfo ci) {
         if (ActionWheel.enabled)
             ActionWheel.play();
+
+        FiguraKeybind.unpressAll();
     }
 
     @Unique
