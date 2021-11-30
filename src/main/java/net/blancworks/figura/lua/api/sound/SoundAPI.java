@@ -17,10 +17,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import org.luaj.vm2.LuaBoolean;
-import org.luaj.vm2.LuaString;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
@@ -106,7 +103,12 @@ public class SoundAPI {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
                     LuaVector pitchVol = LuaVector.checkOrNew(arg3);
-                    return FiguraSoundManager.getChannel().playCustomSound(script, arg1.checkjstring(), LuaVector.checkOrNew(arg2).asV3d(), pitchVol.x(), pitchVol.y());
+                    try {
+                        FiguraSoundManager.getChannel().playCustomSound(script, arg1.checkjstring(), LuaVector.checkOrNew(arg2).asV3d(), pitchVol.x(), pitchVol.y());
+                    } catch (Exception e) {
+                        throw new LuaError(e);
+                    }
+                    return NIL;
                 }
             });
 

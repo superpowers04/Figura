@@ -17,8 +17,11 @@ public class CustomModelPartMesh extends CustomModelPart {
     public CompoundTag meshProperties;
 
     @Override
-    public void rebuild(Vec2f texSize) {
-        super.rebuild(texSize);
+    public void rebuild(Vec2f newTexSize) {
+        if (newTexSize == null)
+            newTexSize = new Vec2f(meshProperties.getFloat("tw"), meshProperties.getFloat("th"));
+
+        super.rebuild(newTexSize);
 
         FloatList vertexData = new FloatArrayList();
         int vertexCount = 0;

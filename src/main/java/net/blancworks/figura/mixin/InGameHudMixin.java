@@ -5,9 +5,11 @@ import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.options.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -21,6 +23,16 @@ public abstract class InGameHudMixin {
 
     @Inject(at = @At ("HEAD"), method = "render")
     public void preRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
+        //render hud parts
+        Entity entity = MinecraftClient.getInstance().getCameraEntity();
+        if (entity != null) {
+            PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
+            if (data != null && data.model != null) {
+                FiguraMod.currentData = data;
+                data.model.renderHudParts(data, matrices);
+            }
+        }
+
         if (FiguraMod.PLAYER_POPUP_BUTTON.isPressed())
             PlayerPopup.render(matrices);
     }

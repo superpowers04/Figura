@@ -11,6 +11,7 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.DiffuseLighting;
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.EntityModel;
@@ -33,7 +34,7 @@ public class CustomModel extends FiguraAsset {
     public final ArrayList<CustomModelPart> allParts = new ArrayList<>();
     public final HashMap<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new HashMap<>();
 
-    public Vec2f defaultTextureSize = new Vec2f(0f, 0f);
+    public Vec2f defaultTextureSize;
 
     public int leftToRender = 0;
     public int lastComplexity = 0;
@@ -212,12 +213,32 @@ public class CustomModel extends FiguraAsset {
         CustomModelPart.canRenderHitBox = false;
     }
 
+    public void renderHudParts(PlayerData data, MatrixStack matrices) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        float scale = (float) (128f / client.getWindow().getScaleFactor());
+        float w = client.getWindow().getScaledWidth() / 2f;
+        float h = client.getWindow().getScaledHeight() / 2f;
+
+        matrices.push();
+        matrices.translate(w, h, -500);
+        matrices.scale(scale, scale, -scale);
+        DiffuseLighting.disableGuiDepthLighting();
+
+        data.model.leftToRender = Integer.MAX_VALUE - 100;
+
+        synchronized (specialParts) {
+            for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.Hud)) {
+                part.render(data, matrices, new MatrixStack(), FiguraMod.tryGetImmediate(), 0xF000F0, OverlayTexture.DEFAULT_UV, 1f);
+            }
+        }
+        matrices.pop();
+    }
+
     public void readNbt(CompoundTag tag) {
         ListTag partList = (ListTag) tag.get("parts");
 
         ListTag uv = tag.getList("uv", NbtType.FLOAT);
-        if (uv != null) this.defaultTextureSize = new Vec2f(uv.getFloat(0), uv.getFloat(1));
-        else this.defaultTextureSize = new Vec2f(64f, 64f);
+        if (uv.size() >= 2) this.defaultTextureSize = new Vec2f(uv.getFloat(0), uv.getFloat(1));
 
         if (partList != null) {
             for (Tag nbtElement : partList) {

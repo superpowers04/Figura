@@ -26,7 +26,6 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.registry.Registry;
 
 import java.util.List;
-import java.util.Objects;
 
 public class ActionWheel extends DrawableHelper {
 
@@ -73,7 +72,7 @@ public class ActionWheel extends DrawableHelper {
                 if (angle < 180) {
                     selectedSlot = MathHelper.floor((rightSegments / 180.0) * angle);
                 } else {
-                    selectedSlot = MathHelper.floor((leftSegments / 180.0) * (angle - 180)) + 4;
+                    selectedSlot = MathHelper.floor((leftSegments / 180.0) * (angle - 180)) + rightSegments;
                 }
             } else {
                 selectedSlot = -1;
@@ -84,8 +83,7 @@ public class ActionWheel extends DrawableHelper {
 
             //render overlay
             for (int i = 0; i < leftSegments + rightSegments; i++) {
-                int index = i < rightSegments ? i : i - rightSegments + 4;
-                renderOverlay(matrices, wheelPos, wheelSize, leftSegments, rightSegments, data, index);
+                renderOverlay(matrices, wheelPos, wheelSize, leftSegments, rightSegments, data, i);
             }
 
             //render textures
@@ -151,14 +149,15 @@ public class ActionWheel extends DrawableHelper {
         matrices.pop();
     }
 
-    public static void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments, PlayerData data, int slot) {
-        ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (slot + 1));
+    public static void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments, PlayerData data, int i) {
+        ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (i + 1));
 
         //property variables
         boolean hasFunction = false;
         boolean hasColor = false;
         boolean hasHoverColor = false;
-        boolean isSelected = selectedSlot == slot;
+        boolean isSelected = selectedSlot == i;
+        int slot = i < rightSegments ? i : i - rightSegments + 4;
         Vector3f overlayColor = new Vector3f(1.0f, 1.0f, 1.0f);
 
         if (customization != null) {
@@ -269,7 +268,7 @@ public class ActionWheel extends DrawableHelper {
             Vec2f pos = new Vec2f(radius * MathHelper.cos(angle) + offset.x, radius * MathHelper.sin(angle) + offset.y);
 
             //render textures
-            ActionWheelCustomization cust = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
+            ActionWheelCustomization cust = data.script.getActionWheelCustomization("SLOT_" + (i + 1));
             if (cust != null && cust.texture != ActionWheelCustomization.TextureType.None && cust.uvOffset != null && cust.uvSize != null && data.playerListEntry != null) {
                 //texture
                 Identifier textureId;
@@ -393,7 +392,7 @@ public class ActionWheel extends DrawableHelper {
             //get item - defaults to air
             ItemStack item = Registry.ITEM.get(Identifier.tryParse("minecraft:air")).getDefaultStack();
 
-            ActionWheelCustomization cust = data.script.getActionWheelCustomization("SLOT_" + (index + 1));
+            ActionWheelCustomization cust = data.script.getActionWheelCustomization("SLOT_" + (i + 1));
             if (cust != null) {
                 if (cust.texture != ActionWheelCustomization.TextureType.None && cust.uvOffset != null && cust.uvSize != null)
                     continue;
