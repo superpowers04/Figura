@@ -5,12 +5,14 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import net.blancworks.figura.FiguraMod;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtFloat;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.util.math.Vec3f;
+import net.fabricmc.fabric.api.util.NbtType;
+import net.minecraft.client.util.math.Vector3f;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.nbt.FloatTag;
+import net.minecraft.nbt.ListTag;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
@@ -18,12 +20,12 @@ import java.util.*;
 
 public class BlockbenchModelSerializer {
 
-    public static void toBlockbench(NbtCompound nbt) {
+    public static void toBlockbench(CompoundTag nbt) {
         FiguraMod.doTask(() -> {
             try {
                 String fileName = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date());
                 Path rootFolder = FiguraMod.getModContentDirectory().resolve("model_files/[§9Figura§r] Saved Models");
-                Path dest = rootFolder.resolve(Path.of(fileName));
+                Path dest = rootFolder.resolve(new File(fileName).toPath());
 
                 boolean hasTexture = false;
                 int stuff = 0;
@@ -38,7 +40,7 @@ public class BlockbenchModelSerializer {
                         stuff++;
 
                         Path script = dest.resolve("script.lua");
-                        NbtCompound tag = nbt.getCompound("script");
+                        CompoundTag tag = nbt.getCompound("script");
 
                         String source;
 
@@ -53,7 +55,7 @@ public class BlockbenchModelSerializer {
                             source = src.toString();
                         }
 
-                        Files.writeString(script, source);
+                        Files.write(script, source.getBytes());
                         success++;
                     }
                 } catch (Exception e) {
@@ -68,7 +70,7 @@ public class BlockbenchModelSerializer {
                         Path sounds = dest.resolve("sounds.json");
                         Path soundFolder = dest.resolve("sounds");
 
-                        NbtCompound tag = nbt.getCompound("sounds");
+                        CompoundTag tag = nbt.getCompound("sounds");
                         JsonArray soundsList = new JsonArray();
 
                         if (!Files.exists(soundFolder))
@@ -84,7 +86,7 @@ public class BlockbenchModelSerializer {
 
                         //save sounds json
                         String jsonString = new GsonBuilder().create().toJson(soundsList);
-                        Files.writeString(sounds, jsonString);
+                        Files.write(sounds, jsonString.getBytes());
 
                         success++;
                     }
@@ -97,7 +99,7 @@ public class BlockbenchModelSerializer {
                     if (nbt.contains("texture")) {
                         stuff++;
 
-                        NbtCompound tag = nbt.getCompound("texture");
+                        CompoundTag tag = nbt.getCompound("texture");
 
                         String type = tag.getString("type");
                         if (type.equals("color")) type = "";
@@ -117,14 +119,14 @@ public class BlockbenchModelSerializer {
                     if (nbt.contains("exTexs")) {
                         stuff++;
 
-                        NbtList list = nbt.getList("exTexs", NbtElement.COMPOUND_TYPE);
+                        ListTag list = nbt.getList("exTexs", NbtType.COMPOUND);
 
-                        for (NbtElement tag : list) {
-                            String type = ((NbtCompound) tag).getString("type");
+                        for (Tag tag : list) {
+                            String type = ((CompoundTag) tag).getString("type");
                             if (type.equals("color")) type = "";
 
                             Path texture = dest.resolve("texture" + type + ".png");
-                            Files.write(texture, ((NbtCompound) tag).getByteArray("img2"));
+                            Files.write(texture, ((CompoundTag) tag).getByteArray("img2"));
                         }
 
                         success++;
@@ -139,7 +141,7 @@ public class BlockbenchModelSerializer {
                         stuff++;
 
                         JsonObject model = new JsonObject();
-                        NbtList list = nbt.getCompound("model").getList("parts", NbtElement.COMPOUND_TYPE);
+                        ListTag list = nbt.getCompound("model").getList("parts", NbtType.COMPOUND);
 
                         //header
                         JsonObject meta = new JsonObject();
@@ -182,7 +184,7 @@ public class BlockbenchModelSerializer {
 
                         //texture size
                         JsonObject resolution = new JsonObject();
-                        NbtList uv = nbt.getCompound("model").getList("uv", NbtElement.FLOAT_TYPE);
+                        ListTag uv = nbt.getCompound("model").getList("uv", NbtType.FLOAT);
                         resolution.addProperty("width", uv.getFloat(0));
                         resolution.addProperty("height", uv.getFloat(1));
 
@@ -192,8 +194,8 @@ public class BlockbenchModelSerializer {
                         boolean isPlayer = false;
                         JsonArray outliner = new JsonArray();
                         JsonArray elements = new JsonArray();
-                        for (NbtElement tagElement : list) {
-                            isPlayer = parseModelPart((NbtCompound) tagElement, elements, outliner, Vec3f.ZERO.copy()) || isPlayer;
+                        for (Tag tagElement : list) {
+                            isPlayer = parseModelPart((CompoundTag) tagElement, elements, outliner, new Vector3f(0f, 0f, 0f)) || isPlayer;
                         }
 
                         model.add("elements", elements);
@@ -201,7 +203,7 @@ public class BlockbenchModelSerializer {
 
                         //write model
                         String jsonString = new GsonBuilder().serializeNulls().create().toJson(model);
-                        Files.writeString(dest.resolve((isPlayer ? "player_model" : "model") + ".bbmodel"), jsonString);
+                        Files.write(dest.resolve((isPlayer ? "player_model" : "model") + ".bbmodel"), jsonString.getBytes());
 
                         success++;
                     }
@@ -217,16 +219,16 @@ public class BlockbenchModelSerializer {
         });
     }
 
-    public static final HashMap<String, Vec3f> PLAYER_MODEL_OFFSETS = new HashMap<>() {{
-        put("Head", new Vec3f(0, 24, 0));
-        put("Body", new Vec3f(0, 24, 0));
-        put("LeftArm", new Vec3f(-5, 22, 0));
-        put("RightArm", new Vec3f(5, 22, 0));
-        put("LeftLeg", new Vec3f(-2, 12, 0));
-        put("RightLeg", new Vec3f(2, 12, 0));
+    public static final HashMap<String, Vector3f> PLAYER_MODEL_OFFSETS = new HashMap<String, Vector3f>() {{
+        put("Head", new Vector3f(0, 24, 0));
+        put("Body", new Vector3f(0, 24, 0));
+        put("LeftArm", new Vector3f(-5, 22, 0));
+        put("RightArm", new Vector3f(5, 22, 0));
+        put("LeftLeg", new Vector3f(-2, 12, 0));
+        put("RightLeg", new Vector3f(2, 12, 0));
     }};
 
-    public static boolean parseModelPart(NbtCompound tag, JsonArray elements, JsonArray outliner, Vec3f offset) {
+    public static boolean parseModelPart(CompoundTag tag, JsonArray elements, JsonArray outliner, Vector3f offset) {
         boolean player = false;
         JsonObject part = new JsonObject();
 
@@ -239,7 +241,7 @@ public class BlockbenchModelSerializer {
 
         //pivot
         if (tag.contains("piv")) {
-            JsonArray pivot = nbtFloatListToJson(tag.getList("piv", NbtElement.FLOAT_TYPE));
+            JsonArray pivot = FloatTagListToJson(tag.getList("piv", NbtType.FLOAT));
             pivot.set(2, new JsonPrimitive(-pivot.get(2).getAsFloat()));
             applyArrayOffset(pivot, offset);
             part.add("origin", pivot);
@@ -247,7 +249,7 @@ public class BlockbenchModelSerializer {
 
         //rotation
         if (tag.contains("rot"))
-            part.add("rotation", nbtFloatListToJson(tag.getList("rot", NbtElement.FLOAT_TYPE)));
+            part.add("rotation", FloatTagListToJson(tag.getList("rot", NbtType.FLOAT)));
 
         //uuid
         String uuid = UUID.randomUUID().toString();
@@ -256,8 +258,8 @@ public class BlockbenchModelSerializer {
         //part type
         String pt = tag.contains("pt") ? tag.getString("pt") : "na";
         switch (pt) {
-            case "cub" -> {
-                NbtCompound props = tag.getCompound("props");
+            case "cub":
+                CompoundTag props = tag.getCompound("props");
                 JsonObject faces = new JsonObject();
 
                 //inflate
@@ -265,11 +267,11 @@ public class BlockbenchModelSerializer {
                     part.addProperty("inflate", props.getFloat("inf"));
 
                 //from to
-                JsonArray from = nbtFloatListToJson(props.getList("f", NbtElement.FLOAT_TYPE));
+                JsonArray from = FloatTagListToJson(props.getList("f", NbtType.FLOAT));
                 applyArrayOffset(from, offset);
                 part.add("from", from);
 
-                JsonArray to = nbtFloatListToJson(props.getList("t", NbtElement.FLOAT_TYPE));
+                JsonArray to = FloatTagListToJson(props.getList("t", NbtType.FLOAT));
                 applyArrayOffset(to, offset);
                 part.add("to", to);
 
@@ -284,9 +286,9 @@ public class BlockbenchModelSerializer {
                 part.add("faces", faces);
                 elements.add(part);
                 outliner.add(uuid);
-            }
-            case "msh" -> {
-                NbtCompound props = tag.getCompound("props");
+                break;
+            case "msh":
+                CompoundTag props2 = tag.getCompound("props");
 
                 //mesh properties
                 part.addProperty("visibility", true);
@@ -294,10 +296,10 @@ public class BlockbenchModelSerializer {
 
                 //vertices
                 JsonObject vertices = new JsonObject();
-                NbtCompound vertList = props.getCompound("vertices");
+                CompoundTag vertList = props2.getCompound("vertices");
 
                 for (String s : vertList.getKeys()) {
-                    JsonArray vertex = nbtFloatListToJson(vertList.getList(s, NbtElement.FLOAT_TYPE));
+                    JsonArray vertex = FloatTagListToJson(vertList.getList(s, NbtType.FLOAT));
                     vertex.set(0, new JsonPrimitive(-vertex.get(0).getAsFloat()));
                     vertex.set(1, new JsonPrimitive(-vertex.get(1).getAsFloat()));
                     //applyArrayOffset(vertex, offset);
@@ -305,46 +307,46 @@ public class BlockbenchModelSerializer {
                 }
 
                 //faces
-                JsonObject faces = new JsonObject();
-                NbtList faceList = props.getList("faces", NbtElement.LIST_TYPE);
+                JsonObject faces2 = new JsonObject();
+                ListTag faceList = props2.getList("faces", NbtType.LIST);
                 int i = 0;
-                for (NbtElement faceNbt : faceList) {
+                for (Tag faceNbt : faceList) {
                     JsonObject face = new JsonObject();
                     face.addProperty("texture", 0f);
 
                     JsonArray vert = new JsonArray();
                     JsonObject uv = new JsonObject();
 
-                    for (NbtElement vertexNbt : ((NbtList) faceNbt)) {
-                        NbtCompound vertex = (NbtCompound) vertexNbt;
+                    for (Tag vertexNbt : ((ListTag) faceNbt)) {
+                        CompoundTag vertex = (CompoundTag) vertexNbt;
                         String id = vertex.getString("id");
 
-                        uv.add(id, nbtFloatListToJson(vertex.getList("uv", NbtElement.FLOAT_TYPE)));
+                        uv.add(id, FloatTagListToJson(vertex.getList("uv", NbtType.FLOAT)));
                         vert.add(id);
                     }
 
                     face.add("vertices", vert);
                     face.add("uv", uv);
-                    faces.add(i++ + "", face);
+                    faces2.add(i++ + "", face);
                 }
 
                 part.add("vertices", vertices);
-                part.add("faces", faces);
+                part.add("faces", faces2);
 
                 elements.add(part);
                 outliner.add(uuid);
-            }
-            case "na" -> {
+                break;
+            case "na":
                 //fix pivot offset
-                Vec3f newOffset = offset.copy();
+                Vector3f newOffset = offset.copy();
 
-                for (Map.Entry<String, Vec3f> entry : PLAYER_MODEL_OFFSETS.entrySet()) {
+                for (Map.Entry<String, Vector3f> entry : PLAYER_MODEL_OFFSETS.entrySet()) {
                     if (name.contains(entry.getKey())) {
                         newOffset = entry.getValue();
                         JsonArray pivot;
 
                         if (tag.contains("piv")) {
-                            pivot = nbtFloatListToJson(tag.getList("piv", NbtElement.FLOAT_TYPE));
+                            pivot = FloatTagListToJson(tag.getList("piv", NbtType.FLOAT));
                             pivot.set(2, new JsonPrimitive(-pivot.get(2).getAsFloat()));
                             applyArrayOffset(pivot, newOffset);
                         } else {
@@ -367,41 +369,41 @@ public class BlockbenchModelSerializer {
 
                 JsonArray children = new JsonArray();
                 if (tag.contains("chld")) {
-                    NbtList childList = tag.getList("chld", NbtElement.COMPOUND_TYPE);
+                    ListTag childList = tag.getList("chld", NbtType.COMPOUND);
 
-                    for (NbtElement nbtElement : childList) {
-                        player = parseModelPart((NbtCompound) nbtElement, elements, children, newOffset) || player;
+                    for (Tag Tag : childList) {
+                        player = parseModelPart((CompoundTag) Tag, elements, children, newOffset) || player;
                     }
                 }
 
                 part.add("children", children);
                 outliner.add(part);
-            }
+            break;
         }
 
         return player;
     }
 
-    public static void applyArrayOffset(JsonArray array, Vec3f offset) {
+    public static void applyArrayOffset(JsonArray array, Vector3f offset) {
         array.set(0, new JsonPrimitive(array.get(0).getAsFloat() + offset.getX()));
         array.set(1, new JsonPrimitive(array.get(1).getAsFloat() + offset.getY()));
         array.set(2, new JsonPrimitive(array.get(2).getAsFloat() + offset.getZ()));
     }
 
-    public static JsonArray nbtFloatListToJson(NbtList list) {
+    public static JsonArray FloatTagListToJson(ListTag list) {
         JsonArray json = new JsonArray();
 
-        for (NbtElement nbtElement : list) {
-            float val = ((NbtFloat) nbtElement).floatValue();
+        for (Tag Tag : list) {
+            float val = ((FloatTag) Tag).getFloat();
             json.add(val);
         }
 
         return json;
     }
 
-    public static JsonObject buildFaceData(NbtCompound nbt) {
+    public static JsonObject buildFaceData(CompoundTag nbt) {
         JsonObject face = new JsonObject();
-        JsonArray uv = nbtFloatListToJson(nbt.getList("uv", NbtElement.FLOAT_TYPE));
+        JsonArray uv = FloatTagListToJson(nbt.getList("uv", NbtType.FLOAT));
 
         if (nbt.contains("texture"))
             face.addProperty("texture", 0f);
