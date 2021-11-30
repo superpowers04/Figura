@@ -89,6 +89,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(RenderLayerAPI.getId(), RenderLayerAPI::getForScript);
         apiSuppliers.put(PingsAPI.getID(), PingsAPI::getForScript);
         apiSuppliers.put(BlockStateAPI.getID(), BlockStateAPI::getForScript);
+        apiSuppliers.put(FirstPersonModelAPI.getID(), FirstPersonModelAPI::getForScript);
     }
 
     public static void registerEvents() {

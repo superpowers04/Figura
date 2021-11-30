@@ -19,8 +19,11 @@ public class CustomModelPartCuboid extends CustomModelPart {
     public NbtCompound cuboidProperties = new NbtCompound();
 
     @Override
-    public void rebuild(Vec2f texSize) {
-        super.rebuild(texSize);
+    public void rebuild(Vec2f newTexSize) {
+        if (newTexSize == null)
+            newTexSize = new Vec2f(cuboidProperties.getFloat("tw"), cuboidProperties.getFloat("th"));
+
+        super.rebuild(newTexSize);
 
         FloatList vertexData = new FloatArrayList();
         int vertexCount = 0;

@@ -1,7 +1,10 @@
 package net.blancworks.figura.models.shaders;
 
 import net.blancworks.figura.FiguraMod;
-import net.minecraft.client.render.*;
+import net.minecraft.client.render.BufferBuilder;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.VertexConsumerProvider;
 
 import java.util.*;
 

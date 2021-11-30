@@ -596,8 +596,8 @@ public class CustomModelPart {
     }
 
     //Re-builds the mesh data for a custom model part.
-    public void rebuild(Vec2f texSize) {
-        this.texSize = texSize;
+    public void rebuild(Vec2f newTexSize) {
+        this.texSize = newTexSize;
     }
 
     public void rebuildAll(Vec2f texSize) {
@@ -749,7 +749,8 @@ public class CustomModelPart {
         LeftSpyglass, //Left position of the spyglass model
         RightSpyglass, //Right position of the spyglass model
         Camera, //paparazzi
-        Skull(true); // A replacement for the "Head" type, but only rendered in the tab list and player head item/blocks
+        Skull(true), //A replacement for the "Head" type, but only rendered in the tab list and player head item/blocks
+        Hud(true); //hud rendering
 
         private final boolean special;
         ParentType(boolean special) {

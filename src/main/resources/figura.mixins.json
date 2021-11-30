@@ -25,6 +25,7 @@
     "GameRendererMixin",
     "HeadFeatureRendererMixin",
     "HeldItemFeatureRendererMixin",
+    "HeldItemRendererMixin",
     "InGameHudMixin",
     "KeyboardMixin",
     "KeyBindingAccessorMixin",
