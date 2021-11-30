@@ -619,7 +619,7 @@ public class RenderLayerAPI {
         if (target == null) return;
         Framebuffer mainFramebuffer = MinecraftClient.getInstance().getFramebuffer();
         target.resize(mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, MinecraftClient.IS_SYSTEM_MAC);
-        RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
+        RenderSystem.assertOnRenderThreadOrInit();
         GlStateManager._glBindFramebuffer(36008, mainFramebuffer.fbo);
         GlStateManager._glBindFramebuffer(36009, target.fbo);
         GlStateManager._glBlitFrameBuffer(0, 0, mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, 0, 0, target.textureWidth, target.textureHeight, 16384, 9728);

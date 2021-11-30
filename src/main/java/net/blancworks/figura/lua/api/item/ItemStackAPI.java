@@ -76,7 +76,7 @@ public class ItemStackAPI {
             set("getCooldown", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaNumber.valueOf(stack.getCooldown());
+                    return LuaNumber.valueOf(stack.getBobbingAnimationTime());
                 }
             });
 

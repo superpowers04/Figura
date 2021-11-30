@@ -237,7 +237,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         matrices.multiply(this.dispatcher.getRotation());
         matrices.scale(-0.025F, -0.025F, 0.025F);
-        Matrix4f matrix4f = matrices.peek().getModel();
+        Matrix4f matrix4f = matrices.peek().getPositionMatrix();
 
         matrices.pop();
 

@@ -213,7 +213,7 @@ public class WorldAPI {
 
                     if (b == null) return NIL;
 
-                    return LuaNumber.valueOf(b.getTemperature(pos));
+                    return LuaNumber.valueOf(b.getTemperature());
                 }
             });
 

@@ -314,8 +314,8 @@ public class CustomModelPart {
     }
 
     public int renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
-        Matrix4f modelMatrix = matrices.peek().getModel();
-        Matrix3f normalMatrix = matrices.peek().getNormal();
+        Matrix4f modelMatrix = matrices.peek().getPositionMatrix();
+        Matrix3f normalMatrix = matrices.peek().getNormalMatrix();
 
         for (int i = 1; i <= this.vertexCount; i++) {
             int startIndex = (i - 1) * 8;
@@ -414,8 +414,8 @@ public class CustomModelPart {
     }
 
     public void updateModelMatrices(MatrixStack stack) {
-        lastModelMatrix = stack.peek().getModel().copy();
-        lastNormalMatrix = stack.peek().getNormal().copy();
+        lastModelMatrix = stack.peek().getPositionMatrix().copy();
+        lastNormalMatrix = stack.peek().getNormalMatrix().copy();
 
         lastModelMatrixInverse = lastModelMatrix.copy();
         lastModelMatrixInverse.invert();

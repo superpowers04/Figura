@@ -40,10 +40,10 @@ public class FiguraToast implements Toast {
         DrawableHelper.drawTexture(matrices, 0, 0, 0f, cheese ? 0 : (int) ((timeDiff / (5000 / 24) % 4) + 1) * 32f, 160, 32, 160, 160);
 
         if (this.message == null) {
-            manager.getGame().textRenderer.draw(matrices, this.title, 31f, 12f, 0xFFFFFF);
+            manager.getClient().textRenderer.draw(matrices, this.title, 31f, 12f, 0xFFFFFF);
         } else {
-            manager.getGame().textRenderer.draw(matrices, this.title, 31f, 7f, 0xFFFFFF);
-            manager.getGame().textRenderer.draw(matrices, this.message, 31f, 18f, 0xFFFFFF);
+            manager.getClient().textRenderer.draw(matrices, this.title, 31f, 7f, 0xFFFFFF);
+            manager.getClient().textRenderer.draw(matrices, this.message, 31f, 18f, 0xFFFFFF);
         }
 
         return timeDiff < 5000 ? Toast.Visibility.SHOW : Toast.Visibility.HIDE;

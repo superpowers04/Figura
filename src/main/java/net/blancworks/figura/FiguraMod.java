@@ -77,7 +77,7 @@ public class FiguraMod implements ClientModInitializer {
 
     public static int ticksElapsed;
 
-    public static final String GRADLE_PROPERTIES_LINK = "https://raw.githubusercontent.com/Blancworks/Figura/1.17/gradle.properties";
+    public static final String GRADLE_PROPERTIES_LINK = "https://raw.githubusercontent.com/Blancworks/Figura/1.18/gradle.properties";
     public static String latestVersion;
     public static int latestVersionStatus = 0;
 

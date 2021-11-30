@@ -34,7 +34,7 @@ public class ItemRenderTask extends RenderTask {
         client.getItemRenderer().renderItem(stack, mode, emissive ? 0xF000F0 : light, OverlayTexture.DEFAULT_UV, matrices, vcp, 0);
         RenderTask.resetOverride(vcp);
 
-        int complexity = 4 * client.getItemRenderer().getHeldItemModel(stack, null, null, 0).getQuads(null, null, client.world.random).size();
+        int complexity = 4 * client.getItemRenderer().getModel(stack, null, null, 0).getQuads(null, null, client.world.random).size();
 
         matrices.pop();
         return complexity;

@@ -23,7 +23,7 @@ public class TextRenderTask extends RenderTask {
         this.transform(matrices);
         matrices.scale(0.025f, 0.025f, 0.025f);
 
-        int instructions = textRenderer.draw(text, 0, 0, 0xFFFFFF, false, matrices.peek().getModel(), vcp, false, 0, emissive ? 0xF000F0 : light);
+        int instructions = textRenderer.draw(text, 0, 0, 0xFFFFFF, false, matrices.peek().getPositionMatrix(), vcp, false, 0, emissive ? 0xF000F0 : light);
 
         matrices.pop();
         return instructions;

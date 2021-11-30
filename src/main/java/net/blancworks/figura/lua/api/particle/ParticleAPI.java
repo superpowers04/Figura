@@ -73,6 +73,10 @@ public class ParticleAPI {
                             ItemStack stack = ItemStackAPI.checkOrCreateItemStack(arg3);
                             particle = new ItemStackParticleEffect(ParticleTypes.ITEM, stack);
                         }
+                        case "minecraft:block_marker" -> {
+                            BlockState state = BlockStateAPI.checkOrCreateBlockState(arg3);
+                            particle = new BlockStateParticleEffect(ParticleTypes.BLOCK_MARKER, state);
+                        }
                         //4 argos
                         case "minecraft:dust_color_transition" -> {
                             LuaVector fromColor = LuaVector.checkOrNew(arg3);
