@@ -12,6 +12,7 @@ import net.minecraft.client.sound.SoundEngine;
 import net.minecraft.client.sound.Source;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.Vec3d;
+import org.luaj.vm2.LuaError;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -48,35 +49,27 @@ public class FiguraChannel extends Channel {
             stopAllSounds = true;
 
         Set<SourceManager> sources = getSourceManagers();
-        Iterator<SourceManager> iterator = sources.iterator();
-        ArrayList<SourceManager> managersToRemove = new ArrayList<>();
-
-        while(iterator.hasNext()) {
-            SourceManager sourceManager = iterator.next();
+        for (SourceManager sourceManager : new HashSet<>(sources)) {
             Source src = getSource(sourceManager);
 
             boolean removePlayer = stopSoundRequests.stream().anyMatch(req -> req.shouldStop(sourceManager));
             if (src == null || removePlayer || stopAllSounds) {
-                managersToRemove.add(sourceManager);
-                if (src != null) {
+                if (src != null)
                     src.stop();
-                    iterator.remove();
-                }
 
+                sources.remove(sourceManager);
                 continue;
             }
 
             src.tick();
             if (src.isStopped()) {
                 sourceManager.close();
-                iterator.remove();
+                sources.remove(sourceManager);
             }
         }
-        stopAllSounds = false;
 
-        managersToRemove.forEach(sources::remove);
-        managersToRemove.clear();
         stopSoundRequests.clear();
+        stopAllSounds = false;
     }
 
     public CompletableFuture<SourceManager> createSource(PlayerData soundOwner, String name, SoundEngine.RunMode mode) {
@@ -91,13 +84,12 @@ public class FiguraChannel extends Channel {
     }
 
     public void playCustomSound(CustomScript script, String soundName, Vec3d pos, float pitch, float volume) {
-        if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0 || script.soundSpawnCount < 1) return;
+        if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0 || script.soundSpawnCount < 1 || pitch <= 0f) return;
         script.soundSpawnCount--;
 
         FiguraSound sound = script.customSounds.get(soundName);
-        if (sound == null) {
-            throw new RuntimeException("Custom sound \"" + soundName + "\" is not defined, or cannot be empty!");
-        }
+        if (sound == null)
+            throw new LuaError("Custom sound \"" + soundName + "\" is not defined, or cannot be empty!");
 
         createSource(script.playerData, soundName, SoundEngine.RunMode.STATIC).thenAccept(sourceManager -> sourceManager.run(source -> {
             if (source != null) {
