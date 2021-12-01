@@ -56,7 +56,7 @@ public class FiguraChannel extends Channel {
             if (src == null || removePlayer || stopAllSounds) {
                 if (src != null)
                     src.stop();
-
+                sourceManager.close();
                 sources.remove(sourceManager);
                 continue;
             }
