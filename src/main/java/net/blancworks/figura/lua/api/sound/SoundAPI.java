@@ -17,7 +17,10 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
-import org.luaj.vm2.*;
+import org.luaj.vm2.LuaBoolean;
+import org.luaj.vm2.LuaString;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
@@ -25,6 +28,7 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
@@ -103,11 +107,7 @@ public class SoundAPI {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
                     LuaVector pitchVol = LuaVector.checkOrNew(arg3);
-                    try {
-                        FiguraSoundManager.getChannel().playCustomSound(script, arg1.checkjstring(), LuaVector.checkOrNew(arg2).asV3d(), pitchVol.x(), pitchVol.y());
-                    } catch (Exception e) {
-                        throw new LuaError(e);
-                    }
+                    FiguraSoundManager.getChannel().playCustomSound(script, arg1.checkjstring(), LuaVector.checkOrNew(arg2).asV3d(), pitchVol.x(), pitchVol.y());
                     return NIL;
                 }
             });
@@ -119,7 +119,7 @@ public class SoundAPI {
 
                     ReadOnlyLuaTable tbl = new ReadOnlyLuaTable();
                     int i = 1;
-                    for (Channel.SourceManager sourceManager : FiguraSoundManager.getChannel().getSourceManagers()) {
+                    for (Channel.SourceManager sourceManager : new HashSet<>(FiguraSoundManager.getChannel().getSourceManagers())) {
                         String soundName = ((SourceManagerAccessor)sourceManager).getName();
                         tbl.javaRawSet(i, LuaString.valueOf(soundName));
                         i++;
