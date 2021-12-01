@@ -160,26 +160,36 @@ public class FiguraTrustScreen extends Screen {
         this.addDrawableChild(resetPermissionButton);
         this.addDrawableChild(resetAllPermissionsButton);
 
-        this.uuidBox = new CustomTextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new LiteralText("UUID").formatted(Formatting.ITALIC));
+        this.uuidBox = new CustomTextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new LiteralText("Name/UUID").formatted(Formatting.ITALIC));
         this.uuidBox.setMaxLength(36);
         /*
         this.addSelectableChild(uuidBox);
 
         this.addDrawableChild(new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("*yoink*"), (btx) -> {
             try {
-                UUID uuid = UUID.fromString(uuidBox.getText());
-                PlayerData data = PlayerDataManager.getDataForPlayer(uuid);
-
-                if (data != null && data.hasAvatar() && PlayerDataManager.localPlayer != null) {
-                    net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
-                    data.writeNbt(nbt);
-                    nbt.putUuid("id", PlayerDataManager.localPlayer.playerId);
-                    PlayerDataManager.localPlayer.loadFromNbt(nbt);
-                    PlayerDataManager.localPlayer.isLocalAvatar = true;
-
-                    net.blancworks.figura.FiguraMod.sendToast("done", "");
+                com.mojang.authlib.GameProfile gameProfile;
+                try {
+                    gameProfile = new com.mojang.authlib.GameProfile(UUID.fromString(uuidBox.getText()), "");
+                } catch (Exception ignored) {
+                    gameProfile = new com.mojang.authlib.GameProfile(null, uuidBox.getText());
                 }
-            } catch (Exception ignored) {}
+
+                net.minecraft.block.entity.SkullBlockEntity.loadProperties(gameProfile, profile -> {
+                    PlayerData data = PlayerDataManager.getDataForPlayer(profile.getId());
+
+                    if (data != null && data.hasAvatar() && PlayerDataManager.localPlayer != null) {
+                        net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
+                        data.writeNbt(nbt);
+                        nbt.putUuid("id", PlayerDataManager.localPlayer.playerId);
+                        PlayerDataManager.localPlayer.loadFromNbt(nbt);
+                        PlayerDataManager.localPlayer.isLocalAvatar = true;
+
+                        net.blancworks.figura.FiguraMod.sendToast("done", "");
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }));
         */
 
