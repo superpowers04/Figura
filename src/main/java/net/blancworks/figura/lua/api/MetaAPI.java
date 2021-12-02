@@ -95,6 +95,13 @@ public class MetaAPI {
             });
 
 
+            set("getCurrentInitCount", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.initInstructionCount);
+                }
+            });
+
             set("getCurrentTickCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
