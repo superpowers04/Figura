@@ -26,7 +26,7 @@ public class PingsAPI {
         public void rawset(LuaValue key, LuaValue value) {
             //check if it is a valid ping
             if (!key.isstring() || !value.isfunction())
-                throw new LuaError("Invalid ping registration");
+                throw new LuaError("Error while registering ping");
 
             //register ping
             targetScript.registerPing(value);
@@ -71,7 +71,7 @@ public class PingsAPI {
                     targetScript.outgoingPingQueue.add(lp);
             } catch (Exception e) {
                 e.printStackTrace();
-                throw new LuaError("Failed to send ping!");
+                throw new LuaError("Something went wrong while sending ping!");
             }
 
             return NIL;
