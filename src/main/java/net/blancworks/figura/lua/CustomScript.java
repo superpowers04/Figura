@@ -72,7 +72,8 @@ public class CustomScript extends FiguraAsset {
         WORLD_RENDER
     }
 
-    //How many instructions the last tick/render event used.
+    //How many instructions the last events used.
+    public int initInstructionCount = 0;
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
     public int worldRenderInstructionCount = 0;
@@ -258,9 +259,13 @@ public class CustomScript extends FiguraAsset {
             currTask = CompletableFuture.runAsync(
                     () -> {
                         try {
+                            initInstructionCount = 0;
+
                             setInstructionLimitPermission(TrustContainer.Trust.INIT_INST);
                             if (data != null) data.lastEntity = null;
                             chunk.call();
+
+                            initInstructionCount = scriptGlobals.running.state.bytecodes;
                         } catch (Exception error) {
                             handleError(error);
                         }
@@ -955,7 +960,8 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void registerPing(LuaValue func) {
-        newFunctionIDMap.put(lastPingID++, func);
+        if (!newFunctionIDMap.containsValue(func))
+            newFunctionIDMap.put(lastPingID++, func);
     }
 
     public void handlePing(short id, LuaValue args) {
