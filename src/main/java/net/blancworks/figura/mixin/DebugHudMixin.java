@@ -18,18 +18,21 @@ public class DebugHudMixin {
     protected void getRightText(CallbackInfoReturnable<List<String>> cir) {
         List<String> lines = cir.getReturnValue();
 
-        lines.add(3, "");
         lines.add(4, "§b[FIGURA]§r");
         lines.add(5, "Version: " + FiguraMod.MOD_VERSION);
 
+        boolean offset = false;
         if (PlayerDataManager.localPlayer != null) {
             CustomScript script = PlayerDataManager.localPlayer.script;
             if (script != null) {
+                offset = true;
                 lines.add(6, String.format("Init instructions: %d", script.initInstructionCount));
                 lines.add(7, String.format("Tick instructions: %d", script.tickInstructionCount + script.damageInstructionCount));
                 lines.add(8, String.format("Render instructions: %d",script.renderInstructionCount + script.worldRenderInstructionCount + script.renderLayerInstructionCount));
                 lines.add(9, String.format("Pings Sent: %d, Received: %d", script.pingSent, script.pingReceived));
             }
         }
+
+        lines.add(offset ? 10 : 6, "");
     }
 }
