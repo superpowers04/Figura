@@ -18,21 +18,25 @@ public class DebugHudMixin {
     protected void getRightText(CallbackInfoReturnable<List<String>> cir) {
         List<String> lines = cir.getReturnValue();
 
-        lines.add(4, "§b[FIGURA]§r");
-        lines.add(5, "Version: " + FiguraMod.MOD_VERSION);
+        int i = 0;
+        for (; i < lines.size(); i++) {
+            if (lines.get(i).equals(""))
+                break;
+        }
 
-        boolean offset = false;
+        lines.add(++i, "§b[FIGURA]§r");
+        lines.add(++i, "Version: " + FiguraMod.MOD_VERSION);
+
         if (PlayerDataManager.localPlayer != null) {
             CustomScript script = PlayerDataManager.localPlayer.script;
             if (script != null) {
-                offset = true;
-                lines.add(6, String.format("Init instructions: %d", script.initInstructionCount));
-                lines.add(7, String.format("Tick instructions: %d", script.tickInstructionCount + script.damageInstructionCount));
-                lines.add(8, String.format("Render instructions: %d",script.renderInstructionCount + script.worldRenderInstructionCount + script.renderLayerInstructionCount));
-                lines.add(9, String.format("Pings Sent: %d, Received: %d", script.pingSent, script.pingReceived));
+                lines.add(++i, String.format("Init instructions: %d", script.initInstructionCount));
+                lines.add(++i, String.format("Tick instructions: %d", script.tickInstructionCount + script.damageInstructionCount));
+                lines.add(++i, String.format("Render instructions: %d",script.renderInstructionCount + script.worldRenderInstructionCount + script.renderLayerInstructionCount));
+                lines.add(++i, String.format("Pings Sent: %d, Received: %d", script.pingSent, script.pingReceived));
             }
         }
 
-        lines.add(offset ? 10 : 6, "");
+        lines.add(++i, "");
     }
 }
