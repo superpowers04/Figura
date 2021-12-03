@@ -142,6 +142,13 @@ public class ItemStackAPI {
                 }
             });
 
+            set("getUseAction", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.getUseAction().toString());
+                }
+            });
+
         }});
     }
 
