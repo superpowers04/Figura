@@ -9,7 +9,7 @@ import net.blancworks.figura.gui.FiguraToast;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.blancworks.figura.models.sounds.FiguraSoundManager;
+import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.network.IFiguraNetwork;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;

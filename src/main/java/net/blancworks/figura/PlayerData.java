@@ -3,7 +3,7 @@ package net.blancworks.figura;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
-import net.blancworks.figura.models.sounds.FiguraSoundManager;
+import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;

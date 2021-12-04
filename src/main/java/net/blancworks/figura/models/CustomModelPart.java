@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
@@ -105,15 +106,23 @@ public class CustomModelPart {
             }
         }
 
-        draw(vcp);
+        boolean batchingFix = (boolean) Config.ENTITY_BATCHING_FIX.value;
+        int prevRet = ret;
+
+        if (batchingFix)
+            draw(vcp);
 
         //shaders
         ret = renderShaders(ret, matrices, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
-        draw(vcp);
+        if (batchingFix && prevRet != ret) {
+            prevRet = ret;
+            draw(vcp);
+        }
 
         //extra stuff and hitboxes
         ret = renderExtraParts(ret, matrices, vcp, light, false, applyHiddenTransforms, renderOnly);
-        draw(vcp);
+        if (batchingFix && prevRet != ret)
+            draw(vcp);
 
         return ret;
     }
