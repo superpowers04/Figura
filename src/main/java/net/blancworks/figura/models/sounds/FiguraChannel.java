@@ -83,7 +83,7 @@ public class FiguraChannel extends Channel {
         return future;
     }
 
-    public void playCustomSound(CustomScript script, String soundName, Vec3d pos, float pitch, float volume) {
+    public void playCustomSound(CustomScript script, String soundName, Vec3d pos, float volume, float pitch) {
         if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0 || script.soundSpawnCount < 1 || pitch <= 0f) return;
         script.soundSpawnCount--;
 
@@ -95,8 +95,8 @@ public class FiguraChannel extends Channel {
             if (source != null) {
                 source.setBuffer(sound.sound());
                 source.setPosition(pos);
-                source.setPitch(pitch);
                 source.setVolume(volume);
+                source.setPitch(pitch);
                 source.play();
             }
         }));
