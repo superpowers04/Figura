@@ -1,4 +1,4 @@
-package net.blancworks.figura.models.sounds;
+package net.blancworks.figura.lua.api.sound;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.mixin.SoundManagerAccessorMixin;

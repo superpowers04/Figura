@@ -1,7 +1,7 @@
 package net.blancworks.figura;
 
 import com.mojang.authlib.GameProfile;
-import net.blancworks.figura.models.sounds.FiguraSoundManager;
+import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;

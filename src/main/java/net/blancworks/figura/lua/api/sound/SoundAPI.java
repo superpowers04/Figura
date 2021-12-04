@@ -6,8 +6,6 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.mixin.SoundManagerAccessorMixin;
 import net.blancworks.figura.mixin.SoundSystemAccessorMixin;
-import net.blancworks.figura.models.sounds.FiguraChannel;
-import net.blancworks.figura.models.sounds.FiguraSoundManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.sound.Channel;

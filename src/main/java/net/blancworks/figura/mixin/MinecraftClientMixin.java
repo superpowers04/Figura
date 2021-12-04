@@ -5,7 +5,7 @@ import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
-import net.blancworks.figura.models.sounds.FiguraSoundManager;
+import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;

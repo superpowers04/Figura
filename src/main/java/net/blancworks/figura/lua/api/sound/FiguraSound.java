@@ -1,4 +1,4 @@
-package net.blancworks.figura.models.sounds;
+package net.blancworks.figura.lua.api.sound;
 
 import net.minecraft.client.sound.StaticSound;
 import net.minecraft.nbt.ByteArrayTag;

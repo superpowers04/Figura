@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.models.tasks.RenderTask;
 import net.blancworks.figura.utils.MathUtils;
@@ -105,33 +106,41 @@ public class CustomModelPart {
 
         //main texture
         Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
-        ret = renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vector3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction, false, applyHiddenTransforms, renderOnly);
+        ret = renderTextures(ret, matrices, transformStack, vcp, light, overlay, 0, 0, new Vector3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction, false, applyHiddenTransforms, renderOnly);
 
         //extra textures
         for (FiguraTexture figuraTexture : FiguraMod.currentData.extraTextures) {
             Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
 
             if (renderLayerGetter != null) {
-                renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vector3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
+                renderTextures(ret, matrices, transformStack, vcp, light, overlay, 0, 0, new Vector3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
             }
         }
 
-        draw(vcp);
+        boolean batchingFix = (boolean) Config.ENTITY_BATCHING_FIX.value;
+        int prevRet = ret;
+
+        if (batchingFix)
+            draw(vcp);
 
         //shaders
         ret = renderShaders(ret, matrices, vcp, light, overlay, 0, 0, new Vector3f(1f, 1f, 1f), alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
-        draw(vcp);
+        if (batchingFix && prevRet != ret) {
+            prevRet = ret;
+            draw(vcp);
+        }
 
         //extra stuff and hitboxes
         ret = renderExtraParts(ret, matrices, vcp, light, false, applyHiddenTransforms, renderOnly);
-        draw(vcp);
+        if (batchingFix && prevRet != ret)
+            draw(vcp);
 
         return ret;
     }
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vector3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction, boolean isExtraTex, boolean applyHiddenTransforms, ParentType renderOnly) {
+    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vector3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction, boolean isExtraTex, boolean applyHiddenTransforms, ParentType renderOnly) {
         //do not render invisible parts
         if (!this.visible || (isExtraTex && !this.extraTex))
             return leftToRender;
@@ -188,7 +197,7 @@ public class CustomModelPart {
                 continue;
 
             //render part
-            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction, isExtraTex, applyHiddenTransforms, renderOnly);
+            leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, light, overlay, u, v, color, alpha, canRender, texture, layerFunction, isExtraTex, applyHiddenTransforms, renderOnly);
         }
 
         matrices.pop();
