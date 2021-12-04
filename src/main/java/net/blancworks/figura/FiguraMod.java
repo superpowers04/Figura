@@ -7,6 +7,7 @@ import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.config.ConfigManager.ConfigKeyBind;
 import net.blancworks.figura.gui.FiguraToast;
 import net.blancworks.figura.lua.FiguraLuaManager;
+import net.blancworks.figura.lua.api.FiguraAPI;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
@@ -23,6 +24,7 @@ import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.fabric.impl.client.keybinding.KeyBindingRegistryImpl;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.SemanticVersion;
+import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.OverlayTexture;
@@ -53,6 +55,7 @@ import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -101,6 +104,9 @@ public class FiguraMod implements ClientModInitializer {
     public static VertexConsumerProvider.Immediate immediate;
     public static float deltaTime;
 
+    //script entry points
+    public static final List<FiguraAPI> apis = new ArrayList<>();
+
     //Methods
 
     //Set current player.
@@ -130,6 +136,17 @@ public class FiguraMod implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
+        //load entrypoints
+        FabricLoader.getInstance().getEntrypointContainers("figura", FiguraAPI.class).forEach(entrypoint -> {
+            ModMetadata metadata = entrypoint.getProvider().getMetadata();
+            String modId = metadata.getId();
+            try {
+                apis.add(entrypoint.getEntrypoint());
+            } catch (Exception e) {
+                LOGGER.error("Failed to load entrypoint of mod {}", modId, e);
+            }
+        });
+
         //initialise managers
         ConfigManager.initialize();
         FiguraLuaManager.initialize();
