@@ -1,4 +1,4 @@
-package net.blancworks.figura.models.sounds;
+package net.blancworks.figura.lua.api.sound;
 
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.SourceManagerAccessor;
@@ -11,10 +11,13 @@ import net.minecraft.client.sound.Channel;
 import net.minecraft.client.sound.SoundEngine;
 import net.minecraft.client.sound.Source;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.luaj.vm2.LuaError;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class FiguraChannel extends Channel {
@@ -84,7 +87,7 @@ public class FiguraChannel extends Channel {
     }
 
     public void playCustomSound(CustomScript script, String soundName, Vec3d pos, float volume, float pitch) {
-        if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0 || script.soundSpawnCount < 1 || pitch <= 0f) return;
+        if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0 || script.soundSpawnCount < 1 || pitch <= 0f || volume <= 0f) return;
         script.soundSpawnCount--;
 
         FiguraSound sound = script.customSounds.get(soundName);
@@ -93,9 +96,10 @@ public class FiguraChannel extends Channel {
 
         createSource(script.playerData, soundName, SoundEngine.RunMode.STATIC).thenAccept(sourceManager -> sourceManager.run(source -> {
             if (source != null) {
+                source.setAttenuation(Math.max(volume * 16f, 16f));
                 source.setBuffer(sound.sound());
                 source.setPosition(pos);
-                source.setVolume(volume);
+                source.setVolume(MathHelper.clamp(volume * MinecraftClient.getInstance().options.getSoundVolume(SoundCategory.PLAYERS), 0f, 1f));
                 source.setPitch(pitch);
                 source.play();
             }

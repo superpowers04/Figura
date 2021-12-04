@@ -91,7 +91,8 @@ public final class ConfigManager {
         }},
         RENDER_OWN_NAMEPLATE(false),
         MODEL_FOLDER_PATH("", InputType.FOLDER_PATH),
-        PANIC_BUTTON(GLFW.GLFW_KEY_UNKNOWN, FiguraMod.PANIC_BUTTON);
+        PANIC_BUTTON(GLFW.GLFW_KEY_UNKNOWN, FiguraMod.PANIC_BUTTON),
+        ENTITY_BATCHING_FIX(false);
 
         //config data
         public Object value;

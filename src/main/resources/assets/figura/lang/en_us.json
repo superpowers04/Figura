@@ -157,6 +157,9 @@
   "figura.config.panic_button": "Toggle Avatar Rendering",
   "figura.config.panic_button.tooltip": "This keybind toggles the avatar rendering of everyone! Beware!",
 
+  "figura.config.entity_batching_fix": "Entity Batching Fix",
+  "figura.config.entity_batching_fix.tooltip": "Fixes the entity batching optimization present on iris and other mods",
+
 
   "figura.toast.upload.success.title": "Avatar Uploaded!",
   "figura.toast.upload.error.title": "Avatar Upload Failed!",

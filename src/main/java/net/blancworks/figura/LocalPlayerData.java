@@ -10,7 +10,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.blancworks.figura.models.sounds.FiguraSoundManager;
+import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
