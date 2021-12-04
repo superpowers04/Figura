@@ -1,5 +1,6 @@
 package net.blancworks.figura.lua;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
@@ -90,6 +91,8 @@ public class FiguraLuaManager {
         apiSuppliers.put(PingsAPI.getID(), PingsAPI::getForScript);
         apiSuppliers.put(BlockStateAPI.getID(), BlockStateAPI::getForScript);
         apiSuppliers.put(FirstPersonModelAPI.getID(), FirstPersonModelAPI::getForScript);
+
+        FiguraMod.apis.forEach(api -> apiSuppliers.put(api.getID(), api::getForScript));
     }
 
     public static void registerEvents() {
