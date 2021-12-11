@@ -124,6 +124,9 @@
   "figura.config.release_channel.2": "Full-Release",
   "figura.config.release_channel.3": "No Updates",
 
+  "figura.config.custom_player_heads": "Custom Player Heads",
+  "figura.config.custom_player_heads.tooltip": "Toggles avatar rendering on player heads and in tablist",
+
   "figura.config.action_wheel_button": "Action Wheel key",
   "figura.config.action_wheel_button.tooltip": "Action Wheel Keybind",
 

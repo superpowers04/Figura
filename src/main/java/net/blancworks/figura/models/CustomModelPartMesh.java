@@ -97,12 +97,6 @@ public class CustomModelPartMesh extends CustomModelPart {
     }
 
     @Override
-    public void writeNbt(NbtCompound partNbt) {
-        super.writeNbt(partNbt);
-        partNbt.put("props", meshProperties.copy());
-    }
-
-    @Override
     public void readNbt(NbtCompound partNbt) {
         super.readNbt(partNbt);
         this.meshProperties = partNbt.getCompound("props");
@@ -111,14 +105,6 @@ public class CustomModelPartMesh extends CustomModelPart {
     @Override
     public PartType getPartType() {
         return PartType.MESH;
-    }
-
-    @Override
-    public void applyTrueOffset(Vec3f offset) {
-        super.applyTrueOffset(offset);
-
-        pivot.add(offset);
-        rebuild(this.texSize);
     }
 
     private static boolean testOppositeSides(Vec3f linePoint1, Vec3f linePoint2, Vec3f point1, Vec3f point2) {

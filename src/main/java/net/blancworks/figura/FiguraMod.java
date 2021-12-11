@@ -1,15 +1,11 @@
 package net.blancworks.figura;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.config.ConfigManager.ConfigKeyBind;
 import net.blancworks.figura.gui.FiguraToast;
 import net.blancworks.figura.lua.FiguraLuaManager;
 import net.blancworks.figura.lua.api.FiguraAPI;
-import net.blancworks.figura.models.CustomModel;
-import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.network.IFiguraNetwork;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
@@ -61,9 +57,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 
 public class FiguraMod implements ClientModInitializer {
-
-    public static final Gson GSON = new GsonBuilder().registerTypeAdapter(CustomModel.class, new BlockbenchModelDeserializer()).setPrettyPrinting().create();
-
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static final Identifier FIGURA_FONT = new Identifier("figura", "default");

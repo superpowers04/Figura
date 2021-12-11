@@ -291,33 +291,6 @@ public class CustomModelPartCuboid extends CustomModelPart {
         this.vertexCount = vertexCount;
     }
 
-    @Override
-    public void applyTrueOffset(Vec3f offset) {
-        super.applyTrueOffset(offset);
-
-        Vec3f from = vec3fFromNbt((NbtList) cuboidProperties.get("f"));
-        Vec3f to = vec3fFromNbt((NbtList) cuboidProperties.get("t"));
-
-        from.add(offset);
-        to.add(offset);
-
-        cuboidProperties.put("f", new NbtList() {{
-            add(NbtFloat.of(from.getX()));
-            add(NbtFloat.of(from.getY()));
-            add(NbtFloat.of(from.getZ()));
-        }});
-
-        cuboidProperties.put("t", new NbtList() {{
-            add(NbtFloat.of(to.getX()));
-            add(NbtFloat.of(to.getY()));
-            add(NbtFloat.of(to.getZ()));
-        }});
-        
-        pivot.add(offset);
-        
-        rebuild(this.texSize);
-    }
-
     public void generateFace(Vec3f a, Vec3f b, Vec3f c, Vec3f d, List<Vec2f> uv, float texWidth, float texHeight, FloatList vertexData) {
         Vec3f nA = b.copy();
         nA.subtract(a);
@@ -336,12 +309,6 @@ public class CustomModelPartCuboid extends CustomModelPart {
     public void readNbt(NbtCompound partNbt) {
         super.readNbt(partNbt);
         this.cuboidProperties = (NbtCompound) partNbt.get("props");
-    }
-
-    @Override
-    public void writeNbt(NbtCompound partNbt) {
-        super.writeNbt(partNbt);
-        partNbt.put("props", this.cuboidProperties);
     }
 
     @Override
@@ -365,18 +332,5 @@ public class CustomModelPartCuboid extends CustomModelPart {
         }
 
         return cornerUVs;
-    }
-
-    public static Vec2f rotateVec2f(Vec2f v, float degrees) {
-        float sin = (float) Math.sin(Math.toRadians(degrees));
-        float cos = (float) Math.cos(Math.toRadians(degrees));
-
-        float tx = v.x;
-        float ty = v.y;
-        v = new Vec2f(
-                (cos * tx) - (sin * ty),
-                (sin * tx) + (cos * ty)
-        );
-        return v;
     }
 }

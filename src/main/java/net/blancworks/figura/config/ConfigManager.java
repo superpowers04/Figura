@@ -66,6 +66,7 @@ public final class ConfigManager {
                 FiguraMod.getLatestModVersion();
             }
         },
+        CUSTOM_PLAYER_HEADS(true),
 
         ActionWheel,
 
@@ -92,7 +93,7 @@ public final class ConfigManager {
         RENDER_OWN_NAMEPLATE(false),
         MODEL_FOLDER_PATH("", InputType.FOLDER_PATH),
         PANIC_BUTTON(GLFW.GLFW_KEY_UNKNOWN, FiguraMod.PANIC_BUTTON),
-        ENTITY_BATCHING_FIX(false);
+        ENTITY_BATCHING_FIX(true);
 
         //config data
         public Object value;

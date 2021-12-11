@@ -170,11 +170,7 @@ public class PlayerData {
             if (modelNbt != null) {
                 FiguraMod.doTask(() -> {
                     try {
-                        model = new CustomModel();
-                        model.readNbt(modelNbt);
-                        model.modelNbt = modelNbt;
-                        model.owner = this;
-                        model.isDone = true;
+                        model = new CustomModel(modelNbt, this);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -204,10 +200,10 @@ public class PlayerData {
                 NbtCompound scriptNbt = (NbtCompound) nbt.get("script");
 
                 if (scriptNbt != null) FiguraMod.doTask(() -> {
-                    script = new CustomScript();
-                    script.fromNBT(this, scriptNbt);
-
                     try {
+                        script = new CustomScript();
+                        script.fromNBT(this, scriptNbt);
+
                         if (nbt.contains("sounds")) {
                             readCustomSoundsNBT(nbt.getCompound("sounds"));
                         }

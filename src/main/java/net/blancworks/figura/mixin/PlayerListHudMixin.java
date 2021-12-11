@@ -100,12 +100,12 @@ public class PlayerListHudMixin {
     private void render(MatrixStack matrices, int x, int y, int width, int height, float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
         PlayerData data = playerEntity == null ? null : PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
 
-        //draw figura head
-        if (data == null || data.model == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0 || !(boolean) Config.PLAYERLIST_MODIFICATIONS.value) {
+        if (!(boolean) Config.CUSTOM_PLAYER_HEADS.value || data == null || data.model == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0) {
             DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
             return;
         }
 
+        //draw figura head
         FiguraMod.currentData = data;
         FiguraMod.currentPlayer = (AbstractClientPlayerEntity) playerEntity;
 
