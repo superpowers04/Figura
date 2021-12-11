@@ -1,12 +1,12 @@
 package net.blancworks.figura.lua.api.model;
 
-import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
+import net.blancworks.figura.models.CustomModelPartGroup;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.minecraft.util.Identifier;
@@ -28,7 +28,7 @@ public class CustomModelAPI {
         return new ScriptLocalAPITable(script, new LuaTable() {{
             if (script.playerData.model != null) {
                 for (CustomModelPart part : script.playerData.model.allParts) {
-                    set(part.name, new CustomModelPartTable(part, script.playerData));
+                    set(part.name, new CustomModelPartTable(part));
                 }
             }
         }});
@@ -36,12 +36,10 @@ public class CustomModelAPI {
 
     private static class CustomModelPartTable extends ReadOnlyLuaTable {
         CustomModelPart targetPart;
-        PlayerData partOwner;
 
-        public CustomModelPartTable(CustomModelPart part, PlayerData owner) {
+        public CustomModelPartTable(CustomModelPart part) {
             super();
             targetPart = part;
-            partOwner = owner;
             super.setTable(getTable());
         }
 
@@ -49,10 +47,12 @@ public class CustomModelAPI {
             LuaTable ret = new LuaTable();
 
             int index = 1;
-            for (CustomModelPart child : targetPart.children) {
-                CustomModelPartTable tbl = new CustomModelPartTable(child, partOwner);
-                ret.set(child.name, tbl);
-                ret.set(index++, tbl);
+            if (targetPart instanceof CustomModelPartGroup group) {
+                for (CustomModelPart child : group.children) {
+                    CustomModelPartTable tbl = new CustomModelPartTable(child);
+                    ret.set(child.name, tbl);
+                    ret.set(index++, tbl);
+                }
             }
 
             ret.set("getPos", new ZeroArgFunction() {
@@ -237,7 +237,7 @@ public class CustomModelAPI {
             ret.set("setParentType", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    CustomModel model = partOwner.model;
+                    CustomModel model = targetPart.model;
                     
                     if (targetPart.isSpecial())
                         model.removeSpecialPart(targetPart);
@@ -308,13 +308,13 @@ public class CustomModelAPI {
             ret.set("setRenderLayer", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    if (!partOwner.canRenderCustomLayers())
+                    if (!targetPart.model.owner.canRenderCustomLayers())
                         return NIL;
 
                     FiguraRenderLayer layer = null;
 
-                    if (!arg1.isnil() && partOwner.getVCP() instanceof FiguraVertexConsumerProvider)
-                        layer = ((FiguraVertexConsumerProvider)partOwner.getVCP()).getLayer(arg1.checkjstring());
+                    if (!arg1.isnil() && targetPart.model.owner.getVCP() instanceof FiguraVertexConsumerProvider)
+                        layer = ((FiguraVertexConsumerProvider)targetPart.model.owner.getVCP()).getLayer(arg1.checkjstring());
 
                     targetPart.customLayer = layer;
                     return NIL;

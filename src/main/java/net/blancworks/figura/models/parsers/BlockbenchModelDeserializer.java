@@ -1,426 +1,454 @@
 package net.blancworks.figura.models.parsers;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.gson.*;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import net.blancworks.figura.models.CustomModel;
-import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.CustomModelPartCuboid;
-import net.blancworks.figura.models.CustomModelPartMesh;
+import net.blancworks.figura.models.CustomModelPart.ParentType;
 import net.minecraft.nbt.*;
-import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.math.Vector4f;
 
-import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
-public class BlockbenchModelDeserializer implements JsonDeserializer<CustomModel> {
+public class BlockbenchModelDeserializer {
 
-    public static boolean overrideAsPlayerModel = false;
+    private static final Map<String, PartData> NAME_PARENT_TYPE_TAGS = new HashMap<>() {{
+            put("HEAD", new PartData(ParentType.Head));
+            put("TORSO", new PartData(ParentType.Torso));
+            put("LEFT_ARM", new PartData(ParentType.LeftArm));
+            put("RIGHT_ARM", new PartData(ParentType.RightArm));
+            put("LEFT_LEG", new PartData(ParentType.LeftLeg));
+            put("RIGHT_LEG", new PartData(ParentType.RightLeg));
+            put("NO_PARENT", new PartData(ParentType.WORLD));
+            put("LEFT_HELD_ITEM", new PartData(ParentType.LeftItemOrigin));
+            put("RIGHT_HELD_ITEM", new PartData(ParentType.RightItemOrigin));
+            put("LEFT_ELYTRA_ORIGIN", new PartData(ParentType.LeftElytraOrigin));
+            put("RIGHT_ELYTRA_ORIGIN", new PartData(ParentType.RightElytraOrigin));
+            put("LEFT_PARROT", new PartData(ParentType.LeftParrotOrigin));
+            put("RIGHT_PARROT", new PartData(ParentType.RightParrotOrigin));
+            put("LEFT_ELYTRA", new PartData(ParentType.LeftElytra));
+            put("RIGHT_ELYTRA", new PartData(ParentType.RightElytra));
+            put("LEFT_SPYGLASS", new PartData(ParentType.LeftSpyglass));
+            put("RIGHT_SPYGLASS", new PartData(ParentType.RightSpyglass));
+            put("CAMERA", new PartData(ParentType.Camera));
+            put("SKULL", new PartData(ParentType.Skull));
+            put("HUD", new PartData(ParentType.Hud));
+    }};
+    private static final Map<String, PartData> NAME_MIMIC_TYPE_TAGS = new HashMap<>() {{
+            put("MIMIC_HEAD", new PartData(ParentType.Head, true));
+            put("MIMIC_TORSO", new PartData(ParentType.Torso, true));
+            put("MIMIC_LEFT_ARM", new PartData(ParentType.LeftArm, true));
+            put("MIMIC_RIGHT_ARM", new PartData(ParentType.RightArm, true));
+            put("MIMIC_LEFT_LEG", new PartData(ParentType.LeftLeg, true));
+            put("MIMIC_RIGHT_LEG", new PartData(ParentType.RightLeg, true));
+    }};
+    private static final Map<String, PartData> PLAYER_SKIN_REMAPS = new HashMap<>() {{
+        put("Head", new PartData(ParentType.Head, new Vec3f(0, -24, 0)));
+        put("Body", new PartData(ParentType.Torso, new Vec3f(0, -24, 0)));
+        put("RightArm", new PartData(ParentType.RightArm, new Vec3f(-5, -22, 0)));
+        put("LeftArm", new PartData(ParentType.LeftArm, new Vec3f(5, -22, 0)));
+        put("RightLeg", new PartData(ParentType.RightLeg, new Vec3f(-2, -12, 0)));
+        put("LeftLeg", new PartData(ParentType.LeftLeg, new Vec3f(2, -12, 0)));
+    }};
 
-    private static final Map<String, CustomModelPart.ParentType> NAME_PARENT_TYPE_TAGS =
-            new ImmutableMap.Builder<String, CustomModelPart.ParentType>()
-                    .put("HEAD", CustomModelPart.ParentType.Head)
-                    .put("TORSO", CustomModelPart.ParentType.Torso)
-                    .put("LEFT_ARM", CustomModelPart.ParentType.LeftArm)
-                    .put("RIGHT_ARM", CustomModelPart.ParentType.RightArm)
-                    .put("LEFT_LEG", CustomModelPart.ParentType.LeftLeg)
-                    .put("RIGHT_LEG", CustomModelPart.ParentType.RightLeg)
-                    .put("NO_PARENT", CustomModelPart.ParentType.WORLD)
-                    .put("LEFT_HELD_ITEM", CustomModelPart.ParentType.LeftItemOrigin)
-                    .put("RIGHT_HELD_ITEM", CustomModelPart.ParentType.RightItemOrigin)
-                    .put("LEFT_ELYTRA_ORIGIN", CustomModelPart.ParentType.LeftElytraOrigin)
-                    .put("RIGHT_ELYTRA_ORIGIN", CustomModelPart.ParentType.RightElytraOrigin)
-                    .put("LEFT_PARROT", CustomModelPart.ParentType.LeftParrotOrigin)
-                    .put("RIGHT_PARROT", CustomModelPart.ParentType.RightParrotOrigin)
-                    .put("LEFT_ELYTRA", CustomModelPart.ParentType.LeftElytra)
-                    .put("RIGHT_ELYTRA", CustomModelPart.ParentType.RightElytra)
-                    .put("LEFT_SPYGLASS", CustomModelPart.ParentType.LeftSpyglass)
-                    .put("RIGHT_SPYGLASS", CustomModelPart.ParentType.RightSpyglass)
-                    .put("CAMERA", CustomModelPart.ParentType.Camera)
-                    .put("SKULL", CustomModelPart.ParentType.Skull)
-                    .put("HUD", CustomModelPart.ParentType.Hud)
-                    .build();
+    private static class PartData {
+        public static final PartData DEFAULT_PARENT = new PartData(ParentType.Model);
+        public final String parentType;
 
-    private static final Map<String, CustomModelPart.ParentType> NAME_MIMIC_TYPE_TAGS =
-            new ImmutableMap.Builder<String, CustomModelPart.ParentType>()
-                    .put("MIMIC_HEAD", CustomModelPart.ParentType.Head)
-                    .put("MIMIC_TORSO", CustomModelPart.ParentType.Torso)
-                    .put("MIMIC_LEFT_ARM", CustomModelPart.ParentType.LeftArm)
-                    .put("MIMIC_RIGHT_ARM", CustomModelPart.ParentType.RightArm)
-                    .put("MIMIC_LEFT_LEG", CustomModelPart.ParentType.LeftLeg)
-                    .put("MIMIC_RIGHT_LEG", CustomModelPart.ParentType.RightLeg)
-                    .build();
-
-    static class PlayerSkinRemap {
-        public CustomModelPart.ParentType parentType;
         public Vec3f offset;
+        public boolean mimic = false;
 
-        public PlayerSkinRemap(CustomModelPart.ParentType parentType, Vec3f offset) {
-            this.parentType = parentType;
+        public PartData(ParentType parentType) {
+            this.parentType = parentType.name();
+        }
+
+        public PartData(ParentType parentType, Vec3f offset) {
+            this(parentType);
             this.offset = offset;
+        }
+
+        public PartData(ParentType parentType, boolean mimic) {
+            this(parentType);
+            this.mimic = mimic;
         }
     }
 
-    private static final Map<String, PlayerSkinRemap> PLAYER_SKIN_REMAPS =
-            new ImmutableMap.Builder<String, PlayerSkinRemap>()
-                    .put("Head", new PlayerSkinRemap(CustomModelPart.ParentType.Head, new Vec3f(0, -24, 0)))
-                    .put("Body", new PlayerSkinRemap(CustomModelPart.ParentType.Torso, new Vec3f(0, -24, 0)))
-                    .put("RightArm", new PlayerSkinRemap(CustomModelPart.ParentType.RightArm, new Vec3f(-5, -22, 0)))
-                    .put("LeftArm", new PlayerSkinRemap(CustomModelPart.ParentType.LeftArm, new Vec3f(5, -22, 0)))
-                    .put("RightLeg", new PlayerSkinRemap(CustomModelPart.ParentType.RightLeg, new Vec3f(-2, -12, 0)))
-                    .put("LeftLeg", new PlayerSkinRemap(CustomModelPart.ParentType.LeftLeg, new Vec3f(2, -12, 0)))
-                    .build();
+    public static NbtCompound deserialize(String json, boolean isPlayerModel) throws JsonParseException {
+        NbtCompound retModel = new NbtCompound();
 
-    @Override
-    public CustomModel deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
-        CustomModel retModel = new CustomModel();
-
-        JsonObject root = json.getAsJsonObject();
+        JsonObject root = JsonParser.parseString(json).getAsJsonObject();
         JsonObject meta = root.get("meta").getAsJsonObject();
         JsonObject resolution = root.get("resolution").getAsJsonObject();
         JsonArray elements = root.get("elements").getAsJsonArray();
         JsonArray outliner = root.get("outliner").getAsJsonArray();
 
-        if (meta.has("model_format") && meta.get("model_format").getAsString().equals("skin"))
-            overrideAsPlayerModel = true;
+        //player_model format
+        isPlayerModel = isPlayerModel || (meta.has("model_format") && meta.get("model_format").getAsString().equals("skin"));
 
-        retModel.defaultTextureSize = new Vec2f(resolution.get("width").getAsFloat(), resolution.get("height").getAsFloat());
+        //animations
+        if (root.has("animations")) {
+            JsonArray animations = root.get("animations").getAsJsonArray();
 
-        Map<UUID, JsonObject> elementsByUuid = sortElements(elements);
-        Map<UUID, CustomModelPart> parsedParts = new Object2ObjectOpenHashMap<>();
-
-        //Parse out custom model parts from json objects.
-        for (Map.Entry<UUID, JsonObject> entry : elementsByUuid.entrySet()) {
-            UUID id = entry.getKey();
-            JsonObject obj = entry.getValue();
-
-            CustomModelPart part = parseElement(obj, retModel);
-            if (part != null)
-                parsedParts.put(id, part);
+            //parse animations
+            NbtList animationsNbt = parseAnimations(animations);
+            retModel.put("anim", animationsNbt);
         }
 
-        for (JsonElement element : outliner) {
-            if (element.isJsonObject()) {
-                //If the element is a json object, it's a group, so parse the group.
-                buildGroup(element.getAsJsonObject(), retModel, parsedParts, null, new Vec3f());
-            } else {
-                //If the element is a string, it's an element, so just add it to the children.
-                String s = element.getAsString();
+        //texture
+        retModel.put("uv", new NbtList() {{
+            add(NbtFloat.of(resolution.get("width").getAsFloat()));
+            add(NbtFloat.of(resolution.get("height").getAsFloat()));
+        }});
 
-                if (s != null) {
-                    CustomModelPart part = parsedParts.get(UUID.fromString(s));
-                    if (part != null)
-                        retModel.allParts.add(part);
-                }
-            }
-        }
+        //sort parts
+        Map<String, JsonObject> elementMap = sortElements(elements);
 
-        NbtList partList = new NbtList();
-        retModel.allParts.forEach(part -> {
-            NbtCompound partNbt = new NbtCompound();
-            part.writeNbt(partNbt);
-            partList.add(partNbt);
-        });
-        retModel.modelNbt.put("parts", partList);
+        //parse outliner, which also parse the parts and finishes the model loading
+        retModel.put("parts", buildElements(outliner, elementMap, isPlayerModel, new Vec3f(0f, 0f, 0f)));
 
-        NbtList uv = new NbtList();
-        uv.add(NbtFloat.of(retModel.defaultTextureSize.x));
-        uv.add(NbtFloat.of(retModel.defaultTextureSize.y));
-        retModel.modelNbt.put("uv", uv);
-
-        //Reset this value.
-        overrideAsPlayerModel = false;
-        retModel.sortAllParts();
         return retModel;
     }
 
-    //Builds out a group from a JsonObject that specifies the group in the outline.
-    public void buildGroup(JsonObject group, CustomModel target, Map<UUID, CustomModelPart> allParts, CustomModelPart parent, Vec3f playerModelOffset) {
-        if (group.has("visibility") && !group.get("visibility").getAsBoolean()) return;
+    public static Map<String, JsonObject> sortElements(JsonArray elementContainer) {
+        Map<String, JsonObject> objects = new HashMap<>();
 
-        CustomModelPart groupPart = new CustomModelPart();
-
-        if (group.has("name")) {
-            groupPart.name = group.get("name").getAsString();
-            groupPart.parentType = CustomModelPart.ParentType.Model;
-
-            if (!group.has("ignoreKeyword") || !group.get("ignoreKeyword").getAsBoolean()) {
-                //Find parent type.
-                for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_MIMIC_TYPE_TAGS.entrySet()) {
-                    if (groupPart.name.contains(entry.getKey())) {
-                        groupPart.isMimicMode = true;
-                        groupPart.parentType = entry.getValue();
-                        break;
-                    }
-                }
-
-                //Only set group parent if not mimicking. We can't mimic and be parented.
-                if (!groupPart.isMimicMode) {
-                    //Check for parent parts
-                    for (Map.Entry<String, CustomModelPart.ParentType> entry : NAME_PARENT_TYPE_TAGS.entrySet()) {
-                        if (groupPart.name.contains(entry.getKey())) {
-                            groupPart.parentType = entry.getValue();
-                            break;
-                        }
-                    }
-                    //Check for player model parts.
-                    if (overrideAsPlayerModel) {
-                        for (Map.Entry<String, PlayerSkinRemap> entry : PLAYER_SKIN_REMAPS.entrySet()) {
-                            if (groupPart.name.contains(entry.getKey())) {
-                                groupPart.parentType = entry.getValue().parentType;
-                                playerModelOffset = entry.getValue().offset.copy();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (group.has("origin")) {
-            Vec3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
-            corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
-            groupPart.pivot = playerModelOffset.copy();
-            groupPart.pivot.add(corrected);
-        }
-        if (group.has("rotation")) groupPart.rot = v3fFromJArray(group.get("rotation").getAsJsonArray());
-
-        if (group.has("children")) {
-            JsonArray children = group.get("children").getAsJsonArray();
-            for (JsonElement child : children) {
-                if (child.isJsonObject()) {
-                    //If the element is a json object, it's a group, so parse the group.
-                    buildGroup(child.getAsJsonObject(), target, allParts, groupPart, playerModelOffset.copy());
-                } else {
-                    //If the element is a string, it's an element, so just add it to the children.
-                    String s = child.getAsString();
-
-                    if (s != null) {
-                        CustomModelPart part = allParts.get(UUID.fromString(s));
-                        if (part != null) {
-                            groupPart.children.add(part);
-                            part.applyTrueOffset(playerModelOffset.copy());
-                        }
-                    }
-                }
-            }
-        }
-
-        //Add part.
-        if (parent == null)
-            target.allParts.add(groupPart);
-        else {
-            parent.children.add(groupPart);
-        }
-    }
-
-    public CustomModelPart parseElement(JsonObject elementObject, CustomModel target) {
-        if (elementObject.has("type") && elementObject.get("type").getAsString().equals("null_object")) {
-            return null;
-        }
-
-        if (elementObject.has("visibility") && !elementObject.get("visibility").getAsBoolean()) return null;
-
-        boolean isMeshPart = elementObject.has("type") && elementObject.get("type").getAsString().equals("mesh");
-        CustomModelPart elementPart = isMeshPart ? new CustomModelPartMesh() : new CustomModelPartCuboid();
-
-        if (elementObject.has("name")) {
-            elementPart.name = elementObject.get("name").getAsString();
-        }
-
-        if (elementObject.has("origin")) {
-            Vec3f corrected = v3fFromJArray(elementObject.get("origin").getAsJsonArray());
-            corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
-            elementPart.pivot = corrected;
-        }
-
-        if (elementObject.has("rotation")) {
-            Vec3f corrected = v3fFromJArray(elementObject.get("rotation").getAsJsonArray());
-            corrected.set(corrected.getX(), corrected.getY(), corrected.getZ());
-
-            elementPart.rot = corrected;
-        }
-
-        elementPart.texSize = target.defaultTextureSize;
-        JsonObject facesObject = elementObject.get("faces").getAsJsonObject();
-
-        if (elementPart instanceof CustomModelPartMesh meshPart) {
-            JsonObject verticesObject = elementObject.get("vertices").getAsJsonObject();
-            NbtCompound meshPropertiesTag = new NbtCompound();
-
-            //uhnm, texture size
-            meshPropertiesTag.put("tw", NbtFloat.of(target.defaultTextureSize.x));
-            meshPropertiesTag.put("th", NbtFloat.of(target.defaultTextureSize.y));
-
-            /*
-                Create a list of named vertices
-                List entry format: String name, float x, float y, float z
-             */
-            NbtCompound verticesList = new NbtCompound();
-            HashMap<String, String> verticesMap = new HashMap<>();
-
-            long i = 0;
-            for (Map.Entry<String, JsonElement> entry : verticesObject.entrySet()) {
-                Vec3f pos = this.v3fFromJArray(entry.getValue().getAsJsonArray());
-                NbtList vertexPos = new NbtList();
-                vertexPos.add(NbtFloat.of(-pos.getX()));
-                vertexPos.add(NbtFloat.of(-pos.getY()));
-                vertexPos.add(NbtFloat.of(pos.getZ()));
-
-                String key = Long.toHexString(i);
-                verticesList.put(key, vertexPos);
-                verticesMap.put(entry.getKey(), key);
-                i++;
-            }
-
-            meshPropertiesTag.put("vertices", verticesList);
-
-            //create data for each face of the mesh
-            NbtList meshFacesList = new NbtList();
-
-            facesObject.entrySet().forEach(entry -> {
-                JsonObject faceObject = entry.getValue().getAsJsonObject();
-                NbtList curFaceTag = new NbtList();
-
-                //build vertex -> uv map
-                NbtCompound uvs = new NbtCompound();
-                faceObject.getAsJsonObject("uv").entrySet().forEach(uvEntry -> {
-                    String vertexName = verticesMap.get(uvEntry.getKey());
-                    JsonArray uvEntries = uvEntry.getValue().getAsJsonArray();
-
-                    NbtList uvList = new NbtList();
-                    uvList.add(NbtFloat.of(uvEntries.get(0).getAsFloat()));
-                    uvList.add(NbtFloat.of(uvEntries.get(1).getAsFloat()));
-                    uvs.put(vertexName, uvList);
-                });
-
-                //read vertex data then pack id and uv and add to this face nbt
-                faceObject.getAsJsonArray("vertices").forEach(element -> {
-                    NbtCompound vertex = new NbtCompound();
-                    String key = verticesMap.get(element.getAsString());
-
-                    vertex.put("id", NbtString.of(key));
-                    vertex.put("uv", uvs.get(key));
-
-                    curFaceTag.add(vertex);
-                });
-
-                //add this face to the faces list
-                meshFacesList.add(curFaceTag);
-            });
-            meshPropertiesTag.put("faces", meshFacesList);
-
-            meshPart.meshProperties = meshPropertiesTag;
-
-        } else {
-            CustomModelPartCuboid cuboidPart = (CustomModelPartCuboid) elementPart;
-            NbtCompound cuboidPropertiesTag = new NbtCompound();
-
-            if (elementObject.has("inflate"))
-                cuboidPropertiesTag.put("inf", NbtFloat.of(elementObject.get("inflate").getAsFloat()));
-
-            Vec3f from = v3fFromJArray(elementObject.get("from").getAsJsonArray());
-            Vec3f to = v3fFromJArray(elementObject.get("to").getAsJsonArray());
-
-            cuboidPropertiesTag.put("f", new NbtList() {{
-                add(NbtFloat.of(from.getX()));
-                add(NbtFloat.of(from.getY()));
-                add(NbtFloat.of(from.getZ()));
-            }});
-
-            cuboidPropertiesTag.put("t", new NbtList() {{
-                add(NbtFloat.of(to.getX()));
-                add(NbtFloat.of(to.getY()));
-                add(NbtFloat.of(to.getZ()));
-            }});
-
-            cuboidPropertiesTag.put("n", getNbtElementFromJsonElement(facesObject.get("north")));
-            cuboidPropertiesTag.put("s", getNbtElementFromJsonElement(facesObject.get("south")));
-            cuboidPropertiesTag.put("e", getNbtElementFromJsonElement(facesObject.get("east")));
-            cuboidPropertiesTag.put("w", getNbtElementFromJsonElement(facesObject.get("west")));
-            cuboidPropertiesTag.put("u", getNbtElementFromJsonElement(facesObject.get("up")));
-            cuboidPropertiesTag.put("d", getNbtElementFromJsonElement(facesObject.get("down")));
-
-            cuboidPart.cuboidProperties = cuboidPropertiesTag;
-        }
-
-        elementPart.rebuild(elementPart.texSize);
-
-        return elementPart;
-    }
-
-    public Vec3f v3fFromJArray(JsonArray array) {
-        return new Vec3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat());
-    }
-
-    public Vector4f v4fFromJArray(JsonArray array) {
-        return new Vector4f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat(), array.get(3).getAsFloat());
-    }
-
-    public NbtCompound jsonObjectToNbt(JsonObject obj) {
-        return new NbtCompound() {{
-            for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-                JsonElement element = entry.getValue();
-
-                if (element.isJsonNull())
-                    continue;
-
-                String key = entry.getKey();
-                put(key, getNbtElementFromJsonElement(element));
-            }
-        }};
-    }
-
-    public NbtList jsonArrayToNbtList(JsonArray array) {
-        return new NbtList() {{
-            for (JsonElement element : array) {
-                add(getNbtElementFromJsonElement(element));
-            }
-        }};
-    }
-
-    public NbtElement getNbtElementFromJsonElement(JsonElement element) {
-        if (element instanceof JsonArray)
-            return this.jsonArrayToNbtList(element.getAsJsonArray());
-        else if (element instanceof JsonObject)
-            return this.jsonObjectToNbt(element.getAsJsonObject());
-        else if (element instanceof JsonPrimitive) {
-            JsonPrimitive primitive = element.getAsJsonPrimitive();
-            if (primitive.isBoolean())
-                return NbtByte.of(primitive.getAsBoolean());
-            if (primitive.isNumber())
-                return NbtFloat.of(primitive.getAsNumber().floatValue());
-            if (primitive.isString())
-                return NbtString.of(primitive.getAsString());
-        }
-        return null;
-    }
-
-    /**
-     * Sorts out all the things in a json array out by UUID.
-     */
-    public Map<UUID, JsonObject> sortElements(JsonArray elementContainer) {
-        Map<UUID, JsonObject> objects = new Object2ObjectOpenHashMap<>();
         for (JsonElement jsonElement : elementContainer) {
             if (!jsonElement.isJsonObject())
                 continue;
-            JsonObject obj = jsonElement.getAsJsonObject();
 
+            JsonObject obj = jsonElement.getAsJsonObject();
             if (!obj.has("uuid"))
                 continue;
-            objects.put(UUID.fromString(obj.get("uuid").getAsString()), obj);
 
-            if (obj.has("children")) {
-                JsonElement children = obj.get("children");
-                if (children.isJsonArray()) {
-                    JsonArray childrenArray = children.getAsJsonArray();
-                    objects.putAll(sortElements(childrenArray));
+            objects.put(obj.get("uuid").getAsString(), obj);
+        }
+
+        return objects;
+    }
+
+    public static NbtList parseAnimations(JsonArray animations) {
+        NbtList anims = new NbtList();
+
+        for (JsonElement jsonElement : animations) {
+            if (!jsonElement.isJsonObject())
+                continue;
+
+            JsonObject obj = jsonElement.getAsJsonObject();
+            NbtCompound anim = new NbtCompound();
+
+            //animation properties
+            anim.put("nm", NbtString.of(obj.get("name").getAsString()));
+            anim.put("loop", NbtString.of(obj.get("loop").getAsString()));
+            anim.put("len", NbtFloat.of(obj.get("length").getAsFloat()));
+            anim.put("snp", NbtFloat.of(obj.get("snapping").getAsFloat()));
+
+            //todo maybe unnecessary? and why they are strings??
+            if (obj.has("anim_time_update"))
+                anim.put("time", NbtString.of(obj.get("anim_time_update").getAsString()));
+            if (obj.has("blend_weight"))
+                anim.put("bld", NbtString.of(obj.get("blend_weight").getAsString()));
+            if (obj.has("start_delay"))
+                anim.put("sdel", NbtString.of(obj.get("start_delay").getAsString()));
+            if (obj.has("loop_delay"))
+                anim.put("ldel", NbtString.of(obj.get("loop_delay").getAsString()));
+
+            //animators
+            if (obj.has("animators")) {
+                JsonObject animators = obj.getAsJsonObject("animators");
+                for (Map.Entry<String, JsonElement> animator : animators.entrySet()) {
+                    if (animator.getKey().length() < 36) continue;
+
+                    JsonObject animObj = animator.getValue().getAsJsonObject();
+                    NbtCompound animNbt = new NbtCompound();
+
+                    //animator properties
+                    animNbt.put("part", NbtString.of(animObj.get("name").getAsString()));
+
+                    NbtList keyFrames = new NbtList();
+                    for (JsonElement keyFrameElement : animObj.get("keyframes").getAsJsonArray()) {
+                        JsonObject keyFrameObj = keyFrameElement.getAsJsonObject();
+                        NbtCompound keyFrame = new NbtCompound();
+
+                        //keyframe properties
+                        keyFrame.put("type", NbtString.of(keyFrameObj.get("channel").getAsString()));
+                        keyFrame.put("int", NbtString.of(keyFrameObj.get("interpolation").getAsString()));
+                        keyFrame.put("time", NbtFloat.of(keyFrameObj.get("time").getAsFloat()));
+
+                        //keyframe pos/scale/rot
+                        JsonObject dataPoints = keyFrameObj.getAsJsonArray("data_points").get(0).getAsJsonObject();
+                        NbtList data = new NbtList();
+                        data.add(NbtFloat.of(dataPoints.get("x").getAsFloat()));
+                        data.add(NbtFloat.of(dataPoints.get("y").getAsFloat()));
+                        data.add(NbtFloat.of(dataPoints.get("z").getAsFloat()));
+
+                        keyFrame.put("data", data);
+                        keyFrames.add(keyFrame);
+                    }
+
+                    animNbt.put("keyf", keyFrames);
                 }
             }
+
+            anims.add(anim);
         }
-        return objects;
+
+        return anims;
+    }
+
+    public static NbtList buildElements(JsonArray group, Map<String, JsonObject> elementMap, boolean overrideAsPlayerModel, Vec3f offset) {
+        NbtList parts = new NbtList();
+        for (JsonElement jsonElement : group) {
+            NbtCompound nbt;
+
+            //if the element is a json object, it's a group, otherwise its a part
+            if (jsonElement.isJsonObject())
+                nbt = buildGroup(jsonElement.getAsJsonObject(), elementMap, overrideAsPlayerModel, offset);
+            else
+                nbt = buildPart(elementMap.get(jsonElement.getAsString()), offset);
+
+            if (nbt != null)
+                parts.add(nbt);
+        }
+
+        return parts;
+    }
+
+    public static NbtCompound buildGroup(JsonObject group, Map<String, JsonObject> elementMap, boolean playerModel, Vec3f offset) {
+        if ((group.has("visibility") && !group.get("visibility").getAsBoolean()) || !group.has("name"))
+            return null;
+
+        NbtCompound groupNbt = new NbtCompound();
+
+        //name
+        String name = group.get("name").getAsString();
+        groupNbt.put("nm", NbtString.of(name));
+
+        //parent type
+        if (!group.has("ignoreKeyword") || !group.get("ignoreKeyword").getAsBoolean()) {
+            PartData parent = getParentType(name, playerModel);
+
+            if (parent.mimic) groupNbt.put("mmc", NbtByte.of(true));
+            if (parent.offset != null) offset = parent.offset.copy();
+
+            groupNbt.put("ptype", NbtString.of(parent.parentType));
+        }
+
+        //pivot
+        if (group.has("origin")) {
+            Vec3f corrected = v3fFromJArray(group.get("origin").getAsJsonArray());
+            corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
+
+            Vec3f thisOffset = offset.copy();
+            thisOffset.add(corrected);
+
+            groupNbt.put("piv", vec3fToNbt(thisOffset));
+        }
+
+        //rotation
+        if (group.has("rotation"))
+            groupNbt.put("rot", vec3fToNbt(v3fFromJArray(group.get("rotation").getAsJsonArray())));
+
+        //children
+        if (group.has("children")) {
+            JsonArray children = group.get("children").getAsJsonArray();
+            NbtList child = buildElements(children, elementMap, playerModel, offset);
+            if (child.size() > 0) groupNbt.put("chld", child);
+        }
+
+        return groupNbt;
+    }
+
+    public static PartData getParentType(String name, boolean playerModel) {
+        //test for mimics
+        for (Map.Entry<String, PartData> entry : NAME_MIMIC_TYPE_TAGS.entrySet()) {
+            if (name.contains(entry.getKey()))
+                return entry.getValue();
+        }
+
+        //test for parent parts
+        for (Map.Entry<String, PartData> entry : NAME_PARENT_TYPE_TAGS.entrySet()) {
+            if (name.contains(entry.getKey()))
+                return entry.getValue();
+        }
+
+        //test for player model parts
+        if (playerModel) {
+            for (Map.Entry<String, PartData> entry : PLAYER_SKIN_REMAPS.entrySet()) {
+                if (name.contains(entry.getKey()))
+                    return entry.getValue();
+            }
+        }
+
+        //if part not found returns default
+        return PartData.DEFAULT_PARENT;
+    }
+
+    public static NbtCompound buildPart(JsonObject part, Vec3f offset) {
+        if ((part.has("visibility") && !part.get("visibility").getAsBoolean()) || !part.has("name"))
+            return null;
+
+        boolean mesh = false;
+        String partType;
+
+        if (part.has("type")) {
+            partType = part.get("type").getAsString();
+
+            if (partType.equals("null_object"))
+                return null;
+
+            mesh = partType.equals("mesh");
+        }
+
+        NbtCompound partNbt = new NbtCompound();
+
+        //name
+        partNbt.put("nm", NbtString.of(part.get("name").getAsString()));
+
+        //pivot
+        if (part.has("origin")) {
+            Vec3f corrected = v3fFromJArray(part.get("origin").getAsJsonArray());
+            corrected.set(corrected.getX(), corrected.getY(), -corrected.getZ());
+            corrected.add(offset);
+            partNbt.put("piv", vec3fToNbt(corrected));
+        }
+
+        //rotation
+        if (part.has("rotation"))
+            partNbt.put("rot", vec3fToNbt(v3fFromJArray(part.get("rotation").getAsJsonArray())));
+
+        if (mesh) buildMesh(part, partNbt);
+        else buildCuboid(part, partNbt, offset);
+
+        return partNbt;
+    }
+
+    public static void buildCuboid(JsonObject partJson, NbtCompound partNbt, Vec3f offset) {
+        //part type
+        partNbt.put("pt", NbtString.of("cub"));
+
+        //faces
+        JsonObject facesObject = partJson.get("faces").getAsJsonObject();
+        NbtCompound properties = new NbtCompound();
+
+        if (partJson.has("inflate"))
+            properties.put("inf", NbtFloat.of(partJson.get("inflate").getAsFloat()));
+
+        Vec3f from = v3fFromJArray(partJson.get("from").getAsJsonArray());
+        Vec3f to = v3fFromJArray(partJson.get("to").getAsJsonArray());
+
+        from.add(offset);
+        to.add(offset);
+
+        properties.put("f", vec3fToNbt(from));
+        properties.put("t", vec3fToNbt(to));
+
+        properties.put("n", getFaceData(facesObject.get("north")));
+        properties.put("s", getFaceData(facesObject.get("south")));
+        properties.put("e", getFaceData(facesObject.get("east")));
+        properties.put("w", getFaceData(facesObject.get("west")));
+        properties.put("u", getFaceData(facesObject.get("up")));
+        properties.put("d", getFaceData(facesObject.get("down")));
+
+        partNbt.put("props", properties);
+    }
+
+    public static NbtElement getFaceData(JsonElement element) {
+        JsonObject faceObj = element.getAsJsonObject();
+        NbtCompound face = new NbtCompound();
+
+        //uv
+        JsonArray uv = faceObj.getAsJsonArray("uv");
+        NbtList uvList = new NbtList() {{
+           add(NbtFloat.of(uv.get(0).getAsFloat()));
+           add(NbtFloat.of(uv.get(1).getAsFloat()));
+           add(NbtFloat.of(uv.get(2).getAsFloat()));
+           add(NbtFloat.of(uv.get(3).getAsFloat()));
+        }};
+
+        //texture
+        JsonElement texture = faceObj.get("texture");
+        if (texture != null && !texture.isJsonNull())
+            face.put("texture", NbtFloat.of(texture.getAsFloat()));
+
+        face.put("uv", uvList);
+        return face;
+    }
+
+    public static void buildMesh(JsonObject partJson, NbtCompound partNbt) {
+        //part type
+        partNbt.put("pt", NbtString.of("msh"));
+
+        //faces
+        JsonObject facesObject = partJson.get("faces").getAsJsonObject();
+        JsonObject verticesObject = partJson.get("vertices").getAsJsonObject();
+        NbtCompound properties = new NbtCompound();
+
+        NbtCompound verticesList = new NbtCompound();
+        HashMap<String, String> verticesMap = new HashMap<>();
+
+        long i = 0;
+        for (Map.Entry<String, JsonElement> entry : verticesObject.entrySet()) {
+            Vec3f pos = v3fFromJArray(entry.getValue().getAsJsonArray());
+            NbtList vertexPos = new NbtList();
+            vertexPos.add(NbtFloat.of(-pos.getX()));
+            vertexPos.add(NbtFloat.of(-pos.getY()));
+            vertexPos.add(NbtFloat.of(pos.getZ()));
+
+            String key = Long.toHexString(i);
+            verticesList.put(key, vertexPos);
+            verticesMap.put(entry.getKey(), key);
+            i++;
+        }
+
+        properties.put("vertices", verticesList);
+
+        //create data for each face of the mesh
+        NbtList meshFacesList = new NbtList();
+
+        facesObject.entrySet().forEach(entry -> {
+            JsonObject faceObject = entry.getValue().getAsJsonObject();
+            NbtList curFaceTag = new NbtList();
+
+            //build vertex -> uv map
+            NbtCompound uvs = new NbtCompound();
+            faceObject.getAsJsonObject("uv").entrySet().forEach(uvEntry -> {
+                String vertexName = verticesMap.get(uvEntry.getKey());
+                JsonArray uvEntries = uvEntry.getValue().getAsJsonArray();
+
+                NbtList uvList = new NbtList();
+                uvList.add(NbtFloat.of(uvEntries.get(0).getAsFloat()));
+                uvList.add(NbtFloat.of(uvEntries.get(1).getAsFloat()));
+                uvs.put(vertexName, uvList);
+            });
+
+            //read vertex data then pack id and uv and add to this face nbt
+            faceObject.getAsJsonArray("vertices").forEach(element -> {
+                NbtCompound vertex = new NbtCompound();
+                String key = verticesMap.get(element.getAsString());
+
+                vertex.put("id", NbtString.of(key));
+                vertex.put("uv", uvs.get(key));
+
+                curFaceTag.add(vertex);
+            });
+
+            //add this face to the faces list
+            meshFacesList.add(curFaceTag);
+        });
+
+        properties.put("faces", meshFacesList);
+        partNbt.put("props", properties);
+    }
+
+    public static Vec3f v3fFromJArray(JsonArray array) {
+        return new Vec3f(array.get(0).getAsFloat(), array.get(1).getAsFloat(), array.get(2).getAsFloat());
+    }
+
+    public static NbtList vec3fToNbt(Vec3f vec) {
+        NbtList nbt = new NbtList();
+
+        nbt.add(NbtFloat.of(vec.getX()));
+        nbt.add(NbtFloat.of(vec.getY()));
+        nbt.add(NbtFloat.of(vec.getZ()));
+
+        return nbt;
     }
 }

@@ -28,7 +28,7 @@ import java.util.HashMap;
 
 public class CustomModel extends FiguraAsset {
     public PlayerData owner;
-    public NbtCompound modelNbt = new NbtCompound();
+    public NbtCompound modelNbt;
 
     public final ArrayList<CustomModelPart> allParts = new ArrayList<>();
     public final HashMap<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new HashMap<>();
@@ -46,6 +46,13 @@ public class CustomModel extends FiguraAsset {
     //This is separate from script customizations, as these are groups from blockbench that are the new,
     //override origins against vanilla.
     public HashMap<Identifier, VanillaModelPartCustomization> originModifications = new HashMap<>();
+
+    public CustomModel(NbtCompound nbt, PlayerData data) {
+        readNbt(nbt);
+        this.modelNbt = nbt;
+        this.owner = data;
+        this.isDone = true;
+    }
 
     public ArrayList<CustomModelPart> getSpecialParts(CustomModelPart.ParentType type) {
         synchronized (specialParts) {
@@ -198,15 +205,14 @@ public class CustomModel extends FiguraAsset {
     }
 
     public void renderWorldParts(PlayerData data, double cameraX, double cameraY, double cameraZ, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, float alpha) {
-        matrices.translate(-cameraX, -cameraY, -cameraZ);
-        matrices.scale(-1, -1, 1);
-
         CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
+        matrices.translate(-cameraX,-cameraY, -cameraZ);
+        matrices.scale(-1,-1,1);
+
         synchronized (specialParts) {
-            for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
+            for (CustomModelPart part : data.model.getSpecialParts(CustomModelPart.ParentType.WORLD))
                 data.model.leftToRender = part.render(data, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
-            }
         }
 
         CustomModelPart.canRenderHitBox = false;
@@ -237,7 +243,7 @@ public class CustomModel extends FiguraAsset {
         NbtList partList = (NbtList) tag.get("parts");
 
         NbtList uv = tag.getList("uv", NbtElement.FLOAT_TYPE);
-        if (uv.size() >= 2) this.defaultTextureSize = new Vec2f(uv.getFloat(0), uv.getFloat(1));
+        if (uv.size() > 0) this.defaultTextureSize = new Vec2f(uv.getFloat(0), uv.getFloat(1));
 
         if (partList != null) {
             for (NbtElement nbtElement : partList) {
@@ -245,30 +251,38 @@ public class CustomModel extends FiguraAsset {
                 CustomModelPart part = CustomModelPart.fromNbt(partTag);
 
                 if (part != null) {
-                    part.rebuildAll(this.defaultTextureSize);
+                    part.rebuild(this.defaultTextureSize);
                     allParts.add(part);
                 }
             }
         }
 
-        sortAllParts();
-    }
-
-    //Sorts parts into their respective places.
-    public void sortAllParts() {
-        specialParts.clear();
-
         synchronized (this.allParts) {
-            for (CustomModelPart part : this.allParts)
+            specialParts.clear();
+            for (CustomModelPart part : this.allParts) {
                 sortPart(part);
+                setModel(part);
+            }
         }
     }
 
+    //Sorts parts into their respective places.
     public void sortPart(CustomModelPart part) {
         if (part.isSpecial())
             addSpecialPart(part);
 
-        for (CustomModelPart child : part.children)
-            sortPart(child);
+        if (part instanceof CustomModelPartGroup group) {
+            for (CustomModelPart child : group.children)
+                sortPart(child);
+        }
+    }
+
+    public void setModel(CustomModelPart part) {
+        part.model = this;
+
+        if (part instanceof CustomModelPartGroup group) {
+            for (CustomModelPart child : group.children)
+                setModel(child);
+        }
     }
 }

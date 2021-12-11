@@ -178,10 +178,12 @@ public class LocalPlayerData extends PlayerData {
         if ((data & 4) == 4) loadTexture(avatarPaths.get("texture"), isZip, modelZip);
 
         //try to load script
-        if ((data & 8) == 8) loadScript(avatarPaths.get("script"), isZip, modelZip);
+        if ((data & 8) == 8) {
+            loadScript(avatarPaths.get("script"), isZip, modelZip);
 
-        //try to load custom sounds (requires a script)
-        if ((data & 16) == 16 && (data & 8) == 8) loadCustomSounds(avatarPaths.get("sounds"), isZip, modelZip, file);
+            //try to load custom sounds (requires a script)
+            if ((data & 16) == 16) loadCustomSounds(avatarPaths.get("sounds"), isZip, modelZip, file);
+        }
 
         //try to load extra textures
         loadExtraTextures(file, isZip, modelZip);
@@ -199,6 +201,8 @@ public class LocalPlayerData extends PlayerData {
         InputStream inputStream = null;
 
         try {
+            boolean overrideAsPlayerModel = false;
+
             //get input stream, either from zip, or directory
             if (isZip) {
                 ZipEntry modelEntry;
@@ -206,7 +210,7 @@ public class LocalPlayerData extends PlayerData {
                     modelEntry = modelZip.getEntry("model.bbmodel");
                 else {
                     modelEntry = modelZip.getEntry("player_model.bbmodel");
-                    BlockbenchModelDeserializer.overrideAsPlayerModel = true;
+                    overrideAsPlayerModel = true;
                 }
 
                 inputStream = modelZip.getInputStream(modelEntry);
@@ -215,24 +219,28 @@ public class LocalPlayerData extends PlayerData {
                     inputStream = new FileInputStream(paths.get("model").toFile());
                 else {
                     inputStream = new FileInputStream(paths.get("player_model").toFile());
-                    BlockbenchModelDeserializer.overrideAsPlayerModel = true;
+                    overrideAsPlayerModel = true;
                 }
             }
 
-            //Try to read from input stream
+            //try to read from input stream
             String modelJsonText;
             try (final Reader reader = new InputStreamReader(inputStream)) {
                 modelJsonText = CharStreams.toString(reader);
             }
 
-            //Finalize string for lambda
+            //finalize variables for lambda
             String finalModelJsonText = modelJsonText;
-            //Load model from GSON in off-thread.
+            boolean finalOverrideAsPlayerModel = overrideAsPlayerModel;
+
+            //load model from GSON in off-thread
             FiguraMod.doTask(() -> {
-                this.model = FiguraMod.GSON.fromJson(finalModelJsonText, CustomModel.class);
-                this.model.owner = this;
-                this.model.isDone = true;
-                FiguraMod.LOGGER.info("Model Loading Finished");
+                try {
+                    this.model = new CustomModel(BlockbenchModelDeserializer.deserialize(finalModelJsonText, finalOverrideAsPlayerModel), this);
+                    FiguraMod.LOGGER.info("Model Loading Finished");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             });
         } catch (Exception e) {
             e.printStackTrace();
@@ -303,7 +311,13 @@ public class LocalPlayerData extends PlayerData {
                 //Finalize script source for lambda.
                 String finalScriptSource = scriptSource;
                 //Load script on off-thread.
-                FiguraMod.doTask(() -> this.script.load(this, finalScriptSource));
+                FiguraMod.doTask(() -> {
+                    try {
+                        this.script.load(this, finalScriptSource);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -323,9 +337,9 @@ public class LocalPlayerData extends PlayerData {
         try {
             JsonElement soundsJson;
             if (isZip)
-                soundsJson = new JsonParser().parse(new InputStreamReader(zip.getInputStream(zip.getEntry("sounds.json"))));
+                soundsJson = JsonParser.parseReader(new InputStreamReader(zip.getInputStream(zip.getEntry("sounds.json"))));
             else
-                soundsJson = new JsonParser().parse(new FileReader(sounds.toFile()));
+                soundsJson = JsonParser.parseReader(new FileReader(sounds.toFile()));
 
             JsonArray soundsArray = soundsJson.getAsJsonArray();
             soundsArray.forEach(entry -> {

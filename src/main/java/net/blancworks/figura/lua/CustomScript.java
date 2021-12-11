@@ -614,7 +614,7 @@ public class CustomScript extends FiguraAsset {
     public void onRender(float deltaTime) {
         synchronized (this.playerData.model.allParts) {
             for (CustomModelPart part : this.playerData.model.allParts) {
-                CustomModelPart.clearExtraRendering(part);
+                part.clearExtraRendering();
             }
         }
 
