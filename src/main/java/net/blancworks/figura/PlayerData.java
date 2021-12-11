@@ -238,16 +238,18 @@ public class PlayerData {
 
     //Returns the file size, in bytes.
     public long getFileSize() {
-        NbtCompound writtenNbt = new NbtCompound();
-        this.writeNbt(writtenNbt);
-
         try {
+            NbtCompound writtenNbt = new NbtCompound();
+            this.writeNbt(writtenNbt);
+
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             DataOutputStream w = new DataOutputStream(out);
 
             NbtIo.writeCompressed(writtenNbt, w);
             return w.size();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         return 0;
     }

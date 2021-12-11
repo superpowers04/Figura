@@ -1,6 +1,5 @@
 package net.blancworks.figura.lua.api.nameplate;
 
-import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.access.FiguraTextAccess;
@@ -247,21 +246,11 @@ public class NamePlateAPI {
         if (currentData != null) {
             //apply nameplate formatting
             if (nameplateData != null && nameplateData.text != null && currentData.getTrustContainer().getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 1) {
-                //try to parse the string as json text
-                //otherwise use the raw text
-                try {
-                    MutableText jsonText = Text.Serializer.fromJson(new StringReader(nameplateData.text));
+                Text jsonText = TextUtils.tryParseJson(nameplateData.text);
+                TextUtils.removeClickableObjects((MutableText) jsonText);
 
-                    if (jsonText == null)
-                        throw new Exception("Error parsing JSON string - using deprecated method");
-
-                    TextUtils.removeClickableObjects(jsonText);
-
-                    ((FiguraTextAccess) formattedText).figura$setText("");
-                    formattedText.append(jsonText);
-                } catch (Exception ignored) {
-                    ((FiguraTextAccess) formattedText).figura$setText(nameplateData.text);
-                }
+                ((FiguraTextAccess) formattedText).figura$setText("");
+                formattedText.append(jsonText);
             }
         }
 

@@ -2,7 +2,6 @@ package net.blancworks.figura.gui;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
@@ -14,7 +13,6 @@ import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
@@ -312,15 +310,7 @@ public class ActionWheel extends DrawableHelper {
             if (customization.title == null)
                 return;
 
-            Text text;
-            try {
-                text = Text.Serializer.fromJson(new StringReader(customization.title));
-
-                if (text == null)
-                    throw new Exception("Error parsing JSON string");
-            } catch (Exception ignored) {
-                text = new LiteralText(customization.title);
-            }
+            Text text = TextUtils.tryParseJson(customization.title);
             lines = TextUtils.splitText(text, "\n");
 
             textColor = Formatting.WHITE.getColorValue();

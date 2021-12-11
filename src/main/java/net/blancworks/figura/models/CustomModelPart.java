@@ -22,10 +22,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -76,7 +73,7 @@ public class CustomModelPart {
     public Matrix3f lastNormalMatrixInverse = new Matrix3f();
 
     //Extra special rendering for this part
-    public final ArrayList<RenderTask> renderTasks = new ArrayList<>();
+    public final HashMap<String, RenderTask> renderTasks = new LinkedHashMap<>();
 
     public static boolean canRenderHitBox = false;
 
@@ -376,15 +373,15 @@ public class CustomModelPart {
     }
 
     public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
-        //Render extra parts
+        //render extra parts
         synchronized (this.renderTasks) {
-            for (RenderTask task : this.renderTasks) {
-                leftToRender -= task.render(matrices, vcp, light);
+            for (Map.Entry<String, RenderTask> entry : this.renderTasks.entrySet()) {
+                leftToRender -= entry.getValue().render(matrices, vcp, light);
                 if (leftToRender <= 0) break;
             }
         }
 
-        //Render hit box
+        //render hit box
         if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
 
         return leftToRender;
