@@ -1,5 +1,6 @@
 package net.blancworks.figura.utils;
 
+import com.mojang.brigadier.StringReader;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.LiteralText;
@@ -57,5 +58,20 @@ public class TextUtils {
         matrices.translate(0f, 0f, 0.1f);
         textRenderer.draw(matrices, text, x, y, color);
         matrices.pop();
+    }
+
+    public static Text tryParseJson(String text) {
+        Text ret;
+
+        try {
+            ret = Text.Serializer.fromJson(new StringReader(text));
+
+            if (ret == null)
+                throw new Exception("Error parsing JSON string");
+        } catch (Exception ignored) {
+            ret = new LiteralText(text);
+        }
+
+        return ret;
     }
 }

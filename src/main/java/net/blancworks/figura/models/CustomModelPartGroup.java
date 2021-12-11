@@ -19,6 +19,8 @@ public class CustomModelPartGroup extends CustomModelPart {
 
     @Override
     public int getComplexity() {
+        if (!this.visible) return 0;
+
         int complexity = 0;
 
         //iterate over children

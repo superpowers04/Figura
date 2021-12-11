@@ -3,12 +3,22 @@ package net.blancworks.figura.lua.api.model;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
+import net.blancworks.figura.lua.api.block.BlockStateAPI;
+import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartGroup;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.models.tasks.BlockRenderTask;
+import net.blancworks.figura.models.tasks.ItemRenderTask;
+import net.blancworks.figura.models.tasks.TextRenderTask;
+import net.blancworks.figura.utils.TextUtils;
+import net.minecraft.block.BlockState;
+import net.minecraft.client.render.model.json.ModelTransformation;
+import net.minecraft.item.ItemStack;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
@@ -16,6 +26,7 @@ import net.minecraft.util.math.Vector4f;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
+import org.luaj.vm2.lib.VarArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class CustomModelAPI {
@@ -28,7 +39,7 @@ public class CustomModelAPI {
         return new ScriptLocalAPITable(script, new LuaTable() {{
             if (script.playerData.model != null) {
                 for (CustomModelPart part : script.playerData.model.allParts) {
-                    set(part.name, new CustomModelPartTable(part));
+                    set(part.name, new CustomModelPartTable(part, script));
                 }
             }
         }});
@@ -37,19 +48,19 @@ public class CustomModelAPI {
     private static class CustomModelPartTable extends ReadOnlyLuaTable {
         CustomModelPart targetPart;
 
-        public CustomModelPartTable(CustomModelPart part) {
+        public CustomModelPartTable(CustomModelPart part, CustomScript script) {
             super();
             targetPart = part;
-            super.setTable(getTable());
+            super.setTable(getTable(script));
         }
 
-        public LuaTable getTable() {
+        public LuaTable getTable(CustomScript script) {
             LuaTable ret = new LuaTable();
 
             int index = 1;
             if (targetPart instanceof CustomModelPartGroup group) {
                 for (CustomModelPart child : group.children) {
-                    CustomModelPartTable tbl = new CustomModelPartTable(child);
+                    CustomModelPartTable tbl = new CustomModelPartTable(child, script);
                     ret.set(child.name, tbl);
                     ret.set(index++, tbl);
                 }
@@ -455,17 +466,98 @@ public class CustomModelAPI {
                 }
             });
 
-            ret.set("part", LuaValue.userdataOf(targetPart));
+            ret.set("renderItem", new VarArgFunction() {
+                @Override
+                public Varargs onInvoke(Varargs args) {
+                    String name = args.arg(1).checkjstring();
+                    ItemStack stack = ItemStackAPI.checkOrCreateItemStack(args.arg(2));
+                    ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
+                    boolean emissive = !args.arg(4).isnil() && args.arg(4).checkboolean();
+                    Vec3f pos = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vec3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+                    Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
+
+                    FiguraRenderLayer customLayer = null;
+                    if (!args.arg(8).isnil() && script.playerData.canRenderCustomLayers()) {
+                        if (script.customVCP != null) {
+                            customLayer = script.customVCP.getLayer(args.arg(8).checkjstring());
+                            if (customLayer == null)
+                                throw new LuaError("No custom layer named: " + args.arg(8).checkjstring());
+                        } else
+                            throw new LuaError("The player has no custom VCP!");
+                    }
+
+                    targetPart.renderTasks.put(name, new ItemRenderTask(stack, mode, emissive, pos, rot, scale, customLayer));
+                    return NIL;
+                }
+            });
+
+            ret.set("renderBlock", new VarArgFunction() {
+                @Override
+                public Varargs onInvoke(Varargs args) {
+                    String name = args.arg(1).checkjstring();
+                    BlockState state = BlockStateAPI.checkOrCreateBlockState(args.arg(2));
+                    boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
+                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
+                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+
+                    FiguraRenderLayer customLayer = null;
+                    if (!args.arg(7).isnil()) {
+                        if (script.customVCP != null) {
+                            customLayer = script.customVCP.getLayer(args.arg(7).checkjstring());
+                            if (customLayer == null)
+                                throw new LuaError("No custom layer named: " + args.arg(7).checkjstring());
+                        } else
+                            throw new LuaError("The player has no custom VCP!");
+                    }
+
+                    targetPart.renderTasks.put(name, new BlockRenderTask(state, emissive, pos, rot, scale, customLayer));
+                    return NIL;
+                }
+            });
+
+            ret.set("renderText", new VarArgFunction() {
+                @Override
+                public Varargs onInvoke(Varargs args) {
+                    String name = args.arg(1).checkjstring();
+                    String textString = TextUtils.noBadges4U(args.arg(2).checkjstring()).replaceAll("[\n\r]", " ");
+
+                    if (textString.length() > 65535)
+                        throw new LuaError("Text too long - oopsie!");
+
+                    Text text = TextUtils.tryParseJson(textString);
+                    boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
+                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
+                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
+                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
+
+                    targetPart.renderTasks.put(name, new TextRenderTask(text, emissive, pos, rot, scale));
+                    return NIL;
+                }
+            });
+
+            ret.set("removeRenderTask", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    synchronized (targetPart.renderTasks) {
+                        targetPart.renderTasks.remove(arg1.checkjstring());
+                        return NIL;
+                    }
+                }
+            });
+
+            ret.set("clearAllRenderTasks", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    synchronized (targetPart.renderTasks) {
+                        targetPart.renderTasks.clear();
+                        return NIL;
+                    }
+                }
+            });
 
             return ret;
         }
-    }
-
-    public static CustomModelPart checkCustomModelPart(LuaValue arg1) {
-        CustomModelPart part = (CustomModelPart) arg1.get("part").touserdata(CustomModelPart.class);
-        if (part == null)
-            throw new LuaError("Not a CustomModelPart table!");
-
-        return part;
     }
 }

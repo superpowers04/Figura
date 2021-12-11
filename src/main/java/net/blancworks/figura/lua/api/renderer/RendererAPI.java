@@ -1,30 +1,19 @@
 package net.blancworks.figura.lua.api.renderer;
 
-import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.PlayerDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
-import net.blancworks.figura.lua.api.item.ItemStackAPI;
-import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.model.CustomModelAPI;
 import net.blancworks.figura.lua.api.entity.EntityAPI;
-import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.shaders.FiguraRenderLayer;
-import net.blancworks.figura.models.tasks.BlockRenderTask;
-import net.blancworks.figura.models.tasks.ItemRenderTask;
-import net.blancworks.figura.models.tasks.TextRenderTask;
+import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MarkerEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.fluid.FluidState;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
@@ -111,105 +100,11 @@ public class RendererAPI {
                 }
             });
 
-            set("renderItem", new VarArgFunction() {
-                @Override
-                public Varargs onInvoke(Varargs args) {
-
-                    ItemStack stack = ItemStackAPI.checkOrCreateItemStack(args.arg(1));
-                    CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
-                    ModelTransformation.Mode mode = !args.arg(3).isnil() ? ModelTransformation.Mode.valueOf(args.arg(3).checkjstring()) : ModelTransformation.Mode.FIXED;
-                    boolean emissive = !args.arg(4).isnil() && args.arg(4).checkboolean();
-                    Vec3f pos = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f rot = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
-                    Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
-
-                    FiguraRenderLayer customLayer = null;
-                    if (!args.arg(8).isnil() && script.playerData.canRenderCustomLayers()) {
-                        if (script.customVCP != null) {
-                            customLayer = script.customVCP.getLayer(args.arg(8).checkjstring());
-                            if (customLayer == null)
-                                throw new LuaError("No custom layer named: " + args.arg(8).checkjstring());
-                        } else
-                            throw new LuaError("The player has no custom VCP!");
-                    }
-
-                    parent.renderTasks.add(new ItemRenderTask(stack, mode, emissive, pos, rot, scale, customLayer));
-                    return NIL;
-                }
-            });
-
-            set("renderBlock", new VarArgFunction() {
-                @Override
-                public Varargs onInvoke(Varargs args) {
-                    if (script.renderMode == CustomScript.RenderType.WORLD_RENDER)
-                        throw new LuaError("Cannot render block on world render!");
-
-                    BlockState state = BlockStateAPI.checkOrCreateBlockState(args.arg(1));
-                    CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
-                    boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
-                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
-                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
-                    FiguraRenderLayer customLayer = null;
-                    if (!args.arg(7).isnil()) {
-                        if (script.customVCP != null) {
-                            customLayer = script.customVCP.getLayer(args.arg(7).checkjstring());
-                            if (customLayer == null)
-                                throw new LuaError("No custom layer named: " + args.arg(7).checkjstring());
-                        } else
-                            throw new LuaError("The player has no custom VCP!");
-                    }
-                    parent.renderTasks.add(new BlockRenderTask(state, emissive, pos, rot, scale, customLayer));
-                    return NIL;
-                }
-            });
-
-            set("renderText", new VarArgFunction() {
-                @Override
-                public Varargs onInvoke(Varargs args) {
-                    if (script.renderMode == CustomScript.RenderType.WORLD_RENDER)
-                        throw new LuaError("Cannot render text on world render!");
-
-                    String arg1 = TextUtils.noBadges4U(args.arg(1).checkjstring()).replaceAll("[\n\r]", " ");
-
-                    if (arg1.length() > 65535)
-                        throw new LuaError("Text too long - oopsie!");
-
-                    Text text;
-                    try {
-                        text = Text.Serializer.fromJson(new StringReader(arg1));
-
-                        if (text == null)
-                            throw new Exception("Error parsing JSON string");
-                    } catch (Exception ignored) {
-                        text = new LiteralText(arg1);
-                    }
-
-                    CustomModelPart parent = CustomModelAPI.checkCustomModelPart(args.arg(2));
-                    boolean emissive = !args.arg(3).isnil() && args.arg(3).checkboolean();
-                    Vec3f pos = args.arg(4).isnil() ? null : LuaVector.checkOrNew(args.arg(4)).asV3f();
-                    Vec3f rot = args.arg(5).isnil() ? null : LuaVector.checkOrNew(args.arg(5)).asV3f();
-                    Vec3f scale = args.arg(6).isnil() ? null : LuaVector.checkOrNew(args.arg(6)).asV3f();
-
-                    parent.renderTasks.add(new TextRenderTask(text, emissive, pos, rot, scale));
-
-                    return NIL;
-                }
-            });
-
             set("getTextWidth", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     String arg1 = TextUtils.noBadges4U(arg.checkjstring()).replaceAll("[\n\r]", " ");
-                    Text text;
-                    try {
-                        text = Text.Serializer.fromJson(new StringReader(arg1));
-
-                        if (text == null)
-                            throw new Exception("Error parsing JSON string");
-                    } catch (Exception ignored) {
-                        text = new LiteralText(arg1);
-                    }
+                    Text text = TextUtils.tryParseJson(arg1);
                     return LuaNumber.valueOf(MinecraftClient.getInstance().textRenderer.getWidth(text));
                 }
             });

@@ -3,7 +3,6 @@ package net.blancworks.figura.lua;
 import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.mojang.brigadier.StringReader;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.PlayerDataManager;
@@ -17,11 +16,10 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
-import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.shaders.FiguraShader;
-import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.lua.api.sound.FiguraSound;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
+import net.blancworks.figura.models.shaders.FiguraShader;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.TextUtils;
@@ -65,12 +63,6 @@ public class CustomScript extends FiguraAsset {
     //The currently running task.
     //Updated as things are added to it.
     public CompletableFuture<Void> currTask;
-
-    public RenderType renderMode = RenderType.RENDER;
-    public enum RenderType {
-        RENDER,
-        WORLD_RENDER
-    }
 
     //How many instructions the last events used.
     public int initInstructionCount = 0;
@@ -282,11 +274,11 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void toNBT(NbtCompound tag) {
-        if (source.length() <= 65000) {
+        if (source.length() < 60000) {
             tag.putString("src", cleanScriptSource(source));
         } else {
             int i = 0;
-            for (String substring : Splitter.fixedLength(65000).split(cleanScriptSource(source))) {
+            for (String substring : Splitter.fixedLength(60000).split(cleanScriptSource(source))) {
                 tag.putString("src_" + i, cleanScriptSource(substring));
                 i++;
             }
@@ -357,7 +349,6 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            renderMode = RenderType.WORLD_RENDER;
             worldRenderInstructionCount = 0;
             renderInstructionCount = 0;
             renderLayerInstructionCount = 0;
@@ -411,22 +402,7 @@ public class CustomScript extends FiguraAsset {
                         if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
 
-                        Text log;
-                        if (arg instanceof LuaVector logText) {
-                            log = logText.toJsonText();
-                        } else {
-                            try {
-                                log = Text.Serializer.fromJson(new StringReader(arg.toString()));
-
-                                if (log == null)
-                                    throw new Exception("Error parsing JSON string");
-
-                                TextUtils.removeClickableObjects((MutableText) log);
-                            } catch (Exception ignored) {
-                                log = new LiteralText(arg.toString());
-                            }
-                        }
-
+                        Text log = arg instanceof LuaVector logText ? logText.toJsonText() : TextUtils.tryParseJson(arg.toString());
                         message.append(log);
 
                         int config = (int) Config.SCRIPT_LOG_LOCATION.value;
@@ -612,13 +588,6 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onRender(float deltaTime) {
-        synchronized (this.playerData.model.allParts) {
-            for (CustomModelPart part : this.playerData.model.allParts) {
-                part.clearExtraRendering();
-            }
-        }
-
-        renderMode = RenderType.RENDER;
         setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, worldRenderInstructionCount);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
