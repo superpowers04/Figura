@@ -84,11 +84,12 @@ public class BlockbenchModelDeserializer {
         isPlayerModel = isPlayerModel || (meta.has("model_format") && meta.get("model_format").getAsString().equals("skin"));
 
         //animations
+        Map<String, NbtList> animationMap = new HashMap<>();
         if (root.has("animations")) {
             JsonArray animations = root.get("animations").getAsJsonArray();
 
             //parse animations
-            NbtList animationsNbt = parseAnimations(animations);
+            NbtList animationsNbt = parseAnimations(animations, animationMap);
             retModel.put("anim", animationsNbt);
         }
 
@@ -102,7 +103,7 @@ public class BlockbenchModelDeserializer {
         Map<String, JsonObject> elementMap = sortElements(elements);
 
         //parse outliner, which also parse the parts and finishes the model loading
-        retModel.put("parts", buildElements(outliner, elementMap, isPlayerModel, new Vec3f(0f, 0f, 0f)));
+        retModel.put("parts", buildElements(outliner, elementMap, isPlayerModel, new Vec3f(0f, 0f, 0f), animationMap));
 
         return retModel;
     }
@@ -124,9 +125,10 @@ public class BlockbenchModelDeserializer {
         return objects;
     }
 
-    public static NbtList parseAnimations(JsonArray animations) {
+    public static NbtList parseAnimations(JsonArray animations, Map<String, NbtList> animationMap) {
         NbtList anims = new NbtList();
 
+        long id = 0;
         for (JsonElement jsonElement : animations) {
             if (!jsonElement.isJsonObject())
                 continue;
@@ -135,6 +137,7 @@ public class BlockbenchModelDeserializer {
             NbtCompound anim = new NbtCompound();
 
             //animation properties
+            anim.put("id", NbtFloat.of(id));
             anim.put("nm", NbtString.of(obj.get("name").getAsString()));
             anim.put("loop", NbtString.of(obj.get("loop").getAsString()));
             anim.put("len", NbtFloat.of(obj.get("length").getAsFloat()));
@@ -160,8 +163,6 @@ public class BlockbenchModelDeserializer {
                     NbtCompound animNbt = new NbtCompound();
 
                     //animator properties
-                    animNbt.put("part", NbtString.of(animObj.get("name").getAsString()));
-
                     NbtList keyFrames = new NbtList();
                     for (JsonElement keyFrameElement : animObj.get("keyframes").getAsJsonArray()) {
                         JsonObject keyFrameObj = keyFrameElement.getAsJsonObject();
@@ -184,23 +185,35 @@ public class BlockbenchModelDeserializer {
                     }
 
                     animNbt.put("keyf", keyFrames);
+                    animNbt.put("id", NbtFloat.of(id));
+
+                    String uuid = animator.getKey();
+                    if (animationMap.containsKey(uuid)) {
+                        NbtList list = animationMap.get(uuid);
+                        list.add(animNbt);
+                    } else {
+                        animationMap.put(animator.getKey(), new NbtList() {{
+                            add(animNbt);
+                        }});
+                    }
                 }
             }
 
             anims.add(anim);
+            id++;
         }
 
         return anims;
     }
 
-    public static NbtList buildElements(JsonArray group, Map<String, JsonObject> elementMap, boolean overrideAsPlayerModel, Vec3f offset) {
+    public static NbtList buildElements(JsonArray group, Map<String, JsonObject> elementMap, boolean overrideAsPlayerModel, Vec3f offset, Map<String, NbtList> animationMap) {
         NbtList parts = new NbtList();
         for (JsonElement jsonElement : group) {
             NbtCompound nbt;
 
             //if the element is a json object, it's a group, otherwise its a part
             if (jsonElement.isJsonObject())
-                nbt = buildGroup(jsonElement.getAsJsonObject(), elementMap, overrideAsPlayerModel, offset);
+                nbt = buildGroup(jsonElement.getAsJsonObject(), elementMap, overrideAsPlayerModel, offset, animationMap);
             else
                 nbt = buildPart(elementMap.get(jsonElement.getAsString()), offset);
 
@@ -211,7 +224,7 @@ public class BlockbenchModelDeserializer {
         return parts;
     }
 
-    public static NbtCompound buildGroup(JsonObject group, Map<String, JsonObject> elementMap, boolean playerModel, Vec3f offset) {
+    public static NbtCompound buildGroup(JsonObject group, Map<String, JsonObject> elementMap, boolean playerModel, Vec3f offset, Map<String, NbtList> animationMap) {
         if ((group.has("visibility") && !group.get("visibility").getAsBoolean()) || !group.has("name"))
             return null;
 
@@ -246,10 +259,15 @@ public class BlockbenchModelDeserializer {
         if (group.has("rotation"))
             groupNbt.put("rot", vec3fToNbt(v3fFromJArray(group.get("rotation").getAsJsonArray())));
 
+        //animations
+        String uuid = group.get("uuid").getAsString();
+        if (animationMap.containsKey(uuid))
+            groupNbt.put("anims", animationMap.get(uuid));
+
         //children
         if (group.has("children")) {
             JsonArray children = group.get("children").getAsJsonArray();
-            NbtList child = buildElements(children, elementMap, playerModel, offset);
+            NbtList child = buildElements(children, elementMap, playerModel, offset, animationMap);
             if (child.size() > 0) groupNbt.put("chld", child);
         }
 
