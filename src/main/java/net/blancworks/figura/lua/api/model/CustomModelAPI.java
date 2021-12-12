@@ -57,12 +57,13 @@ public class CustomModelAPI {
         public LuaTable getTable(CustomScript script) {
             LuaTable ret = new LuaTable();
 
-            int index = 1;
+            //int index = 1;
             if (targetPart instanceof CustomModelPartGroup group) {
                 for (CustomModelPart child : group.children) {
                     CustomModelPartTable tbl = new CustomModelPartTable(child, script);
                     ret.set(child.name, tbl);
-                    ret.set(index++, tbl);
+                    //disabled due to memory issues
+                    //ret.set(index++, tbl);
                 }
             }
 
