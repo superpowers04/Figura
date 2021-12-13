@@ -87,13 +87,6 @@ public class ItemStackAPI {
                 }
             });
 
-            set("getItem", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return ItemAPI.getTable(stack.getItem());
-                }
-            });
-
             set("getItemTags", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -146,6 +139,82 @@ public class ItemStackAPI {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(stack.getUseAction().toString());
+                }
+            });
+
+            set("getName", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.getName().getString());
+                }
+            });
+
+            set("getMaxCount", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.getMaxCount());
+                }
+            });
+
+            set("getRarity", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.getRarity().toString());
+                }
+            });
+
+            set("isEnchantable", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.isEnchantable());
+                }
+            });
+
+            set("getMaxDamage", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.getMaxDamage());
+                }
+            });
+
+            set("isDamageable", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.isDamageable());
+                }
+            });
+
+            set("isStackable", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.isStackable());
+                }
+            });
+
+            set("getRepairCost", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.getRepairCost());
+                }
+            });
+
+            set("getMaxUseTime", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(stack.getMaxUseTime());
+                }
+            });
+
+            set("toStackString", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    String ret = Registry.ITEM.getId(stack.getItem()).toString();
+
+                    NbtCompound nbt = stack.getNbt();
+                    if (nbt != null)
+                        ret += nbt.toString();
+
+                    return LuaValue.valueOf(ret);
                 }
             });
 
