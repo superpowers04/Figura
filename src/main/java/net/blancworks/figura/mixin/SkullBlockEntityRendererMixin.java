@@ -1,9 +1,8 @@
 package net.blancworks.figura.mixin;
 
 import com.mojang.authlib.GameProfile;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.block.SkullBlock;
@@ -17,6 +16,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -25,9 +25,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(SkullBlockEntityRenderer.class)
 public abstract class SkullBlockEntityRendererMixin {
 
+    @Unique private static AvatarData data;
+
     @Inject(method = "renderSkull", at = @At(value = "HEAD"), cancellable = true)
     private static void renderSkull(Direction direction, float yaw, float animationProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, SkullBlockEntityModel model, RenderLayer renderLayer, CallbackInfo ci) {
-        PlayerData data = FiguraMod.currentData;
         if (!(boolean) Config.CUSTOM_PLAYER_HEADS.value || data == null || data.model == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
@@ -42,7 +43,7 @@ public abstract class SkullBlockEntityRendererMixin {
         matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(yaw));
 
         //render skull :3
-        if (data.model.renderSkull(data, matrices, FiguraMod.tryGetImmediate(), light))
+        if (data.model.renderSkull(matrices, data.tryGetImmediate(), light))
             ci.cancel();
 
         matrices.pop();
@@ -55,11 +56,11 @@ public abstract class SkullBlockEntityRendererMixin {
             player = MinecraftClient.getInstance().world.getPlayerByUuid(profile.getId());
 
         if (player == null) {
-            FiguraMod.currentData = null;
+            data = null;
             return;
         }
 
-        FiguraMod.currentData = PlayerDataManager.getDataForPlayer(profile.getId());
-        if (FiguraMod.currentData != null) FiguraMod.currentData.lastEntity = player;
+        data = AvatarDataManager.getDataForPlayer(profile.getId());
+        if (data != null) data.lastEntity = player;
     }
 }

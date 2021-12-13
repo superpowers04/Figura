@@ -37,8 +37,8 @@ public class CustomModelAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ScriptLocalAPITable(script, new LuaTable() {{
-            if (script.playerData.model != null) {
-                for (CustomModelPart part : script.playerData.model.allParts) {
+            if (script.avatarData.model != null) {
+                for (CustomModelPart part : script.avatarData.model.allParts) {
                     set(part.name, new CustomModelPartTable(part, script));
                 }
             }
@@ -479,7 +479,7 @@ public class CustomModelAPI {
                     Vec3f scale = args.arg(7).isnil() ? null : LuaVector.checkOrNew(args.arg(7)).asV3f();
 
                     FiguraRenderLayer customLayer = null;
-                    if (!args.arg(8).isnil() && script.playerData.canRenderCustomLayers()) {
+                    if (!args.arg(8).isnil() && script.avatarData.canRenderCustomLayers()) {
                         if (script.customVCP != null) {
                             customLayer = script.customVCP.getLayer(args.arg(8).checkjstring());
                             if (customLayer == null)

@@ -1,6 +1,5 @@
 package net.blancworks.figura.lua.api.model;
 
-import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
@@ -9,6 +8,7 @@ import net.blancworks.figura.mixin.PlayerEntityModelAccessorMixin;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.entity.PlayerModelPart;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
@@ -16,6 +16,7 @@ import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class VanillaModelAPI {
@@ -45,31 +46,31 @@ public class VanillaModelAPI {
         return new Identifier("default", "vanilla_model");
     }
 
-    public static Supplier<PlayerEntityModel<?>> getCurrModel = () -> FiguraMod.currentData.vanillaModel;
+    public static Function<CustomScript, PlayerEntityModel<?>> getCurrModel = (script) -> (PlayerEntityModel<?>) script.avatarData.vanillaModel;
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ScriptLocalAPITable(script, new LuaTable() {{
-            set(VANILLA_HEAD, getTableForPart(() -> getCurrModel.get().head, VANILLA_HEAD, script));
-            set(VANILLA_TORSO, getTableForPart(() -> getCurrModel.get().body, VANILLA_TORSO, script));
+            set(VANILLA_HEAD, getTableForPart(() -> getCurrModel.apply(script).head, VANILLA_HEAD, script));
+            set(VANILLA_TORSO, getTableForPart(() -> getCurrModel.apply(script).body, VANILLA_TORSO, script));
 
-            set(VANILLA_LEFT_ARM, getTableForPart(() -> getCurrModel.get().leftArm, VANILLA_LEFT_ARM, script));
-            set(VANILLA_RIGHT_ARM, getTableForPart(() -> getCurrModel.get().rightArm, VANILLA_RIGHT_ARM, script));
+            set(VANILLA_LEFT_ARM, getTableForPart(() -> getCurrModel.apply(script).leftArm, VANILLA_LEFT_ARM, script));
+            set(VANILLA_RIGHT_ARM, getTableForPart(() -> getCurrModel.apply(script).rightArm, VANILLA_RIGHT_ARM, script));
 
-            set(VANILLA_LEFT_LEG, getTableForPart(() -> getCurrModel.get().leftLeg, VANILLA_LEFT_LEG, script));
-            set(VANILLA_RIGHT_LEG, getTableForPart(() -> getCurrModel.get().rightLeg, VANILLA_RIGHT_LEG, script));
+            set(VANILLA_LEFT_LEG, getTableForPart(() -> getCurrModel.apply(script).leftLeg, VANILLA_LEFT_LEG, script));
+            set(VANILLA_RIGHT_LEG, getTableForPart(() -> getCurrModel.apply(script).rightLeg, VANILLA_RIGHT_LEG, script));
 
-            set(VANILLA_HAT, getTableForPart(() -> getCurrModel.get().hat, VANILLA_HAT, script));
-            set(VANILLA_JACKET, getTableForPart(() -> getCurrModel.get().jacket, VANILLA_JACKET, script));
+            set(VANILLA_HAT, getTableForPart(() -> getCurrModel.apply(script).hat, VANILLA_HAT, script));
+            set(VANILLA_JACKET, getTableForPart(() -> getCurrModel.apply(script).jacket, VANILLA_JACKET, script));
 
-            set(VANILLA_LEFT_SLEEVE, getTableForPart(() -> getCurrModel.get().leftSleeve, VANILLA_LEFT_SLEEVE, script));
-            set(VANILLA_RIGHT_SLEEVE, getTableForPart(() -> getCurrModel.get().rightSleeve, VANILLA_RIGHT_SLEEVE, script));
+            set(VANILLA_LEFT_SLEEVE, getTableForPart(() -> getCurrModel.apply(script).leftSleeve, VANILLA_LEFT_SLEEVE, script));
+            set(VANILLA_RIGHT_SLEEVE, getTableForPart(() -> getCurrModel.apply(script).rightSleeve, VANILLA_RIGHT_SLEEVE, script));
 
-            set(VANILLA_LEFT_PANTS, getTableForPart(() -> getCurrModel.get().leftPants, VANILLA_LEFT_PANTS, script));
-            set(VANILLA_RIGHT_PANTS, getTableForPart(() -> getCurrModel.get().rightPants, VANILLA_RIGHT_PANTS, script));
+            set(VANILLA_LEFT_PANTS, getTableForPart(() -> getCurrModel.apply(script).leftPants, VANILLA_LEFT_PANTS, script));
+            set(VANILLA_RIGHT_PANTS, getTableForPart(() -> getCurrModel.apply(script).rightPants, VANILLA_RIGHT_PANTS, script));
 
-            set(VANILLA_CAPE, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.get()).getCloak(), VANILLA_CAPE, script));
-            set(VANILLA_LEFT_EAR, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.get()).getEar(), VANILLA_LEFT_EAR, script));
-            set(VANILLA_RIGHT_EAR, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.get()).getEar(), VANILLA_RIGHT_EAR, script));
+            set(VANILLA_CAPE, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.apply(script)).getCloak(), VANILLA_CAPE, script));
+            set(VANILLA_LEFT_EAR, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.apply(script)).getEar(), VANILLA_LEFT_EAR, script));
+            set(VANILLA_RIGHT_EAR, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.apply(script)).getEar(), VANILLA_RIGHT_EAR, script));
         }});
     }
 
@@ -202,7 +203,7 @@ public class VanillaModelAPI {
                 @Override
                 public LuaValue call() {
                     try {
-                        return LuaBoolean.valueOf(script.playerData.lastEntity.isPartVisible(PlayerModelPart.valueOf(accessor)));
+                        return LuaBoolean.valueOf(((PlayerEntity) script.avatarData.lastEntity).isPartVisible(PlayerModelPart.valueOf(accessor)));
                     }
                     catch (Exception ignored) {
                         return NIL;

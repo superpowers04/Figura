@@ -1,5 +1,6 @@
-package net.blancworks.figura;
+package net.blancworks.figura.avatar;
 
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
@@ -9,13 +10,11 @@ import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.PlayerEntityRenderer;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.texture.TextureManager;
-import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtIo;
@@ -36,11 +35,11 @@ import java.util.UUID;
 /**
  * Responsible for storing all the data associated with the player on this client.
  */
-public class PlayerData {
+public class AvatarData {
     private static TextureManager textureManager;
 
-    //ID of the player
-    public UUID playerId;
+    //ID of the owner
+    public UUID entityId;
 
     //The custom model associated with the player
     public CustomModel model;
@@ -50,12 +49,12 @@ public class PlayerData {
     public CustomScript script;
 
     //Vanilla model for the player, in case we need it for something.
-    public PlayerEntityModel<?> vanillaModel;
+    public EntityModel<?> vanillaModel;
 
     //Extra textures for the model (like emission)
     public final List<FiguraTexture> extraTextures = new ArrayList<>();
 
-    public PlayerEntity lastEntity;
+    public Entity lastEntity;
     public PlayerListEntry playerListEntry;
 
     //The last hash code of the avatar.
@@ -65,24 +64,34 @@ public class PlayerData {
 
     private Identifier trustIdentifier;
 
-    public Text playerName;
+    public Text name;
 
     public boolean isLocalAvatar = true;
 
     public boolean hasPopup = false;
 
-    public static final int FILESIZE_WARNING_THRESHOLD = 76800;
-    public static final int FILESIZE_LARGE_THRESHOLD = 102400;
+    //used during rendering
+    public VertexConsumerProvider vertexConsumerProvider;
+    public VertexConsumerProvider.Immediate immediate;
+    public float deltaTime = 1f;
+    public static AvatarData currentRenderingData;
+
+    public static final int FILESIZE_WARNING_THRESHOLD = 75000;
+    public static final int FILESIZE_LARGE_THRESHOLD = 100000;
 
     public VertexConsumerProvider getVCP() {
         if (script != null && script.customVCP != null) return script.customVCP;
-        else if (FiguraMod.vertexConsumerProvider != null) return FiguraMod.vertexConsumerProvider;
+        else if (vertexConsumerProvider != null) return vertexConsumerProvider;
         else return MinecraftClient.getInstance().getBufferBuilders().getEntityVertexConsumers();
+    }
+
+    public VertexConsumerProvider tryGetImmediate() {
+        return immediate == null ? vertexConsumerProvider : immediate;
     }
 
     public Identifier getTrustIdentifier() {
         if (trustIdentifier == null)
-            trustIdentifier = new Identifier("player", playerId.toString());
+            trustIdentifier = new Identifier("player", entityId.toString());
         return trustIdentifier;
     }
 
@@ -90,6 +99,19 @@ public class PlayerData {
         if (textureManager == null)
             textureManager = MinecraftClient.getInstance().getTextureManager();
         return textureManager;
+    }
+
+    //define the current rendering data
+    public static void setRenderingData(AvatarData data, VertexConsumerProvider vcp, EntityModel<?> mdl, float dt) {
+        if (data == null) return;
+
+        data.vanillaModel = mdl;
+        data.vertexConsumerProvider = vcp;
+        if (vcp.getClass() == VertexConsumerProvider.Immediate.class)
+            data.immediate = (VertexConsumerProvider.Immediate) vcp;
+
+        data.deltaTime = dt;
+        currentRenderingData = data;
     }
 
     /**
@@ -104,7 +126,7 @@ public class PlayerData {
             return false;
 
         //Put ID.
-        nbt.putUuid("id", playerId);
+        nbt.putUuid("id", entityId);
 
         //Put Model.
         if (model != null)
@@ -154,7 +176,7 @@ public class PlayerData {
      */
     public void readNbt(NbtCompound nbt) {
         if (!nbt.contains("id")) return;
-        playerId = nbt.getUuid("id");
+        entityId = nbt.getUuid("id");
 
         model = null;
         texture = null;
@@ -187,7 +209,7 @@ public class PlayerData {
             //Load texture, if any
             if (textureNbt != null) {
                 texture = new FiguraTexture();
-                texture.id = new Identifier("figura", playerId.toString());
+                texture.id = new Identifier("figura", entityId.toString());
                 getTextureManager().registerTexture(texture.id, texture);
                 FiguraMod.doTask(() -> texture.readNbt(textureNbt));
             }
@@ -223,7 +245,7 @@ public class PlayerData {
                 if (textureList != null) {
                     for (NbtElement element : textureList) {
                         FiguraTexture newTexture = new FiguraTexture();
-                        newTexture.id = new Identifier("figura", playerId.toString() + newTexture.type.toString());
+                        newTexture.id = new Identifier("figura", entityId.toString() + newTexture.type.toString());
                         getTextureManager().registerTexture(newTexture.id, newTexture);
                         extraTextures.add(newTexture);
 
@@ -256,21 +278,19 @@ public class PlayerData {
 
     //Ticks from client.
     public void tick() {
-        if (this.playerId == null)
+        if (this.entityId == null)
             return;
 
         if (this.isInvalidated)
-            PlayerDataManager.clearPlayer(playerId);
+            AvatarDataManager.clearPlayer(entityId);
 
-        vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
-        lastEntity = MinecraftClient.getInstance().world != null ? MinecraftClient.getInstance().world.getPlayerByUuid(this.playerId) : null;
+        //vanillaModel = ((PlayerEntityRenderer) MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(MinecraftClient.getInstance().player)).getModel();
+        lastEntity = MinecraftClient.getInstance().world != null ? MinecraftClient.getInstance().world.getPlayerByUuid(this.entityId) : null;
 
-        FiguraMod.currentPlayer = (AbstractClientPlayerEntity) lastEntity;
-
-        NewFiguraNetworkManager.subscribe(playerId);
+        NewFiguraNetworkManager.subscribe(entityId);
 
         if (lastEntity != null) {
-            playerName = lastEntity.getName();
+            name = lastEntity.getName();
 
             if (script != null) {
                 try {
@@ -311,16 +331,10 @@ public class PlayerData {
         //We run this as a task to make sure all the previous load operations are done (since those are all also tasks)
         FiguraMod.doTask(() -> {
             Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
+            String id = this.entityId.toString();
 
-            String[] splitID = this.playerId.toString().split("-");
-
-            for (int i = 0; i < splitID.length; i++) {
-                if (i != splitID.length - 1)
-                    destinationPath = destinationPath.resolve(splitID[i]);
-            }
-
-            Path nbtFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".nbt");
-            Path hashFilePath = destinationPath.resolve(splitID[splitID.length - 1] + ".hsh");
+            Path nbtFilePath = destinationPath.resolve(id + ".nbt");
+            //Path hashFilePath = destinationPath.resolve(id + ".hsh");
 
             try {
                 NbtCompound targetTag = new NbtCompound();
@@ -328,8 +342,9 @@ public class PlayerData {
 
                 if (!Files.exists(nbtFilePath.getParent()))
                     Files.createDirectories(nbtFilePath.getParent());
+
                 NbtIo.writeCompressed(targetTag, new FileOutputStream(nbtFilePath.toFile()));
-                Files.writeString(hashFilePath, this.lastHash);
+                //Files.writeString(hashFilePath, this.lastHash);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -365,7 +380,7 @@ public class PlayerData {
             script.clearSounds();
             script.clearPings();
         } else {
-            FiguraSoundManager.getChannel().stopSound(playerId);
+            FiguraSoundManager.getChannel().stopSound(entityId);
         }
     }
 }

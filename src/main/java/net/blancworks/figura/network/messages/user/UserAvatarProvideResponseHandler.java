@@ -2,8 +2,8 @@ package net.blancworks.figura.network.messages.user;
 
 import com.google.common.io.LittleEndianDataInputStream;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.network.messages.MessageHandler;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
@@ -36,7 +36,7 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
 
             dis.close();
 
-            PlayerData pData = PlayerDataManager.getDataForPlayer(targetUser);
+            AvatarData pData = AvatarDataManager.getDataForPlayer(targetUser);
 
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hashBytes = md.digest(allAvatarData);

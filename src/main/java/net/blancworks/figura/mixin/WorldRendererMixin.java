@@ -1,8 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -29,7 +28,7 @@ public class WorldRendererMixin {
         if (this.world == null) return;
 
         this.world.getPlayers().forEach((player) -> {
-            PlayerData data = PlayerDataManager.getDataForPlayer(player.getUuid());
+            AvatarData data = AvatarDataManager.getDataForPlayer(player.getUuid());
             if (data != null && data.script != null) {
                 data.script.onWorldRender(tickDelta);
             }
@@ -42,13 +41,9 @@ public class WorldRendererMixin {
             matrices.push();
 
             try {
-                PlayerData data = PlayerDataManager.getDataForPlayer(ent.getUuid());
-                FiguraMod.currentData = data;
-
-                if (data != null && data.model != null && data.lastEntity != null)
-                    data.model.renderWorldParts(data, cameraX, cameraY, cameraZ, matrices, data.getVCP(), entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1f);
-
-                FiguraMod.clearRenderingData();
+                AvatarData data = AvatarDataManager.getDataForPlayer(ent.getUuid());
+                if (data != null && data.model != null)
+                    data.model.renderWorldParts(cameraX, cameraY, cameraZ, matrices, data.getVCP(), entityRenderDispatcher.getLight(ent, tickDelta), OverlayTexture.DEFAULT_UV, 1f);
             } catch (Exception e) {
                 e.printStackTrace();
             }

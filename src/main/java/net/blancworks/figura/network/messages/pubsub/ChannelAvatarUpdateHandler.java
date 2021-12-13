@@ -1,8 +1,7 @@
 package net.blancworks.figura.network.messages.pubsub;
 
 import com.google.common.io.LittleEndianDataInputStream;
-import net.blancworks.figura.PlayerDataManager;
-import net.blancworks.figura.network.messages.MessageHandler;
+import net.blancworks.figura.avatar.AvatarDataManager;
 
 public class ChannelAvatarUpdateHandler extends ChannelMessageHandler {
 
@@ -10,7 +9,7 @@ public class ChannelAvatarUpdateHandler extends ChannelMessageHandler {
     public void handleMessage(LittleEndianDataInputStream stream) throws Exception {
         super.handleMessage(stream);
 
-        PlayerDataManager.getDataForPlayer(senderID).isInvalidated = true;
+        AvatarDataManager.getDataForPlayer(senderID).isInvalidated = true;
         
         System.out.println("AVATAR UPDATE RECEIVED");
     }

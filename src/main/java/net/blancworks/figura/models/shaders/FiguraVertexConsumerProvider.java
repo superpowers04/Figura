@@ -1,6 +1,6 @@
 package net.blancworks.figura.models.shaders;
 
-import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.avatar.AvatarData;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
@@ -10,10 +10,10 @@ import java.util.*;
 
 public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
 
-    private ArrayList<FiguraRenderLayer> sortedLayers = new ArrayList<>();
-    private HashMap<FiguraRenderLayer, BufferBuilder> bufferBuilders = new HashMap<>();
-    private Map<String, FiguraRenderLayer> stringLayerMap = new HashMap<>();
-    private Set<BufferBuilder> activeConsumers = new HashSet<>();
+    private final ArrayList<FiguraRenderLayer> sortedLayers = new ArrayList<>();
+    private final HashMap<FiguraRenderLayer, BufferBuilder> bufferBuilders = new HashMap<>();
+    private final Map<String, FiguraRenderLayer> stringLayerMap = new HashMap<>();
+    private final Set<BufferBuilder> activeConsumers = new HashSet<>();
     //If this is non-null, then it will always be used. The value can be set to non-null for a short time, then reset to null after the operation.
     public FiguraRenderLayer overrideLayer = null;
     public final int maxSize;
@@ -60,13 +60,11 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
                 bufferBuilder.begin(layer.getDrawMode(), layer.getVertexFormat());
             return bufferBuilders.get(layer);
         }
-        return FiguraMod.vertexConsumerProvider.getBuffer(layer);
+        return AvatarData.currentRenderingData.vertexConsumerProvider.getBuffer(layer);
     }
 
     public void draw() {
-        Iterator<FiguraRenderLayer> iterator = sortedLayers.iterator();
-        while(iterator.hasNext()) {
-            FiguraRenderLayer layer = iterator.next();
+        for (FiguraRenderLayer layer : sortedLayers) {
             draw(layer);
         }
     }

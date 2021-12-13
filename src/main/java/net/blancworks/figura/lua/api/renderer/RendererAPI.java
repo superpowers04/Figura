@@ -1,6 +1,6 @@
 package net.blancworks.figura.lua.api.renderer;
 
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
@@ -59,7 +59,7 @@ public class RendererAPI {
             set("isFirstPerson", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    if (PlayerDataManager.localPlayer != script.playerData)
+                    if (AvatarDataManager.localPlayer != script.avatarData)
                         return LuaBoolean.FALSE;
 
                     return MinecraftClient.getInstance().options.getPerspective().isFirstPerson() ? LuaBoolean.TRUE : LuaBoolean.FALSE;
@@ -69,7 +69,7 @@ public class RendererAPI {
             set("isCameraBackwards", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    if (PlayerDataManager.localPlayer != script.playerData)
+                    if (AvatarDataManager.localPlayer != script.avatarData)
                         return LuaBoolean.FALSE;
 
                     return MinecraftClient.getInstance().options.getPerspective().isFrontView() ? LuaBoolean.TRUE : LuaBoolean.FALSE;

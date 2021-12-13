@@ -43,7 +43,7 @@ public class RenderLayerAPI {
             set("registerShader", new VarArgFunction() {
                 @Override
                 public Varargs invoke(Varargs args) {
-                    if (!script.playerData.canRenderCustomLayers())
+                    if (!script.avatarData.canRenderCustomLayers())
                         return NIL;
                     if (script.shaders.size() >= CustomScript.maxShaders)
                         throw new LuaError("You've registered too many (" + CustomScript.maxShaders + ") shaders. Ignoring further ones.");
@@ -83,7 +83,7 @@ public class RenderLayerAPI {
                             FiguraShader newShader = FiguraShader.create(vertexFormat, vertexSource, fragmentSource, numSamplers, uniformNames, uniformTypes);
                             script.shaders.put(name, newShader);
                         } catch (IOException e) {
-                            if (script.playerData.isLocalAvatar)
+                            if (script.avatarData.isLocalAvatar)
                                 CustomScript.sendChatMessage(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                             e.printStackTrace();
                         }
@@ -94,7 +94,7 @@ public class RenderLayerAPI {
             set("registerRenderLayer", new VarArgFunction() {
                 @Override
                 public Varargs invoke(Varargs args) {
-                    if (!script.playerData.canRenderCustomLayers())
+                    if (!script.avatarData.canRenderCustomLayers())
                         return NIL;
                     if (script.customVCP != null && !script.customVCP.canAddLayer())
                         throw new LuaError("Cannot add anymore render layers, already reached cap (" + script.customVCP.maxSize + ").");
@@ -213,9 +213,9 @@ public class RenderLayerAPI {
                     String textureStr = arg2.checkjstring();
                     RenderSystem.enableTexture();
                     switch (textureStr) {
-                        case "MY_TEXTURE" -> RenderSystem.setShaderTexture(loc, script.playerData.texture.id);
+                        case "MY_TEXTURE" -> RenderSystem.setShaderTexture(loc, script.avatarData.texture.id);
                         case "MY_TEXTURE_EMISSIVE" -> {
-                            List<FiguraTexture> textureList = script.playerData.extraTextures;
+                            List<FiguraTexture> textureList = script.avatarData.extraTextures;
                             if (textureList.size() > 0) {
                                 RenderSystem.setShaderTexture(loc, textureList.get(0).id);
                             } else {

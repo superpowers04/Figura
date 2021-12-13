@@ -1,7 +1,7 @@
 package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -20,77 +20,77 @@ public class MetaAPI {
             set("getInitLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.INIT_INST));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.INIT_INST));
                 }
             });
 
             set("getTickLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.TICK_INST));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.TICK_INST));
                 }
             });
 
             set("getRenderLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.RENDER_INST));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.RENDER_INST));
                 }
             });
 
             set("getCanModifyVanilla", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1);
                 }
             });
 
             set("getComplexityLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY));
                 }
             });
 
             set("getParticleLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES));
                 }
             });
 
             set("getSoundLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS));
                 }
             });
 
             set("getDoesRenderOffscreen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1);
                 }
             });
 
             set("getCanModifyNameplate", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 1);
                 }
             });
 
             set("getCanHaveCustomRenderLayer", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1);
                 }
             });
 
             set("getCanHaveCustomSounds", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 1);
                 }
             });
 
@@ -119,7 +119,7 @@ public class MetaAPI {
             set("getCurrentComplexity", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.model != null ? script.playerData.model.lastComplexity : 0);
+                    return LuaValue.valueOf(script.avatarData.model != null ? script.avatarData.model.lastComplexity : 0);
                 }
             });
 
@@ -149,15 +149,15 @@ public class MetaAPI {
             set("getModelStatus", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    if (script.playerData.model == null)
+                    if (script.avatarData.model == null)
                         return LuaValue.valueOf(1);
 
                     int ret;
-                    long fileSize = script.playerData.getFileSize();
+                    long fileSize = script.avatarData.getFileSize();
 
-                    if (fileSize >= PlayerData.FILESIZE_LARGE_THRESHOLD)
+                    if (fileSize >= AvatarData.FILESIZE_LARGE_THRESHOLD)
                         ret = 2;
-                    else if (fileSize >= PlayerData.FILESIZE_WARNING_THRESHOLD)
+                    else if (fileSize >= AvatarData.FILESIZE_WARNING_THRESHOLD)
                         ret = 3;
                     else
                         ret = 4;
@@ -176,7 +176,7 @@ public class MetaAPI {
             set("getTextureStatus", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData.texture != null ? 4 : 1);
+                    return LuaValue.valueOf(script.avatarData.texture != null ? 4 : 1);
                 }
             });
 

@@ -1,8 +1,8 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
 import net.minecraft.client.MinecraftClient;
@@ -26,11 +26,9 @@ public abstract class InGameHudMixin {
         //render hud parts
         Entity entity = MinecraftClient.getInstance().getCameraEntity();
         if (entity != null) {
-            PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
-            if (data != null && data.model != null) {
-                FiguraMod.currentData = data;
-                data.model.renderHudParts(data, matrices);
-            }
+            AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
+            if (data != null && data.model != null)
+                data.model.renderHudParts(matrices);
         }
 
         if (FiguraMod.PLAYER_POPUP_BUTTON.isPressed())
@@ -54,7 +52,7 @@ public abstract class InGameHudMixin {
             ci.cancel();
 
         //do not render crosshair
-        PlayerData currentData = PlayerDataManager.localPlayer;
+        AvatarData currentData = AvatarDataManager.localPlayer;
         if (currentData != null && currentData.script != null && !currentData.script.crossHairEnabled)
             ci.cancel();
     }
@@ -69,7 +67,7 @@ public abstract class InGameHudMixin {
     )
     private void renderCrosshairDrawTexture(Args args) {
         //set crosshair offset
-        PlayerData currentData = PlayerDataManager.localPlayer;
+        AvatarData currentData = AvatarDataManager.localPlayer;
         if (currentData != null && currentData.script != null && currentData.script.crossHairPos != null) {
             args.set(1, (int) ((int) args.get(1) + currentData.script.crossHairPos.x));
             args.set(2, (int) ((int) args.get(2) + currentData.script.crossHairPos.y));

@@ -1,7 +1,7 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.minecraft.client.gui.hud.DebugHud;
 import org.spongepowered.asm.mixin.Mixin;
@@ -27,8 +27,8 @@ public class DebugHudMixin {
         lines.add(++i, "§b[FIGURA]§r");
         lines.add(++i, "Version: " + FiguraMod.MOD_VERSION);
 
-        if (PlayerDataManager.localPlayer != null) {
-            CustomScript script = PlayerDataManager.localPlayer.script;
+        if (AvatarDataManager.localPlayer != null) {
+            CustomScript script = AvatarDataManager.localPlayer.script;
             if (script != null) {
                 lines.add(++i, String.format("Init instructions: %d", script.initInstructionCount));
                 lines.add(++i, String.format("Tick instructions: %d", script.tickInstructionCount + script.damageInstructionCount));

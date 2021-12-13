@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.InputUtil;
@@ -79,8 +79,8 @@ public final class ConfigManager {
         FORMAT_SCRIPT_ON_UPLOAD(true) {
             @Override
             public void runOnChange() {
-                if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.isLocalAvatar) {
-                    PlayerDataManager.localPlayer.reloadAvatar();
+                if (AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.isLocalAvatar) {
+                    AvatarDataManager.localPlayer.reloadAvatar();
                 }
             }
         },

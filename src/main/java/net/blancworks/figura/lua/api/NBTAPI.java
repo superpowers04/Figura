@@ -8,7 +8,7 @@ import java.util.function.Function;
 
 public class NBTAPI {
 
-    public static HashMap<Class, Function<NbtElement, LuaValue>> nbtConverters = new HashMap<Class, Function<NbtElement, LuaValue>>(){{
+    public static HashMap<Class<?>, Function<NbtElement, LuaValue>> nbtConverters = new HashMap<>() {{
         put(NbtCompound.class, NBTAPI::fromCompoundTag);
         put(NbtInt.class, NBTAPI::fromIntTag);
         put(NbtShort.class, NBTAPI::fromShortTag);
@@ -28,7 +28,7 @@ public class NBTAPI {
         if(tag == null)
             return LuaValue.NIL;
 
-        Class getClass = tag.getClass();
+        Class<?> getClass = tag.getClass();
         Function<NbtElement, LuaValue> builder = nbtConverters.get(getClass);
         if(builder == null) return LuaValue.NIL;
         return builder.apply(tag);

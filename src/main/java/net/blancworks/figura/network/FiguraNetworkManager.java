@@ -4,8 +4,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
 import net.minecraft.nbt.NbtCompound;
@@ -121,7 +121,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
 
                         String hashString = Base64.getEncoder().encodeToString(hashBytes);
                         
-                        PlayerData data =  PlayerDataManager.getDataForPlayer(id);
+                        AvatarData data =  AvatarDataManager.getDataForPlayer(id);
                         
                         data.loadFromNbt(nbt);
                         data.lastHash = getAvatarHashSync(id);
@@ -140,7 +140,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     public CompletableFuture<UUID> postAvatar() {
         return CompletableFuture.supplyAsync(()->{
             postModel();
-            return PlayerDataManager.localPlayer.playerId; 
+            return AvatarDataManager.localPlayer.entityId;
         });
     }
 
@@ -162,7 +162,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
             String newHash = getAvatarHashSync(playerID);
             
             if(!newHash.equals(previousHash)){
-                PlayerData data = PlayerDataManager.getDataForPlayer(playerID);
+                AvatarData data = AvatarDataManager.getDataForPlayer(playerID);
                 data.isInvalidated = true;
             }
         });
@@ -309,7 +309,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
 
                 try {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", getServerURL(), uuidString, figuraSessionKey));
-                    PlayerData data = PlayerDataManager.localPlayer;
+                    AvatarData data = AvatarDataManager.localPlayer;
 
                     NbtCompound infoNbt = new NbtCompound();
                     data.writeNbt(infoNbt);
@@ -358,7 +358,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
 
                 try {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", getServerURL(), uuidString, figuraSessionKey));
-                    PlayerData data = PlayerDataManager.localPlayer;
+                    AvatarData data = AvatarDataManager.localPlayer;
 
                     NbtCompound infoNbt = new NbtCompound();
                     data.writeNbt(infoNbt);
@@ -371,7 +371,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                     httpURLConnection.connect();
                     httpURLConnection.disconnect();
 
-                    PlayerDataManager.clearLocalPlayer();
+                    AvatarDataManager.clearLocalPlayer();
 
                     FiguraMod.LOGGER.info(httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
@@ -411,11 +411,11 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     //Player data stuff
     //Right now just gets avatar, but will eventually get other stuff like report data.
 
-    public CompletableFuture<PlayerData> getPlayerData(UUID uuid) {
+    public CompletableFuture<AvatarData> getPlayerData(UUID uuid) {
         return null;
     }
 
-    private PlayerData getData(UUID id) {
+    private AvatarData getData(UUID id) {
 
         return null;
     }

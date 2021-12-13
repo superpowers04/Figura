@@ -1,7 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
@@ -22,7 +22,7 @@ public abstract class PlayerEntityMixin extends LivingEntity {
     @Inject(at = @At("RETURN"), method = "damage")
     public void damage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (cir.getReturnValue()) {
-            PlayerData data = PlayerDataManager.getDataForPlayer(this.getUuid());
+            AvatarData data = AvatarDataManager.getDataForPlayer(this.getUuid());
 
             if (data != null && data.script != null) {
                 data.script.lastDamageSource = source;

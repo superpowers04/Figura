@@ -1,6 +1,6 @@
 package net.blancworks.figura.lua.api.chat;
 
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.mixin.ChatHudAccessorMixin;
@@ -27,7 +27,7 @@ public class ChatAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-            final boolean isHost = script.playerData == PlayerDataManager.localPlayer;
+            final boolean isHost = script.avatarData == AvatarDataManager.localPlayer;
 
             set("sendMessage", new OneArgFunction() {
                 @Override

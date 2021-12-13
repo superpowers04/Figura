@@ -1,7 +1,6 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.access.ElytraEntityModelAccess;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
@@ -47,8 +46,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
 
     @Override
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
-        PlayerData data = FiguraMod.currentData;
-
+        AvatarData data = AvatarData.currentRenderingData;
         
         try {
             if (data != null && data.model != null) {
@@ -110,15 +108,14 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
         return rightWing;
     }
 
-    public void figura$renderExtraElytraPartsWithTexture(PlayerData data, MatrixStack matrices, int light, int overlay, float alpha) {
-
+    public void figura$renderExtraElytraPartsWithTexture(AvatarData data, MatrixStack matrices, int light, int overlay, float alpha) {
         //Render left parts.
         matrices.push();
         getLeftWing().rotate(matrices);
 
         synchronized (data.model.specialParts) {
             for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.LeftElytra)) {
-                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), data.vertexConsumerProvider, light, overlay, alpha);
 
                 if (data.model.leftToRender == 0)
                     break;
@@ -133,7 +130,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
 
         synchronized (data.model.specialParts) {
             for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.RightElytra)) {
-                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), FiguraMod.vertexConsumerProvider, light, overlay, alpha);
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), data.vertexConsumerProvider, light, overlay, alpha);
 
                 if (data.model.leftToRender == 0)
                     break;

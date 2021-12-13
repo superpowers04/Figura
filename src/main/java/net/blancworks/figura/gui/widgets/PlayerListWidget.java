@@ -2,8 +2,8 @@ package net.blancworks.figura.gui.widgets;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.FiguraTrustScreen;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.mixin.PlayerListHudAccessorMixin;
@@ -48,7 +48,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             if (addedPlayers.contains(name))
                 continue;
 
-            PlayerData data = PlayerDataManager.getDataForPlayer(listEntry.getProfile().getId());
+            AvatarData data = AvatarDataManager.getDataForPlayer(listEntry.getProfile().getId());
             if (data == null || !data.hasAvatar()) {
                 players.add(listEntry);
             } else {
@@ -173,7 +173,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
             else
                 name = new LiteralText("  " + entry.getProfile().getName());
 
-            Text badges = NamePlateAPI.getBadges(PlayerDataManager.getDataForPlayer(entry.getProfile().getId()));
+            Text badges = NamePlateAPI.getBadges(AvatarDataManager.getDataForPlayer(entry.getProfile().getId()));
             if (badges != null) name.append(badges);
             return name;
         }

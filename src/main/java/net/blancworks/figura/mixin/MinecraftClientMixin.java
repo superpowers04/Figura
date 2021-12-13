@@ -1,7 +1,7 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
@@ -56,7 +56,7 @@ public class MinecraftClientMixin {
     public void disconnect(Screen screen, CallbackInfo ci) {
         try {
             FiguraSoundManager.getChannel().stopAllSounds();
-            PlayerDataManager.clearCache();
+            AvatarDataManager.clearCache();
         } catch (Exception ignored) {}
     }
 
@@ -77,9 +77,9 @@ public class MinecraftClientMixin {
                 if (((PlayerListHudAccessorMixin) this.inGameHud.getPlayerListHud()).isVisible()) {
                     PlayerPopup.miniEnabled = true;
                 } else if (target instanceof PlayerEntity player && !target.isInvisibleTo(this.player)) {
-                    PlayerPopup.data = PlayerDataManager.getDataForPlayer(player.getUuid());
+                    PlayerPopup.data = AvatarDataManager.getDataForPlayer(player.getUuid());
                 } else if (!this.options.getPerspective().isFirstPerson()) {
-                    PlayerPopup.data = PlayerDataManager.localPlayer;
+                    PlayerPopup.data = AvatarDataManager.localPlayer;
                 }
             }
         } else if (PlayerPopup.enabled || PlayerPopup.miniEnabled) {
@@ -95,7 +95,7 @@ public class MinecraftClientMixin {
         if (FiguraMod.PANIC_BUTTON.wasPressed()) {
             RenderLayerAPI.restoreDefaults();
             FiguraSoundManager.getChannel().stopAllSounds();
-            PlayerDataManager.panic = !PlayerDataManager.panic;
+            AvatarDataManager.panic = !AvatarDataManager.panic;
         }
     }
 

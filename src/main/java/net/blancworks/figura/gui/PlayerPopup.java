@@ -2,8 +2,8 @@ package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
@@ -37,7 +37,7 @@ public class PlayerPopup extends DrawableHelper {
     public static int miniSelected = 0;
     public static int miniSize = 1;
 
-    public static PlayerData data;
+    public static AvatarData data;
 
     private static final List<Text> buttons = List.of(
             new TranslatableText("figura.playerpopup.cancel"),
@@ -119,7 +119,7 @@ public class PlayerPopup extends DrawableHelper {
         }
 
         //playername
-        MutableText name = data.playerName.shallowCopy().formatted(Formatting.BLACK);
+        MutableText name = data.name.shallowCopy().formatted(Formatting.BLACK);
         Text badges = NamePlateAPI.getBadges(data);
         if (badges != null) name.append(badges);
 
@@ -153,14 +153,14 @@ public class PlayerPopup extends DrawableHelper {
     public static void execute() {
         if (data != null) {
             data.hasPopup = false;
-            MutableText playerName = new LiteralText("").append(data.playerName);
+            MutableText playerName = new LiteralText("").append(data.name);
             Text badges = NamePlateAPI.getBadges(data);
             if (badges != null) playerName.append(badges);
 
             switch (index) {
                 case 1 -> {
                     if (data.hasAvatar() && data.isAvatarLoaded()) {
-                        PlayerDataManager.clearPlayer(data.playerId);
+                        AvatarDataManager.clearPlayer(data.entityId);
                         FiguraMod.sendToast(playerName, "figura.toast.avatar.reload.title");
                     }
                 }

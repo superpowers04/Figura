@@ -1,10 +1,10 @@
 package net.blancworks.figura.gui.widgets;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.LocalAvatarManager;
-import net.blancworks.figura.LocalAvatarManager.LocalAvatar;
-import net.blancworks.figura.LocalAvatarManager.LocalAvatarFolder;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.LocalAvatarManager;
+import net.blancworks.figura.avatar.LocalAvatarManager.LocalAvatar;
+import net.blancworks.figura.avatar.LocalAvatarManager.LocalAvatarFolder;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
@@ -61,7 +61,7 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
             this.reloadFilters();
             return;
         } else if (entry instanceof ModelFileListWidgetEntry file) {
-            if (PlayerDataManager.localPlayer == null || !PlayerDataManager.localPlayer.isAvatarLoaded())
+            if (AvatarDataManager.localPlayer == null || !AvatarDataManager.localPlayer.isAvatarLoaded())
                 return;
 
             FiguraGuiScreen parent = (FiguraGuiScreen) getParent();

@@ -1,5 +1,9 @@
 package net.blancworks.figura;
 
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
+import net.blancworks.figura.avatar.EntityAvatarData;
+import net.blancworks.figura.avatar.LocalAvatarManager;
 import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.config.ConfigManager.ConfigKeyBind;
@@ -10,10 +14,10 @@ import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.network.IFiguraNetwork;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.utils.SSLFixer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext;
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
@@ -23,10 +27,6 @@ import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumerProvider;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
@@ -36,7 +36,6 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -88,42 +87,10 @@ public class FiguraMod implements ClientModInitializer {
     //private static FiguraNetworkManager oldNetworkManager;
     private static NewFiguraNetworkManager newNetworkManager;
 
-    //Used during rendering.
-    public static AbstractClientPlayerEntity currentPlayer;
-    public static PlayerData currentData;
-    public static VertexConsumerProvider vertexConsumerProvider;
-    public static VertexConsumerProvider.Immediate immediate;
-    public static float deltaTime;
-
     //script entry points
-    public static final List<FiguraAPI> apis = new ArrayList<>();
+    public static final List<FiguraAPI> CUSTOM_APIS = new ArrayList<>();
 
     //Methods
-
-    //Set current player.
-    //If there is a model loaded for the player, it'll be assigned here to the current model.
-    //Otherwise, sends the model to the request list.
-    public static void setRenderingData(AbstractClientPlayerEntity player, VertexConsumerProvider vcp, PlayerEntityModel<?> mdl, float dt) {
-        currentPlayer = player;
-        currentData = PlayerDataManager.getDataForPlayer(player.getUuid());
-        if (currentData != null)
-            currentData.vanillaModel = mdl;
-        FiguraMod.vertexConsumerProvider = vcp;
-        if (vcp.getClass() == VertexConsumerProvider.Immediate.class) {
-            FiguraMod.immediate = (VertexConsumerProvider.Immediate) vcp;
-        }
-        deltaTime = dt;
-    }
-
-    public static VertexConsumerProvider tryGetImmediate() {
-        return immediate == null ? vertexConsumerProvider : immediate;
-    }
-
-    public static void clearRenderingData() {
-        currentPlayer = null;
-        currentData = null;
-        deltaTime = 0;
-    }
 
     @Override
     public void onInitializeClient() {
@@ -132,7 +99,7 @@ public class FiguraMod implements ClientModInitializer {
             ModMetadata metadata = entrypoint.getProvider().getMetadata();
             String modId = metadata.getId();
             try {
-                apis.add(entrypoint.getEntrypoint());
+                CUSTOM_APIS.add(entrypoint.getEntrypoint());
             } catch (Exception e) {
                 LOGGER.error("Failed to load entrypoint of mod {}", modId, e);
             }
@@ -165,7 +132,11 @@ public class FiguraMod implements ClientModInitializer {
 
         //Register fabric events
         ClientTickEvents.END_CLIENT_TICK.register(FiguraMod::ClientEndTick);
-        WorldRenderEvents.AFTER_ENTITIES.register(FiguraMod::renderFirstPersonWorldParts);
+        WorldRenderEvents.AFTER_ENTITIES.register(context -> {
+            AvatarData data = AvatarDataManager.localPlayer;
+            if (data != null && data.model != null && !context.camera().isThirdPerson())
+                data.model.renderFirstPersonWorldParts(context.matrixStack(), context.camera(), context.tickDelta());
+        });
         ClientLifecycleEvents.CLIENT_STOPPING.register((v) -> networkManager.onClose());
 
         ResourceManagerHelper.get(ResourceType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
@@ -176,7 +147,8 @@ public class FiguraMod implements ClientModInitializer {
 
             @Override
             public void reload(ResourceManager manager) {
-                PlayerDataManager.reloadAllTextures();
+                AvatarDataManager.reloadAssets();
+                EntityAvatarData.loadCemModels();
 
                 try {
                     cheese = NbtIo.readCompressed(manager.getResource(new Identifier("figura", "cheese/cheese.nbt")).getInputStream());
@@ -193,7 +165,7 @@ public class FiguraMod implements ClientModInitializer {
     //Client-side ticks.
     public static void ClientEndTick(MinecraftClient client) {
         try {
-            PlayerDataManager.tick();
+            AvatarDataManager.tick();
             FiguraSoundManager.tick();
 
             networkManager = newNetworkManager;
@@ -258,39 +230,6 @@ public class FiguraMod implements ClientModInitializer {
 
         if (onFinished != null)
             onFinished.run();
-    }
-
-
-    private static void renderFirstPersonWorldParts(WorldRenderContext context) {
-        if (context.camera().isThirdPerson())
-            return;
-
-        PlayerData data = PlayerDataManager.localPlayer;
-
-        if (data != null && data.lastEntity != null) {
-            FiguraMod.currentData = data;
-
-            context.matrixStack().push();
-
-            try {
-                if (data.model != null) {
-                    int prevCount = data.model.leftToRender;
-                    data.model.leftToRender = Integer.MAX_VALUE - 100;
-
-                    if (FiguraMod.vertexConsumerProvider != null) {
-                        Vec3d camera = context.camera().getPos();
-                        data.model.renderWorldParts(data, camera.x, camera.y, camera.z, context.matrixStack(), data.getVCP(), MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(data.lastEntity, context.tickDelta()), OverlayTexture.DEFAULT_UV, 1f);
-                    }
-
-                    data.model.leftToRender = prevCount;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            context.matrixStack().pop();
-            FiguraMod.clearRenderingData();
-        }
     }
 
     public static void sendToast(Object title, Object message) {

@@ -1,7 +1,7 @@
 package net.blancworks.figura.lua.api.nameplate;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.access.FiguraTextAccess;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.CustomScript;
@@ -134,7 +134,7 @@ public class NamePlateAPI {
         }
     }
 
-    public static boolean applyFormattingRecursive(LiteralText text, String playerName, NamePlateCustomization nameplateData, PlayerData currentData) {
+    public static boolean applyFormattingRecursive(LiteralText text, String playerName, NamePlateCustomization nameplateData, AvatarData currentData) {
         //save siblings
         ArrayList<Text> siblings = new ArrayList<>(text.getSiblings());
 
@@ -232,7 +232,7 @@ public class NamePlateAPI {
         return false;
     }
 
-    public static Text applyNameplateFormatting(Text text, NamePlateCustomization nameplateData, PlayerData currentData) {
+    public static Text applyNameplateFormatting(Text text, NamePlateCustomization nameplateData, AvatarData currentData) {
         //dummy playername text
         MutableText formattedText = new LiteralText(((LiteralText) text).getRawString());
 
@@ -265,7 +265,7 @@ public class NamePlateAPI {
     }
 
     private static final String LOADING = "\u22EE\u22F0\u22EF\u22F1";
-    public static Text getBadges(PlayerData currentData) {
+    public static Text getBadges(AvatarData currentData) {
         if (currentData == null) return null;
 
         //font
@@ -291,7 +291,7 @@ public class NamePlateAPI {
         }
 
         //special badges
-        if (FiguraMod.VIP.contains(currentData.playerId))
+        if (FiguraMod.VIP.contains(currentData.entityId))
             badges += "✭";
 
         //return null if no badges

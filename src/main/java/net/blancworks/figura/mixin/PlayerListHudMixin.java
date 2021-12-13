@@ -2,9 +2,8 @@ package net.blancworks.figura.mixin;
 
 import com.mojang.authlib.GameProfile;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
@@ -13,7 +12,6 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.gui.hud.PlayerListHud;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.DiffuseLighting;
@@ -51,7 +49,7 @@ public class PlayerListHudMixin {
             UUID uuid = entry.getProfile().getId();
             String playerName = entry.getProfile().getName();
 
-            PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
+            AvatarData currentData = AvatarDataManager.getDataForPlayer(uuid);
             if (currentData != null && !playerName.equals("")) {
                 NamePlateCustomization nameplateData = currentData.script == null ? null : currentData.script.nameplateCustomizations.get(NamePlateAPI.TABLIST);
 
@@ -83,7 +81,7 @@ public class PlayerListHudMixin {
         this.playerEntity = playerEntity;
 
         if (PlayerPopup.miniEnabled && x == PlayerPopup.miniSelected) {
-            PlayerPopup.data = PlayerDataManager.getDataForPlayer(playerListEntry2.getProfile().getId());
+            PlayerPopup.data = AvatarDataManager.getDataForPlayer(playerListEntry2.getProfile().getId());
 
             PlayerPopup.miniSize = list.size();
 
@@ -98,7 +96,7 @@ public class PlayerListHudMixin {
 
     @Redirect(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawableHelper;drawTexture(Lnet/minecraft/client/util/math/MatrixStack;IIIIFFIIII)V"), method = "render")
     private void render(MatrixStack matrices, int x, int y, int width, int height, float u, float v, int regionWidth, int regionHeight, int textureWidth, int textureHeight) {
-        PlayerData data = playerEntity == null ? null : PlayerDataManager.getDataForPlayer(playerEntity.getUuid());
+        AvatarData data = playerEntity == null ? null : AvatarDataManager.getDataForPlayer(playerEntity.getUuid());
 
         if (!(boolean) Config.CUSTOM_PLAYER_HEADS.value || data == null || data.model == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0) {
             DrawableHelper.drawTexture(matrices, x, y, width, height, u, v, regionWidth, regionHeight, textureWidth, textureHeight);
@@ -106,8 +104,7 @@ public class PlayerListHudMixin {
         }
 
         //draw figura head
-        FiguraMod.currentData = data;
-        FiguraMod.currentPlayer = (AbstractClientPlayerEntity) playerEntity;
+        data.lastEntity = playerEntity;
 
         Window w = MinecraftClient.getInstance().getWindow();
         final double guiScale = w.getScaleFactor();
@@ -122,7 +119,7 @@ public class PlayerListHudMixin {
         stack.scale(-16, 16, 16);
         stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
 
-        if (!data.model.renderSkull(data, stack, FiguraMod.tryGetImmediate(), 0xF000F0)) {
+        if (!data.model.renderSkull(stack, data.tryGetImmediate(), 0xF000F0)) {
             matrices.push();
             matrices.translate(0f, 0f, 4f);
 

@@ -3,10 +3,6 @@ package net.blancworks.figura.models.shaders;
 import net.minecraft.client.render.BufferBuilder;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexFormat;
-import net.minecraft.nbt.NbtCompound;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.concurrent.CompletableFuture;
 
 /**
  * This class only exists because RenderLayer is abstract, and I need to instantiate them.

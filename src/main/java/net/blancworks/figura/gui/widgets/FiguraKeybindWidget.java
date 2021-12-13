@@ -1,8 +1,8 @@
 package net.blancworks.figura.gui.widgets;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.FiguraKeyBindsScreen;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.minecraft.client.MinecraftClient;
@@ -41,7 +41,7 @@ public class FiguraKeybindWidget extends ElementListWidget<FiguraKeybindWidget.E
     public void tick() {
         this.children().clear();
 
-        PlayerData data = PlayerDataManager.localPlayer;
+        AvatarData data = AvatarDataManager.localPlayer;
         if (data != null && data.script != null) {
             data.script.keyBindings.forEach(binding -> this.addEntry(new FiguraKeybindEntry(Text.of(binding.name), binding)));
         }

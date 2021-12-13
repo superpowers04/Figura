@@ -1,6 +1,6 @@
 package net.blancworks.figura.lua.api.network;
 
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.minecraft.util.Identifier;
@@ -43,7 +43,7 @@ public class NetworkAPI {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     //Only allow sending pings on local player avatar.
-                    if(targetScript.playerData != PlayerDataManager.localPlayer)
+                    if(targetScript.avatarData != AvatarDataManager.localPlayer)
                         return NIL;
 
                     try {
@@ -59,7 +59,7 @@ public class NetworkAPI {
                         lp.args = arg2;
                         lp.functionID = id;
 
-                        if (!targetScript.playerData.isLocalAvatar)
+                        if (!targetScript.avatarData.isLocalAvatar)
                             targetScript.outgoingPingQueue.add(lp);
                     } catch (Exception e) {
                         e.printStackTrace();

@@ -1,8 +1,8 @@
 package net.blancworks.figura.network.messages.pings;
 
 import com.google.common.io.LittleEndianDataInputStream;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.api.network.LuaNetworkReadWriter;
 import net.blancworks.figura.network.messages.pubsub.ChannelMessageHandler;
 import org.luaj.vm2.LuaValue;
@@ -15,7 +15,7 @@ public class PingMessageHandler extends ChannelMessageHandler {
         
         short count = (short) Math.max(Math.min(stream.readShort(), 32), 0);
         
-        PlayerData data = PlayerDataManager.getDataForPlayer(senderID);
+        AvatarData data = AvatarDataManager.getDataForPlayer(senderID);
 
         if (data != null && data.script != null) {
             for (int i = 0; i < count; i++) {

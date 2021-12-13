@@ -1,7 +1,7 @@
 package net.blancworks.figura.lua;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelAPI;
@@ -92,7 +92,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(BlockStateAPI.getID(), BlockStateAPI::getForScript);
         apiSuppliers.put(FirstPersonModelAPI.getID(), FirstPersonModelAPI::getForScript);
 
-        FiguraMod.apis.forEach(api -> apiSuppliers.put(api.getID(), api::getForScript));
+        FiguraMod.CUSTOM_APIS.forEach(api -> apiSuppliers.put(api.getID(), api::getForScript));
     }
 
     public static void registerEvents() {
@@ -104,7 +104,7 @@ public class FiguraLuaManager {
         registerEvent("onDamage");
     }
 
-    public static void loadScript(PlayerData data, String content) {
+    public static void loadScript(AvatarData data, String content) {
         data.script = new CustomScript(data, content);
     }
 

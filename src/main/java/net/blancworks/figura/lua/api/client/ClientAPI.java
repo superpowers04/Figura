@@ -1,6 +1,6 @@
 package net.blancworks.figura.lua.api.client;
 
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -208,7 +208,7 @@ public class ClientAPI {
             set("isHost", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.playerData == PlayerDataManager.localPlayer);
+                    return LuaValue.valueOf(script.avatarData == AvatarDataManager.localPlayer);
                 }
             });
 
