@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.blaze3d.platform.TextureUtil;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.avatar.AvatarData;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.texture.NativeImage;
 import net.minecraft.client.texture.ResourceTexture;
@@ -64,7 +64,7 @@ public class FiguraTexture extends ResourceTexture {
     }
 
     public void registerTexture(){
-        PlayerData.getTextureManager().registerTexture(id, this);
+        AvatarData.getTextureManager().registerTexture(id, this);
     }
     
     private void uploadTexture(NativeImage image) {

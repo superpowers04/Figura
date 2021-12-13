@@ -4,8 +4,8 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.LuaEvent;
@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
 
 public class CustomScript extends FiguraAsset {
 
-    public PlayerData playerData;
+    public AvatarData avatarData;
     public String source;
     public boolean scriptError = false;
     public String scriptName = "main";
@@ -153,22 +153,22 @@ public class CustomScript extends FiguraAsset {
         source = "";
     }
 
-    public CustomScript(PlayerData data, String content) {
+    public CustomScript(AvatarData data, String content) {
         load(data, content);
     }
 
     //--Setup--
     //Loads the script using the targeted playerData and source code.
-    public void load(PlayerData data, String src) {
+    public void load(AvatarData data, String src) {
         //Set the player data so we have something to target.
-        playerData = data;
+        avatarData = data;
 
         //Loads the source into this string variable for later use.
         source = src;
 
         //get the script name
-        if (data == PlayerDataManager.localPlayer && (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.loadedName != null))
-            scriptName = PlayerDataManager.localPlayer.loadedName;
+        if (data == AvatarDataManager.localPlayer && (AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.loadedName != null))
+            scriptName = AvatarDataManager.localPlayer.loadedName;
 
         //Load up the default libraries we want to include.
         scriptGlobals.load(new JseBaseLib());
@@ -236,9 +236,9 @@ public class CustomScript extends FiguraAsset {
                     scriptError = true;
                     String error = "Script overran resource limits";
 
-                    if (data == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
+                    if (data == AvatarDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
-                        if (data != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(data.playerName.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
+                        if (data != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(data.name.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR)).append(error).formatted(Formatting.RED);
 
                         sendChatMessage(message);
@@ -285,7 +285,7 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
-    public void fromNBT(PlayerData data, NbtCompound tag) {
+    public void fromNBT(AvatarData data, NbtCompound tag) {
         Set<String> keys = tag.getKeys();
         if (keys.size() <= 1) {
             source = tag.getString("src");
@@ -317,7 +317,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onFiguraChatCommand(String message) {
-        if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || scriptError || !hasPlayer || avatarData.lastEntity == null)
             return;
 
         queueTask(() -> {
@@ -331,7 +331,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void runActionWheelFunction(LuaFunction function) {
-        if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || scriptError || !hasPlayer || avatarData.lastEntity == null)
             return;
 
         queueTask(() -> {
@@ -345,7 +345,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onWorldRender(float deltaTime) {
-        if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || scriptError || !hasPlayer || avatarData.lastEntity == null)
             return;
 
         queueTask(() -> {
@@ -364,7 +364,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onDamage(float amount, DamageSource source) {
-        if (!isDone || scriptError || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || scriptError || !hasPlayer || avatarData.lastEntity == null)
             return;
 
         queueTask(() -> {
@@ -397,9 +397,9 @@ public class CustomScript extends FiguraAsset {
             @Override
             public LuaValue call(LuaValue arg) {
                 try {
-                    if (playerData == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
+                    if (avatarData == AvatarDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
-                        if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
+                        if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
 
                         Text log = arg instanceof LuaVector logText ? logText.toJsonText() : TextUtils.tryParseJson(arg.toString());
@@ -429,9 +429,9 @@ public class CustomScript extends FiguraAsset {
                 try {
                     LuaTable table = arg.checktable();
 
-                    if (playerData == PlayerDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
+                    if (avatarData == AvatarDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
-                        if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
+                        if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
 
                         int config = (int) Config.SCRIPT_LOG_LOCATION.value;
@@ -513,7 +513,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void setInstructionLimitPermission(TrustContainer.Trust permissionID, int subtract) {
-        int count = playerData.getTrustContainer().getTrust(permissionID) - subtract;
+        int count = avatarData.getTrustContainer().getTrust(permissionID) - subtract;
         setInstructionLimit(count);
     }
 
@@ -534,9 +534,9 @@ public class CustomScript extends FiguraAsset {
 
     //Called whenever the global tick event happens
     public void tick() {
-        if (playerData != null) {
-            float particles = playerData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES);
-            float sounds = playerData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS);
+        if (avatarData != null) {
+            float particles = avatarData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES);
+            float sounds = avatarData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS);
             particleSpawnCount = MathHelper.clamp(particleSpawnCount + (1 / 20f * particles), 0, particles);
             soundSpawnCount = MathHelper.clamp(soundSpawnCount + (1 / 20f * sounds), 0, sounds);
         }
@@ -553,14 +553,14 @@ public class CustomScript extends FiguraAsset {
     public void render(float deltaTime) {
         //Don't render if the script is doing something else still
         //Prevents threading memory errors and also ensures that "long" ticks and events and such are penalized.
-        if (renderLuaEvent == null || scriptError || currTask == null || !currTask.isDone() || !isDone || !hasPlayer || playerData.lastEntity == null)
+        if (renderLuaEvent == null || scriptError || currTask == null || !currTask.isDone() || !isDone || !hasPlayer || avatarData.lastEntity == null)
             return;
 
         onRender(deltaTime);
     }
 
     public void onTick() {
-        if (!isDone || tickLuaEvent == null || scriptError || !hasPlayer || playerData.lastEntity == null)
+        if (!isDone || tickLuaEvent == null || scriptError || !hasPlayer || avatarData.lastEntity == null)
             return;
 
         setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
@@ -759,7 +759,7 @@ public class CustomScript extends FiguraAsset {
 
     public void logLuaError(LuaError error) {
         //Never even log errors for other players, only the local player.
-        if (playerData != PlayerDataManager.localPlayer && !(boolean) Config.LOG_OTHERS_SCRIPT.value)
+        if (avatarData != AvatarDataManager.localPlayer && !(boolean) Config.LOG_OTHERS_SCRIPT.value)
             return;
 
         String msg = error.getMessage();
@@ -767,7 +767,7 @@ public class CustomScript extends FiguraAsset {
         String[] messageParts = msg.split("\n");
 
         MutableText message = LOG_PREFIX.shallowCopy();
-        if (playerData != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(playerData.playerName.copy()).append(" ");
+        if (avatarData != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
         message.append(new LiteralText(">> ").styled(LUA_COLOR));
         sendChatMessage(message);
 
@@ -975,8 +975,8 @@ public class CustomScript extends FiguraAsset {
 
     //--Misc--
     public void clearSounds() {
-        if (playerData != null) {
-            FiguraSoundManager.getChannel().stopSound(playerData.playerId);
+        if (avatarData != null) {
+            FiguraSoundManager.getChannel().stopSound(avatarData.entityId);
         }
 
         customSounds.values().forEach(FiguraSound::close);

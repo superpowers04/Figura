@@ -2,6 +2,10 @@ package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.*;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
+import net.blancworks.figura.avatar.LocalAvatarData;
+import net.blancworks.figura.avatar.LocalAvatarManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.config.ConfigScreen;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
@@ -203,10 +207,10 @@ public class FiguraGuiScreen extends Screen {
 
         //open folder
         openFolderButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("figura.gui.button.openfolder"), (buttonWidgetx) -> {
-            Path modelDir = LocalPlayerData.getContentDirectory();
+            Path modelDir = LocalAvatarData.getContentDirectory();
             try {
-                if (isHoldingShift && PlayerDataManager.localPlayer.loadedPath != null) {
-                    String path = PlayerDataManager.localPlayer.loadedPath;
+                if (isHoldingShift && AvatarDataManager.localPlayer.loadedPath != null) {
+                    String path = AvatarDataManager.localPlayer.loadedPath;
                     modelDir = Path.of(path);
 
                     if (path.endsWith(".zip"))
@@ -303,7 +307,7 @@ public class FiguraGuiScreen extends Screen {
                 25, 25,
                 0, 0, 25,
                 reloadTexture, 25, 50,
-                (bx) -> PlayerDataManager.clearLocalPlayer()
+                (bx) -> AvatarDataManager.clearLocalPlayer()
         );
         this.addDrawableChild(reloadButton);
 
@@ -411,12 +415,12 @@ public class FiguraGuiScreen extends Screen {
         }
 
         //panic
-        if (PlayerDataManager.panic)
+        if (AvatarDataManager.panic)
             drawCenteredText(matrices, client.textRenderer, new TranslatableText("figura.gui.panic.warning").formatted(Formatting.YELLOW), this.width / 2, 3, 0xFFFFFF);
 
         //tooltips
         boolean hasBackend = connectionStatus == 3;
-        PlayerData local = PlayerDataManager.localPlayer;
+        AvatarData local = AvatarDataManager.localPlayer;
         uploadButton.active = hasBackend && local != null && local.hasAvatar() && local.isAvatarLoaded() && local.isLocalAvatar;
 
         boolean wasUploadActive = uploadButton.active;
@@ -456,7 +460,7 @@ public class FiguraGuiScreen extends Screen {
             matrices.pop();
         }
 
-        keybindsButton.active = PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.script != null;
+        keybindsButton.active = AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.script != null;
 
         boolean wasKeybindsActive = keybindsButton.active;
         keybindsButton.active = true;
@@ -496,34 +500,34 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public void loadLocalAvatar(String fileName, String path) {
-        PlayerDataManager.lastLoadedFileName = fileName;
-        PlayerDataManager.localPlayer.isLocalAvatar = true;
-        PlayerDataManager.localPlayer.loadModelFile(path);
+        AvatarDataManager.lastLoadedFileName = fileName;
+        AvatarDataManager.localPlayer.isLocalAvatar = true;
+        AvatarDataManager.localPlayer.loadModelFile(path);
     }
 
     public void updateAvatarData() {
-        if (PlayerDataManager.localPlayer != null && PlayerDataManager.localPlayer.hasAvatar()) {
-            if (PlayerDataManager.lastLoadedFileName != null) {
+        if (AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.hasAvatar()) {
+            if (AvatarDataManager.lastLoadedFileName != null) {
                 nameText = new TranslatableText("figura.gui.status.name");
-                nameText.append(new LiteralText(this.textRenderer.trimToWidth(" " + PlayerDataManager.lastLoadedFileName, this.width / 2 - modelBgSize / 2 - 41 - this.textRenderer.getWidth(nameText))).styled(FiguraMod.ACCENT_COLOR));
+                nameText.append(new LiteralText(this.textRenderer.trimToWidth(" " + AvatarDataManager.lastLoadedFileName, this.width / 2 - modelBgSize / 2 - 41 - this.textRenderer.getWidth(nameText))).styled(FiguraMod.ACCENT_COLOR));
             } else {
                 nameText = null;
             }
 
-            if (PlayerDataManager.localPlayer.model != null) {
-                modelComplexityText = new TranslatableText("figura.gui.status.complexity").append(new LiteralText(" " + PlayerDataManager.localPlayer.model.getRenderComplexity()).styled(FiguraMod.ACCENT_COLOR));
+            if (AvatarDataManager.localPlayer.model != null) {
+                modelComplexityText = new TranslatableText("figura.gui.status.complexity").append(new LiteralText(" " + AvatarDataManager.localPlayer.model.getRenderComplexity()).styled(FiguraMod.ACCENT_COLOR));
             }
             else {
                 modelComplexityText = new TranslatableText("figura.gui.status.complexity").append(new LiteralText(" " + 0).styled(FiguraMod.ACCENT_COLOR));
                 modelSizeStatus = 0;
             }
 
-            if (PlayerDataManager.localPlayer.hasAvatar()) {
+            if (AvatarDataManager.localPlayer.hasAvatar()) {
                 FiguraMod.doTask(() -> fileSizeText = getFileSizeText());
             }
 
-            scriptStatus = PlayerDataManager.localPlayer.script != null ? PlayerDataManager.localPlayer.script.scriptError ? 1 : 3 : 0;
-            textureStatus = PlayerDataManager.localPlayer.texture != null ? 3 : 0;
+            scriptStatus = AvatarDataManager.localPlayer.script != null ? AvatarDataManager.localPlayer.script.scriptError ? 1 : 3 : 0;
+            textureStatus = AvatarDataManager.localPlayer.texture != null ? 3 : 0;
         } else {
             nameText = null;
             modelComplexityText = null;
@@ -546,7 +550,7 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public MutableText getFileSizeText() {
-        long fileSize = PlayerDataManager.localPlayer.getFileSize();
+        long fileSize = AvatarDataManager.localPlayer.getFileSize();
 
         //format file size
         DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
@@ -555,11 +559,11 @@ public class FiguraGuiScreen extends Screen {
 
         MutableText fsText = new TranslatableText("figura.gui.status.filesize").append(new LiteralText(" " + size).styled(FiguraMod.ACCENT_COLOR));
 
-        if (fileSize >= PlayerData.FILESIZE_LARGE_THRESHOLD) {
+        if (fileSize >= AvatarData.FILESIZE_LARGE_THRESHOLD) {
             fsText.setStyle(TEXT_COLORS.get(1));
             modelSizeStatus = 1;
         }
-        else if (fileSize >= PlayerData.FILESIZE_WARNING_THRESHOLD) {
+        else if (fileSize >= AvatarData.FILESIZE_WARNING_THRESHOLD) {
             fsText.setStyle(TEXT_COLORS.get(2));
             modelSizeStatus = 2;
         }
@@ -568,7 +572,7 @@ public class FiguraGuiScreen extends Screen {
             modelSizeStatus = 3;
         }
 
-        modelSizeStatus = PlayerDataManager.localPlayer.hasAvatar() ? modelSizeStatus : 0;
+        modelSizeStatus = AvatarDataManager.localPlayer.hasAvatar() ? modelSizeStatus : 0;
 
         return fsText;
     }
@@ -783,7 +787,7 @@ public class FiguraGuiScreen extends Screen {
 
         String string = paths.stream().map(Path::getFileName).map(Path::toString).collect(Collectors.joining(", "));
         this.client.setScreen(new ConfirmScreen((bl) -> {
-            Path destPath = LocalPlayerData.getContentDirectory();
+            Path destPath = LocalAvatarData.getContentDirectory();
             if (bl) {
                 paths.forEach((path2) -> {
                     try {

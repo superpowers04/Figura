@@ -1,5 +1,6 @@
-package net.blancworks.figura;
+package net.blancworks.figura.avatar;
 
+import net.blancworks.figura.FiguraMod;
 import net.minecraft.nbt.*;
 
 import java.io.File;
@@ -88,7 +89,7 @@ public class LocalAvatarManager {
     public static void loadFromDisk() {
         //reload avatars
         FiguraMod.doTask(() -> {
-            Path contentDirectory = LocalPlayerData.getContentDirectory();
+            Path contentDirectory = LocalAvatarData.getContentDirectory();
 
             try {
                 if (!Files.exists(contentDirectory))

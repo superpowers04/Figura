@@ -1,7 +1,7 @@
 package net.blancworks.figura.gui;
 
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
 import net.blancworks.figura.gui.widgets.CustomTextFieldWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
@@ -117,11 +117,11 @@ public class FiguraTrustScreen extends Screen {
             this.client.setScreen(this);
         }, "https://github.com/Blancworks/Figura/wiki/Trust-Menu", true))));
 
-        this.addDrawableChild(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("figura.gui.button.clearall"), (buttonWidgetx) -> PlayerDataManager.clearCache()));
+        this.addDrawableChild(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("figura.gui.button.clearall"), (buttonWidgetx) -> AvatarDataManager.clearCache()));
 
         this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("figura.gui.button.reloadavatar"), (btx) -> {
             if (playerListState.selected instanceof PlayerListEntry entry) {
-                PlayerDataManager.clearPlayer(entry.getProfile().getId());
+                AvatarDataManager.clearPlayer(entry.getProfile().getId());
             }
         }));
 
@@ -213,7 +213,7 @@ public class FiguraTrustScreen extends Screen {
             LiteralText nameText = new LiteralText(name);
             Text uuidText = new LiteralText(id.toString()).formatted(Formatting.DARK_GRAY);
 
-            PlayerData data = PlayerDataManager.getDataForPlayer(id);
+            AvatarData data = AvatarDataManager.getDataForPlayer(id);
 
             if (data != null && !name.equals("")) {
                 NamePlateCustomization nameplateData = data.script == null ? null : data.script.nameplateCustomizations.get(NamePlateAPI.TABLIST);
@@ -256,9 +256,9 @@ public class FiguraTrustScreen extends Screen {
                     float fileSize = Float.parseFloat(df.format(size / 1024.0f));
 
                     MutableText sizeText = new TranslatableText("figura.gui.status.filesize").formatted(Formatting.GRAY).append(" " + fileSize);
-                    if (size >= PlayerData.FILESIZE_LARGE_THRESHOLD)
+                    if (size >= AvatarData.FILESIZE_LARGE_THRESHOLD)
                         sizeText.formatted(Formatting.RED);
-                    else if (size >= PlayerData.FILESIZE_WARNING_THRESHOLD)
+                    else if (size >= AvatarData.FILESIZE_WARNING_THRESHOLD)
                         sizeText.formatted(Formatting.YELLOW);
 
                     drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, 0xFFFFFF);

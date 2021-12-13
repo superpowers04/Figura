@@ -3,6 +3,8 @@ package net.blancworks.figura.network;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import net.blancworks.figura.*;
+import net.blancworks.figura.avatar.AvatarDataManager;
+import net.blancworks.figura.avatar.LocalAvatarData;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.messages.MessageRegistry;
@@ -175,7 +177,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         return doTask(() -> {
             //Get NBT tag for local player avatar
             if (currWebSocket != null && currWebSocket.isOpen()) {
-                LocalPlayerData data = PlayerDataManager.localPlayer;
+                LocalAvatarData data = AvatarDataManager.localPlayer;
 
                 //mark as not local
                 data.isLocalAvatar = false;
@@ -217,7 +219,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                 if (currWebSocket != null && currWebSocket.isOpen()) {
                     new UserDeleteCurrentAvatarMessageSender().sendMessage(currWebSocket);
 
-                    PlayerDataManager.clearLocalPlayer();
+                    AvatarDataManager.clearLocalPlayer();
                 }
             } catch (Exception e) {
                 e.printStackTrace();

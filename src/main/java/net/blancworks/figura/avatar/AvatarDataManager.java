@@ -1,12 +1,16 @@
-package net.blancworks.figura;
+package net.blancworks.figura.avatar;
 
 import com.mojang.authlib.GameProfile;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
+import net.minecraft.entity.Entity;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.LiteralText;
+import net.minecraft.util.registry.Registry;
 
 import java.io.DataInputStream;
 import java.io.FileInputStream;
@@ -14,9 +18,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-public final class PlayerDataManager {
+public final class AvatarDataManager {
     public static boolean didInitLocalPlayer = false;
-    public static final Map<UUID, PlayerData> LOADED_PLAYER_DATA = new HashMap<>();
+    public static final Map<UUID, AvatarData> LOADED_PLAYER_DATA = new HashMap<>();
+    public static final Map<UUID, EntityAvatarData> LOADED_ENTITY_DATA = new HashMap<>();
     public static final Map<UUID, UUID> OFFLINE_SWAP_DATA = new HashMap<>();
 
     //Players that we're currently queued up to grab data for.
@@ -27,19 +32,19 @@ public final class PlayerDataManager {
     public static final Queue<UUID> TO_REFRESH = new ArrayDeque<>();
     public static final Set<UUID> TO_REFRESH_SET = new HashSet<>();
 
-    public static LocalPlayerData localPlayer;
+    public static LocalAvatarData localPlayer;
 
     public static String lastLoadedFileName;
 
     public static boolean panic = false;
 
-    public static PlayerData getDataForPlayer(UUID id) {
+    public static AvatarData getDataForPlayer(UUID id) {
         if (panic) return null;
 
         if (OFFLINE_SWAP_DATA.containsKey(id)) {
-            PlayerData data = LOADED_PLAYER_DATA.get(OFFLINE_SWAP_DATA.get(id));
+            AvatarData data = LOADED_PLAYER_DATA.get(OFFLINE_SWAP_DATA.get(id));
             if (data != null) {
-                data.playerId = id;
+                data.entityId = id;
                 LOADED_PLAYER_DATA.put(id, data);
                 OFFLINE_SWAP_DATA.remove(id);
             }
@@ -49,17 +54,17 @@ public final class PlayerDataManager {
         if (client.player != null && id == client.player.getUuid()) {
             if (didInitLocalPlayer) {
                 if (client.getNetworkHandler() != null)
-                    localPlayer.playerListEntry = client.getNetworkHandler().getPlayerListEntry(localPlayer.playerId);
+                    localPlayer.playerListEntry = client.getNetworkHandler().getPlayerListEntry(localPlayer.entityId);
                 return localPlayer;
             }
 
-            localPlayer = new LocalPlayerData();
-            localPlayer.playerId = client.player.getUuid();
+            localPlayer = new LocalAvatarData();
+            localPlayer.entityId = client.player.getUuid();
             LOADED_PLAYER_DATA.put(client.player.getUuid(), localPlayer);
             didInitLocalPlayer = true;
 
             if (client.getNetworkHandler() != null)
-                localPlayer.playerListEntry = client.getNetworkHandler().getPlayerListEntry(localPlayer.playerId);
+                localPlayer.playerListEntry = client.getNetworkHandler().getPlayerListEntry(localPlayer.entityId);
 
             if (lastLoadedFileName != null) {
                 localPlayer.vanillaModel = ((PlayerEntityRenderer) client.getEntityRenderDispatcher().getRenderer(client.player)).getModel();
@@ -67,15 +72,15 @@ public final class PlayerDataManager {
                 return localPlayer;
             }
 
-            getPlayerAvatarFromServerOrCache(localPlayer.playerId, localPlayer);
+            getPlayerAvatarFromServerOrCache(localPlayer.entityId, localPlayer);
 
             return localPlayer;
         }
 
-        PlayerData getData;
+        AvatarData getData;
         if (!LOADED_PLAYER_DATA.containsKey(id)) {
-            getData = new PlayerData();
-            getData.playerId = id;
+            getData = new AvatarData();
+            getData.entityId = id;
 
             if (client.getNetworkHandler() != null) {
                 PlayerListEntry playerEntry = client.getNetworkHandler().getPlayerListEntry(id);
@@ -110,14 +115,37 @@ public final class PlayerDataManager {
 
                 getData.playerListEntry = playerEntry;
             }
-            getData.playerName = playerName;
+            getData.name = playerName;
         }
 
         return getData;
     }
 
+    public static AvatarData getDataForEntity(Entity entity) {
+        if (panic) return null;
+
+        UUID id = entity.getUuid();
+        EntityAvatarData getData;
+        if (!LOADED_PLAYER_DATA.containsKey(id)) {
+            getData = new EntityAvatarData();
+            NbtCompound avatar = EntityAvatarData.CEM_MAP.get(Registry.ENTITY_TYPE.getId(entity.getType()));
+
+            if (avatar != null) {
+                avatar.putUuid("id", id);
+                getData.loadFromNbt(avatar);
+            }
+
+            LOADED_ENTITY_DATA.put(id, getData);
+        } else {
+            getData = LOADED_ENTITY_DATA.get(id);
+        }
+
+        //System.out.println(getData.model);
+        return getData;
+    }
+
     //Attempts to get the data for a player from the server.
-    public static void getPlayerAvatarFromServerOrCache(UUID id, PlayerData targetData) {
+    public static void getPlayerAvatarFromServerOrCache(UUID id, AvatarData targetData) {
         //Prevent this from running more than once at a time per player.
         if (SERVER_REQUESTED_PLAYERS.contains(id))
             return;
@@ -140,7 +168,7 @@ public final class PlayerDataManager {
     }
 
     //Loads the model out of the local cache, if the file for that exists.
-    public static void attemptCacheLoad(UUID id, PlayerData targetData) {
+    public static void attemptCacheLoad(UUID id, AvatarData targetData) {
         Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
 
         String[] splitID = id.toString().split("-");
@@ -170,12 +198,12 @@ public final class PlayerDataManager {
     }
 
     //Loads the model off of the network.
-    public static void loadFromNetwork(UUID id, PlayerData targetData) {
+    public static void loadFromNetwork(UUID id, AvatarData targetData) {
         FiguraMod.networkManager.getAvatarData(id);
     }
 
     public static void clearPlayer(UUID id) {
-        if (localPlayer != null && id.compareTo(localPlayer.playerId) == 0) {
+        if (localPlayer != null && id.compareTo(localPlayer.entityId) == 0) {
             if (!localPlayer.isLocalAvatar)
                 clearLocalPlayer();
             else if (localPlayer.loadedPath != null)
@@ -198,7 +226,7 @@ public final class PlayerDataManager {
         if (localPlayer == null) return;
         localPlayer.clearData();
 
-        LOADED_PLAYER_DATA.remove(localPlayer.playerId);
+        LOADED_PLAYER_DATA.remove(localPlayer.entityId);
         localPlayer = null;
         didInitLocalPlayer = false;
         lastLoadedFileName = null;
@@ -213,7 +241,7 @@ public final class PlayerDataManager {
 
         synchronized(TO_CLEAR) {
             TO_CLEAR.forEach(uuid -> {
-                PlayerData data = getDataForPlayer(uuid);
+                AvatarData data = getDataForPlayer(uuid);
                 if (data != null) data.clearData();
                 else FiguraSoundManager.getChannel().stopSound(uuid);
                 LOADED_PLAYER_DATA.remove(uuid);
@@ -222,12 +250,17 @@ public final class PlayerDataManager {
         }
 
         synchronized(LOADED_PLAYER_DATA) {
-            LOADED_PLAYER_DATA.values().forEach(PlayerData::tick);
+            LOADED_PLAYER_DATA.values().forEach(AvatarData::tick);
+        }
+
+        synchronized(LOADED_ENTITY_DATA) {
+            LOADED_ENTITY_DATA.values().forEach(AvatarData::tick);
         }
     }
 
     //Reloads all textures, used for asset reloads in vanilla.
-    public static void reloadAllTextures() {
+    public static void reloadAssets() {
+        AvatarDataManager.LOADED_ENTITY_DATA.clear();
         LOADED_PLAYER_DATA.values().forEach(data -> {
             if (data.texture != null) {
                 data.texture.registerTexture();

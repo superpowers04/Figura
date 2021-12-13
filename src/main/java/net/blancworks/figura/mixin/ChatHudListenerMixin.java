@@ -1,7 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
@@ -54,7 +54,7 @@ public class ChatHudListenerMixin {
         }
 
         //get player data
-        PlayerData currentData = PlayerDataManager.getDataForPlayer(uuid);
+        AvatarData currentData = AvatarDataManager.getDataForPlayer(uuid);
 
         //player not found or no data
         if (playerName.equals("") || currentData == null)

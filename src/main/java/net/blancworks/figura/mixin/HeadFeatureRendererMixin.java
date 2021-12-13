@@ -1,8 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ArmorModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -34,14 +33,13 @@ public class HeadFeatureRendererMixin<T extends LivingEntity, M extends EntityMo
 
     @Inject(at = @At("HEAD"), method = "render", cancellable = true)
     private void onRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        PlayerData data = PlayerDataManager.getDataForPlayer(livingEntity.getUuid());
-        FiguraMod.currentData = data;
+        AvatarData data = AvatarDataManager.getDataForPlayer(livingEntity.getUuid());
 
         if (data == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
         ModelPart part = this.getContextModel().getHead();
-        figura$applyPartCustomization(ArmorModelAPI.VANILLA_HEAD_ITEM, part);
+        figura$applyPartCustomization(ArmorModelAPI.VANILLA_HEAD_ITEM, part, data);
 
         VanillaModelPartCustomization customization = ((ModelPartAccess) (Object) part).figura$getPartCustomization();
 
@@ -64,9 +62,7 @@ public class HeadFeatureRendererMixin<T extends LivingEntity, M extends EntityMo
     @Override
     public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {}
 
-    public void figura$applyPartCustomization(String id, ModelPart part) {
-        PlayerData data = FiguraMod.currentData;
-
+    public void figura$applyPartCustomization(String id, ModelPart part, AvatarData data) {
         if (data != null && data.script != null && data.script.allCustomizations != null) {
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 

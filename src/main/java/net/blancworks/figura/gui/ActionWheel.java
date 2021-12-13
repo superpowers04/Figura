@@ -2,8 +2,8 @@ package net.blancworks.figura.gui;
 
 import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.models.FiguraTexture;
@@ -57,7 +57,7 @@ public class ActionWheel extends DrawableHelper {
         int itemRadius = 42;
 
         //script data
-        PlayerData data = PlayerDataManager.localPlayer;
+        AvatarData data = AvatarDataManager.localPlayer;
 
         //render
         RenderSystem.enableBlend();
@@ -148,7 +148,7 @@ public class ActionWheel extends DrawableHelper {
         matrices.pop();
     }
 
-    public static void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments, PlayerData data, int i) {
+    public static void renderOverlay(MatrixStack matrices, Vec2f pos, int size, int leftSegments, int rightSegments, AvatarData data, int i) {
         ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (i + 1));
 
         //property variables
@@ -252,7 +252,7 @@ public class ActionWheel extends DrawableHelper {
         matrices.pop();
     }
 
-    public static void renderTextures(MatrixStack matrices, int leftSegments, int rightSegments, Vec2f offset, int radius, PlayerData data) {
+    public static void renderTextures(MatrixStack matrices, int leftSegments, int rightSegments, Vec2f offset, int radius, AvatarData data) {
         for (int i = 0; i < leftSegments + rightSegments; i++) {
 
             int index;
@@ -299,7 +299,7 @@ public class ActionWheel extends DrawableHelper {
         }
     }
 
-    public static void renderText(MatrixStack matrices, Vec2f pos, int size, float scale, PlayerData data, MinecraftClient client) {
+    public static void renderText(MatrixStack matrices, Vec2f pos, int size, float scale, AvatarData data, MinecraftClient client) {
         //customization
         ActionWheelCustomization customization = data.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
 
@@ -342,7 +342,7 @@ public class ActionWheel extends DrawableHelper {
         matrices.pop();
     }
 
-    public static void renderItems(int leftSegments, int rightSegments, Vec2f offset, int radius, PlayerData data, MinecraftClient client) {
+    public static void renderItems(int leftSegments, int rightSegments, Vec2f offset, int radius, AvatarData data, MinecraftClient client) {
         for (int i = 0; i < leftSegments + rightSegments; i++) {
 
             int index;
@@ -386,7 +386,7 @@ public class ActionWheel extends DrawableHelper {
 
     public static void play() {
         if (selectedSlot != -1) {
-            PlayerData currentData = PlayerDataManager.localPlayer;
+            AvatarData currentData = AvatarDataManager.localPlayer;
 
             if (currentData != null && currentData.script != null) {
                 ActionWheelCustomization customization = currentData.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));

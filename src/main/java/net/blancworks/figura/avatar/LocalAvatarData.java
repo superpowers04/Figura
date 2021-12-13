@@ -1,4 +1,4 @@
-package net.blancworks.figura;
+package net.blancworks.figura.avatar;
 
 
 import com.google.common.io.CharStreams;
@@ -6,6 +6,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
@@ -27,7 +28,7 @@ import java.util.zip.ZipFile;
  * This is in place to allow users to freely modify their model based on files loaded from disk,
  * and allow for easier editing.
  */
-public class LocalPlayerData extends PlayerData {
+public class LocalAvatarData extends AvatarData {
     public String loadedName;
     public String loadedPath;
     private final Map<String, WatchKey> watchKeys = new Object2ObjectOpenHashMap<>();
@@ -147,7 +148,7 @@ public class LocalPlayerData extends PlayerData {
         //log and clear player model
         if (data == 0 || data == 4) {
             FiguraMod.LOGGER.warn("Failed to load model " + path);
-            PlayerDataManager.clearLocalPlayer();
+            AvatarDataManager.clearLocalPlayer();
             return;
         }
 
@@ -259,7 +260,7 @@ public class LocalPlayerData extends PlayerData {
     public void loadTexture(Path texturePath, boolean isZip, ZipFile modelZip) {
         try {
             //Generate Identifier for texture.
-            Identifier id = new Identifier("figura", playerId.toString());
+            Identifier id = new Identifier("figura", entityId.toString());
 
             //Create new texture, and register it.
             this.texture = new FiguraTexture();
@@ -388,7 +389,7 @@ public class LocalPlayerData extends PlayerData {
                 //If there IS a stream for this extra texture
                 if (inputStream != null) {
                     FiguraTexture extraTexture = new FiguraTexture();
-                    extraTexture.id = new Identifier("figura", playerId.toString() + textureType);
+                    extraTexture.id = new Identifier("figura", entityId.toString() + textureType);
                     extraTexture.filePath = location;
                     getTextureManager().registerTexture(extraTexture.id, extraTexture);
                     extraTexture.type = textureType;
@@ -445,7 +446,7 @@ public class LocalPlayerData extends PlayerData {
         watchKeys.clear();
         clearData();
 
-        PlayerDataManager.lastLoadedFileName = loadedName;
+        AvatarDataManager.lastLoadedFileName = loadedName;
         loadModelFile(loadedPath);
         isLocalAvatar = true;
     }

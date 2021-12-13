@@ -1,8 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.access.ElytraEntityModelAccess;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
@@ -38,12 +37,11 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
 
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        PlayerData data = PlayerDataManager.getDataForPlayer(livingEntity.getUuid());
-        FiguraMod.currentData = data;
+        AvatarData data = AvatarDataManager.getDataForPlayer(livingEntity.getUuid());
 
         if (data != null && data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1) {
-            figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess) elytra).getLeftWing());
-            figura$applyPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING, ((ElytraEntityModelAccess) elytra).getRightWing());
+            figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess) elytra).getLeftWing(), data);
+            figura$applyPartCustomization(ElytraModelAPI.VANILLA_RIGHT_WING, ((ElytraEntityModelAccess) elytra).getRightWing(), data);
         }
     }
 
@@ -56,9 +54,7 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
     @Override
     public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {}
 
-    public void figura$applyPartCustomization(String id, ModelPart part) {
-        PlayerData data = FiguraMod.currentData;
-
+    public void figura$applyPartCustomization(String id, ModelPart part, AvatarData data) {
         if (data != null && data.script != null && data.script.allCustomizations != null) {
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 

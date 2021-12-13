@@ -1,8 +1,8 @@
 package net.blancworks.figura.lua.api.keybind;
 
 import com.google.common.collect.HashBiMap;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.InputUtil;
 import net.minecraft.text.Text;
@@ -56,7 +56,7 @@ public final class FiguraKeybind {
     }
 
     public static void unpressAll() {
-        PlayerData data = PlayerDataManager.localPlayer;
+        AvatarData data = AvatarDataManager.localPlayer;
 
         if (data == null || data.script == null)
             return;
@@ -74,7 +74,7 @@ public final class FiguraKeybind {
 
     public static FiguraKeybind getKeybind(InputUtil.Key key) {
         //only gets from local player, since we dont want to process other ppl keybinds
-        PlayerData data = PlayerDataManager.localPlayer;
+        AvatarData data = AvatarDataManager.localPlayer;
 
         if (data == null || data.script == null)
             return null;

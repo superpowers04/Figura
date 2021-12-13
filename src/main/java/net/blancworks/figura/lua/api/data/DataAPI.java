@@ -5,7 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -33,7 +33,7 @@ public class DataAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        final boolean isHost = script.playerData == PlayerDataManager.localPlayer;
+        final boolean isHost = script.avatarData == AvatarDataManager.localPlayer;
 
         return new ReadOnlyLuaTable(new LuaTable() {{
             //script name
@@ -122,7 +122,7 @@ public class DataAPI {
             } else {
                 //load file
                 BufferedReader br = new BufferedReader(new FileReader(file.toFile()));
-                JsonElement json = new JsonParser().parse(br);
+                JsonElement json = JsonParser.parseReader(br);
                 br.close();
 
                 if (json != null && json.isJsonObject())

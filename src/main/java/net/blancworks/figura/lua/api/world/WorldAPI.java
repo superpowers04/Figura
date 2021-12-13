@@ -1,7 +1,7 @@
 package net.blancworks.figura.lua.api.world;
 
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
@@ -239,7 +239,7 @@ public class WorldAPI {
                     LuaTable playerList = new LuaTable();
 
                     for (PlayerEntity entity : getWorld().getPlayers()) {
-                        PlayerData data = PlayerDataManager.getDataForPlayer(entity.getUuid());
+                        AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
                         if (data == null || data.script == null || !data.script.allowPlayerTargeting)
                             continue;
 

@@ -3,8 +3,7 @@ package net.blancworks.figura.models;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
@@ -78,9 +77,9 @@ public class CustomModelPart {
     public static boolean canRenderHitBox = false;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
-    public int render(PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+    public int render(AvatarData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         //no model to render
-        if (FiguraMod.currentData == null || data.model == null || data.playerListEntry == null || vcp == null || !data.isAvatarLoaded())
+        if (data.model == null || data.vanillaModel == null || (data.playerListEntry == null && data.texture == null) || vcp == null || !data.isAvatarLoaded())
             return 0;
 
         //lets render boys!!
@@ -91,14 +90,14 @@ public class CustomModelPart {
 
         //main texture
         Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
-        ret = renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(), layerFunction, false, applyHiddenTransforms, renderOnly);
+        ret = renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(data), layerFunction, false, applyHiddenTransforms, renderOnly);
 
         //extra textures
-        for (FiguraTexture figuraTexture : FiguraMod.currentData.extraTextures) {
+        for (FiguraTexture figuraTexture : data.extraTextures) {
             Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
 
             if (renderLayerGetter != null) {
-                renderTextures(ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
+                renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
             }
         }
 
@@ -109,14 +108,14 @@ public class CustomModelPart {
             draw(vcp);
 
         //shaders
-        ret = renderShaders(ret, matrices, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
+        ret = renderShaders(data, ret, matrices, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
         if (batchingFix && prevRet != ret) {
             prevRet = ret;
             draw(vcp);
         }
 
         //extra stuff and hitboxes
-        ret = renderExtraParts(ret, matrices, vcp, light, false, applyHiddenTransforms, renderOnly);
+        ret = renderExtraParts(data, ret, matrices, vcp, light, false, applyHiddenTransforms, renderOnly);
         if (batchingFix && prevRet != ret)
             draw(vcp);
 
@@ -125,7 +124,7 @@ public class CustomModelPart {
 
     //Renders this custom model part and all its children.
     //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
-    public int renderTextures(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction, boolean isExtraTex, boolean applyHiddenTransforms, ParentType renderOnly) {
+    public int renderTextures(AvatarData data, int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction, boolean isExtraTex, boolean applyHiddenTransforms, ParentType renderOnly) {
         //do not render invisible parts
         if (!this.visible || (isExtraTex && !this.extraTex))
             return leftToRender;
@@ -134,7 +133,7 @@ public class CustomModelPart {
         transformStack.push();
 
         if (applyHiddenTransforms) {
-            applyVanillaTransforms(matrices, transformStack);
+            applyVanillaTransforms(data, matrices, transformStack);
 
             applyTransforms(matrices);
             applyTransforms(transformStack);
@@ -162,7 +161,7 @@ public class CustomModelPart {
 
         //texture
         if (this.textureType != TextureType.Custom)
-            texture = getTexture();
+            texture = getTexture(data);
 
         //render!
         if (canRender) {
@@ -193,7 +192,7 @@ public class CustomModelPart {
                     continue;
 
                 //render part
-                leftToRender = child.renderTextures(leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction, isExtraTex, applyHiddenTransforms, renderOnly);
+                leftToRender = child.renderTextures(data, leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction, isExtraTex, applyHiddenTransforms, renderOnly);
             }
         }
 
@@ -203,7 +202,7 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    public int renderShaders(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, byte shadersToRender, boolean applyHiddenTransforms, ParentType renderOnly) {
+    public int renderShaders(AvatarData data, int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, byte shadersToRender, boolean applyHiddenTransforms, ParentType renderOnly) {
         //do not render invisible parts
         if (!this.visible)
             return leftToRender;
@@ -211,7 +210,7 @@ public class CustomModelPart {
         matrices.push();
 
         if (applyHiddenTransforms) {
-            applyVanillaTransforms(matrices, new MatrixStack());
+            applyVanillaTransforms(data, matrices, new MatrixStack());
             applyTransforms(matrices);
         } else if (canRender) {
             applyTransforms(matrices);
@@ -251,7 +250,7 @@ public class CustomModelPart {
                     continue;
 
                 //render part
-                leftToRender = child.renderShaders(leftToRender, matrices, vcp, light, overlay, u, v, color, alpha, canRender, shaders, applyHiddenTransforms, renderOnly);
+                leftToRender = child.renderShaders(data, leftToRender, matrices, vcp, light, overlay, u, v, color, alpha, canRender, shaders, applyHiddenTransforms, renderOnly);
             }
         }
 
@@ -260,7 +259,7 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    public int renderExtraParts(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRender, boolean applyHiddenTransforms, ParentType renderOnly) {
+    public int renderExtraParts(AvatarData data, int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRender, boolean applyHiddenTransforms, ParentType renderOnly) {
         //do not render invisible parts
         if (!this.visible)
             return leftToRender;
@@ -268,7 +267,7 @@ public class CustomModelPart {
         matrices.push();
 
         if (applyHiddenTransforms) {
-            applyVanillaTransforms(matrices, new MatrixStack());
+            applyVanillaTransforms(data, matrices, new MatrixStack());
             applyTransforms(matrices);
         } else if (canRender) {
             applyTransforms(matrices);
@@ -291,7 +290,7 @@ public class CustomModelPart {
                     continue;
 
                 //render part
-                leftToRender = child.renderExtraParts(leftToRender, matrices, vcp, light, canRender, applyHiddenTransforms, renderOnly);
+                leftToRender = child.renderExtraParts(data, leftToRender, matrices, vcp, light, canRender, applyHiddenTransforms, renderOnly);
             }
         }
 
@@ -306,11 +305,9 @@ public class CustomModelPart {
         else if (vcp instanceof OutlineVertexConsumerProvider outline) outline.draw();
     }
 
-    public Identifier getTexture() {
-        PlayerData data = FiguraMod.currentData;
-
+    public Identifier getTexture(AvatarData data) {
         Identifier textureId;
-        if (data.texture == null || this.textureType != TextureType.Custom) {
+        if (data.playerListEntry != null && (data.texture == null || this.textureType != TextureType.Custom)) {
             switch (this.textureType) {
                 case Cape -> textureId = Objects.requireNonNullElse(data.playerListEntry.getCapeTexture(), FiguraTexture.DEFAULT_ID);
                 case Elytra -> textureId = Objects.requireNonNullElse(data.playerListEntry.getElytraTexture(), new Identifier("minecraft", "textures/entity/elytra.png"));
@@ -423,12 +420,15 @@ public class CustomModelPart {
         lastNormalMatrixInverse.invert();
     }
 
-    public void applyVanillaTransforms(MatrixStack matrices, MatrixStack transformStack) {
+    public void applyVanillaTransforms(AvatarData data, MatrixStack matrices, MatrixStack transformStack) {
         if (parentType == ParentType.Model)
             return;
 
         try {
-            PlayerEntityModel<?> model = FiguraMod.currentData.vanillaModel;
+            PlayerEntityModel<?> model;
+            if (data.vanillaModel instanceof PlayerEntityModel)
+                model = (PlayerEntityModel<?>) data.vanillaModel;
+            else return;
 
             //mimic rotations
             if (this.isMimicMode) {
@@ -471,7 +471,7 @@ public class CustomModelPart {
                         model.rightLeg.rotate(matrices);
                         model.rightLeg.rotate(transformStack);
                     }
-                    case LeftItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
+                    case LeftItemOrigin -> data.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
                         applyTransformsAsItem(matrices);
                         applyTransformsAsItem(transformStack);
@@ -480,7 +480,7 @@ public class CustomModelPart {
                         visible = true;
                         matrices.pop();
                     }});
-                    case RightItemOrigin -> FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
+                    case RightItemOrigin -> data.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
                         applyTransformsAsItem(matrices);
                         applyTransformsAsItem(transformStack);
@@ -489,7 +489,7 @@ public class CustomModelPart {
                         visible = true;
                         matrices.pop();
                     }});
-                    case LeftElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
+                    case LeftElytraOrigin -> data.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
                         applyTransformsAsElytraOrParrot(matrices);
                         applyTransformsAsElytraOrParrot(transformStack);
@@ -498,7 +498,7 @@ public class CustomModelPart {
                         visible = true;
                         matrices.pop();
                     }});
-                    case RightElytraOrigin -> FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
+                    case RightElytraOrigin -> data.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
                         applyTransformsAsElytraOrParrot(matrices);
                         applyTransformsAsElytraOrParrot(transformStack);
@@ -507,7 +507,7 @@ public class CustomModelPart {
                         visible = true;
                         matrices.pop();
                     }});
-                    case LeftParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
+                    case LeftParrotOrigin -> data.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
                         applyTransformsAsElytraOrParrot(matrices);
                         applyTransformsAsElytraOrParrot(transformStack);
@@ -516,7 +516,7 @@ public class CustomModelPart {
                         visible = true;
                         matrices.pop();
                     }});
-                    case RightParrotOrigin -> FiguraMod.currentData.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
+                    case RightParrotOrigin -> data.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
                         applyTransformsAsElytraOrParrot(matrices);
                         applyTransformsAsElytraOrParrot(transformStack);
@@ -525,7 +525,7 @@ public class CustomModelPart {
                         visible = true;
                         matrices.pop();
                     }});
-                    case LeftSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
+                    case LeftSpyglass -> data.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
                         applyTransformsAsSpyglass(matrices);
                         applyTransformsAsSpyglass(transformStack);
@@ -534,7 +534,7 @@ public class CustomModelPart {
                         visible = true;
                         matrices.pop();
                     }});
-                    case RightSpyglass -> FiguraMod.currentData.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
+                    case RightSpyglass -> data.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
                         applyTransformsAsSpyglass(matrices);
                         applyTransformsAsSpyglass(transformStack);

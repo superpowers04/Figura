@@ -2,7 +2,6 @@ package net.blancworks.figura.lua.api.network;
 
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.io.LittleEndianDataOutputStream;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import org.luaj.vm2.*;
 
 import java.io.IOException;

@@ -1,7 +1,7 @@
 package net.blancworks.figura.lua.api.entity;
 
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
@@ -28,9 +28,8 @@ public class PlayerEntityAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-
         //Global table will get the local player.
-        return new PlayerEntityLuaAPITable(() -> script.playerData.lastEntity);
+        return new ReadOnlyLuaTable(EntityAPI.getTableForEntity(script.avatarData.lastEntity));
     }
 
     public static ReadOnlyLuaTable get(PlayerEntity entity) {
@@ -44,7 +43,7 @@ public class PlayerEntityAPI {
             super.setTable(getTable());
         }
 
-        public LuaTable getTable() {
+        public ReadOnlyLuaTable getTable() {
             LuaTable superTable = super.getTable();
 
             superTable.set("getHeldItem", new OneArgFunction() {
@@ -115,7 +114,7 @@ public class PlayerEntityAPI {
             superTable.set("lastDamageSource", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    PlayerData data = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid());
+                    AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
                     if (data == null || data.script == null) return NIL;
 
                     DamageSource ds = data.script.lastDamageSource;
@@ -128,7 +127,7 @@ public class PlayerEntityAPI {
                 public LuaValue call(LuaValue arg1) {
                     String key = arg1.checkjstring();
 
-                    PlayerData data = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid());
+                    AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
                     if (data == null || data.script == null) return NIL;
 
                     LuaValue val = data.script.SHARED_VALUES.get(key);
@@ -139,14 +138,14 @@ public class PlayerEntityAPI {
             superTable.set("getModelType", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    PlayerData data = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid());
+                    AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
                     if (data == null || data.playerListEntry == null) return NIL;
 
                     return LuaValue.valueOf(data.playerListEntry.getModel());
                 }
             });
 
-            return superTable;
+            return new ReadOnlyLuaTable(superTable);
         }
 
         @Override

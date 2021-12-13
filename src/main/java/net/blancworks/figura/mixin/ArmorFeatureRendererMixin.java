@@ -1,8 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.lua.api.model.ArmorModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -46,17 +45,16 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
         String partID = partMap.get(equipmentSlot);
 
         if (partID != null) {
-            PlayerData data = PlayerDataManager.getDataForPlayer(livingEntity.getUuid());
-            FiguraMod.currentData = data;
+            AvatarData data = AvatarDataManager.getDataForPlayer(livingEntity.getUuid());
 
             if (data != null && data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1) {
-                figura$applyPartCustomization(partID, bipedEntityModel.head);
-                figura$applyPartCustomization(partID, bipedEntityModel.hat);
-                figura$applyPartCustomization(partID, bipedEntityModel.body);
-                figura$applyPartCustomization(partID, bipedEntityModel.leftArm);
-                figura$applyPartCustomization(partID, bipedEntityModel.leftLeg);
-                figura$applyPartCustomization(partID, bipedEntityModel.rightArm);
-                figura$applyPartCustomization(partID, bipedEntityModel.rightLeg);
+                figura$applyPartCustomization(partID, bipedEntityModel.head, data);
+                figura$applyPartCustomization(partID, bipedEntityModel.hat, data);
+                figura$applyPartCustomization(partID, bipedEntityModel.body, data);
+                figura$applyPartCustomization(partID, bipedEntityModel.leftArm, data);
+                figura$applyPartCustomization(partID, bipedEntityModel.leftLeg, data);
+                figura$applyPartCustomization(partID, bipedEntityModel.rightArm, data);
+                figura$applyPartCustomization(partID, bipedEntityModel.rightLeg, data);
             }
         }
     }
@@ -70,9 +68,7 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
     @Override
     public void render(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, T entity, float limbAngle, float limbDistance, float tickDelta, float animationProgress, float headYaw, float headPitch) {}
 
-    public void figura$applyPartCustomization(String id, ModelPart part) {
-        PlayerData data = FiguraMod.currentData;
-
+    public void figura$applyPartCustomization(String id, ModelPart part, AvatarData data) {
         if (data != null && data.script != null && data.script.allCustomizations != null) {
             VanillaModelPartCustomization customization = data.script.allCustomizations.get(id);
 

@@ -1,4 +1,4 @@
-package net.blancworks.figura;
+package net.blancworks.figura.utils;
 
 import net.fabricmc.loader.api.FabricLoader;
 

@@ -128,30 +128,30 @@ public class FiguraShader extends Shader {
         String name = "shader"+shadersMade++;
 
         //Generate json string from provided info
-        String json = "{\"vertex\":\""+name+"\",\"fragment\":\""+name+"\",\"attributes\": [";
+        StringBuilder json = new StringBuilder("{\"vertex\":\"" + name + "\",\"fragment\":\"" + name + "\",\"attributes\": [");
         //Attributes
         ImmutableList<String> attributes = vertexFormat.getShaderAttributes();
         for (String attribute : attributes) {
             if (!(attribute.equals("Padding")))
-                json += "\""+attribute+"\",";
+                json.append("\"").append(attribute).append("\",");
         }
-        json = json.substring(0, json.length()-1);
+        json = new StringBuilder(json.substring(0, json.length() - 1));
         //Samplers
-        json += "],\"samplers\":[";
+        json.append("],\"samplers\":[");
         for (int i = 0; i < numSamplers; i++)
-            json += "{\"name\":\"Sampler" + i + "\"},";
-        json = json.substring(0, json.length()-1);
+            json.append("{\"name\":\"Sampler").append(i).append("\"},");
+        json = new StringBuilder(json.substring(0, json.length() - 1));
         //Uniforms
-        json += "],\"uniforms\":[";
+        json.append("],\"uniforms\":[");
         for (int i = 0; i < defaultUniformNames.size(); i++) {
             String uniformName = defaultUniformNames.get(i);
             String uniformType = defaultUniformTypes.get(i);
             String type = typeMap.get(uniformType);
             int count = countMap.get(uniformType);
-            json += "{\"name\":\"" + uniformName + "\",\"type\":\"" + type + "\",\"count\":" + count + ",\"values\":[";
+            json.append("{\"name\":\"").append(uniformName).append("\",\"type\":\"").append(type).append("\",\"count\":").append(count).append(",\"values\":[");
             for (int j = 0; j < count; j++)
-                json += (uniformType.startsWith("mat")&&j%(Math.sqrt(count)+1)==0 ? "1.0" : "0.0") + ",";
-            json = json.substring(0, json.length()-1) + "]},";
+                json.append(uniformType.startsWith("mat") && j % (Math.sqrt(count) + 1) == 0 ? "1.0" : "0.0").append(",");
+            json = new StringBuilder(json.substring(0, json.length() - 1) + "]},");
         }
         for (int i = 0; i < uniformNames.size(); i++) {
             String uniformName = uniformNames.get(i);
@@ -162,23 +162,23 @@ public class FiguraShader extends Shader {
                 throw new LuaError("Invalid uniform type: " + uniformType);
             String type = typeMap.get(uniformType);
             int count = countMap.get(uniformType);
-            json += "{\"name\":\"" + uniformName + "\",\"type\":\"" + type + "\",\"count\":" + count + ",\"values\":[";
+            json.append("{\"name\":\"").append(uniformName).append("\",\"type\":\"").append(type).append("\",\"count\":").append(count).append(",\"values\":[");
             for (int j = 0; j < count; j++)
-                json += (uniformType.startsWith("mat")&&j%(Math.sqrt(count)+1)==0 ? "1.0" : "0.0") + ",";
-            json = json.substring(0, json.length()-1) + "]},";
+                json.append(uniformType.startsWith("mat") && j % (Math.sqrt(count) + 1) == 0 ? "1.0" : "0.0").append(",");
+            json = new StringBuilder(json.substring(0, json.length() - 1) + "]},");
         }
-        json = json.substring(0, json.length()-1) + "]}";
+        json = new StringBuilder(json.substring(0, json.length() - 1) + "]}");
 
         //System.out.println(json);
 
         //Pass all 3 strings to create a special factory that just returns them back as InputStreams
-        ResourceFactory factory = new FiguraShaderFactory(json, vertexSource, fragmentSource);
+        ResourceFactory factory = new FiguraShaderFactory(json.toString(), vertexSource, fragmentSource);
         return new FiguraShader(factory, name, vertexFormat);
     }
 
     private static class FiguraShaderFactory implements ResourceFactory {
 
-        private String[] sources;
+        private final String[] sources;
         private int i = 0;
 
         public FiguraShaderFactory(String json, String vsh, String fsh) {
@@ -186,7 +186,7 @@ public class FiguraShader extends Shader {
         }
 
         @Override
-        public Resource getResource(Identifier id) throws IOException {
+        public Resource getResource(Identifier id) {
             return new Resource() {
                 @Override
                 public Identifier getId() {
@@ -215,7 +215,7 @@ public class FiguraShader extends Shader {
                 }
 
                 @Override
-                public void close() throws IOException {
+                public void close() {
                     //I don't think this needs to do anything?
                 }
             };

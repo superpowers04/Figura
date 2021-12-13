@@ -1,7 +1,7 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.api.model.FirstPersonModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -24,9 +24,9 @@ public abstract class HeldItemRendererMixin {
 
     @Inject(at = @At("HEAD"), method = "renderFirstPersonItem", cancellable = true)
     private void onRenderFirstPersonItem(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
-        PlayerData data = PlayerDataManager.getDataForPlayer(player.getUuid());
+        AvatarData data = AvatarDataManager.getDataForPlayer(player.getUuid());
 
-        if (data == null || data != PlayerDataManager.localPlayer || data.script == null || data.script.allCustomizations == null)
+        if (data == null || data != AvatarDataManager.localPlayer || data.script == null || data.script.allCustomizations == null)
             return;
 
         try {

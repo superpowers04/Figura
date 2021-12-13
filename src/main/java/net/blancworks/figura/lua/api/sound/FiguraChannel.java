@@ -1,6 +1,6 @@
 package net.blancworks.figura.lua.api.sound;
 
-import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.access.SourceManagerAccessor;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.mixin.ChannelAccessorMixin;
@@ -75,7 +75,7 @@ public class FiguraChannel extends Channel {
         stopAllSounds = false;
     }
 
-    public CompletableFuture<SourceManager> createSource(PlayerData soundOwner, String name, SoundEngine.RunMode mode) {
+    public CompletableFuture<SourceManager> createSource(AvatarData soundOwner, String name, SoundEngine.RunMode mode) {
         CompletableFuture<SourceManager> future = super.createSource(mode);
         future.thenApply((sm) -> {
             ((SourceManagerAccessor) sm).setOwner(soundOwner.lastEntity.getUuid());
@@ -87,14 +87,14 @@ public class FiguraChannel extends Channel {
     }
 
     public void playCustomSound(CustomScript script, String soundName, Vec3d pos, float volume, float pitch) {
-        if (script.playerData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0 || script.soundSpawnCount < 1 || pitch <= 0f || volume <= 0f) return;
+        if (script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0 || script.soundSpawnCount < 1 || pitch <= 0f || volume <= 0f) return;
         script.soundSpawnCount--;
 
         FiguraSound sound = script.customSounds.get(soundName);
         if (sound == null)
             throw new LuaError("Custom sound \"" + soundName + "\" is not defined, or cannot be empty!");
 
-        createSource(script.playerData, soundName, SoundEngine.RunMode.STATIC).thenAccept(sourceManager -> sourceManager.run(source -> {
+        createSource(script.avatarData, soundName, SoundEngine.RunMode.STATIC).thenAccept(sourceManager -> sourceManager.run(source -> {
             if (source != null) {
                 source.setAttenuation(Math.max(volume * 16f, 16f));
                 source.setBuffer(sound.sound());

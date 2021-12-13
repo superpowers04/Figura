@@ -12,7 +12,7 @@ public class LuaEvent extends LuaTable {
 
 
     public String defaultFunctionName;
-    private List<LuaFunction> subscribedFunctions = new ArrayList<LuaFunction>();
+    private final List<LuaFunction> subscribedFunctions = new ArrayList<>();
 
     public LuaEvent(String defaultFunctionName) {
         this.defaultFunctionName = defaultFunctionName;
@@ -80,7 +80,6 @@ public class LuaEvent extends LuaTable {
 
     //Unsubscribes a function from this event
     public void unsubscribe(LuaFunction function) {
-        if (subscribedFunctions.contains(function))
-            subscribedFunctions.remove(function);
+        subscribedFunctions.remove(function);
     }
 }
