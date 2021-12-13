@@ -136,6 +136,16 @@ public class PlayerEntityAPI {
                 }
             });
 
+            superTable.set("getModelType", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    PlayerData data = PlayerDataManager.getDataForPlayer(targetEntity.get().getUuid());
+                    if (data == null || data.playerListEntry == null) return NIL;
+
+                    return LuaValue.valueOf(data.playerListEntry.getModel());
+                }
+            });
+
             return superTable;
         }
 

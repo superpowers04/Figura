@@ -255,7 +255,13 @@ public class BlockStateAPI {
             tbl.javaRawSet(LuaValue.valueOf("toStateString"), new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(state.toString());
+                    try {
+                        String ret = state.toString().split("\\{", 2)[1];
+                        String[] split = ret.split("}", 2);
+                        return LuaValue.valueOf(split[0] + split[1]);
+                    } catch (Exception ignored) {
+                        return LuaValue.valueOf(state.toString());
+                    }
                 }
             });
 
