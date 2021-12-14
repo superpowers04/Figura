@@ -79,7 +79,7 @@ public class CustomModelPart {
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int render(AvatarData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         //no model to render
-        if (data.model == null || data.vanillaModel == null || vcp == null || !data.isAvatarLoaded())
+        if (data.model == null || data.vanillaModel == null || vcp == null || !data.isAvatarLoaded() || data.model.leftToRender <= 0)
             return 0;
 
         //lets render boys!!

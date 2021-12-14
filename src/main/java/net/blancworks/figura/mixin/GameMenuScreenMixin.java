@@ -1,5 +1,7 @@
 package net.blancworks.figura.mixin;
 
+import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.FiguraGuiScreen;
@@ -60,7 +62,7 @@ public class GameMenuScreenMixin extends Screen {
                     btn -> this.client.setScreen(figura$screen)));
         }
         else {
-            Identifier iconTexture = new Identifier("figura", "textures/gui/config_icon.png");
+            Identifier iconTexture = new Identifier("figura", "textures/gui/config_icon" + (AvatarDataManager.panic || FiguraMod.latestVersionStatus < 0 ? "_notif" : "") + ".png");
             addDrawableChild(new TexturedButtonWidget(x, y, 20, 20, 0, 0, 20, iconTexture, 20, 40, btn -> this.client.setScreen(figura$screen)));
         }
 

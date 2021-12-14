@@ -280,7 +280,7 @@ public class NamePlateAPI {
                 else
                     badges += LOADING.charAt(Math.abs(FiguraMod.ticksElapsed) % 4);
             }
-            else if (currentData.model != null && currentData.model.getRenderComplexity() > currentData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY))
+            else if (currentData.getComplexity() > currentData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY))
                 badges += "▲";
             else if (currentData.script != null && currentData.script.scriptError)
                 badges += "▲";

@@ -38,7 +38,7 @@ public class PlayerHeldItemFeatureRendererMixin {
                 VanillaModelPartCustomization originModification = left ? data.model.originModifications.get(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID) : data.model.originModifications.get(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID);
 
                 if (originModification != null) {
-                    if (originModification.part == null || originModification.visible == null || data.model.lastComplexity > data.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY)) {
+                    if (originModification.part == null || originModification.visible == null || data.getComplexity() > data.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY)) {
                         ci.cancel();
                         return;
                     }

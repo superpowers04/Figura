@@ -68,9 +68,6 @@ public class CustomScript extends FiguraAsset {
     public int initInstructionCount = 0;
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
-    public int worldRenderInstructionCount = 0;
-    public int renderLayerInstructionCount = 0;
-    public int damageInstructionCount = 0;
     public int pingSent = 0;
     public int pingReceived = 0;
 
@@ -250,17 +247,15 @@ public class CustomScript extends FiguraAsset {
             //Queue up a new task.
             currTask = CompletableFuture.runAsync(
                     () -> {
+                        initInstructionCount = 0;
+                        setInstructionLimitPermission(TrustContainer.Trust.INIT_INST, 0);
                         try {
-                            initInstructionCount = 0;
-
-                            setInstructionLimitPermission(TrustContainer.Trust.INIT_INST);
                             if (data != null) data.lastEntity = null;
                             chunk.call();
-
-                            initInstructionCount = scriptGlobals.running.state.bytecodes;
                         } catch (Exception error) {
                             handleError(error);
                         }
+                        initInstructionCount += scriptGlobals.running.state.bytecodes;
 
                         isDone = true;
                         currTask = null;
@@ -307,11 +302,13 @@ public class CustomScript extends FiguraAsset {
         if (!hasPlayer) {
             hasPlayer = true;
             queueTask(() -> {
+                setInstructionLimitPermission(TrustContainer.Trust.INIT_INST, initInstructionCount);
                 try {
                     allEvents.get("player_init").call();
                 } catch (Exception error) {
                     handleError(error);
                 }
+                initInstructionCount += scriptGlobals.running.state.bytecodes;
             });
         }
     }
@@ -321,12 +318,13 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
+            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST, tickInstructionCount);
             try {
                 allEvents.get("onCommand").call(LuaString.valueOf(message));
             } catch (Exception error) {
                 handleError(error);
             }
+            tickInstructionCount += scriptGlobals.running.state.bytecodes;
         });
     }
 
@@ -335,12 +333,13 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
+            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST, tickInstructionCount);
             try {
                 function.call();
             } catch (Exception error) {
                 handleError(error);
             }
+            tickInstructionCount += scriptGlobals.running.state.bytecodes;
         });
     }
 
@@ -349,17 +348,13 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            worldRenderInstructionCount = 0;
-            renderInstructionCount = 0;
-            renderLayerInstructionCount = 0;
-
-            setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST);
+            setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, renderInstructionCount);
             try {
                 allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
             } catch (Exception error) {
                 handleError(error);
             }
-            worldRenderInstructionCount = scriptGlobals.running.state.bytecodes;
+            renderInstructionCount += scriptGlobals.running.state.bytecodes;
         });
     }
 
@@ -368,13 +363,13 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
-            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
+            setInstructionLimitPermission(TrustContainer.Trust.TICK_INST, tickInstructionCount);
             try {
                 allEvents.get("onDamage").call(LuaNumber.valueOf(amount), LuaString.valueOf(source.name));
             } catch (Exception error) {
                 handleError(error);
             }
-            damageInstructionCount = scriptGlobals.running.state.bytecodes;
+            tickInstructionCount += scriptGlobals.running.state.bytecodes;
         });
     }
 
@@ -508,10 +503,6 @@ public class CustomScript extends FiguraAsset {
 
     //Sets the instruction limit of the next function we'll call, and resets the bytecode count to 0
     //Uses the permission at permissionID to set it.
-    public void setInstructionLimitPermission(TrustContainer.Trust permissionID) {
-        setInstructionLimitPermission(permissionID, 0);
-    }
-
     public void setInstructionLimitPermission(TrustContainer.Trust permissionID, int subtract) {
         int count = avatarData.getTrustContainer().getTrust(permissionID) - subtract;
         setInstructionLimit(count);
@@ -520,14 +511,9 @@ public class CustomScript extends FiguraAsset {
     //Sets the instruction limit of the next function we'll call, and resets the bytecode count to 0.
     public void setInstructionLimit(int count) {
         scriptGlobals.running.state.bytecodes = 0;
-        setHook.invoke(
-                LuaValue.varargsOf(
-                        new LuaValue[]{
-                                instructionCapFunction,
-                                LuaValue.EMPTYSTRING, LuaValue.valueOf(count)
-                        }
-                )
-        );
+        setHook.invoke(LuaValue.varargsOf(new LuaValue[]{
+                instructionCapFunction, LuaValue.EMPTYSTRING, LuaValue.valueOf(Math.max(count, 1))
+        }));
     }
 
     //--Events--
@@ -563,13 +549,18 @@ public class CustomScript extends FiguraAsset {
         if (!isDone || tickLuaEvent == null || scriptError || !hasPlayer || avatarData.lastEntity == null)
             return;
 
-        setInstructionLimitPermission(TrustContainer.Trust.TICK_INST);
+        tickInstructionCount = 0;
+        setInstructionLimitPermission(TrustContainer.Trust.TICK_INST, 0);
         try {
             tickLuaEvent.call();
 
             //Process all pings.
-            pingSent = outgoingPingQueue.size();
-            pingReceived = incomingPingQueue.size();
+            pingSent = Math.max(outgoingPingQueue.size(), pingSent);
+            pingReceived = Math.max(incomingPingQueue.size(), pingReceived);
+            if (FiguraMod.ticksElapsed % 20 == 0) {
+                pingSent = 0;
+                pingReceived = 0;
+            }
 
             while (incomingPingQueue.size() > 0) {
                 LuaPing p = incomingPingQueue.poll();
@@ -584,17 +575,18 @@ public class CustomScript extends FiguraAsset {
             handleError(error);
             error.printStackTrace();
         }
-        tickInstructionCount = scriptGlobals.running.state.bytecodes;
+        tickInstructionCount += scriptGlobals.running.state.bytecodes;
     }
 
     public void onRender(float deltaTime) {
-        setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, worldRenderInstructionCount);
+        renderInstructionCount = 0;
+        setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, 0);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
         } catch (Exception error) {
             handleError(error);
         }
-        renderInstructionCount = scriptGlobals.running.state.bytecodes;
+        renderInstructionCount += scriptGlobals.running.state.bytecodes;
     }
 
     public void handleError(Exception error) {

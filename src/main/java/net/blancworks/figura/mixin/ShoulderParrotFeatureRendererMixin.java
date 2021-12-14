@@ -50,7 +50,7 @@ public class ShoulderParrotFeatureRendererMixin<T extends PlayerEntity> extends 
                 VanillaModelPartCustomization originModification = leftShoulder ? data.model.originModifications.get(ParrotModelAPI.VANILLA_LEFT_PARROT_ID) : data.model.originModifications.get(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID);
 
                 if (originModification != null) {
-                    if (originModification.part == null || originModification.visible == null || data.model.lastComplexity > data.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY)) {
+                    if (originModification.part == null || originModification.visible == null || data.getComplexity() > data.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY)) {
                         ci.cancel();
                         return;
                     }

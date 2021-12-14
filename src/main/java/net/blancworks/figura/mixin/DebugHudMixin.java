@@ -30,10 +30,11 @@ public class DebugHudMixin {
         if (AvatarDataManager.localPlayer != null) {
             CustomScript script = AvatarDataManager.localPlayer.script;
             if (script != null) {
+                lines.add(++i, String.format("Complexity: %d", AvatarDataManager.localPlayer.getComplexity()));
                 lines.add(++i, String.format("Init instructions: %d", script.initInstructionCount));
-                lines.add(++i, String.format("Tick instructions: %d", script.tickInstructionCount + script.damageInstructionCount));
-                lines.add(++i, String.format("Render instructions: %d",script.renderInstructionCount + script.worldRenderInstructionCount + script.renderLayerInstructionCount));
-                lines.add(++i, String.format("Pings Sent: %d, Received: %d", script.pingSent, script.pingReceived));
+                lines.add(++i, String.format("Tick instructions: %d", script.tickInstructionCount));
+                lines.add(++i, String.format("Render instructions: %d",script.renderInstructionCount));
+                lines.add(++i, String.format("Pings per second: ↑%d, ↓%d", script.pingSent, script.pingReceived));
             }
         }
 

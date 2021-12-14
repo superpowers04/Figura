@@ -5,7 +5,6 @@ import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
@@ -20,7 +19,6 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 
@@ -37,7 +35,6 @@ public class CustomModel extends FiguraAsset {
     public Vec2f defaultTextureSize;
 
     public int leftToRender = 0;
-    public int lastComplexity = 0;
 
     //used during rendering
     public boolean applyHiddenTransforms = true;
@@ -76,39 +73,21 @@ public class CustomModel extends FiguraAsset {
         }
     }
 
-    public int getRenderComplexity() {
-        lastComplexity = 0;
-
-        try {
-            synchronized (this.allParts) {
-                for (CustomModelPart part : this.allParts) {
-                    lastComplexity += part.getComplexity();
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Integer.MAX_VALUE - 100;
-        }
-
-        return lastComplexity;
-    }
-
     public int getMaxRenderAmount() {
         if (this.owner == null)
             return 0;
 
-        TrustContainer tc = PlayerTrustManager.getContainer(new Identifier("player", this.owner.entityId.toString()));
+        TrustContainer tc = owner.getTrustContainer();
         return tc != null ? tc.getTrust(TrustContainer.Trust.COMPLEXITY) : 0;
     }
 
     public void render(EntityModel<?> entity_model, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         if (owner == null) return;
 
-        leftToRender = getMaxRenderAmount();
-        int maxRender = leftToRender;
-
         if (owner.script != null)
             owner.script.render(owner.deltaTime);
+
+        leftToRender = getMaxRenderAmount();
 
         synchronized (this.allParts) {
             for (CustomModelPart part : this.allParts) {
@@ -132,7 +111,6 @@ public class CustomModel extends FiguraAsset {
                     CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
                     leftToRender = part.render(owner, matrices, transformStack, vcp, light, overlay, alpha);
-                    lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
 
                     CustomModelPart.canRenderHitBox = false;
                 } catch (Exception e) {
@@ -148,34 +126,34 @@ public class CustomModel extends FiguraAsset {
         if (owner.script != null)
             owner.script.render(owner.deltaTime);
 
-        int prevCount = owner.model.leftToRender;
-        owner.model.leftToRender = Integer.MAX_VALUE - 100;
+        this.leftToRender = getMaxRenderAmount();
 
-        synchronized (owner.model.allParts) {
+        synchronized (this.allParts) {
             //applyHiddenTransforms = !(boolean) Config.FIX_FIRST_PERSON_HANDS.value;
-            for (CustomModelPart part : owner.model.allParts) {
+            for (CustomModelPart part : this.allParts) {
+                if (part.isSpecial() || !part.visible)
+                    continue;
+
                 if (arm == model.rightArm)
                     renderOnly = CustomModelPart.ParentType.RightArm;
                 else if (arm == model.leftArm)
                     renderOnly = CustomModelPart.ParentType.LeftArm;
 
-                owner.model.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+                this.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
             }
             //applyHiddenTransforms = true;
         }
-
-        owner.model.leftToRender = prevCount;
     }
 
     public boolean renderSkull(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
-        owner.model.leftToRender = getMaxRenderAmount();
+        this.leftToRender = getMaxRenderAmount();
 
-        ArrayList<CustomModelPart> skullParts = owner.model.getSpecialParts(CustomModelPart.ParentType.Skull);
+        ArrayList<CustomModelPart> skullParts = this.getSpecialParts(CustomModelPart.ParentType.Skull);
         if (!skullParts.isEmpty()) {
             for (CustomModelPart modelPart : skullParts) {
-                owner.model.leftToRender = modelPart.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+                this.leftToRender = modelPart.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
-                if (owner.model.leftToRender <= 0)
+                if (this.leftToRender <= 0)
                     break;
             }
 
@@ -184,11 +162,11 @@ public class CustomModel extends FiguraAsset {
         else {
             synchronized (this.allParts) {
                 applyHiddenTransforms = false;
-                for (CustomModelPart modelPart : owner.model.allParts) {
+                for (CustomModelPart modelPart : this.allParts) {
                     renderOnly = CustomModelPart.ParentType.Head;
-                    owner.model.leftToRender = modelPart.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+                    this.leftToRender = modelPart.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
-                    if (owner.model.leftToRender <= 0)
+                    if (this.leftToRender <= 0)
                         break;
                 }
                 applyHiddenTransforms = true;
@@ -210,35 +188,30 @@ public class CustomModel extends FiguraAsset {
         matrices.scale(-1,-1,1);
 
         synchronized (specialParts) {
-            for (CustomModelPart part : owner.model.getSpecialParts(CustomModelPart.ParentType.WORLD))
-                owner.model.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
+            for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
+                this.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
+
+                if (leftToRender <= 0)
+                    break;
+            }
         }
 
         CustomModelPart.canRenderHitBox = false;
     }
 
     public void renderFirstPersonWorldParts(MatrixStack matrices, Camera camera, float tickDelta) {
-        if (owner.lastEntity != null) {
-            matrices.push();
+        if (owner.lastEntity == null || owner.vertexConsumerProvider == null) return;
 
-            try {
-                if (owner.model != null) {
-                    int prevCount = owner.model.leftToRender;
-                    owner.model.leftToRender = Integer.MAX_VALUE - 100;
+        matrices.push();
 
-                    if (owner.vertexConsumerProvider != null) {
-                        Vec3d cameraPos = camera.getPos();
-                        owner.model.renderWorldParts(cameraPos.x, cameraPos.y, cameraPos.z, matrices, owner.getVCP(), MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(owner.lastEntity, tickDelta), OverlayTexture.DEFAULT_UV, 1f);
-                    }
-
-                    owner.model.leftToRender = prevCount;
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-
-            matrices.pop();
+        try {
+            Vec3d cameraPos = camera.getPos();
+            this.renderWorldParts(cameraPos.x, cameraPos.y, cameraPos.z, matrices, owner.getVCP(), MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(owner.lastEntity, tickDelta), OverlayTexture.DEFAULT_UV, 1f);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
+        matrices.pop();
     }
 
     public void renderHudParts(MatrixStack matrices) {
@@ -252,11 +225,14 @@ public class CustomModel extends FiguraAsset {
         matrices.scale(scale, scale, -scale);
         DiffuseLighting.disableGuiDepthLighting();
 
-        owner.model.leftToRender = Integer.MAX_VALUE - 100;
+        this.leftToRender = getMaxRenderAmount();
 
         synchronized (specialParts) {
-            for (CustomModelPart part : owner.model.getSpecialParts(CustomModelPart.ParentType.Hud)) {
-                part.render(owner, matrices, new MatrixStack(), owner.tryGetImmediate(), 0xF000F0, OverlayTexture.DEFAULT_UV, 1f);
+            for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.Hud)) {
+                leftToRender = part.render(owner, matrices, new MatrixStack(), owner.tryGetImmediate(), 0xF000F0, OverlayTexture.DEFAULT_UV, 1f);
+
+                if (leftToRender <= 0)
+                    break;
             }
         }
         matrices.pop();

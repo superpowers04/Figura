@@ -3,6 +3,7 @@ package net.blancworks.figura.avatar;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
+import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
@@ -112,6 +113,24 @@ public class AvatarData {
 
         data.deltaTime = dt;
         currentRenderingData = data;
+    }
+
+    public int getComplexity() {
+        if (this.model == null) return 0;
+
+        int lastComplexity = 0;
+        try {
+            synchronized (this.model.allParts) {
+                for (CustomModelPart part : this.model.allParts) {
+                    lastComplexity += part.getComplexity();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
+
+        return lastComplexity;
     }
 
     /**
