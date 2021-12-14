@@ -555,22 +555,22 @@ public class CustomScript extends FiguraAsset {
             tickLuaEvent.call();
 
             //Process all pings.
-            pingSent = Math.max(outgoingPingQueue.size(), pingSent);
-            pingReceived = Math.max(incomingPingQueue.size(), pingReceived);
             if (FiguraMod.ticksElapsed % 20 == 0) {
                 pingSent = 0;
                 pingReceived = 0;
             }
 
             while (incomingPingQueue.size() > 0) {
+                pingReceived++;
                 LuaPing p = incomingPingQueue.poll();
-
                 p.function.call(p.args);
             }
 
             //Batch-send pings.
-            if (outgoingPingQueue.size() > 0)
+            if (outgoingPingQueue.size() > 0) {
+                pingSent += outgoingPingQueue.size();
                 ((NewFiguraNetworkManager) FiguraMod.networkManager).sendPing(outgoingPingQueue);
+            }
         } catch (Exception error) {
             handleError(error);
             error.printStackTrace();

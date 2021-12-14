@@ -1,5 +1,6 @@
 package net.blancworks.figura.models;
 
+import net.blancworks.figura.models.animations.KeyFrame;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.Vec2f;
@@ -9,6 +10,7 @@ import java.util.ArrayList;
 public class CustomModelPartGroup extends CustomModelPart {
 
     public ArrayList<CustomModelPart> children = new ArrayList<>();
+    public ArrayList<KeyFrame> keyFrames;
 
     @Override
     public void clearExtraRendering() {
@@ -48,8 +50,15 @@ public class CustomModelPartGroup extends CustomModelPart {
                 this.parentType = ParentType.Model;
             }
         }
+
         if (partNbt.contains("mmc")) {
             this.isMimicMode = partNbt.getByte("mmc") == 1;
+        }
+
+        if (partNbt.contains("anims")) {
+            keyFrames = new ArrayList<>();
+
+            //todo
         }
 
         if (partNbt.contains("chld")) {

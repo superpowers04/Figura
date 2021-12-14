@@ -41,6 +41,14 @@ public class EntityAvatarData extends AvatarData {
                     e.printStackTrace();
                 }
             }
+
+            if (model != null) {
+                try {
+                    model.tick();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 }

@@ -110,7 +110,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.initValue = (boolean) config.value;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.title, (button) -> config.configValue = !(boolean) config.configValue);
+            this.toggle = new ButtonWidget(0, 0, 80, 20, this.title, (button) -> config.configValue = !(boolean) config.configValue);
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
@@ -176,7 +176,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.states = states;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.title, (button) -> config.configValue = (int) config.configValue + 1);
+            this.toggle = new ButtonWidget(0, 0, 80, 20, this.title, (button) -> config.configValue = (int) config.configValue + 1);
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
@@ -248,7 +248,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             else
                 fieldText = new LiteralText(config.configValue + "");
 
-            this.field = new TextFieldWidget(ConfigListWidget.this.client.textRenderer, 0, 0, 70, 16, fieldText);
+            this.field = new TextFieldWidget(ConfigListWidget.this.client.textRenderer, 0, 0, 76, 16, fieldText);
             this.field.setChangedListener((text) -> {
                 // Only write config value if it's valid
                 if (inputType.validator.test(text)) {
@@ -301,7 +301,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
                 extraWidth = MathHelper.clamp(textRenderer.getWidth(field.getText()) - 50, 0, 167);
 
             //set size
-            this.field.setWidth(70 + extraWidth);
+            this.field.setWidth(76 + extraWidth);
             this.field.x = x + 167 - extraWidth;
 
             //set text color
@@ -387,7 +387,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.binding = binding;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.title, (button) -> focusedBinding = binding);
+            this.toggle = new ButtonWidget(0, 0, 80, 20, this.title, (button) -> focusedBinding = binding);
 
             //reset button
             this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {

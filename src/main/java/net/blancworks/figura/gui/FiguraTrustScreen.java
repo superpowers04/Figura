@@ -175,14 +175,14 @@ public class FiguraTrustScreen extends Screen {
                 }
 
                 net.minecraft.block.entity.SkullBlockEntity.loadProperties(gameProfile, profile -> {
-                    PlayerData data = PlayerDataManager.getDataForPlayer(profile.getId());
+                    AvatarData data = AvatarDataManager.getDataForPlayer(profile.getId());
 
-                    if (data != null && data.hasAvatar() && PlayerDataManager.localPlayer != null) {
+                    if (data != null && data.hasAvatar() && AvatarDataManager.localPlayer != null) {
                         net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
                         data.writeNbt(nbt);
-                        nbt.putUuid("id", PlayerDataManager.localPlayer.playerId);
-                        PlayerDataManager.localPlayer.loadFromNbt(nbt);
-                        PlayerDataManager.localPlayer.isLocalAvatar = true;
+                        nbt.putUuid("id", AvatarDataManager.localPlayer.entityId);
+                        AvatarDataManager.localPlayer.loadFromNbt(nbt);
+                        AvatarDataManager.localPlayer.isLocalAvatar = true;
 
                         net.blancworks.figura.FiguraMod.sendToast("done", "");
                     }
