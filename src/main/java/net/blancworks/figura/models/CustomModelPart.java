@@ -79,7 +79,7 @@ public class CustomModelPart {
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int render(AvatarData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         //no model to render
-        if (data.model == null || data.vanillaModel == null || (data.playerListEntry == null && data.texture == null) || vcp == null || !data.isAvatarLoaded())
+        if (data.model == null || data.vanillaModel == null || vcp == null || !data.isAvatarLoaded())
             return 0;
 
         //lets render boys!!
@@ -306,19 +306,25 @@ public class CustomModelPart {
     }
 
     public Identifier getTexture(AvatarData data) {
-        Identifier textureId;
-        if (data.playerListEntry != null && (data.texture == null || this.textureType != TextureType.Custom)) {
-            switch (this.textureType) {
-                case Cape -> textureId = Objects.requireNonNullElse(data.playerListEntry.getCapeTexture(), FiguraTexture.DEFAULT_ID);
-                case Elytra -> textureId = Objects.requireNonNullElse(data.playerListEntry.getElytraTexture(), new Identifier("minecraft", "textures/entity/elytra.png"));
-                case Resource -> textureId = MinecraftClient.getInstance().getResourceManager().containsResource(textureVanilla) ? textureVanilla : MissingSprite.getMissingSpriteId();
-                default -> textureId = data.playerListEntry.getSkinTexture();
-            }
-        } else {
+        Identifier textureId = null;
+
+        if (textureType == TextureType.Resource) {
+            textureId = MinecraftClient.getInstance().getResourceManager().containsResource(textureVanilla) ? textureVanilla : MissingSprite.getMissingSpriteId();
+        } else if (textureType == TextureType.Elytra) {
+            if (data.playerListEntry != null)
+                textureId = data.playerListEntry.getElytraTexture();
+
+            if (textureId == null)
+                textureId = new Identifier("minecraft", "textures/entity/elytra.png");
+        } else if (data.playerListEntry != null && textureType != TextureType.Custom) {
+            textureId = this.textureType == TextureType.Cape ? data.playerListEntry.getCapeTexture() : data.playerListEntry.getSkinTexture();
+        } else if (data.texture != null) {
             textureId = data.texture.id;
+        } else if (data.lastEntity != null) {
+            textureId = MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(data.lastEntity).getTexture(data.lastEntity);
         }
 
-        return textureId;
+        return textureId == null ? FiguraTexture.DEFAULT_ID : textureId;
     }
 
     public int renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
