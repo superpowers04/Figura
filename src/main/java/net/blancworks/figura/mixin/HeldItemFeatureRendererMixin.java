@@ -46,7 +46,7 @@ public class HeldItemFeatureRendererMixin<T extends LivingEntity, M extends Enti
                 VanillaModelPartCustomization originModification = arm == Arm.LEFT ? data.model.originModifications.get(ItemModelAPI.VANILLA_LEFT_HAND_ID) : data.model.originModifications.get(ItemModelAPI.VANILLA_RIGHT_HAND_ID);
 
                 if (originModification != null) {
-                    if (originModification.part == null || originModification.visible == null || data.model.lastComplexity > data.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY)) {
+                    if (originModification.part == null || originModification.visible == null || data.getComplexity() > data.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY)) {
                         ci.cancel();
                         return;
                     }

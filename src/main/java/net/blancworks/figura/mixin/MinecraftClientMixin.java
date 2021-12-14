@@ -1,6 +1,7 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
@@ -95,6 +96,7 @@ public class MinecraftClientMixin {
         if (FiguraMod.PANIC_BUTTON.wasPressed()) {
             RenderLayerAPI.restoreDefaults();
             FiguraSoundManager.getChannel().stopAllSounds();
+            AvatarData.currentRenderingData = null;
             AvatarDataManager.panic = !AvatarDataManager.panic;
         }
     }

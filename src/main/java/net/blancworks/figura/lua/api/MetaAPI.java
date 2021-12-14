@@ -105,21 +105,21 @@ public class MetaAPI {
             set("getCurrentTickCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.tickInstructionCount + script.damageInstructionCount);
+                    return LuaValue.valueOf(script.tickInstructionCount);
                 }
             });
 
             set("getCurrentRenderCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.renderInstructionCount + script.worldRenderInstructionCount);
+                    return LuaValue.valueOf(script.renderInstructionCount);
                 }
             });
 
             set("getCurrentComplexity", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.model != null ? script.avatarData.model.lastComplexity : 0);
+                    return LuaValue.valueOf(script.avatarData.getComplexity());
                 }
             });
 

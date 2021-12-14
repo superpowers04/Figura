@@ -231,38 +231,37 @@ public class FiguraTrustScreen extends Screen {
             drawTextWithShadow(matrices, textRenderer, uuidText, MathHelper.floor((paneWidth + 13) / 0.75f), MathHelper.floor((32) / 0.75f), 0xFFFFFF);
             matrices.pop();
 
-            if (data != null) {
-                TrustContainer trustData = data.getTrustContainer();
-
-                //Complexity
+            if (data != null && data.hasAvatar()) {
                 int currX = paneWidth + 13;
-                if (data.model != null) {
-                    int complexity = data.model.getRenderComplexity();
-                    MutableText complexityText = new TranslatableText("figura.gui.status.complexity").formatted(Formatting.GRAY).append(" " + complexity);
 
-                    if (trustData != null && complexity > trustData.getTrust(TrustContainer.Trust.COMPLEXITY))
-                        complexityText.formatted(Formatting.RED);
+                // #complexity#
 
-                    drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, 0xFFFFFF);
-                    currX += textRenderer.getWidth(complexityText) + 10;
-                }
+                int complexity = data.getComplexity();
+                MutableText complexityText = new TranslatableText("figura.gui.status.complexity").formatted(Formatting.GRAY).append(" " + complexity);
 
-                if (data.hasAvatar()) {
-                    long size = data.getFileSize();
+                TrustContainer trustData = data.getTrustContainer();
+                if (trustData != null && complexity > trustData.getTrust(TrustContainer.Trust.COMPLEXITY))
+                    complexityText.formatted(Formatting.RED);
 
-                    //format file size
-                    DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
-                    df.setRoundingMode(RoundingMode.HALF_UP);
-                    float fileSize = Float.parseFloat(df.format(size / 1024.0f));
+                drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, 0xFFFFFF);
+                currX += textRenderer.getWidth(complexityText) + 10;
 
-                    MutableText sizeText = new TranslatableText("figura.gui.status.filesize").formatted(Formatting.GRAY).append(" " + fileSize);
-                    if (size >= AvatarData.FILESIZE_LARGE_THRESHOLD)
-                        sizeText.formatted(Formatting.RED);
-                    else if (size >= AvatarData.FILESIZE_WARNING_THRESHOLD)
-                        sizeText.formatted(Formatting.YELLOW);
+                // #avatar size#
 
-                    drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, 0xFFFFFF);
-                }
+                long size = data.getFileSize();
+
+                //format file size
+                DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
+                df.setRoundingMode(RoundingMode.HALF_UP);
+                float fileSize = Float.parseFloat(df.format(size / 1024.0f));
+
+                MutableText sizeText = new TranslatableText("figura.gui.status.filesize").formatted(Formatting.GRAY).append(" " + fileSize);
+                if (size >= AvatarData.FILESIZE_LARGE_THRESHOLD)
+                    sizeText.formatted(Formatting.RED);
+                else if (size >= AvatarData.FILESIZE_WARNING_THRESHOLD)
+                    sizeText.formatted(Formatting.YELLOW);
+
+                drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, 0xFFFFFF);
             }
         }
 
@@ -270,21 +269,9 @@ public class FiguraTrustScreen extends Screen {
 
         if (!resetPermissionButton.active) {
             resetPermissionButton.active = true;
-
             if (resetPermissionButton.isMouseOver(mouseX, mouseY)) {
-                if (playerListState.selected instanceof PlayerListEntry) {
-                    renderTooltip(matrices, new TranslatableText("figura.gui.button.resetperm.tooltip"), mouseX, mouseY);
-                } else if (playerListState.selected instanceof Identifier) {
-                    TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
-
-                    if (tc != null) {
-                        renderTooltip(matrices, new TranslatableText("figura.gui.button.cantreset.tooltip"), mouseX, mouseY);
-                    } else {
-                        renderTooltip(matrices, new TranslatableText("figura.gui.button.resetallperm.tooltip"), mouseX, mouseY);
-                    }
-                }
+                renderTooltip(matrices, new TranslatableText("figura.gui.button.resetperm.tooltip"), mouseX, mouseY);
             }
-
             resetPermissionButton.active = false;
         }
 

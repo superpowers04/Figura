@@ -115,7 +115,7 @@ public class RenderLayerAPI {
                         throw new LuaError("Invalid draw mode!");
                     Runnable preDraw = () -> {
                         canCallGLFunctions = true;
-                        script.setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, script.worldRenderInstructionCount + script.renderInstructionCount + script.renderLayerInstructionCount);
+                        script.setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, script.renderInstructionCount);
                         try {
                             startFunc.call();
                         } catch (Exception err) {
@@ -136,7 +136,7 @@ public class RenderLayerAPI {
                                 if (script.customVCP.getLayer(name) != null)
                                     script.customVCP.getLayer(name).disabled = true;
                         }
-                        script.renderLayerInstructionCount += script.scriptGlobals.running.state.bytecodes;
+                        script.renderInstructionCount += script.scriptGlobals.running.state.bytecodes;
                         canCallGLFunctions = false;
                     };
                     FiguraRenderLayer newLayer = new FiguraRenderLayer(name, vertexFormat, drawMode, expectedBufferSize, hasCrumbling, translucent, preDraw, postDraw);

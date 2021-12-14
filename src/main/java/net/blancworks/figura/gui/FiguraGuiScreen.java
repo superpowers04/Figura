@@ -515,7 +515,7 @@ public class FiguraGuiScreen extends Screen {
             }
 
             if (AvatarDataManager.localPlayer.model != null) {
-                modelComplexityText = new TranslatableText("figura.gui.status.complexity").append(new LiteralText(" " + AvatarDataManager.localPlayer.model.getRenderComplexity()).styled(FiguraMod.ACCENT_COLOR));
+                modelComplexityText = new TranslatableText("figura.gui.status.complexity").append(new LiteralText(" " + AvatarDataManager.localPlayer.getComplexity()).styled(FiguraMod.ACCENT_COLOR));
             }
             else {
                 modelComplexityText = new TranslatableText("figura.gui.status.complexity").append(new LiteralText(" " + 0).styled(FiguraMod.ACCENT_COLOR));
