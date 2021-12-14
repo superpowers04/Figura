@@ -1,10 +1,11 @@
 package net.blancworks.figura.models;
 
-import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.assets.FiguraAsset;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.models.animations.Animation;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
@@ -31,6 +32,7 @@ public class CustomModel extends FiguraAsset {
 
     public final ArrayList<CustomModelPart> allParts = new ArrayList<>();
     public final HashMap<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new HashMap<>();
+    public final HashMap<Float, Animation> animations = new HashMap<>();
 
     public Vec2f defaultTextureSize;
 
@@ -39,6 +41,10 @@ public class CustomModel extends FiguraAsset {
     //used during rendering
     public boolean applyHiddenTransforms = true;
     public CustomModelPart.ParentType renderOnly = null;
+
+    public void tick() {
+        animations.forEach((integer, animation) -> animation.tick());
+    }
 
     //This contains all the modifications to origins for stuff like elytra and held items.
     //This is separate from script customizations, as these are groups from blockbench that are the new,
@@ -239,11 +245,23 @@ public class CustomModel extends FiguraAsset {
     }
 
     public void readNbt(NbtCompound tag) {
-        NbtList partList = (NbtList) tag.get("parts");
+        //animations needed to be parsed FIRST
+        NbtList animList = tag.getList("anim", NbtElement.COMPOUND_TYPE);
+        if (animList != null) {
+            for (NbtElement nbtElement : animList) {
+                NbtCompound animTag = (NbtCompound) nbtElement;
+                Animation anim = Animation.fromNbt(animTag);
 
+                this.animations.put(anim.id, anim);
+            }
+        }
+
+        //texture size
         NbtList uv = tag.getList("uv", NbtElement.FLOAT_TYPE);
         if (uv.size() > 0) this.defaultTextureSize = new Vec2f(uv.getFloat(0), uv.getFloat(1));
 
+        //parts :3
+        NbtList partList = tag.getList("parts", NbtElement.COMPOUND_TYPE);
         if (partList != null) {
             for (NbtElement nbtElement : partList) {
                 NbtCompound partTag = (NbtCompound) nbtElement;

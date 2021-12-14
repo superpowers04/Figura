@@ -229,7 +229,7 @@ public class FiguraGuiScreen extends Screen {
         /*
         //save model
         this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 75, width, 20, new TranslatableText("Save model"), (buttonWidgetx) -> {
-            PlayerData local = PlayerDataManager.localPlayer;
+            AvatarData local = AvatarDataManager.localPlayer;
             if (local != null && local.hasAvatar()) {
                 net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
                 local.writeNbt(nbt);
@@ -239,8 +239,8 @@ public class FiguraGuiScreen extends Screen {
 
         //export nbt
         this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 50, width, 20, new TranslatableText("Cache nbt"), (buttonWidgetx) -> {
-            if (PlayerDataManager.localPlayer != null) {
-                PlayerDataManager.localPlayer.saveToCache();
+            if (AvatarDataManager.localPlayer != null) {
+                AvatarDataManager.localPlayer.saveToCache();
                 FiguraMod.sendToast("done", "");
             }
         }));
