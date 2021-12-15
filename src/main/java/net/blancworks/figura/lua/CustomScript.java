@@ -388,16 +388,16 @@ public class CustomScript extends FiguraAsset {
     //Sets up global variables
     public void setupGlobals() {
         //Log! Only for local player.
-        scriptGlobals.set("log", new OneArgFunction() {
+        scriptGlobals.set("log", new TwoArgFunction() {
             @Override
-            public LuaValue call(LuaValue arg) {
+            public LuaValue call(LuaValue arg, LuaValue arg2) {
                 try {
                     if (avatarData == AvatarDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
                         if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
 
-                        Text log = arg instanceof LuaVector logText ? logText.toJsonText() : TextUtils.tryParseJson(arg.toString());
+                        Text log = arg instanceof LuaVector logText ? logText.toJsonText() : arg2.isnil() || !arg2.checkboolean() ? new LiteralText(arg.toString()) : TextUtils.tryParseJson(arg.toString());
                         message.append(log);
 
                         int config = (int) Config.SCRIPT_LOG_LOCATION.value;

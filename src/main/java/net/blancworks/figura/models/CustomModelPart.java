@@ -576,6 +576,12 @@ public class CustomModelPart {
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
 
         stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
+
+        if (this instanceof CustomModelPartGroup group) {
+            if (group.animScale != null) stack.scale(group.animScale.getX(), group.animScale.getY(), group.animScale.getZ());
+            if (group.animPos != null) stack.translate(group.animPos.getX() / 16f, group.animPos.getY() / 16f, group.animPos.getZ() / 16f);
+            if (group.animRot != null) rotate(stack, group.animRot);
+        }
     }
 
     //TODO move these to the mixins, probably.
@@ -779,7 +785,7 @@ public class CustomModelPart {
     /**
      * Gets a CustomModelPart from NBT, automatically reading the type from that NBT.
      */
-    public static CustomModelPart fromNbt(NbtCompound nbt) {
+    public static CustomModelPart fromNbt(NbtCompound nbt, CustomModel model) {
         NbtElement pt = nbt.get("pt");
         String partType = pt == null ? "na" : pt.asString();
 
@@ -789,6 +795,7 @@ public class CustomModelPart {
         Supplier<CustomModelPart> sup = MODEL_PART_TYPES.get(partType);
         CustomModelPart part = sup.get();
 
+        part.model = model;
         part.readNbt(nbt);
         return part;
     }

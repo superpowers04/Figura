@@ -128,7 +128,6 @@ public class BlockbenchModelDeserializer {
     public static NbtList parseAnimations(JsonArray animations, Map<String, NbtList> animationMap) {
         NbtList anims = new NbtList();
 
-        long id = 0;
         for (JsonElement jsonElement : animations) {
             if (!jsonElement.isJsonObject())
                 continue;
@@ -137,8 +136,8 @@ public class BlockbenchModelDeserializer {
             NbtCompound anim = new NbtCompound();
 
             //animation properties
-            anim.put("id", NbtFloat.of(id));
-            anim.put("nm", NbtString.of(obj.get("name").getAsString()));
+            NbtString name = NbtString.of(obj.get("name").getAsString());
+            anim.put("nm", name);
             anim.put("loop", NbtString.of(obj.get("loop").getAsString()));
             anim.put("len", NbtFloat.of(obj.get("length").getAsFloat()));
             anim.put("snp", NbtFloat.of(obj.get("snapping").getAsFloat()));
@@ -185,7 +184,7 @@ public class BlockbenchModelDeserializer {
                     }
 
                     animNbt.put("keyf", keyFrames);
-                    animNbt.put("id", NbtFloat.of(id));
+                    animNbt.put("id", name);
 
                     String uuid = animator.getKey();
                     if (animationMap.containsKey(uuid)) {
@@ -200,7 +199,6 @@ public class BlockbenchModelDeserializer {
             }
 
             anims.add(anim);
-            id++;
         }
 
         return anims;

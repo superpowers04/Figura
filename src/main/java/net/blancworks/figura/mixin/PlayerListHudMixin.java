@@ -80,7 +80,7 @@ public class PlayerListHudMixin {
     private void render(MatrixStack matrices, int scaledWindowWidth, Scoreboard scoreboard, ScoreboardObjective objective, CallbackInfo ci, ClientPlayNetworkHandler clientPlayNetworkHandler, List<?> list, int i, int j, int l, int m, int n, boolean bl, int q, int r, int s, int t, int u, List<?> list2, int w, int x, int y, int z, int aa, int ab, PlayerListEntry playerListEntry2, GameProfile gameProfile, PlayerEntity playerEntity, boolean bl2, int ae, int af) {
         this.playerEntity = playerEntity;
 
-        if (PlayerPopup.miniEnabled && x == PlayerPopup.miniSelected) {
+        if (!AvatarDataManager.panic && PlayerPopup.miniEnabled && x == PlayerPopup.miniSelected) {
             PlayerPopup.data = AvatarDataManager.getDataForPlayer(playerListEntry2.getProfile().getId());
 
             PlayerPopup.miniSize = list.size();

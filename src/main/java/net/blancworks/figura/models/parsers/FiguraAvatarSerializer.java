@@ -16,9 +16,9 @@ import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class BlockbenchModelSerializer {
+public class FiguraAvatarSerializer {
 
-    public static void toBlockbench(NbtCompound nbt) {
+    public static void serialize(NbtCompound nbt) {
         FiguraMod.doTask(() -> {
             try {
                 String fileName = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date());

@@ -32,7 +32,7 @@ public class CustomModel extends FiguraAsset {
 
     public final ArrayList<CustomModelPart> allParts = new ArrayList<>();
     public final HashMap<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new HashMap<>();
-    public final HashMap<Float, Animation> animations = new HashMap<>();
+    public final HashMap<String, Animation> animations = new HashMap<>();
 
     public Vec2f defaultTextureSize;
 
@@ -43,7 +43,10 @@ public class CustomModel extends FiguraAsset {
     public CustomModelPart.ParentType renderOnly = null;
 
     public void tick() {
-        animations.forEach((integer, animation) -> animation.tick());
+        animations.forEach((name, animation) -> {
+            if (animation.playState == Animation.PlayState.playing)
+                animation.tick();
+        });
     }
 
     //This contains all the modifications to origins for stuff like elytra and held items.
@@ -252,7 +255,7 @@ public class CustomModel extends FiguraAsset {
                 NbtCompound animTag = (NbtCompound) nbtElement;
                 Animation anim = Animation.fromNbt(animTag);
 
-                this.animations.put(anim.id, anim);
+                this.animations.put(anim.name, anim);
             }
         }
 
@@ -265,7 +268,7 @@ public class CustomModel extends FiguraAsset {
         if (partList != null) {
             for (NbtElement nbtElement : partList) {
                 NbtCompound partTag = (NbtCompound) nbtElement;
-                CustomModelPart part = CustomModelPart.fromNbt(partTag);
+                CustomModelPart part = CustomModelPart.fromNbt(partTag, this);
 
                 if (part != null) {
                     part.rebuild(this.defaultTextureSize);
@@ -276,10 +279,7 @@ public class CustomModel extends FiguraAsset {
 
         synchronized (this.allParts) {
             specialParts.clear();
-            for (CustomModelPart part : this.allParts) {
-                sortPart(part);
-                setModel(part);
-            }
+            this.allParts.forEach(this::sortPart);
         }
     }
 
@@ -291,15 +291,6 @@ public class CustomModel extends FiguraAsset {
         if (part instanceof CustomModelPartGroup group) {
             for (CustomModelPart child : group.children)
                 sortPart(child);
-        }
-    }
-
-    public void setModel(CustomModelPart part) {
-        part.model = this;
-
-        if (part instanceof CustomModelPartGroup group) {
-            for (CustomModelPart child : group.children)
-                setModel(child);
         }
     }
 }

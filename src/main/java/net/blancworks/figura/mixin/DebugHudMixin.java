@@ -16,6 +16,8 @@ public class DebugHudMixin {
 
     @Inject(at = @At("RETURN"), method = "getRightText")
     protected void getRightText(CallbackInfoReturnable<List<String>> cir) {
+        if (AvatarDataManager.panic) return;
+
         List<String> lines = cir.getReturnValue();
 
         int i = 0;

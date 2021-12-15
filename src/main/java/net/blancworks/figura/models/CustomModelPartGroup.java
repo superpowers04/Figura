@@ -4,13 +4,16 @@ import net.blancworks.figura.models.animations.KeyFrame;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3f;
 
 import java.util.ArrayList;
 
 public class CustomModelPartGroup extends CustomModelPart {
 
     public ArrayList<CustomModelPart> children = new ArrayList<>();
-    public ArrayList<KeyFrame> keyFrames;
+    public Vec3f animRot;
+    public Vec3f animPos;
+    public Vec3f animScale;
 
     @Override
     public void clearExtraRendering() {
@@ -56,9 +59,26 @@ public class CustomModelPartGroup extends CustomModelPart {
         }
 
         if (partNbt.contains("anims")) {
-            keyFrames = new ArrayList<>();
+            NbtList animList = partNbt.getList("anims", NbtElement.COMPOUND_TYPE);
+            if (animList != null) {
+                for (NbtElement nbtElement : animList) {
+                    NbtCompound animTag = (NbtCompound) nbtElement;
 
-            //todo
+                    String animationID = animTag.getString("id");
+
+                    NbtList keyFrameList = animTag.getList("keyf", NbtElement.COMPOUND_TYPE);
+                    if (keyFrameList != null) {
+                        for (NbtElement nbtElement2 : keyFrameList) {
+                            NbtCompound keyFrameTag = (NbtCompound) nbtElement2;
+
+                            KeyFrame keyFrame = KeyFrame.fromNbt(keyFrameTag);
+                            keyFrame.modelPart = this;
+
+                            this.model.animations.get(animationID).keyFrames.add(keyFrame);
+                        }
+                    }
+                }
+            }
         }
 
         if (partNbt.contains("chld")) {
@@ -68,7 +88,7 @@ public class CustomModelPartGroup extends CustomModelPart {
 
             for (NbtElement child : childrenNbt) {
                 NbtCompound childNbt = (NbtCompound) child;
-                CustomModelPart part = fromNbt(childNbt);
+                CustomModelPart part = fromNbt(childNbt, this.model);
                 if (part != null) this.children.add(part);
             }
         }
