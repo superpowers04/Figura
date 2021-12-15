@@ -31,13 +31,13 @@ public abstract class InGameHudMixin {
                 data.model.renderHudParts(matrices);
         }
 
-        if (FiguraMod.PLAYER_POPUP_BUTTON.isPressed())
+        if (!AvatarDataManager.panic && FiguraMod.PLAYER_POPUP_BUTTON.isPressed())
             PlayerPopup.render(matrices);
     }
 
     @Inject(at = @At ("RETURN"), method = "render")
     public void postRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        if (FiguraMod.ACTION_WHEEL_BUTTON.isPressed())
+        if (!AvatarDataManager.panic && FiguraMod.ACTION_WHEEL_BUTTON.isPressed())
             ActionWheel.render(matrices);
     }
 
@@ -48,6 +48,8 @@ public abstract class InGameHudMixin {
 
     @Inject(at = @At ("HEAD"), method = "renderCrosshair", cancellable = true)
     private void renderCrosshair(MatrixStack matrices, CallbackInfo ci) {
+        if (AvatarDataManager.panic) return;
+
         if (FiguraMod.ACTION_WHEEL_BUTTON.isPressed() && ActionWheel.enabled)
             ci.cancel();
 
@@ -68,7 +70,7 @@ public abstract class InGameHudMixin {
     private void renderCrosshairDrawTexture(Args args) {
         //set crosshair offset
         AvatarData currentData = AvatarDataManager.localPlayer;
-        if (currentData != null && currentData.script != null && currentData.script.crossHairPos != null) {
+        if (!AvatarDataManager.panic && currentData != null && currentData.script != null && currentData.script.crossHairPos != null) {
             args.set(1, (int) ((int) args.get(1) + currentData.script.crossHairPos.x));
             args.set(2, (int) ((int) args.get(2) + currentData.script.crossHairPos.y));
         }

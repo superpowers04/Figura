@@ -63,6 +63,16 @@ public class MinecraftClientMixin {
 
     @Inject(at = @At("RETURN"), method = "handleInputEvents")
     public void handleInputEvents(CallbackInfo ci) {
+        if (FiguraMod.PANIC_BUTTON.wasPressed()) {
+            RenderLayerAPI.restoreDefaults();
+            FiguraSoundManager.getChannel().stopAllSounds();
+            AvatarData.currentRenderingData = null;
+            AvatarDataManager.panic = !AvatarDataManager.panic;
+            return;
+        }
+
+        if (AvatarDataManager.panic) return;
+
         if (FiguraMod.ACTION_WHEEL_BUTTON.isPressed()) {
             this.mouse.unlockCursor();
         } else if (ActionWheel.enabled) {
@@ -91,13 +101,6 @@ public class MinecraftClientMixin {
             if (this.options.keysHotbar[i].isPressed()) {
                 PlayerPopup.hotbarKeyPressed(i);
             }
-        }
-
-        if (FiguraMod.PANIC_BUTTON.wasPressed()) {
-            RenderLayerAPI.restoreDefaults();
-            FiguraSoundManager.getChannel().stopAllSounds();
-            AvatarData.currentRenderingData = null;
-            AvatarDataManager.panic = !AvatarDataManager.panic;
         }
     }
 

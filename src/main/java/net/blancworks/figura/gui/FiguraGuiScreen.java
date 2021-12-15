@@ -233,7 +233,7 @@ public class FiguraGuiScreen extends Screen {
             if (local != null && local.hasAvatar()) {
                 net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
                 local.writeNbt(nbt);
-                net.blancworks.figura.models.parsers.BlockbenchModelSerializer.toBlockbench(nbt);
+                net.blancworks.figura.models.parsers.FiguraAvatarSerializer.serialize(nbt);
             }
         }));
 
@@ -393,10 +393,15 @@ public class FiguraGuiScreen extends Screen {
         //draw buttons
         super.render(matrices, mouseX, mouseY, delta);
 
-        //mod version
-        if (FiguraMod.latestVersionStatus >= 0)
-            drawCenteredText(matrices, this.textRenderer, new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)).formatted(Formatting.DARK_GRAY), this.width / 2, this.height - 12, 0xFFFFFF);
-        else {
+        //mod version / warning
+        if (AvatarDataManager.panic) {
+            Text panic = new LiteralText("").append(new TranslatableText("figura.gui.panic.warning").formatted(Formatting.YELLOW)).append(new LiteralText(" =").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)));
+            drawCenteredText(matrices, this.textRenderer, panic, this.width / 2, this.height - 12, 0xFFFFFF);
+        }
+        else if (FiguraMod.latestVersionStatus >= 0) {
+            Text version = new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)).formatted(Formatting.DARK_GRAY);
+            drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
+        } else {
             Text version = new LiteralText("").append(new LiteralText("Figura " + FiguraMod.MOD_VERSION).formatted(Formatting.YELLOW, Formatting.ITALIC)).append(new LiteralText(" =").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)));
             drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
 
@@ -413,10 +418,6 @@ public class FiguraGuiScreen extends Screen {
                 matrices.pop();
             }
         }
-
-        //panic
-        if (AvatarDataManager.panic)
-            drawCenteredText(matrices, client.textRenderer, new TranslatableText("figura.gui.panic.warning").formatted(Formatting.YELLOW), this.width / 2, 3, 0xFFFFFF);
 
         //tooltips
         boolean hasBackend = connectionStatus == 3;
@@ -572,7 +573,7 @@ public class FiguraGuiScreen extends Screen {
             modelSizeStatus = 3;
         }
 
-        modelSizeStatus = AvatarDataManager.localPlayer.hasAvatar() ? modelSizeStatus : 0;
+        modelSizeStatus = AvatarDataManager.localPlayer.model != null ? modelSizeStatus : 0;
 
         return fsText;
     }

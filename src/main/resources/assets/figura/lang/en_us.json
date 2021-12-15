@@ -27,7 +27,7 @@
   "figura.gui.keybinds.title": "Figura Script Keybinds Menu",
 
   "figura.gui.dropconfirm": "Do you want to add the following models to Figura?",
-  "figura.gui.panic.warning": "Limited usage of Figura! // Avatar rendering is Disabled!   *panik*",
+  "figura.gui.panic.warning": "Limited usage of Figura! // Avatar rendering is Disabled! *panik*",
 
   "figura.gui.newver.tooltip": "New Figura version detected",
   "figura.gui.newver.tooltip2": "Check the discord server for new updates!",
