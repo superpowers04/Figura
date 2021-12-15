@@ -298,7 +298,10 @@ public class RendererAPI {
                         };
                     EntityHitResult result = ProjectileUtil.raycast(e, start, end, new Box(start, end), pred, Double.MAX_VALUE);
                     if (result == null) return NIL;
-                    return EntityAPI.getTableForEntity(result.getEntity());
+                    LuaTable ret = new LuaTable();
+                    ret.set("entity", EntityAPI.getTableForEntity(result.getEntity()));
+                    ret.set("pos", LuaVector.of(result.getPos()));
+                    return ret;
                 }
             });
 

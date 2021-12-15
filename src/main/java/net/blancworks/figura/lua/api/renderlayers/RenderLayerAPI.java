@@ -86,6 +86,8 @@ public class RenderLayerAPI {
                             if (script.playerData.isLocalAvatar)
                                 CustomScript.sendChatMessage(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
                             e.printStackTrace();
+                        } catch (Exception e) {
+                            script.handleError(e);
                         }
                     });
                     return NIL;
@@ -153,14 +155,13 @@ public class RenderLayerAPI {
             set("setUniform", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                    if (!RenderSystem.isOnRenderThread())
+                        throw new LuaError("setUniform can only be called inside render() or a renderlayer function!");
                     FiguraShader shader = script.shaders.get(arg1.checkjstring());
                     if (shader != null) {
                         if (shader.hasUniform(arg2.checkjstring())) {
                             arg3.checknotnil();
-                            if (RenderSystem.isOnRenderThread())
-                                shader.setUniformFromLua(arg2, arg3);
-                            else
-                                RenderSystem.recordRenderCall(()->shader.setUniformFromLua(arg2, arg3));
+                            shader.setUniformFromLua(arg2, arg3);
                         } else {
                             throw new LuaError("No uniform with name: " + arg2.checkjstring());
                         }
