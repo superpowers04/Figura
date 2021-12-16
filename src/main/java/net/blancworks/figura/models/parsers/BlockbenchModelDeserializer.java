@@ -140,7 +140,6 @@ public class BlockbenchModelDeserializer {
             anim.put("nm", name);
             anim.put("loop", NbtString.of(obj.get("loop").getAsString()));
             anim.put("len", NbtFloat.of(obj.get("length").getAsFloat()));
-            anim.put("snp", NbtFloat.of(obj.get("snapping").getAsFloat()));
 
             //todo maybe unnecessary? and why they are strings??
             if (obj.has("anim_time_update"))

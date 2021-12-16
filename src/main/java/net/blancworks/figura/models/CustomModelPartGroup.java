@@ -11,9 +11,15 @@ import java.util.ArrayList;
 public class CustomModelPartGroup extends CustomModelPart {
 
     public ArrayList<CustomModelPart> children = new ArrayList<>();
-    public Vec3f animRot;
-    public Vec3f animPos;
-    public Vec3f animScale;
+    public Vec3f animRot = Vec3f.ZERO.copy();
+    public Vec3f animPos = Vec3f.ZERO.copy();
+    public Vec3f animScale = new Vec3f(1f, 1f, 1f);
+
+    public void clearAnimData() {
+        animRot = Vec3f.ZERO.copy();
+        animPos = Vec3f.ZERO.copy();
+        animScale = new Vec3f(1f, 1f, 1f);
+    }
 
     @Override
     public void clearExtraRendering() {
@@ -66,17 +72,16 @@ public class CustomModelPartGroup extends CustomModelPart {
 
                     String animationID = animTag.getString("id");
 
+                    ArrayList<KeyFrame> keyFrames = new ArrayList<>();
                     NbtList keyFrameList = animTag.getList("keyf", NbtElement.COMPOUND_TYPE);
                     if (keyFrameList != null) {
                         for (NbtElement nbtElement2 : keyFrameList) {
                             NbtCompound keyFrameTag = (NbtCompound) nbtElement2;
-
-                            KeyFrame keyFrame = KeyFrame.fromNbt(keyFrameTag);
-                            keyFrame.modelPart = this;
-
-                            this.model.animations.get(animationID).keyFrames.add(keyFrame);
+                            keyFrames.add(KeyFrame.fromNbt(keyFrameTag));
                         }
                     }
+
+                    this.model.animations.get(animationID).keyFrames.put(this, keyFrames);
                 }
             }
         }

@@ -96,6 +96,12 @@ public class CustomModel extends FiguraAsset {
         if (owner.script != null)
             owner.script.render(owner.deltaTime);
 
+        //process animations
+        animations.forEach((s, animation) -> {
+            if (animation.playState == Animation.PlayState.playing)
+                animation.render(owner.deltaTime);
+        });
+
         leftToRender = getMaxRenderAmount();
 
         synchronized (this.allParts) {
@@ -134,6 +140,12 @@ public class CustomModel extends FiguraAsset {
     public void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, ModelPart arm, PlayerEntityModel<?> model, float alpha) {
         if (owner.script != null)
             owner.script.render(owner.deltaTime);
+
+        //process animations
+        animations.forEach((s, animation) -> {
+            if (animation.playState == Animation.PlayState.playing)
+                animation.render(owner.deltaTime);
+        });
 
         this.leftToRender = getMaxRenderAmount();
 

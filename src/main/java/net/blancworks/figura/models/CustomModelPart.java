@@ -16,12 +16,16 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -564,6 +568,14 @@ public class CustomModelPart {
     }
 
     public void applyTransforms(MatrixStack stack) {
+        if (this instanceof CustomModelPartGroup group) {
+            stack.translate(group.animPos.getX() / 16f, -group.animPos.getY() / 16f, group.animPos.getZ() / 16f);
+            vanillaRotate(stack, group.animRot);
+            stack.scale(group.animScale.getX(), group.animScale.getY(), group.animScale.getZ());
+
+            group.clearAnimData();
+        }
+
         stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
 
         stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
@@ -576,12 +588,6 @@ public class CustomModelPart {
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
 
         stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
-
-        if (this instanceof CustomModelPartGroup group) {
-            if (group.animScale != null) stack.scale(group.animScale.getX(), group.animScale.getY(), group.animScale.getZ());
-            if (group.animPos != null) stack.translate(group.animPos.getX() / 16f, group.animPos.getY() / 16f, group.animPos.getZ() / 16f);
-            if (group.animRot != null) rotate(stack, group.animRot);
-        }
     }
 
     //TODO move these to the mixins, probably.
