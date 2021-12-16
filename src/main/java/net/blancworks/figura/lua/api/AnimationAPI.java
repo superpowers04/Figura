@@ -2,7 +2,6 @@ package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
-import net.blancworks.figura.models.CustomModelPartGroup;
 import net.blancworks.figura.models.animations.Animation;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaError;
@@ -10,7 +9,7 @@ import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 
-public class animation {
+public class AnimationAPI {
     public static Identifier getID() {
         return new Identifier("default", "animation");
     }
@@ -36,9 +35,7 @@ public class animation {
             set("stop", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    Animation anim = checkForAnimation(script, arg);
-                    anim.playState = Animation.PlayState.stopped;
-                    anim.tick = 0;
+                    checkForAnimation(script, arg).stop();
                     return NIL;
                 }
             });

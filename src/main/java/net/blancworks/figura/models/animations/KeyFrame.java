@@ -11,8 +11,6 @@ public class KeyFrame {
     public final AnimationType type;
     public final Interpolation interpolation;
 
-    public CustomModelPart modelPart;
-
     public KeyFrame(Vec3f data, float time, AnimationType type, Interpolation interpolation) {
         this.data = data;
         this.time = time;
@@ -21,9 +19,9 @@ public class KeyFrame {
     }
 
     public enum AnimationType {
+        position,
         rotation,
-        scale,
-        position
+        scale
     }
 
     public enum Interpolation {
