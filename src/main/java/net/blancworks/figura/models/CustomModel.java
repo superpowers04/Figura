@@ -98,7 +98,7 @@ public class CustomModel extends FiguraAsset {
 
         //process animations
         animations.forEach((s, animation) -> {
-            if (animation.playState == Animation.PlayState.playing)
+            if (animation.playState != Animation.PlayState.stopped)
                 animation.render(owner.deltaTime);
         });
 
@@ -143,7 +143,7 @@ public class CustomModel extends FiguraAsset {
 
         //process animations
         animations.forEach((s, animation) -> {
-            if (animation.playState == Animation.PlayState.playing)
+            if (animation.playState != Animation.PlayState.stopped)
                 animation.render(owner.deltaTime);
         });
 

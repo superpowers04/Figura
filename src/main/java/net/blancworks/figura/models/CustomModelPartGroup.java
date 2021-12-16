@@ -7,6 +7,7 @@ import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class CustomModelPartGroup extends CustomModelPart {
 
@@ -72,16 +73,25 @@ public class CustomModelPartGroup extends CustomModelPart {
 
                     String animationID = animTag.getString("id");
 
-                    ArrayList<KeyFrame> keyFrames = new ArrayList<>();
+                    HashMap<Float, KeyFrame> keyFrames = new HashMap<>();
                     NbtList keyFrameList = animTag.getList("keyf", NbtElement.COMPOUND_TYPE);
                     if (keyFrameList != null) {
                         for (NbtElement nbtElement2 : keyFrameList) {
                             NbtCompound keyFrameTag = (NbtCompound) nbtElement2;
-                            keyFrames.add(KeyFrame.fromNbt(keyFrameTag));
-                        }
-                    }
 
-                    this.model.animations.get(animationID).keyFrames.put(this, keyFrames);
+                            KeyFrame frame = KeyFrame.fromNbt(keyFrameTag);
+
+                            if (keyFrames.containsKey(frame.time))
+                                keyFrames.get(frame.time).merge(frame);
+                            else
+                                keyFrames.put(frame.time, frame);
+                        }
+
+                        ArrayList<KeyFrame> frames = new ArrayList<>();
+                        keyFrames.values().stream().sorted().forEach(frames::add);
+
+                        this.model.animations.get(animationID).addKeyFrames(this, frames);
+                    }
                 }
             }
         }
