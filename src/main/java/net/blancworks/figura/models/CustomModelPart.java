@@ -570,8 +570,12 @@ public class CustomModelPart {
     public void applyTransforms(MatrixStack stack) {
         if (this instanceof CustomModelPartGroup group) {
             stack.translate(group.animPos.getX() / 16f, -group.animPos.getY() / 16f, group.animPos.getZ() / 16f);
+            stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
+
             vanillaRotate(stack, group.animRot);
             stack.scale(group.animScale.getX(), group.animScale.getY(), group.animScale.getZ());
+
+            stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
 
             group.clearAnimData();
         }
