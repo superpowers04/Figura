@@ -56,24 +56,29 @@ public class Animation {
         //animation end
         if (time > this.length) {
             switch (loopMode) {
-                case hold -> playState = PlayState.stopped;
-                case once -> stop();
+                case hold -> {
+                    playState = PlayState.paused;
+                    return;
+                }
+                case once -> {
+                    stop();
+                    return;
+                }
                 case loop -> {
                     stop();
+                    time = 0f;
                     playState = PlayState.playing;
                 }
             }
-            return;
+        } else {
+            tick++;
         }
 
+        float finalTime = time;
         currentKeyFrame.forEach((group, keyFrame) -> {
-            if (time > keyFrame.nextKeyFrame.time) {
+            if (finalTime >= keyFrame.nextKeyFrame.time)
                 currentKeyFrame.put(group, keyFrame.nextKeyFrame);
-                System.out.println(time);
-            }
         });
-
-        tick++;
     }
 
     public void render(float delta) {
@@ -84,24 +89,35 @@ public class Animation {
 
             if (keyFrame.pos != null) {
                 KeyFrame next = keyFrame.getNext(KeyFrame.DataType.position);
-                float realDelta = timeNow / (next.time - keyFrame.time);
 
-                group.animPos.add(lerpVec3f(keyFrame.pos.offset(), next.pos.offset(), realDelta));
-                //System.out.println(tick + " ||| " + timeNow + " ||| " + keyFrame.time + " ||| " + next.time + " ||| " + realDelta);
+                if (next.time < keyFrame.time || next == keyFrame) {
+                    group.animPos.add(keyFrame.pos.offset());
+                } else {
+                    float realDelta = timeNow / (next.time - keyFrame.time);
+                    group.animPos.add(lerpVec3f(keyFrame.pos.offset(), next.pos.offset(), realDelta));
+                }
             }
 
             if (keyFrame.rot != null) {
                 KeyFrame next = keyFrame.getNext(KeyFrame.DataType.rotation);
-                float realDelta = timeNow / (next.time - keyFrame.time);
 
-                group.animRot.add(lerpVec3f(keyFrame.rot.offset(), next.rot.offset(), realDelta));
+                if (next.time < keyFrame.time || next == keyFrame) {
+                    group.animRot.add(keyFrame.rot.offset());
+                } else {
+                    float realDelta = timeNow / (next.time - keyFrame.time);
+                    group.animRot.add(lerpVec3f(keyFrame.rot.offset(), next.rot.offset(), realDelta));
+                }
             }
 
             if (keyFrame.scale != null) {
                 KeyFrame next = keyFrame.getNext(KeyFrame.DataType.scale);
-                float realDelta = timeNow / (next.time - keyFrame.time);
 
-                group.animScale.add(lerpVec3f(keyFrame.scale.offset(), next.scale.offset(), realDelta));
+                if (next.time < keyFrame.time || next == keyFrame) {
+                    group.animScale.add(keyFrame.scale.offset());
+                } else {
+                    float realDelta = timeNow / (next.time - keyFrame.time);
+                    group.animScale.add(lerpVec3f(keyFrame.scale.offset(), next.scale.offset(), realDelta));
+                }
             }
         });
     }
@@ -109,7 +125,7 @@ public class Animation {
     public void stop() {
         this.tick = 0;
         this.playState = PlayState.stopped;
-        this.currentKeyFrame.forEach((group, keyFrame) -> currentKeyFrame.put(group, keyFrame.head));
+        this.currentKeyFrame.forEach((group, keyFrame) -> currentKeyFrame.put(group, keyFrame.getFirst()));
     }
 
     public void addKeyFrames(CustomModelPartGroup group, ArrayList<KeyFrame> keyFrames) {
@@ -138,6 +154,9 @@ public class Animation {
         String name = animTag.getString("nm");
         float length = animTag.getFloat("len");
         Animation.LoopMode loopMode = Animation.LoopMode.valueOf(animTag.getString("loop"));
+
+        if (loopMode == LoopMode.loop)
+            length -= 1 / 20f; //remove last frame on loop
 
         //TODO - i think you got it
         String animationTimeUpdate = animTag.contains("time") ? animTag.getString("time") : "";

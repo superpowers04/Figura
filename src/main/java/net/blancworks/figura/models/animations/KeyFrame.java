@@ -12,7 +12,6 @@ public class KeyFrame implements Comparable<KeyFrame> {
     public Translation rot;
     public Translation scale;
 
-    public KeyFrame head = this;
     public KeyFrame previousKeyFrame;
     public KeyFrame nextKeyFrame;
 
@@ -56,6 +55,12 @@ public class KeyFrame implements Comparable<KeyFrame> {
         }
 
         return this;
+    }
+
+    public KeyFrame getFirst() {
+        if (previousKeyFrame == this) return this;
+        else if (previousKeyFrame.time <= this.time) return previousKeyFrame.getFirst();
+        else return this;
     }
 
     public void merge(KeyFrame kf) {
