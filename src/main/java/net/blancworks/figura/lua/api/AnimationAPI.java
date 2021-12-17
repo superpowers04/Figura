@@ -3,11 +3,13 @@ package net.blancworks.figura.lua.api;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.animations.Animation;
+import net.blancworks.figura.models.animations.Animation.LoopMode;
+import net.blancworks.figura.models.animations.Animation.PlayState;
 import net.minecraft.util.Identifier;
-import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class AnimationAPI {
     public static Identifier getID() {
@@ -16,40 +18,126 @@ public class AnimationAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         return new ReadOnlyLuaTable(new LuaTable() {{
-            set("play", new OneArgFunction() {
+            set("get", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    checkForAnimation(script, arg).playState = Animation.PlayState.playing;
-                    return NIL;
+                    Animation anim = getAnimation(script, arg.checkjstring());
+                    if (anim == null) return NIL;
+
+                    return getTable(anim);
                 }
             });
 
-            set("pause", new OneArgFunction() {
+            set("listAnimations", new ZeroArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg) {
-                    checkForAnimation(script, arg).playState = Animation.PlayState.paused;
-                    return NIL;
-                }
-            });
+                public LuaValue call() {
+                    CustomModel model = script.avatarData.model;
+                    if (model == null) return NIL;
 
-            set("stop", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    checkForAnimation(script, arg).stop();
-                    return NIL;
+                    int i = 1;
+                    LuaTable tbl = new LuaTable();
+                    for (Animation animation : model.animations.values()) {
+                        tbl.set(i, LuaValue.valueOf(animation.name));
+                        i++;
+                    }
+
+                    return new ReadOnlyLuaTable(tbl);
                 }
             });
         }});
     }
 
-    private static Animation checkForAnimation(CustomScript script, LuaValue arg) {
+    public static ReadOnlyLuaTable getTable(Animation anim) {
+        return new AnimationTable(anim).getTable();
+    }
+
+    private static Animation getAnimation(CustomScript script, String name) {
         CustomModel model = script.avatarData.model;
-        if (model == null)
-            throw new LuaError("Avatar has no model!");
+        if (model == null) return null;
 
-        if (!model.animations.containsKey(arg.checkjstring()))
-            throw new LuaError("Animation not found!");
+        return model.animations.get(name);
+    }
 
-        return model.animations.get(arg.checkjstring());
+    private static class AnimationTable extends ReadOnlyLuaTable {
+        private final Animation animation;
+
+        private AnimationTable(Animation animation) {
+            this.animation = animation;
+        }
+
+        public ReadOnlyLuaTable getTable() {
+            return new ReadOnlyLuaTable(new LuaTable() {{
+                set("play", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        animation.play();
+                        return NIL;
+                    }
+                });
+
+                set("pause", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        animation.playState = PlayState.paused;
+                        return NIL;
+                    }
+                });
+
+                set("stop", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        animation.stop();
+                        return NIL;
+                    }
+                });
+
+                set("isPlaying", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.playState == PlayState.playing);
+                    }
+                });
+
+                set("setLength", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        animation.length = arg.checknumber().tofloat();
+                        return NIL;
+                    }
+                });
+
+                set("setSpeed", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        animation.speed = arg.checknumber().tofloat();
+                        return NIL;
+                    }
+                });
+
+                set("setLoopMode", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        LoopMode mode;
+                        try {
+                            mode = LoopMode.valueOf(arg.checkjstring());
+                        } catch (Exception ignored) {
+                            mode = LoopMode.once;
+                        }
+
+                        if (animation.loopMode != mode) {
+                            //fix last frame on loop mode
+                            if (animation.loopMode == LoopMode.loop) //was "loop"
+                                animation.length += Animation.STEP;
+                            else if (mode == LoopMode.loop) //will be "loop"
+                                animation.length -= Animation.STEP;
+
+                            animation.loopMode = mode;
+                        }
+                        return NIL;
+                    }
+                });
+
+            }});
+        }
     }
 }
