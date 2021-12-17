@@ -41,7 +41,20 @@ public class AnimationAPI {
                         i++;
                     }
 
-                    return new ReadOnlyLuaTable(tbl);
+                    return tbl;
+                }
+            });
+
+            set("stopAll", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    CustomModel model = script.avatarData.model;
+                    if (model == null) return NIL;
+
+                    for (Animation animation : model.animations.values())
+                        animation.stop();
+
+                    return NIL;
                 }
             });
         }});

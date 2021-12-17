@@ -6,13 +6,11 @@ import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.block.SkullBlock;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.block.entity.SkullBlockEntityModel;
 import net.minecraft.client.render.block.entity.SkullBlockEntityRenderer;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
@@ -51,16 +49,9 @@ public abstract class SkullBlockEntityRendererMixin {
 
     @Inject(method = "getRenderLayer", at = @At(value = "HEAD"))
     private static void getRenderLayer(SkullBlock.SkullType type, GameProfile profile, CallbackInfoReturnable<RenderLayer> cir) {
-        PlayerEntity player = null;
-        if (profile != null && profile.getId() != null && MinecraftClient.getInstance().world != null)
-            player = MinecraftClient.getInstance().world.getPlayerByUuid(profile.getId());
+        data = null;
 
-        if (player == null) {
-            data = null;
-            return;
-        }
-
-        data = AvatarDataManager.getDataForPlayer(profile.getId());
-        if (data != null) data.lastEntity = player;
+        if (profile != null && profile.getId() != null)
+            data = AvatarDataManager.getDataForPlayer(profile.getId());
     }
 }

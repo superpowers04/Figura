@@ -135,6 +135,11 @@ public class CustomModel extends FiguraAsset {
                 matrices.pop();
             }
         }
+
+        animations.forEach((s, animation) -> {
+            if (animation.playState != Animation.PlayState.stopped)
+                animation.clearAnimData();
+        });
     }
 
     public void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, ModelPart arm, PlayerEntityModel<?> model, float alpha) {
@@ -164,6 +169,11 @@ public class CustomModel extends FiguraAsset {
             }
             //applyHiddenTransforms = true;
         }
+
+        animations.forEach((s, animation) -> {
+            if (animation.playState != Animation.PlayState.stopped)
+                animation.clearAnimData();
+        });
     }
 
     public boolean renderSkull(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
@@ -242,7 +252,7 @@ public class CustomModel extends FiguraAsset {
         float h = client.getWindow().getScaledHeight() / 2f;
 
         matrices.push();
-        matrices.translate(w, h, -500);
+        matrices.translate(w, h, 0f);
         matrices.scale(scale, scale, -scale);
         DiffuseLighting.disableGuiDepthLighting();
 
@@ -256,6 +266,8 @@ public class CustomModel extends FiguraAsset {
                     break;
             }
         }
+
+        DiffuseLighting.enableGuiDepthLighting();
         matrices.pop();
     }
 

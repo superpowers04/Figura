@@ -27,8 +27,6 @@ public class EntityAvatarData extends AvatarData {
                 if (entity.getUuid().compareTo(this.entityId) == 0)
                     this.lastEntity = entity;
             });
-        } else {
-            lastEntity = null;
         }
 
         if (lastEntity != null) {

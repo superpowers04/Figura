@@ -173,6 +173,14 @@ public class Animation {
         this.currentKeyFrame.forEach((group, keyFrame) -> currentKeyFrame.put(group, keyFrame.getFirst()));
     }
 
+    public void clearAnimData() {
+        currentKeyFrame.forEach((group, keyFrame) -> {
+            group.animRot = Vec3f.ZERO.copy();
+            group.animPos = Vec3f.ZERO.copy();
+            group.animScale = new Vec3f(1f, 1f, 1f);
+        });
+    }
+
     public void addKeyFrames(CustomModelPartGroup group, ArrayList<KeyFrame> keyFrames) {
         //start
         KeyFrame head = keyFrames.get(0);
