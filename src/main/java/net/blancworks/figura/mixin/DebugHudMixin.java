@@ -30,9 +30,10 @@ public class DebugHudMixin {
         lines.add(++i, "Version: " + FiguraMod.MOD_VERSION);
 
         if (AvatarDataManager.localPlayer != null) {
+            lines.add(++i, String.format("Complexity: %d", AvatarDataManager.localPlayer.getComplexity()));
+
             CustomScript script = AvatarDataManager.localPlayer.script;
             if (script != null) {
-                lines.add(++i, String.format("Complexity: %d", AvatarDataManager.localPlayer.getComplexity()));
                 lines.add(++i, String.format("Init instructions: %d", script.initInstructionCount));
                 lines.add(++i, String.format("Tick instructions: %d", script.tickInstructionCount));
                 lines.add(++i, String.format("Render instructions: %d",script.renderInstructionCount));

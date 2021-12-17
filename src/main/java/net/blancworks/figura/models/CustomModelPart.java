@@ -568,18 +568,6 @@ public class CustomModelPart {
     }
 
     public void applyTransforms(MatrixStack stack) {
-        if (this instanceof CustomModelPartGroup group) {
-            stack.translate(group.animPos.getX() / 16f, -group.animPos.getY() / 16f, group.animPos.getZ() / 16f);
-            stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
-
-            vanillaRotate(stack, group.animRot);
-            stack.scale(group.animScale.getX(), group.animScale.getY(), group.animScale.getZ());
-
-            stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
-
-            group.clearAnimData();
-        }
-
         stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
 
         stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
@@ -592,6 +580,9 @@ public class CustomModelPart {
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
 
         stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
+
+        if (this instanceof CustomModelPartGroup group)
+            group.applyAnimationTransforms(stack);
     }
 
     //TODO move these to the mixins, probably.

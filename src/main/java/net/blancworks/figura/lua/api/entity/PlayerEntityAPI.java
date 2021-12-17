@@ -29,7 +29,8 @@ public class PlayerEntityAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         //Global table will get the local player.
-        return new ReadOnlyLuaTable(EntityAPI.getTableForEntity(script.avatarData.lastEntity));
+        //why I can not use EntityAPI.getTableForEntity() ?
+        return new PlayerEntityLuaAPITable(() -> (PlayerEntity) script.avatarData.lastEntity);
     }
 
     public static ReadOnlyLuaTable get(PlayerEntity entity) {
@@ -43,13 +44,12 @@ public class PlayerEntityAPI {
             super.setTable(getTable());
         }
 
-        public ReadOnlyLuaTable getTable() {
+        public LuaTable getTable() {
             LuaTable superTable = super.getTable();
 
             superTable.set("getHeldItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-
                     int hand = arg.checkint();
 
                     ItemStack targetStack;
@@ -145,7 +145,7 @@ public class PlayerEntityAPI {
                 }
             });
 
-            return new ReadOnlyLuaTable(superTable);
+            return superTable;
         }
 
         @Override
@@ -155,5 +155,4 @@ public class PlayerEntityAPI {
             return super.rawget(key);
         }
     }
-
 }

@@ -467,6 +467,20 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("getChildren", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    if (!(targetPart instanceof CustomModelPartGroup group))
+                        return NIL;
+
+                    LuaTable tbl = new LuaTable();
+                    for (CustomModelPart child : group.children)
+                        tbl.set(child.name, new CustomModelPartTable(child, script));
+
+                    return tbl;
+                }
+            });
+
             ret.set("renderItem", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {

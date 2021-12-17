@@ -30,16 +30,13 @@ public class EntityAPI {
     public static class EntityLuaAPITable<T extends Entity> extends ReadOnlyLuaTable {
 
         public Supplier<T> targetEntity;
-        
+
         public EntityLuaAPITable(Supplier<T> targetEntity) {
             this.targetEntity = targetEntity;
         }
 
-
         public LuaTable getTable() {
-
             return new LuaTable() {{
-
                 set("getPos", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
@@ -155,7 +152,6 @@ public class EntityAPI {
                         if (targetEntity == null) return NIL;
 
                         EntityPose p = targetEntity.get().getPose();
-
                         if (p == null)
                             return NIL;
 
@@ -203,7 +199,7 @@ public class EntityAPI {
                     @Override
                     public LuaValue call() {
                         verifyEntityExists();
-                        
+
                         Entity ent = targetEntity.get();
                         if (ent.hasCustomName() && ent.getCustomName() != null)
                             return LuaValue.valueOf(ent.getCustomName().getString());
@@ -265,7 +261,6 @@ public class EntityAPI {
                     @Override
                     public LuaValue call(LuaValue arg) {
                         String pathArg = arg.checkjstring();
-
                         String[] path = pathArg.split("\\.");
 
                         NbtCompound tag = new NbtCompound();
@@ -281,7 +276,6 @@ public class EntityAPI {
                         }
 
                         if (current == null) return NIL;
-
                         return NBTAPI.fromTag(current);
                     }
                 });
@@ -294,21 +288,14 @@ public class EntityAPI {
             verifyEntityExists();
             return super.rawget(key);
         }
-        
 
         private static <T> T retrieveItemByIndex(Iterable<T> iterable, int index) {
-
-            if (iterable == null || index < 0) {
-
+            if (iterable == null || index < 0)
                 return null;
-            }
 
             int cursor = 0;
-
             Iterator<T> iterator = iterable.iterator();
-
             while (cursor < index && iterator.hasNext()) {
-
                 iterator.next();
                 cursor++;
             }
@@ -316,16 +303,18 @@ public class EntityAPI {
             return cursor == index && iterator.hasNext() ? iterator.next() : null;
         }
 
-        protected void verifyEntityExists(){
-            if(targetEntity.get() == null)
+        protected void verifyEntityExists() {
+            if (targetEntity.get() == null)
                 throw new LuaError("Entity does not exist!");
         }
-
     }
 
-    public static LuaTable getTableForEntity(Entity entity) {
-        if (entity instanceof PlayerEntity) return new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> (PlayerEntity) entity).getTable();
-        if (entity instanceof LivingEntity) return new LivingEntityAPI.LivingEntityAPITable<>(() -> (LivingEntity) entity).getTable();
-        return new EntityAPI.EntityLuaAPITable<>(() -> entity).getTable();
+    public static ReadOnlyLuaTable getTableForEntity(Entity entity) {
+        if (entity instanceof PlayerEntity player)
+            return new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> player);
+        else if (entity instanceof LivingEntity mob)
+            return new LivingEntityAPI.LivingEntityAPITable<>(() -> mob);
+        else
+            return new EntityAPI.EntityLuaAPITable<>(() -> entity);
     }
 }

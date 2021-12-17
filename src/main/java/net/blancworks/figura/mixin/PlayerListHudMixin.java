@@ -104,8 +104,6 @@ public class PlayerListHudMixin {
         }
 
         //draw figura head
-        data.lastEntity = playerEntity;
-
         Window w = MinecraftClient.getInstance().getWindow();
         final double guiScale = w.getScaleFactor();
 

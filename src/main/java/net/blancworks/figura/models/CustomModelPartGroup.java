@@ -2,6 +2,7 @@ package net.blancworks.figura.models;
 
 import net.blancworks.figura.models.animations.KeyFrame;
 import net.fabricmc.fabric.api.util.NbtType;
+import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.*;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
@@ -16,10 +17,20 @@ public class CustomModelPartGroup extends CustomModelPart {
     public Vec3f animPos = Vec3f.ZERO.copy();
     public Vec3f animScale = new Vec3f(1f, 1f, 1f);
 
-    public void clearAnimData() {
-        animRot = Vec3f.ZERO.copy();
-        animPos = Vec3f.ZERO.copy();
-        animScale = new Vec3f(1f, 1f, 1f);
+    public void applyAnimationTransforms(MatrixStack stack) {
+        stack.translate(animPos.getX() / 16f, -animPos.getY() / 16f, animPos.getZ() / 16f);
+        stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
+
+        animRotate(stack, animRot);
+        stack.scale(animScale.getX(), animScale.getY(), animScale.getZ());
+
+        stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
+    }
+
+    public void animRotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
     }
 
     @Override
