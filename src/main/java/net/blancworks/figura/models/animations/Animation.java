@@ -1,8 +1,9 @@
 package net.blancworks.figura.models.animations;
 
 import net.blancworks.figura.models.CustomModelPartGroup;
+import net.blancworks.figura.models.animations.KeyFrame.DataType;
+import net.blancworks.figura.models.animations.KeyFrame.Interpolation;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3f;
 
 import java.util.ArrayList;
@@ -11,8 +12,8 @@ import java.util.HashMap;
 public class Animation {
     //animation data
     public final String name;
-    public final float length;
-    public final LoopMode loopMode;
+    public float length;
+    public LoopMode loopMode;
 
     //todo maybe unnecessary? and why they are strings??
     public final String animationTimeUpdate;
@@ -24,8 +25,11 @@ public class Animation {
     public HashMap<CustomModelPartGroup, KeyFrame> currentKeyFrame = new HashMap<>();
 
     //animation status
-    public int tick = 0;
+    public float tick = 0f;
+    public float speed = 1f;
     public PlayState playState = PlayState.stopped;
+
+    public static final float STEP = 1 / 20f;
 
     public Animation(String name, float length, LoopMode loopMode, String animationTimeUpdate, String blendWeight, String startDelay, String loopDelay) {
         this.name = name;
@@ -47,7 +51,8 @@ public class Animation {
     public enum PlayState {
         stopped,
         playing,
-        paused
+        paused,
+        ended
     }
 
     public void tick() {
@@ -57,7 +62,7 @@ public class Animation {
         if (time > this.length) {
             switch (loopMode) {
                 case hold -> {
-                    playState = PlayState.paused;
+                    playState = PlayState.ended;
                     return;
                 }
                 case once -> {
@@ -71,12 +76,12 @@ public class Animation {
                 }
             }
         } else {
-            tick++;
+            tick += speed;
         }
 
         float finalTime = time;
         currentKeyFrame.forEach((group, keyFrame) -> {
-            if (finalTime >= keyFrame.nextKeyFrame.time)
+            if (finalTime >= keyFrame.nextKeyFrame.time && keyFrame.time <= keyFrame.nextKeyFrame.time)
                 currentKeyFrame.put(group, keyFrame.nextKeyFrame);
         });
     }
@@ -88,42 +93,82 @@ public class Animation {
             float timeNow = time - keyFrame.time;
 
             if (keyFrame.pos != null) {
-                KeyFrame next = keyFrame.getNext(KeyFrame.DataType.position);
+                KeyFrame next = keyFrame.getNext(DataType.position);
 
                 if (next.time < keyFrame.time || next == keyFrame) {
                     group.animPos.add(keyFrame.pos.offset());
                 } else {
                     float realDelta = timeNow / (next.time - keyFrame.time);
-                    group.animPos.add(lerpVec3f(keyFrame.pos.offset(), next.pos.offset(), realDelta));
+
+                    Vec3f pos;
+                    if (keyFrame.pos.lerpMode() == Interpolation.linear)
+                        pos = lerpVec3f(keyFrame.pos.offset(), next.pos.offset(), realDelta);
+                    else
+                        pos = catmullRomVec3f(
+                                keyFrame.getPrevious(DataType.position).pos.offset(),
+                                keyFrame.pos.offset(), next.pos.offset(),
+                                next.getNext(DataType.position).pos.offset(),
+                                realDelta
+                        );
+                    group.animPos.add(pos);
                 }
             }
 
             if (keyFrame.rot != null) {
-                KeyFrame next = keyFrame.getNext(KeyFrame.DataType.rotation);
+                KeyFrame next = keyFrame.getNext(DataType.rotation);
 
                 if (next.time < keyFrame.time || next == keyFrame) {
                     group.animRot.add(keyFrame.rot.offset());
                 } else {
                     float realDelta = timeNow / (next.time - keyFrame.time);
-                    group.animRot.add(lerpVec3f(keyFrame.rot.offset(), next.rot.offset(), realDelta));
+
+                    Vec3f rot;
+                    if (keyFrame.rot.lerpMode() == Interpolation.linear)
+                        rot = lerpVec3f(keyFrame.rot.offset(), next.rot.offset(), realDelta);
+                    else
+                        rot = catmullRomVec3f(
+                                keyFrame.getPrevious(DataType.rotation).rot.offset(),
+                                keyFrame.rot.offset(), next.rot.offset(),
+                                next.getNext(DataType.rotation).rot.offset(),
+                                realDelta
+                        );
+                    group.animRot.add(rot);
                 }
             }
 
             if (keyFrame.scale != null) {
-                KeyFrame next = keyFrame.getNext(KeyFrame.DataType.scale);
+                KeyFrame next = keyFrame.getNext(DataType.scale);
 
                 if (next.time < keyFrame.time || next == keyFrame) {
                     group.animScale.add(keyFrame.scale.offset());
                 } else {
                     float realDelta = timeNow / (next.time - keyFrame.time);
-                    group.animScale.add(lerpVec3f(keyFrame.scale.offset(), next.scale.offset(), realDelta));
+
+                    Vec3f scale;
+                    if (keyFrame.scale.lerpMode() == Interpolation.linear)
+                        scale = lerpVec3f(keyFrame.scale.offset(), next.scale.offset(), realDelta);
+                    else
+                        scale = catmullRomVec3f(
+                                keyFrame.getPrevious(DataType.scale).scale.offset(),
+                                keyFrame.scale.offset(), next.scale.offset(),
+                                next.getNext(DataType.scale).scale.offset(),
+                                realDelta
+                        );
+                    group.animScale.add(scale);
                 }
             }
         });
     }
 
+    public void play() {
+        if (this.playState == PlayState.ended)
+            stop();
+
+        this.playState = PlayState.playing;
+    }
+
     public void stop() {
-        this.tick = 0;
+        this.tick = 0f;
         this.playState = PlayState.stopped;
         this.currentKeyFrame.forEach((group, keyFrame) -> currentKeyFrame.put(group, keyFrame.getFirst()));
     }
@@ -156,7 +201,7 @@ public class Animation {
         Animation.LoopMode loopMode = Animation.LoopMode.valueOf(animTag.getString("loop"));
 
         if (loopMode == LoopMode.loop)
-            length -= 1 / 20f; //remove last frame on loop
+            length -= STEP; //remove last frame on loop
 
         //TODO - i think you got it
         String animationTimeUpdate = animTag.contains("time") ? animTag.getString("time") : "";
@@ -168,19 +213,13 @@ public class Animation {
     }
 
     public static Vec3f lerpVec3f(Vec3f start, Vec3f end, float delta) {
-        float x = MathHelper.lerp(delta, start.getX(), end.getX());
-        float y = MathHelper.lerp(delta, start.getY(), end.getY());
-        float z = MathHelper.lerp(delta, start.getZ(), end.getZ());
-
-        return new Vec3f(x, y, z);
+        Vec3f ret = start.copy();
+        ret.lerp(end, delta);
+        return ret;
     }
 
     //TODO
-    //TODO
-    //TODO
-    //TODO
-    //TODO
-    public static Vec3f catmullRomVec3f(Vec3f start, Vec3f end, float delta) {
+    public static Vec3f catmullRomVec3f(Vec3f startPrev, Vec3f start, Vec3f end, Vec3f endNext, float delta) {
         return lerpVec3f(start, end, delta);
     }
 }

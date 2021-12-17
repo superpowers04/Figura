@@ -57,6 +57,27 @@ public class KeyFrame implements Comparable<KeyFrame> {
         return this;
     }
 
+    public KeyFrame getPrevious(DataType data) {
+        if (previousKeyFrame == this) return this;
+
+        switch (data) {
+            case position -> {
+                if (previousKeyFrame.pos == null) return previousKeyFrame.getPrevious(data);
+                else return previousKeyFrame;
+            }
+            case rotation -> {
+                if (previousKeyFrame.rot == null) return previousKeyFrame.getPrevious(data);
+                else return previousKeyFrame;
+            }
+            case scale -> {
+                if (previousKeyFrame.scale == null) return previousKeyFrame.getPrevious(data);
+                else return previousKeyFrame;
+            }
+        }
+
+        return this;
+    }
+
     public KeyFrame getFirst() {
         if (previousKeyFrame == this) return this;
         else if (previousKeyFrame.time <= this.time) return previousKeyFrame.getFirst();
