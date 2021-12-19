@@ -91,7 +91,7 @@ public class AnimationAPI {
                 set("pause", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        animation.playState = PlayState.paused;
+                        animation.playState = PlayState.PAUSED;
                         return NIL;
                     }
                 });
@@ -107,7 +107,7 @@ public class AnimationAPI {
                 set("isPlaying", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaValue.valueOf(animation.playState == PlayState.playing);
+                        return LuaValue.valueOf(animation.playState == PlayState.PLAYING);
                     }
                 });
 
@@ -119,11 +119,25 @@ public class AnimationAPI {
                     }
                 });
 
+                set("getLength", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.length);
+                    }
+                });
+
                 set("setSpeed", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
                         animation.speed = arg.checknumber().tofloat();
                         return NIL;
+                    }
+                });
+
+                set("getSpeed", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.speed);
                     }
                 });
 
@@ -134,19 +148,26 @@ public class AnimationAPI {
                         try {
                             mode = LoopMode.valueOf(arg.checkjstring());
                         } catch (Exception ignored) {
-                            mode = LoopMode.once;
+                            mode = LoopMode.ONCE;
                         }
 
                         if (animation.loopMode != mode) {
                             //fix last frame on loop mode
-                            if (animation.loopMode == LoopMode.loop) //was "loop"
+                            if (animation.loopMode == LoopMode.LOOP) //was "loop"
                                 animation.length += Animation.STEP;
-                            else if (mode == LoopMode.loop) //will be "loop"
+                            else if (mode == LoopMode.LOOP) //will be "loop"
                                 animation.length -= Animation.STEP;
 
                             animation.loopMode = mode;
                         }
                         return NIL;
+                    }
+                });
+
+                set("getLoopMode", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.loopMode.name());
                     }
                 });
 

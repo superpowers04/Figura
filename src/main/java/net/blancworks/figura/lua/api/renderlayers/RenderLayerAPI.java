@@ -618,13 +618,16 @@ public class RenderLayerAPI {
 
     public static void blitMainFramebuffer(Framebuffer target) {
         if (target == null) return;
+        int readId = GL30.glGetInteger(GL30.GL_READ_FRAMEBUFFER_BINDING);
+        int writeId = GL30.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
         Framebuffer mainFramebuffer = MinecraftClient.getInstance().getFramebuffer();
         target.resize(mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, MinecraftClient.IS_SYSTEM_MAC);
         RenderSystem.assertOnRenderThreadOrInit();
-        GlStateManager._glBindFramebuffer(36008, mainFramebuffer.fbo);
-        GlStateManager._glBindFramebuffer(36009, target.fbo);
-        GlStateManager._glBlitFrameBuffer(0, 0, mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, 0, 0, target.textureWidth, target.textureHeight, 16384, 9728);
-        GlStateManager._glBindFramebuffer(36160, mainFramebuffer.fbo);
+        GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, mainFramebuffer.fbo);
+        GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, target.fbo);
+        GlStateManager._glBlitFrameBuffer(0, 0, mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, 0, 0, target.textureWidth, target.textureHeight, GL30.GL_COLOR_BUFFER_BIT, GL30.GL_NEAREST);
+        GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readId);
+        GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, writeId);
     }
 
     public static final Map<String, VertexFormat> vertexFormatMap;

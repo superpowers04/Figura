@@ -43,12 +43,10 @@ public class MinecraftClientMixin {
     @Shadow @Nullable public ClientPlayerEntity player;
     @Shadow @Nullable public Entity cameraEntity;
 
-    /*
     @Inject(at = @At("RETURN"), method = "render")
     public void copyFramebuffer(boolean tick, CallbackInfo ci) {
         RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
     }
-    */
 
     @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V"), index = 0)
     public int clearMask(int defaultMask) {

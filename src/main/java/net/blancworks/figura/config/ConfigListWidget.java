@@ -113,7 +113,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.toggle = new ButtonWidget(0, 0, 80, 20, this.title, (button) -> config.configValue = !(boolean) config.configValue);
 
             //reset button
-            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
+            this.reset = new ButtonWidget(0, 0, 40, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
         }
 
         @Override
@@ -124,13 +124,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             textRenderer.draw(matrices, this.title, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
 
             //reset button
-            this.reset.x = x + 250;
+            this.reset.x = x + 260;
             this.reset.y = y;
             this.reset.active = this.config.configValue != this.config.defaultValue;
             this.reset.render(matrices, mouseX, mouseY, tickDelta);
 
             //toggle button
-            this.toggle.x = x + 165;
+            this.toggle.x = x + 175;
             this.toggle.y = y;
             this.toggle.setMessage(new TranslatableText("gui." + ((boolean) this.config.configValue ? "yes" : "no")));
 
@@ -179,7 +179,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.toggle = new ButtonWidget(0, 0, 80, 20, this.title, (button) -> config.configValue = (int) config.configValue + 1);
 
             //reset button
-            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
+            this.reset = new ButtonWidget(0, 0, 40, 20, new TranslatableText("controls.reset"), (button) -> config.configValue = config.defaultValue);
         }
 
         @Override
@@ -190,13 +190,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             textRenderer.draw(matrices, this.title, (float) x, (float)(posY - 9 / 2), 0xFFFFFF);
 
             //reset button
-            this.reset.x = x + 250;
+            this.reset.x = x + 260;
             this.reset.y = y;
             this.reset.active = !this.config.configValue.equals(this.config.defaultValue);
             this.reset.render(matrices, mouseX, mouseY, tickDelta);
 
             //toggle button
-            this.toggle.x = x + 165;
+            this.toggle.x = x + 175;
             this.toggle.y = y;
             this.toggle.setMessage(states.get((int) this.config.configValue % states.size()));
 
@@ -263,7 +263,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.field.setCursorToStart();
 
             //reset button
-            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {
+            this.reset = new ButtonWidget(0, 0, 40, 20, new TranslatableText("controls.reset"), (button) -> {
                 config.configValue = config.defaultValue;
                 if (inputType == InputType.HEX_COLOR)
                     this.field.setText(String.format("#%06X", config.configValue));
@@ -287,7 +287,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             }
 
             //reset button
-            this.reset.x = x + 250;
+            this.reset.x = x + 260;
             this.reset.y = y;
             this.reset.active = !this.config.configValue.equals(this.config.defaultValue + "");
             this.reset.render(matrices, mouseX, mouseY, tickDelta);
@@ -298,11 +298,11 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             //focused size
             int extraWidth = 0;
             if (this.field.isFocused() && !field.getText().isBlank())
-                extraWidth = MathHelper.clamp(textRenderer.getWidth(field.getText()) - 50, 0, 167);
+                extraWidth = MathHelper.clamp(textRenderer.getWidth(field.getText()) - 50, 0, 177);
 
             //set size
             this.field.setWidth(76 + extraWidth);
-            this.field.x = x + 167 - extraWidth;
+            this.field.x = x + 177 - extraWidth;
 
             //set text color
             int color = 0xFFFFFF;
@@ -390,7 +390,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             this.toggle = new ButtonWidget(0, 0, 80, 20, this.title, (button) -> focusedBinding = binding);
 
             //reset button
-            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> {
+            this.reset = new ButtonWidget(0, 0, 40, 20, new TranslatableText("controls.reset"), (button) -> {
                 binding.setBoundKey(binding.getDefaultKey());
                 KeyBinding.updateKeysByCode();
             });
@@ -404,13 +404,13 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
             textRenderer.draw(matrices, this.title, (float) x, (float) (posY - 9 / 2), 0xFFFFFF);
 
             //reset button
-            this.reset.x = x + 250;
+            this.reset.x = x + 260;
             this.reset.y = y;
             this.reset.active = !this.binding.isDefault();
             this.reset.render(matrices, mouseX, mouseY, tickDelta);
 
             //toggle button
-            this.toggle.x = x + 165;
+            this.toggle.x = x + 175;
             this.toggle.y = y;
             this.toggle.setMessage(this.binding.getBoundKeyLocalizedText());
 
@@ -454,6 +454,7 @@ public class ConfigListWidget extends ElementListWidget<ConfigListWidget.Entry> 
         public final Config config;
         public final Text title;
         public final Text tooltip;
+
         public Entry(Config config, Text title, Text tooltip) {
             this.config = config;
             this.title = title;

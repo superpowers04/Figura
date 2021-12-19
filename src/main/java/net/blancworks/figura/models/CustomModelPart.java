@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.avatar.AvatarData;
-import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
@@ -104,24 +103,15 @@ public class CustomModelPart {
                 renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
             }
         }
-
-        boolean batchingFix = (boolean) Config.ENTITY_BATCHING_FIX.value;
-        int prevRet = ret;
-
-        if (batchingFix)
-            draw(vcp);
+        draw(vcp);
 
         //shaders
         ret = renderShaders(data, ret, matrices, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
-        if (batchingFix && prevRet != ret) {
-            prevRet = ret;
-            draw(vcp);
-        }
+        draw(vcp);
 
         //extra stuff and hitboxes
         ret = renderExtraParts(data, ret, matrices, vcp, light, false, applyHiddenTransforms, renderOnly);
-        if (batchingFix && prevRet != ret)
-            draw(vcp);
+        draw(vcp);
 
         return ret;
     }

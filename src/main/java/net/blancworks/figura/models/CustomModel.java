@@ -45,7 +45,7 @@ public class CustomModel extends FiguraAsset {
     public void tick() {
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
             animations.forEach((name, animation) -> {
-                if (animation.playState == Animation.PlayState.playing)
+                if (animation.playState == Animation.PlayState.PLAYING)
                     animation.tick();
             });
         }
@@ -101,7 +101,7 @@ public class CustomModel extends FiguraAsset {
         //process animations
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
             animations.forEach((s, animation) -> {
-                if (animation.playState != Animation.PlayState.stopped)
+                if (animation.playState != Animation.PlayState.STOPPED)
                     animation.render(owner.deltaTime);
             });
         }
@@ -142,7 +142,7 @@ public class CustomModel extends FiguraAsset {
 
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
             animations.forEach((s, animation) -> {
-                if (animation.playState != Animation.PlayState.stopped)
+                if (animation.playState != Animation.PlayState.STOPPED)
                     animation.clearAnimData();
             });
         }
@@ -155,7 +155,7 @@ public class CustomModel extends FiguraAsset {
         //process animations
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
             animations.forEach((s, animation) -> {
-                if (animation.playState != Animation.PlayState.stopped)
+                if (animation.playState != Animation.PlayState.STOPPED)
                     animation.render(owner.deltaTime);
             });
         }
@@ -180,7 +180,7 @@ public class CustomModel extends FiguraAsset {
 
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
             animations.forEach((s, animation) -> {
-                if (animation.playState != Animation.PlayState.stopped)
+                if (animation.playState != Animation.PlayState.STOPPED)
                     animation.clearAnimData();
             });
         }
