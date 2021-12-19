@@ -12,13 +12,14 @@
   "figura.trust.maxtickinstructions": "Max Tick Instructions",
   "figura.trust.maxrenderinstructions": "Max Render Instructions",
   "figura.trust.maxcomplexity": "Max Complexity",
+  "figura.trust.maxparticles": "Maximum Particles Per Second",
+  "figura.trust.maxsfx": "Maximum Sounds Per Second",
   "figura.trust.allowvanillaedit": "Vanilla Avatar Changes",
   "figura.trust.allownameplateedit": "Nameplate/Chat Name Changes",
   "figura.trust.allowoffscreenrendering": "Offscreen Rendering",
   "figura.trust.allowcustomrenderlayers": "Custom Render Layers",
   "figura.trust.allowcustomsounds": "Custom Sounds",
-  "figura.trust.maxparticles": "Maximum Particles Per Second",
-  "figura.trust.maxsfx": "Maximum Sounds Per Second",
+  "figura.trust.bbanimations": "Blockbench Animations",
 
 
   "figura.gui.trustmenu.title": "Figura Trust Menu",

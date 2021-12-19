@@ -30,7 +30,8 @@ public class TrustContainer {
         NAMEPLATE_EDIT("allownameplateedit"),
         OFFSCREEN_RENDERING("allowoffscreenrendering"),
         CUSTOM_RENDER_LAYER("allowcustomrenderlayers"),
-        CUSTOM_SOUNDS("allowcustomsounds");
+        CUSTOM_SOUNDS("allowcustomsounds"),
+        BB_ANIMATIONS("bbanimations");
 
         public final String id;
         public final boolean isBool;

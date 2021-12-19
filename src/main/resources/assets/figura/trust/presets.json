@@ -10,7 +10,8 @@
     "NAMEPLATE_EDIT": 0,
     "OFFSCREEN_RENDERING": 0,
     "CUSTOM_RENDER_LAYER": 0,
-    "CUSTOM_SOUNDS": 0
+    "CUSTOM_SOUNDS": 0,
+    "BB_ANIMATIONS": 0
   },
   "untrusted": {
     "INIT_INST": 16384,
@@ -23,7 +24,8 @@
     "NAMEPLATE_EDIT": 0,
     "OFFSCREEN_RENDERING": 0,
     "CUSTOM_RENDER_LAYER": 0,
-    "CUSTOM_SOUNDS": 0
+    "CUSTOM_SOUNDS": 0,
+    "BB_ANIMATIONS": 0
   },
   "trusted": {
     "INIT_INST": 16384,
@@ -36,7 +38,8 @@
     "NAMEPLATE_EDIT": 1,
     "OFFSCREEN_RENDERING": 1,
     "CUSTOM_RENDER_LAYER": 1,
-    "CUSTOM_SOUNDS": 1
+    "CUSTOM_SOUNDS": 1,
+    "BB_ANIMATIONS": 1
   },
   "friend": {
     "INIT_INST": 2147483547,
@@ -49,7 +52,8 @@
     "NAMEPLATE_EDIT": 1,
     "OFFSCREEN_RENDERING": 1,
     "CUSTOM_RENDER_LAYER": 1,
-    "CUSTOM_SOUNDS": 1
+    "CUSTOM_SOUNDS": 1,
+    "BB_ANIMATIONS": 1
   },
   "local": {
     "INIT_INST": 2147483547,
@@ -62,6 +66,7 @@
     "NAMEPLATE_EDIT": 1,
     "OFFSCREEN_RENDERING": 1,
     "CUSTOM_RENDER_LAYER": 1,
-    "CUSTOM_SOUNDS": 1
+    "CUSTOM_SOUNDS": 1,
+    "BB_ANIMATIONS": 1
   }
 }

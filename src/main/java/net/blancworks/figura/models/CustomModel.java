@@ -43,10 +43,12 @@ public class CustomModel extends FiguraAsset {
     public CustomModelPart.ParentType renderOnly = null;
 
     public void tick() {
-        animations.forEach((name, animation) -> {
-            if (animation.playState == Animation.PlayState.playing)
-                animation.tick();
-        });
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            animations.forEach((name, animation) -> {
+                if (animation.playState == Animation.PlayState.playing)
+                    animation.tick();
+            });
+        }
     }
 
     //This contains all the modifications to origins for stuff like elytra and held items.
@@ -97,10 +99,12 @@ public class CustomModel extends FiguraAsset {
             owner.script.render(owner.deltaTime);
 
         //process animations
-        animations.forEach((s, animation) -> {
-            if (animation.playState != Animation.PlayState.stopped)
-                animation.render(owner.deltaTime);
-        });
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            animations.forEach((s, animation) -> {
+                if (animation.playState != Animation.PlayState.stopped)
+                    animation.render(owner.deltaTime);
+            });
+        }
 
         leftToRender = getMaxRenderAmount();
 
@@ -136,10 +140,12 @@ public class CustomModel extends FiguraAsset {
             }
         }
 
-        animations.forEach((s, animation) -> {
-            if (animation.playState != Animation.PlayState.stopped)
-                animation.clearAnimData();
-        });
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            animations.forEach((s, animation) -> {
+                if (animation.playState != Animation.PlayState.stopped)
+                    animation.clearAnimData();
+            });
+        }
     }
 
     public void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, ModelPart arm, PlayerEntityModel<?> model, float alpha) {
@@ -147,10 +153,12 @@ public class CustomModel extends FiguraAsset {
             owner.script.render(owner.deltaTime);
 
         //process animations
-        animations.forEach((s, animation) -> {
-            if (animation.playState != Animation.PlayState.stopped)
-                animation.render(owner.deltaTime);
-        });
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            animations.forEach((s, animation) -> {
+                if (animation.playState != Animation.PlayState.stopped)
+                    animation.render(owner.deltaTime);
+            });
+        }
 
         this.leftToRender = getMaxRenderAmount();
 
@@ -170,10 +178,12 @@ public class CustomModel extends FiguraAsset {
             //applyHiddenTransforms = true;
         }
 
-        animations.forEach((s, animation) -> {
-            if (animation.playState != Animation.PlayState.stopped)
-                animation.clearAnimData();
-        });
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            animations.forEach((s, animation) -> {
+                if (animation.playState != Animation.PlayState.stopped)
+                    animation.clearAnimData();
+            });
+        }
     }
 
     public boolean renderSkull(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
@@ -215,8 +225,8 @@ public class CustomModel extends FiguraAsset {
     public void renderWorldParts(double cameraX, double cameraY, double cameraZ, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, float alpha) {
         CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
-        matrices.translate(-cameraX,-cameraY, -cameraZ);
-        matrices.scale(-1,-1,1);
+        matrices.translate(-cameraX, -cameraY, -cameraZ);
+        matrices.scale(-1f,-1f,1f);
 
         synchronized (specialParts) {
             for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
