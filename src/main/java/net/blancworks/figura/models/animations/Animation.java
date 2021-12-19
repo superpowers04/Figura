@@ -1,7 +1,7 @@
 package net.blancworks.figura.models.animations;
 
 import net.blancworks.figura.models.CustomModelPartGroup;
-import net.blancworks.figura.models.animations.KeyFrame.DataType;
+import net.blancworks.figura.models.animations.KeyFrame.AnimationType;
 import net.blancworks.figura.models.animations.KeyFrame.Interpolation;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.math.Vec3f;
@@ -27,7 +27,7 @@ public class Animation {
     //animation status
     public float tick = 0f;
     public float speed = 1f;
-    public PlayState playState = PlayState.stopped;
+    public PlayState playState = PlayState.STOPPED;
 
     public static final float STEP = 1 / 20f;
 
@@ -43,16 +43,16 @@ public class Animation {
     }
 
     public enum LoopMode {
-        hold,
-        loop,
-        once
+        HOLD,
+        LOOP,
+        ONCE
     }
 
     public enum PlayState {
-        stopped,
-        playing,
-        paused,
-        ended
+        STOPPED,
+        PLAYING,
+        PAUSED,
+        ENDED
     }
 
     public void tick() {
@@ -61,18 +61,18 @@ public class Animation {
         //animation end
         if (time > this.length) {
             switch (loopMode) {
-                case hold -> {
-                    playState = PlayState.ended;
+                case HOLD -> {
+                    playState = PlayState.ENDED;
                     return;
                 }
-                case once -> {
+                case ONCE -> {
                     stop();
                     return;
                 }
-                case loop -> {
+                case LOOP -> {
                     stop();
                     time = 0f;
-                    playState = PlayState.playing;
+                    playState = PlayState.PLAYING;
                 }
             }
         } else {
@@ -93,7 +93,7 @@ public class Animation {
             float timeNow = time - keyFrame.time;
 
             if (keyFrame.pos != null) {
-                KeyFrame next = keyFrame.getNext(DataType.position);
+                KeyFrame next = keyFrame.getNext(AnimationType.POSITION);
 
                 if (next.time < keyFrame.time || next == keyFrame) {
                     group.animPos.add(keyFrame.pos.offset());
@@ -101,13 +101,13 @@ public class Animation {
                     float realDelta = timeNow / (next.time - keyFrame.time);
 
                     Vec3f pos;
-                    if (keyFrame.pos.lerpMode() == Interpolation.linear)
+                    if (keyFrame.pos.lerpMode() == Interpolation.LINEAR)
                         pos = lerpVec3f(keyFrame.pos.offset(), next.pos.offset(), realDelta);
                     else
                         pos = catmullRomVec3f(
-                                keyFrame.getPrevious(DataType.position).pos.offset(),
+                                keyFrame.getPrevious(AnimationType.POSITION).pos.offset(),
                                 keyFrame.pos.offset(), next.pos.offset(),
-                                next.getNext(DataType.position).pos.offset(),
+                                next.getNext(AnimationType.POSITION).pos.offset(),
                                 realDelta
                         );
                     group.animPos.add(pos);
@@ -115,7 +115,7 @@ public class Animation {
             }
 
             if (keyFrame.rot != null) {
-                KeyFrame next = keyFrame.getNext(DataType.rotation);
+                KeyFrame next = keyFrame.getNext(AnimationType.ROTATION);
 
                 if (next.time < keyFrame.time || next == keyFrame) {
                     group.animRot.add(keyFrame.rot.offset());
@@ -123,13 +123,13 @@ public class Animation {
                     float realDelta = timeNow / (next.time - keyFrame.time);
 
                     Vec3f rot;
-                    if (keyFrame.rot.lerpMode() == Interpolation.linear)
+                    if (keyFrame.rot.lerpMode() == Interpolation.LINEAR)
                         rot = lerpVec3f(keyFrame.rot.offset(), next.rot.offset(), realDelta);
                     else
                         rot = catmullRomVec3f(
-                                keyFrame.getPrevious(DataType.rotation).rot.offset(),
+                                keyFrame.getPrevious(AnimationType.ROTATION).rot.offset(),
                                 keyFrame.rot.offset(), next.rot.offset(),
-                                next.getNext(DataType.rotation).rot.offset(),
+                                next.getNext(AnimationType.ROTATION).rot.offset(),
                                 realDelta
                         );
                     group.animRot.add(rot);
@@ -137,7 +137,7 @@ public class Animation {
             }
 
             if (keyFrame.scale != null) {
-                KeyFrame next = keyFrame.getNext(DataType.scale);
+                KeyFrame next = keyFrame.getNext(AnimationType.SCALE);
 
                 if (next.time < keyFrame.time || next == keyFrame) {
                     group.animScale.add(keyFrame.scale.offset());
@@ -145,13 +145,13 @@ public class Animation {
                     float realDelta = timeNow / (next.time - keyFrame.time);
 
                     Vec3f scale;
-                    if (keyFrame.scale.lerpMode() == Interpolation.linear)
+                    if (keyFrame.scale.lerpMode() == Interpolation.LINEAR)
                         scale = lerpVec3f(keyFrame.scale.offset(), next.scale.offset(), realDelta);
                     else
                         scale = catmullRomVec3f(
-                                keyFrame.getPrevious(DataType.scale).scale.offset(),
+                                keyFrame.getPrevious(AnimationType.SCALE).scale.offset(),
                                 keyFrame.scale.offset(), next.scale.offset(),
-                                next.getNext(DataType.scale).scale.offset(),
+                                next.getNext(AnimationType.SCALE).scale.offset(),
                                 realDelta
                         );
                     group.animScale.add(scale);
@@ -161,15 +161,15 @@ public class Animation {
     }
 
     public void play() {
-        if (this.playState == PlayState.ended)
+        if (this.playState == PlayState.ENDED)
             stop();
 
-        this.playState = PlayState.playing;
+        this.playState = PlayState.PLAYING;
     }
 
     public void stop() {
         this.tick = 0f;
-        this.playState = PlayState.stopped;
+        this.playState = PlayState.STOPPED;
         this.currentKeyFrame.forEach((group, keyFrame) -> currentKeyFrame.put(group, keyFrame.getFirst()));
     }
 
@@ -206,9 +206,9 @@ public class Animation {
     public static Animation fromNbt(NbtCompound animTag) {
         String name = animTag.getString("nm");
         float length = animTag.getFloat("len");
-        Animation.LoopMode loopMode = Animation.LoopMode.valueOf(animTag.getString("loop"));
+        Animation.LoopMode loopMode = Animation.LoopMode.valueOf(animTag.getString("loop").toUpperCase());
 
-        if (loopMode == LoopMode.loop)
+        if (loopMode == LoopMode.LOOP)
             length -= STEP; //remove last frame on loop
 
         //TODO - i think you got it

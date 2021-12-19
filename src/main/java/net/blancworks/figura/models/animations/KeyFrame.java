@@ -20,36 +20,30 @@ public class KeyFrame implements Comparable<KeyFrame> {
     }
 
     public enum AnimationType {
-        position,
-        rotation,
-        scale
+        POSITION,
+        ROTATION,
+        SCALE
     }
 
     public enum Interpolation {
-        linear,
-        catmullrom
+        LINEAR,
+        CATMULLROM
     }
 
-    public enum DataType {
-        position,
-        rotation,
-        scale
-    }
-
-    public KeyFrame getNext(DataType data) {
+    public KeyFrame getNext(AnimationType type) {
         if (nextKeyFrame == this) return this;
 
-        switch (data) {
-            case position -> {
-                if (nextKeyFrame.pos == null) return nextKeyFrame.getNext(data);
+        switch (type) {
+            case POSITION -> {
+                if (nextKeyFrame.pos == null) return nextKeyFrame.getNext(type);
                 else return nextKeyFrame;
             }
-            case rotation -> {
-                if (nextKeyFrame.rot == null) return nextKeyFrame.getNext(data);
+            case ROTATION -> {
+                if (nextKeyFrame.rot == null) return nextKeyFrame.getNext(type);
                 else return nextKeyFrame;
             }
-            case scale -> {
-                if (nextKeyFrame.scale == null) return nextKeyFrame.getNext(data);
+            case SCALE -> {
+                if (nextKeyFrame.scale == null) return nextKeyFrame.getNext(type);
                 else return nextKeyFrame;
             }
         }
@@ -57,20 +51,20 @@ public class KeyFrame implements Comparable<KeyFrame> {
         return this;
     }
 
-    public KeyFrame getPrevious(DataType data) {
+    public KeyFrame getPrevious(AnimationType type) {
         if (previousKeyFrame == this) return this;
 
-        switch (data) {
-            case position -> {
-                if (previousKeyFrame.pos == null) return previousKeyFrame.getPrevious(data);
+        switch (type) {
+            case POSITION -> {
+                if (previousKeyFrame.pos == null) return previousKeyFrame.getPrevious(type);
                 else return previousKeyFrame;
             }
-            case rotation -> {
-                if (previousKeyFrame.rot == null) return previousKeyFrame.getPrevious(data);
+            case ROTATION -> {
+                if (previousKeyFrame.rot == null) return previousKeyFrame.getPrevious(type);
                 else return previousKeyFrame;
             }
-            case scale -> {
-                if (previousKeyFrame.scale == null) return previousKeyFrame.getPrevious(data);
+            case SCALE -> {
+                if (previousKeyFrame.scale == null) return previousKeyFrame.getPrevious(type);
                 else return previousKeyFrame;
             }
         }
@@ -95,14 +89,14 @@ public class KeyFrame implements Comparable<KeyFrame> {
         KeyFrame ret = new KeyFrame(time);
 
         Vec3f data = CustomModelPart.vec3fFromNbt(tag.getList("data", NbtElement.FLOAT_TYPE));
-        AnimationType type = AnimationType.valueOf(tag.getString("type"));
-        Interpolation interpolation = Interpolation.valueOf(tag.getString("int"));
+        AnimationType type = AnimationType.valueOf(tag.getString("type").toUpperCase());
+        Interpolation interpolation = Interpolation.valueOf(tag.getString("int").toUpperCase());
 
         Translation ts = new Translation(data, interpolation);
         switch (type) {
-            case position -> ret.pos = ts;
-            case rotation -> ret.rot = ts;
-            case scale -> ret.scale = ts;
+            case POSITION -> ret.pos = ts;
+            case ROTATION -> ret.rot = ts;
+            case SCALE -> ret.scale = ts;
         }
 
         return ret;
