@@ -4,7 +4,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
-import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.trust.TrustContainer.Trust;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
@@ -20,77 +20,84 @@ public class MetaAPI {
             set("getInitLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.INIT_INST));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.INIT_INST));
                 }
             });
 
             set("getTickLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.TICK_INST));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.TICK_INST));
                 }
             });
 
             set("getRenderLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.RENDER_INST));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.RENDER_INST));
                 }
             });
 
             set("getCanModifyVanilla", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.VANILLA_MODEL_EDIT) == 1);
                 }
             });
 
             set("getComplexityLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.COMPLEXITY));
                 }
             });
 
             set("getParticleLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.PARTICLES));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.PARTICLES));
                 }
             });
 
             set("getSoundLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.SOUNDS));
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.SOUNDS));
                 }
             });
 
             set("getDoesRenderOffscreen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.OFFSCREEN_RENDERING) == 1);
                 }
             });
 
             set("getCanModifyNameplate", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.NAMEPLATE_EDIT) == 1);
                 }
             });
 
             set("getCanHaveCustomRenderLayer", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.CUSTOM_RENDER_LAYER) == 1);
                 }
             });
 
             set("getCanHaveCustomSounds", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 1);
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.CUSTOM_SOUNDS) == 1);
+                }
+            });
+
+            set("getCanUseBBAnimations", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.BB_ANIMATIONS) == 1);
                 }
             });
 

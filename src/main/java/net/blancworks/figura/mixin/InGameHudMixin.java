@@ -23,14 +23,6 @@ public abstract class InGameHudMixin {
 
     @Inject(at = @At ("HEAD"), method = "render")
     public void preRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
-        //render hud parts
-        Entity entity = MinecraftClient.getInstance().getCameraEntity();
-        if (entity != null) {
-            AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
-            if (data != null && data.model != null)
-                data.model.renderHudParts(matrices);
-        }
-
         if (!AvatarDataManager.panic && FiguraMod.PLAYER_POPUP_BUTTON.isPressed())
             PlayerPopup.render(matrices);
     }
@@ -39,6 +31,14 @@ public abstract class InGameHudMixin {
     public void postRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
         if (!AvatarDataManager.panic && FiguraMod.ACTION_WHEEL_BUTTON.isPressed())
             ActionWheel.render(matrices);
+
+        //render hud parts
+        Entity entity = MinecraftClient.getInstance().getCameraEntity();
+        if (entity != null) {
+            AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
+            if (data != null && data.model != null)
+                data.model.renderHudParts(matrices);
+        }
     }
 
     @Redirect(method = "render", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/option/KeyBinding;isPressed()Z"))

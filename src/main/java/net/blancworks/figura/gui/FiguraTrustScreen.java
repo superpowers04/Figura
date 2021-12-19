@@ -53,6 +53,7 @@ public class FiguraTrustScreen extends Screen {
 
     public ButtonWidget resetPermissionButton;
     public ButtonWidget resetAllPermissionsButton;
+    public ButtonWidget setAvatarButton;
 
     public ButtonWidget clearCacheButton;
 
@@ -162,10 +163,8 @@ public class FiguraTrustScreen extends Screen {
 
         this.uuidBox = new CustomTextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new LiteralText("Name/UUID").formatted(Formatting.ITALIC));
         this.uuidBox.setMaxLength(36);
-        /*
-        this.addSelectableChild(uuidBox);
 
-        this.addDrawableChild(new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("*yoink*"), (btx) -> {
+        setAvatarButton = new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("set avatar"), (btx) -> {
             try {
                 com.mojang.authlib.GameProfile gameProfile;
                 try {
@@ -175,23 +174,31 @@ public class FiguraTrustScreen extends Screen {
                 }
 
                 net.minecraft.block.entity.SkullBlockEntity.loadProperties(gameProfile, profile -> {
-                    AvatarData data = AvatarDataManager.getDataForPlayer(profile.getId());
+                    AvatarData newData = AvatarDataManager.getDataForPlayer(profile.getId());
 
-                    if (data != null && data.hasAvatar() && AvatarDataManager.localPlayer != null) {
+                    if (newData != null && newData.hasAvatar() && playerListState.selected instanceof PlayerListEntry entry) {
+                        UUID id = entry.getProfile().getId();
+
                         net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
-                        data.writeNbt(nbt);
-                        nbt.putUuid("id", AvatarDataManager.localPlayer.entityId);
-                        AvatarDataManager.localPlayer.loadFromNbt(nbt);
-                        AvatarDataManager.localPlayer.isLocalAvatar = true;
+                        newData.writeNbt(nbt);
+                        nbt.putUuid("id", id);
 
-                        net.blancworks.figura.FiguraMod.sendToast("done", "");
+                        AvatarData data = AvatarDataManager.getDataForPlayer(id);
+                        if (data != null) {
+                            data.loadFromNbt(nbt);
+                            data.isLocalAvatar = true;
+
+                            net.blancworks.figura.FiguraMod.sendToast("done", "");
+                        }
                     }
                 });
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }));
-        */
+        });
+
+        //this.addSelectableChild(uuidBox);
+        //this.addDrawableChild(setAvatarButton);
 
         playerList.reloadFilters();
         permissionList.rebuild();

@@ -119,6 +119,8 @@ public class FiguraGuiScreen extends Screen {
     public TexturedButtonWidget keybindsButton;
 
     public ButtonWidget openFolderButton;
+    public ButtonWidget exportNbt;
+    public ButtonWidget serializeAvatar;
 
     public MutableText nameText;
     public MutableText fileSizeText;
@@ -226,25 +228,26 @@ public class FiguraGuiScreen extends Screen {
         });
         this.addDrawableChild(openFolderButton);
 
-        /*
         //save model
-        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 75, width, 20, new TranslatableText("Save model"), (buttonWidgetx) -> {
+        serializeAvatar = new ButtonWidget(this.width - width - 5, this.height - 75, width, 20, new TranslatableText("Save model"), (buttonWidgetx) -> {
             AvatarData local = AvatarDataManager.localPlayer;
             if (local != null && local.hasAvatar()) {
                 net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
                 local.writeNbt(nbt);
                 net.blancworks.figura.models.parsers.FiguraAvatarSerializer.serialize(nbt);
             }
-        }));
+        });
 
         //export nbt
-        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 50, width, 20, new TranslatableText("Cache nbt"), (buttonWidgetx) -> {
+        exportNbt = new ButtonWidget(this.width - width - 5, this.height - 50, width, 20, new TranslatableText("Cache nbt"), (buttonWidgetx) -> {
             if (AvatarDataManager.localPlayer != null) {
                 AvatarDataManager.localPlayer.saveToCache();
                 FiguraMod.sendToast("done", "");
             }
-        }));
-        */
+        });
+
+        //this.addDrawableChild(serializeAvatar);
+        //this.addDrawableChild(exportNbt);
 
         //back button
         this.addDrawableChild(new ButtonWidget(this.width - 145, this.height - 25, 140, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> {
