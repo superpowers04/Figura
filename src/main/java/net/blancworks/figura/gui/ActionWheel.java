@@ -381,6 +381,7 @@ public class ActionWheel extends DrawableHelper {
             client.getItemRenderer().renderGuiItemIcon(item, (int) pos.x, (int) pos.y);
 
             matrixStack.pop();
+            RenderSystem.applyModelViewMatrix();
         }
     }
 

@@ -61,10 +61,10 @@ public class FiguraKeybindWidget extends ElementListWidget<FiguraKeybindWidget.E
             this.binding = binding;
 
             //toggle button
-            this.toggle = new ButtonWidget(0, 0, 75, 20, this.display, (button) -> focusedBinding = binding);
+            this.toggle = new ButtonWidget(0, 0, 80, 20, this.display, (button) -> focusedBinding = binding);
 
             //reset button
-            this.reset = new ButtonWidget(0, 0, 50, 20, new TranslatableText("controls.reset"), (button) -> binding.resetToDefault());
+            this.reset = new ButtonWidget(0, 0, 40, 20, new TranslatableText("controls.reset"), (button) -> binding.resetToDefault());
         }
 
         public void render(MatrixStack matrices, int index, int y, int x, int entryWidth, int entryHeight, int mouseX, int mouseY, boolean hovered, float tickDelta) {
@@ -74,13 +74,13 @@ public class FiguraKeybindWidget extends ElementListWidget<FiguraKeybindWidget.E
             textRenderer.draw(matrices, this.display, (float) x, (float) (posY - 9 / 2), 16777215);
 
             //reset button
-            this.reset.x = x + 250;
+            this.reset.x = x + 260;
             this.reset.y = y;
             this.reset.active = !this.binding.isDefault();
             this.reset.render(matrices, mouseX, mouseY, tickDelta);
 
             //toggle button
-            this.toggle.x = x + 165;
+            this.toggle.x = x + 175;
             this.toggle.y = y;
             this.toggle.setMessage(this.binding.getLocalizedText());
 

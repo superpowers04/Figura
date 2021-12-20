@@ -11,9 +11,9 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.Vec3f;
 
 public class ItemRenderTask extends RenderTask {
-    public final ItemStack stack;
-    public final ModelTransformation.Mode mode;
-    public final FiguraRenderLayer customLayer;
+    public ItemStack stack;
+    public ModelTransformation.Mode mode;
+    public FiguraRenderLayer customLayer;
 
     public ItemRenderTask(ItemStack stack, ModelTransformation.Mode mode, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale, FiguraRenderLayer customLayer) {
         super(emissive, pos, rot, scale);
