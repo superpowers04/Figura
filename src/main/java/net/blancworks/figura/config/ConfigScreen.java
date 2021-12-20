@@ -1,6 +1,7 @@
 package net.blancworks.figura.config;
 
 import net.blancworks.figura.config.ConfigManager.Config;
+import net.blancworks.figura.config.widgets.ConfigListWidget;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.option.KeyBinding;

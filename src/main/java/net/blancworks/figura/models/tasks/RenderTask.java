@@ -7,10 +7,10 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3f;
 
 public abstract class RenderTask {
-    public final boolean emissive;
-    public final Vec3f pos;
-    public final Vec3f rot;
-    public final Vec3f scale;
+    public boolean emissive;
+    public Vec3f pos;
+    public Vec3f rot;
+    public Vec3f scale;
     private static FiguraRenderLayer storedOverride;
 
     protected RenderTask(boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {

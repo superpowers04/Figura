@@ -9,8 +9,8 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3f;
 
 public class BlockRenderTask extends RenderTask {
-    public final BlockState state;
-    public final FiguraRenderLayer customLayer;
+    public BlockState state;
+    public FiguraRenderLayer customLayer;
 
     public BlockRenderTask(BlockState state, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale, FiguraRenderLayer customLayer) {
         super(emissive, pos, rot, scale);

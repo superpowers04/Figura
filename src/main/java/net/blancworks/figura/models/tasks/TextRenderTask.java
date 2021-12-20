@@ -9,7 +9,7 @@ import net.minecraft.util.math.Vec3f;
 
 public class TextRenderTask extends RenderTask {
     private final TextRenderer textRenderer = MinecraftClient.getInstance().textRenderer;
-    private final Text text;
+    public Text text;
 
     public TextRenderTask(Text text, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {
         super(emissive, pos, rot, scale);
