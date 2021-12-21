@@ -105,6 +105,8 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
         AvatarData.setRenderingData(data, vertexConsumers, this.getModel(), MinecraftClient.getInstance().getTickDelta());
 
+        if (data == null) return;
+
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head, entity);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().body, entity);
         figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm, entity);

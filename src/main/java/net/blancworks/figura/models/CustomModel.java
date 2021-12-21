@@ -25,14 +25,16 @@ import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CustomModel extends FiguraAsset {
     public final AvatarData owner;
     public final NbtCompound modelNbt;
 
     public final ArrayList<CustomModelPart> allParts = new ArrayList<>();
-    public final HashMap<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new HashMap<>();
-    public final HashMap<String, Animation> animations = new HashMap<>();
+    public final Map<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new ConcurrentHashMap<>();
+    public final Map<String, Animation> animations = new HashMap<>();
 
     public Vec2f defaultTextureSize;
 

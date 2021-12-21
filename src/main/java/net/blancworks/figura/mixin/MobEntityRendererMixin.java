@@ -37,7 +37,7 @@ public abstract class MobEntityRendererMixin<T extends MobEntity, M extends Enti
         AvatarData data = AvatarDataManager.getDataForEntity(entity);
         AvatarData.setRenderingData(data, vertexConsumerProvider, mob.getModel(), MinecraftClient.getInstance().getTickDelta());
 
-        shadowRadius = 0.5f; //Vanilla shadow radius.
+        //shadowRadius = 0.5f; //Vanilla shadow radius.
         //Reset this here because... Execution order.
 
         if (mob instanceof PiglinEntityRenderer renderer) {

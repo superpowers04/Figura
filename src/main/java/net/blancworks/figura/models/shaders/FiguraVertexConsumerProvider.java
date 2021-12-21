@@ -18,6 +18,8 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
     public FiguraRenderLayer overrideLayer = null;
     public final int maxSize;
 
+    public static boolean isUsingLastFramebuffer = false;
+
     public FiguraVertexConsumerProvider(int maxSize) {
         this.maxSize = maxSize;
     }
@@ -60,7 +62,12 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
                 bufferBuilder.begin(layer.getDrawMode(), layer.getVertexFormat());
             return bufferBuilders.get(layer);
         }
-        return AvatarData.currentRenderingData.vertexConsumerProvider.getBuffer(layer);
+
+        AvatarData data = AvatarData.currentRenderingData;
+        if (data != null && data.vertexConsumerProvider != null)
+            return data.vertexConsumerProvider.getBuffer(layer);
+
+        return null;
     }
 
     public void draw() {

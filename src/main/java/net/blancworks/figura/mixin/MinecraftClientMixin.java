@@ -8,6 +8,7 @@ import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -45,12 +46,15 @@ public class MinecraftClientMixin {
 
     @Inject(at = @At("RETURN"), method = "render")
     public void copyFramebuffer(boolean tick, CallbackInfo ci) {
-        RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
+        if (FiguraVertexConsumerProvider.isUsingLastFramebuffer) {
+            RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
+            FiguraVertexConsumerProvider.isUsingLastFramebuffer = false;
+        }
     }
 
     @ModifyArg(method = "render", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/systems/RenderSystem;clear(IZ)V"), index = 0)
     public int clearMask(int defaultMask) {
-        return GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_COLOR_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT;
+        return defaultMask | GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_COLOR_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT;
     }
 
     @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")

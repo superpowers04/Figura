@@ -17,11 +17,12 @@ import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class AvatarDataManager {
     public static boolean didInitLocalPlayer = false;
-    public static final Map<UUID, AvatarData> LOADED_PLAYER_DATA = new HashMap<>();
-    public static final Map<UUID, EntityAvatarData> LOADED_ENTITY_DATA = new HashMap<>();
+    public static final Map<UUID, AvatarData> LOADED_PLAYER_DATA = new ConcurrentHashMap<>();
+    public static final Map<UUID, EntityAvatarData> LOADED_ENTITY_DATA = new ConcurrentHashMap<>();
     public static final Map<UUID, UUID> OFFLINE_SWAP_DATA = new HashMap<>();
 
     //Players that we're currently queued up to grab data for.

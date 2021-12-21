@@ -1,5 +1,6 @@
 package net.blancworks.figura.trust;
 
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.minecraft.nbt.NbtByte;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtInt;
@@ -8,6 +9,7 @@ import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 //Contains trust settings and permissions
 //Used in players and trust groups
@@ -15,7 +17,7 @@ public class TrustContainer {
     public String name;
     public boolean locked = false;
     public boolean expanded = true;
-    public Identifier parentID;
+    private Identifier parentID;
 
     private final Map<Trust, Integer> trustSettings;
 
@@ -121,5 +123,16 @@ public class TrustContainer {
 
     public boolean contains(Trust trust) {
         return this.trustSettings.containsKey(trust);
+    }
+
+    public void setParent(Identifier parent) {
+        this.parentID = parent;
+        try {
+            AvatarDataManager.clearPlayer(UUID.fromString(name));
+        } catch (Exception ignored) {}
+    }
+
+    public Identifier getParent() {
+        return this.parentID;
     }
 }
