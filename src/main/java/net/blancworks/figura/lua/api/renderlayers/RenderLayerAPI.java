@@ -625,7 +625,7 @@ public class RenderLayerAPI {
         int writeId = GL30.glGetInteger(GL30.GL_DRAW_FRAMEBUFFER_BINDING);
         Framebuffer mainFramebuffer = MinecraftClient.getInstance().getFramebuffer();
         target.resize(mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, MinecraftClient.IS_SYSTEM_MAC);
-        RenderSystem.assertOnRenderThreadOrInit();
+        RenderSystem.assertThread(RenderSystem::isOnRenderThreadOrInit);
         GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, mainFramebuffer.fbo);
         GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, target.fbo);
         GlStateManager._glBlitFrameBuffer(0, 0, mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, 0, 0, target.textureWidth, target.textureHeight, GL30.GL_COLOR_BUFFER_BIT, GL30.GL_NEAREST);

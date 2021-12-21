@@ -74,7 +74,7 @@ public class BlockbenchModelDeserializer {
     public static NbtCompound deserialize(String json, boolean isPlayerModel) throws JsonParseException {
         NbtCompound retModel = new NbtCompound();
 
-        JsonObject root = JsonParser.parseString(json).getAsJsonObject();
+        JsonObject root = new JsonParser().parse(json).getAsJsonObject();
         JsonObject meta = root.get("meta").getAsJsonObject();
         JsonObject resolution = root.get("resolution").getAsJsonObject();
         JsonArray elements = root.get("elements").getAsJsonArray();

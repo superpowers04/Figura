@@ -122,7 +122,7 @@ public class DataAPI {
             } else {
                 //load file
                 BufferedReader br = new BufferedReader(new FileReader(file.toFile()));
-                JsonElement json = JsonParser.parseReader(br);
+                JsonElement json = new JsonParser().parse(br);
                 br.close();
 
                 if (json != null && json.isJsonObject())

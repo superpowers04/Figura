@@ -338,9 +338,9 @@ public class LocalAvatarData extends AvatarData {
         try {
             JsonElement soundsJson;
             if (isZip)
-                soundsJson = JsonParser.parseReader(new InputStreamReader(zip.getInputStream(zip.getEntry("sounds.json"))));
+                soundsJson = new JsonParser().parse(new InputStreamReader(zip.getInputStream(zip.getEntry("sounds.json"))));
             else
-                soundsJson = JsonParser.parseReader(new FileReader(sounds.toFile()));
+                soundsJson = new JsonParser().parse(new FileReader(sounds.toFile()));
 
             JsonArray soundsArray = soundsJson.getAsJsonArray();
             soundsArray.forEach(entry -> {
