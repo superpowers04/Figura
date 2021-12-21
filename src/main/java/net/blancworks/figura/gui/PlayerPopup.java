@@ -123,7 +123,7 @@ public class PlayerPopup extends DrawableHelper {
         Text badges = NamePlateAPI.getBadges(data);
         if (badges != null) name.append(badges);
 
-        Text trust = new TranslatableText("figura.trust." + data.getTrustContainer().parentID.getPath()).formatted(Formatting.BLACK);
+        Text trust = new TranslatableText("figura.trust." + data.getTrustContainer().getParent().getPath()).formatted(Formatting.BLACK);
 
         matrices.scale(0.5f, 0.5f, 0.5f);
         matrices.translate(0f, 0f, -1f);
@@ -167,12 +167,12 @@ public class PlayerPopup extends DrawableHelper {
                 case 2 -> {
                     TrustContainer tc = data.getTrustContainer();
                     if (PlayerTrustManager.increaseTrust(tc))
-                        FiguraMod.sendToast(playerName, new TranslatableText("figura.toast.avatar.trust.title").append(new TranslatableText("figura.trust." + tc.parentID.getPath())));
+                        FiguraMod.sendToast(playerName, new TranslatableText("figura.toast.avatar.trust.title").append(new TranslatableText("figura.trust." + tc.getParent().getPath())));
                 }
                 case 3 -> {
                     TrustContainer tc = data.getTrustContainer();
                     if (PlayerTrustManager.decreaseTrust(tc))
-                        FiguraMod.sendToast(playerName, new TranslatableText("figura.toast.avatar.trust.title").append(new TranslatableText("figura.trust." + tc.parentID.getPath())));
+                        FiguraMod.sendToast(playerName, new TranslatableText("figura.toast.avatar.trust.title").append(new TranslatableText("figura.trust." + tc.getParent().getPath())));
                 }
             }
         }

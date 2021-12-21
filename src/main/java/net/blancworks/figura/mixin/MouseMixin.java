@@ -15,11 +15,13 @@ public class MouseMixin {
 
     @Inject(method = "onMouseButton", at = @At("HEAD"))
     private void onMouseButton(long window, int button, int action, int mods, CallbackInfo ci) {
-        boolean pressed = action == 1;
-        FiguraKeybind.setKeyPressed(InputUtil.Type.MOUSE.createFromCode(button), pressed);
+        if (window == MinecraftClient.getInstance().getWindow().getHandle()) {
+            boolean pressed = action == 1;
+            FiguraKeybind.setKeyPressed(InputUtil.Type.MOUSE.createFromCode(button), pressed);
 
-        if (pressed)
-            FiguraKeybind.onKeyPressed(InputUtil.Type.MOUSE.createFromCode(button));
+            if (pressed)
+                FiguraKeybind.onKeyPressed(InputUtil.Type.MOUSE.createFromCode(button));
+        }
     }
 
     @Inject(method = "onMouseScroll", at = @At("HEAD"), cancellable = true)

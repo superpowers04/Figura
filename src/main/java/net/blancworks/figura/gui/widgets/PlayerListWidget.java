@@ -79,7 +79,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
                 //Get trust container for that player
                 TrustContainer container = PlayerTrustManager.getContainer(new Identifier("player", listEntry.getProfile().getId().toString()));
-                TrustContainer parent = PlayerTrustManager.getContainer(container.parentID);
+                TrustContainer parent = PlayerTrustManager.getContainer(container.getParent());
 
                 if (parent.equals(entry.getValue()))
                     addEntry(new PlayerListWidgetEntry(listEntry, this));

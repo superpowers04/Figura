@@ -92,7 +92,7 @@ public class PlayerTrustManager {
         });
 
         players.forEach((key, value) -> {
-            if (!key.getPath().equals(getClientPlayerID()) && !value.parentID.getPath().equals("local") && (!value.isTrustEmpty() || !value.parentID.getPath().equals("untrusted"))) {
+            if (!key.getPath().equals(getClientPlayerID()) && !value.getParent().getPath().equals("local") && (!value.isTrustEmpty() || !value.getParent().getPath().equals("untrusted"))) {
                 NbtCompound container = new NbtCompound();
                 value.writeNbt(container);
                 playerList.add(container);
@@ -173,7 +173,7 @@ public class PlayerTrustManager {
     }
 
     public static boolean increaseTrust(TrustContainer tc) {
-        Identifier parentID = tc.parentID;
+        Identifier parentID = tc.getParent();
 
         int i = 0;
         Identifier nextID = null;
@@ -192,13 +192,13 @@ public class PlayerTrustManager {
         if (nextID == null || (nextID.getPath().equals("local") && !tc.name.equals(getClientPlayerID())) || i == groups.size())
             return false;
 
-        tc.parentID = nextID;
+        tc.setParent(nextID);
         saveToDisk();
         return true;
     }
 
     public static boolean decreaseTrust(TrustContainer tc) {
-        Identifier parentID = tc.parentID;
+        Identifier parentID = tc.getParent();
 
         int i = 0;
         Identifier prevID = null;
@@ -213,7 +213,7 @@ public class PlayerTrustManager {
         if (prevID == null || i == groups.size())
             return false;
 
-        tc.parentID = prevID;
+        tc.setParent(prevID);
         saveToDisk();
         return true;
     }

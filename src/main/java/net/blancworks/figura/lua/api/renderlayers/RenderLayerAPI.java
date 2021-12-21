@@ -227,7 +227,10 @@ public class RenderLayerAPI {
                             blitMainFramebuffer(mainFramebufferCopy);
                             RenderSystem.setShaderTexture(loc, mainFramebufferCopy.getColorAttachment());
                         }
-                        case "LAST_FRAMEBUFFER" -> RenderSystem.setShaderTexture(loc, lastFramebufferCopy.getColorAttachment());
+                        case "LAST_FRAMEBUFFER" -> {
+                            FiguraVertexConsumerProvider.isUsingLastFramebuffer = true;
+                            RenderSystem.setShaderTexture(loc, lastFramebufferCopy.getColorAttachment());
+                        }
                         default -> {
                             checkValidId(textureStr, "Invalid texture name: ");
                             Identifier id = new Identifier(textureStr);

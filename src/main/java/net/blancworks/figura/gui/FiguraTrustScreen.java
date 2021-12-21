@@ -463,7 +463,7 @@ public class FiguraTrustScreen extends Screen {
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
 
                         if (tc != null && (!id.getPath().equals("local") || draggedId.compareTo(MinecraftClient.getInstance().player.getUuid()) == 0))
-                            tc.parentID = id;
+                            tc.setParent(id);
                     } else if (obj instanceof PlayerListEntry) {
                         Identifier playerID = new Identifier("player", draggedId.toString());
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
@@ -471,7 +471,7 @@ public class FiguraTrustScreen extends Screen {
                         Identifier droppedID = new Identifier("player", ((PlayerListEntry) obj).getProfile().getId().toString());
                         TrustContainer droppedTC = PlayerTrustManager.getContainer(droppedID);
 
-                        if (tc != null && droppedTC != null && !droppedTC.parentID.getPath().equals("local")) tc.parentID = droppedTC.parentID;
+                        if (tc != null && droppedTC != null && !droppedTC.getParent().getPath().equals("local")) tc.setParent(droppedTC.getParent());
                     }
                 }
             }

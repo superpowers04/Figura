@@ -59,7 +59,7 @@ public class SoundAPI {
             set("getSounds", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Map<SoundInstance, Channel.SourceManager> sources = ((SoundSystemAccessorMixin) ((SoundManagerAccessorMixin) MinecraftClient.getInstance().getSoundManager()).getSoundSystem()).getSources();
+                    Map<SoundInstance, Channel.SourceManager> sources = new HashMap<>(((SoundSystemAccessorMixin) ((SoundManagerAccessorMixin) MinecraftClient.getInstance().getSoundManager()).getSoundSystem()).getSources());
 
                     ReadOnlyLuaTable tbl = new ReadOnlyLuaTable();
                     int i = 1;
