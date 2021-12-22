@@ -40,6 +40,9 @@
   "suggests": {
     "another-mod": "*"
   },
+  "breaks": {
+    "optifabric": "*"
+  },
   "custom": {
     "modmenu": {
       "links": {
