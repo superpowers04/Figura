@@ -77,6 +77,7 @@ public class CustomModelPart {
     public final HashMap<String, RenderTaskAPI.RenderTaskTable> renderTasks = new LinkedHashMap<>();
 
     public static boolean canRenderHitBox = false;
+    public static boolean canRenderTasks = true;
 
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int render(AvatarData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
@@ -270,8 +271,13 @@ public class CustomModelPart {
             canRender = true;
 
         //render!
-        if (canRender)
-            leftToRender = renderExtras(leftToRender, matrices, vcp, light);
+        if (canRender) {
+            //render tasks
+            if (canRenderTasks) leftToRender = renderExtras(leftToRender, matrices, vcp, light);
+
+            //render hit box
+            if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
+        }
 
         if (this instanceof CustomModelPartGroup group) {
             for (CustomModelPart child : group.children) {
@@ -376,9 +382,6 @@ public class CustomModelPart {
                 if (leftToRender <= 0) break;
             }
         }
-
-        //render hit box
-        if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
 
         return leftToRender;
     }
