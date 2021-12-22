@@ -27,7 +27,8 @@ public class KeyFrame implements Comparable<KeyFrame> {
 
     public enum Interpolation {
         LINEAR,
-        CATMULLROM
+        CATMULLROM,
+        STEP
     }
 
     public KeyFrame getNext(AnimationType type) {

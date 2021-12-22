@@ -193,6 +193,7 @@ public class CustomModel extends FiguraAsset {
 
         ArrayList<CustomModelPart> skullParts = this.getSpecialParts(CustomModelPart.ParentType.Skull);
         if (!skullParts.isEmpty()) {
+            CustomModelPart.canRenderTasks = false;
             for (CustomModelPart modelPart : skullParts) {
                 this.leftToRender = modelPart.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
@@ -200,11 +201,13 @@ public class CustomModel extends FiguraAsset {
                     break;
             }
 
+            CustomModelPart.canRenderTasks = true;
             return true;
         }
         else {
             synchronized (this.allParts) {
                 applyHiddenTransforms = false;
+                CustomModelPart.canRenderTasks = false;
                 for (CustomModelPart modelPart : this.allParts) {
                     renderOnly = CustomModelPart.ParentType.Head;
                     this.leftToRender = modelPart.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
@@ -213,6 +216,7 @@ public class CustomModel extends FiguraAsset {
                         break;
                 }
                 applyHiddenTransforms = true;
+                CustomModelPart.canRenderTasks = true;
             }
 
             if (owner.script != null) {

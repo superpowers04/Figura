@@ -18,6 +18,16 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
     public FiguraRenderLayer overrideLayer = null;
     public final int maxSize;
 
+    private static final List<RenderLayer> VANILLA_GLINT_LAYERS = Arrays.asList(
+            RenderLayer.getArmorGlint(),
+            RenderLayer.getArmorEntityGlint(),
+            RenderLayer.getGlintTranslucent(),
+            RenderLayer.getGlint(),
+            RenderLayer.getDirectGlint(),
+            RenderLayer.getEntityGlint(),
+            RenderLayer.getDirectEntityGlint()
+    );
+
     public static boolean isUsingLastFramebuffer = false;
 
     public FiguraVertexConsumerProvider(int maxSize) {
@@ -52,10 +62,13 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
         return stringLayerMap.get(name);
     }
 
-    @Override
     public VertexConsumer getBuffer(RenderLayer layer) {
-        if (overrideLayer != null)
+        if (overrideLayer != null) {
+            if (VANILLA_GLINT_LAYERS.contains(layer))
+                return DO_NOTHING_CONSUMER;
             layer = overrideLayer;
+        }
+
         if (layer instanceof FiguraRenderLayer && bufferBuilders.containsKey(layer)) {
             BufferBuilder bufferBuilder = bufferBuilders.get(layer);
             if (activeConsumers.add(bufferBuilder))
@@ -82,4 +95,44 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
             layer.draw(bufferBuilder, 0, 0, 0);
     }
 
+    private static final VertexConsumer DO_NOTHING_CONSUMER = new VertexConsumer() {
+        @Override
+        public VertexConsumer vertex(double x, double y, double z) {
+            return this;
+        }
+
+        @Override
+        public VertexConsumer color(int red, int green, int blue, int alpha) {
+            return this;
+        }
+
+        @Override
+        public VertexConsumer texture(float u, float v) {
+            return this;
+        }
+
+        @Override
+        public VertexConsumer overlay(int u, int v) {
+            return this;
+        }
+
+        @Override
+        public VertexConsumer light(int u, int v) {
+            return this;
+        }
+
+        @Override
+        public VertexConsumer normal(float x, float y, float z) {
+            return this;
+        }
+
+        @Override
+        public void next() {}
+
+        @Override
+        public void fixedColor(int red, int green, int blue, int alpha) {}
+
+        @Override
+        public void unfixColor() {}
+    };
 }
