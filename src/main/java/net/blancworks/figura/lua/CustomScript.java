@@ -68,6 +68,7 @@ public class CustomScript extends FiguraAsset {
     public int initInstructionCount = 0;
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
+    public int worldRenderInstructionCount = 0;
     public int pingSent = 0;
     public int pingReceived = 0;
 
@@ -345,13 +346,16 @@ public class CustomScript extends FiguraAsset {
             return;
 
         queueTask(() -> {
+            renderInstructionCount -= worldRenderInstructionCount;
+            worldRenderInstructionCount = 0;
             setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, renderInstructionCount);
             try {
                 allEvents.get("world_render").call(LuaNumber.valueOf(deltaTime));
             } catch (Exception error) {
                 handleError(error);
             }
-            renderInstructionCount += scriptGlobals.running.state.bytecodes;
+            worldRenderInstructionCount = scriptGlobals.running.state.bytecodes;
+            renderInstructionCount += worldRenderInstructionCount;
         });
     }
 
@@ -576,7 +580,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void onRender(float deltaTime) {
-        renderInstructionCount = 0;
+        renderInstructionCount = worldRenderInstructionCount;
         setInstructionLimitPermission(TrustContainer.Trust.RENDER_INST, 0);
         try {
             renderLuaEvent.call(LuaNumber.valueOf(deltaTime));
@@ -765,8 +769,6 @@ public class CustomScript extends FiguraAsset {
                 sendChatMessage(new LiteralText(part).formatted(Formatting.RED));
         }
 
-        error.printStackTrace();
-
         String location = "?";
         try {
             //split the line at the first :
@@ -795,6 +797,8 @@ public class CustomScript extends FiguraAsset {
         } catch (Exception ignored) {}
 
         sendChatMessage(new LiteralText("script:\n   " + location).formatted(Formatting.RED));
+
+        error.printStackTrace();
     }
 
     public void logTableContents(LuaTable table, int depth, String depthString) {
