@@ -29,7 +29,7 @@ public class DebugHudMixin {
         lines.add(++i, "§b[FIGURA]§r");
         lines.add(++i, "Version: " + FiguraMod.MOD_VERSION);
 
-        if (AvatarDataManager.localPlayer != null) {
+        if (AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.hasAvatar()) {
             lines.add(++i, String.format("Complexity: %d", AvatarDataManager.localPlayer.getComplexity()));
 
             CustomScript script = AvatarDataManager.localPlayer.script;
