@@ -3,12 +3,15 @@ package net.blancworks.figura.models;
 import net.blancworks.figura.models.animations.KeyFrame;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.TreeMap;
 
 public class CustomModelPartGroup extends CustomModelPart {
 
@@ -17,20 +20,24 @@ public class CustomModelPartGroup extends CustomModelPart {
     public Vec3f animPos = Vec3f.ZERO.copy();
     public Vec3f animScale = new Vec3f(1f, 1f, 1f);
 
-    public void applyAnimationTransforms(MatrixStack stack) {
+    @Override
+    public void applyTransforms(MatrixStack stack) {
+        //pos
         stack.translate(animPos.getX() / 16f, -animPos.getY() / 16f, animPos.getZ() / 16f);
+
+        //part transforms
+        super.applyTransforms(stack);
+
+        //rotation and scale
         stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
 
-        animRotate(stack, animRot);
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(animRot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(animRot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(animRot.getX()));
+
         stack.scale(animScale.getX(), animScale.getY(), animScale.getZ());
 
         stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
-    }
-
-    public void animRotate(MatrixStack stack, Vec3f rot) {
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
     }
 
     @Override
@@ -84,25 +91,25 @@ public class CustomModelPartGroup extends CustomModelPart {
 
                     String animationID = animTag.getString("id");
 
-                    HashMap<Float, KeyFrame> keyFrames = new HashMap<>();
+                    TreeMap<Float, KeyFrame> posKeys = new TreeMap<>();
+                    TreeMap<Float, KeyFrame> rotKeys = new TreeMap<>();
+                    TreeMap<Float, KeyFrame> scaleKeys = new TreeMap<>();
+
                     NbtList keyFrameList = animTag.getList("keyf", NbtElement.COMPOUND_TYPE);
                     if (keyFrameList != null) {
                         for (NbtElement nbtElement2 : keyFrameList) {
                             NbtCompound keyFrameTag = (NbtCompound) nbtElement2;
 
                             KeyFrame frame = KeyFrame.fromNbt(keyFrameTag);
-
-                            if (keyFrames.containsKey(frame.time))
-                                keyFrames.get(frame.time).merge(frame);
-                            else
-                                keyFrames.put(frame.time, frame);
+                            switch (frame.type) {
+                                case POSITION -> posKeys.put(frame.time, frame);
+                                case ROTATION -> rotKeys.put(frame.time, frame);
+                                case SCALE -> scaleKeys.put(frame.time, frame);
+                            }
                         }
-
-                        ArrayList<KeyFrame> frames = new ArrayList<>();
-                        keyFrames.values().stream().sorted().forEach(frames::add);
-
-                        this.model.animations.get(animationID).addKeyFrames(this, frames);
                     }
+
+                    this.model.animations.get(animationID).keyFrames.put(this, List.of(posKeys, rotKeys, scaleKeys));
                 }
             }
         }

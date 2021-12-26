@@ -89,8 +89,13 @@ public class BlockbenchModelDeserializer {
             JsonArray animations = root.get("animations").getAsJsonArray();
 
             //parse animations
-            NbtList animationsNbt = parseAnimations(animations, animationMap);
-            retModel.put("anim", animationsNbt);
+            try {
+                NbtList animationsNbt = parseAnimations(animations, animationMap);
+                retModel.put("anim", animationsNbt);
+            } catch (Exception e) {
+                System.out.println("Failed to load animations");
+                e.printStackTrace();
+            }
         }
 
         //texture
@@ -141,15 +146,21 @@ public class BlockbenchModelDeserializer {
             anim.put("loop", NbtString.of(obj.get("loop").getAsString()));
             anim.put("len", NbtFloat.of(obj.get("length").getAsFloat()));
 
-            //todo maybe unnecessary? and why they are strings??
             if (obj.has("anim_time_update"))
-                anim.put("time", NbtString.of(obj.get("anim_time_update").getAsString()));
-            if (obj.has("blend_weight"))
-                anim.put("bld", NbtString.of(obj.get("blend_weight").getAsString()));
+                anim.put("time", NbtFloat.of(tryGetFloat(obj.get("anim_time_update"))));
+            if (obj.has("blend_weight")) {
+                float f;
+                try {
+                    f = obj.get("blend_weight").getAsFloat();
+                } catch (Exception ignored) {
+                    f = 1f;
+                }
+                anim.put("bld", NbtFloat.of(f));
+            }
             if (obj.has("start_delay"))
-                anim.put("sdel", NbtString.of(obj.get("start_delay").getAsString()));
+                anim.put("sdel", NbtFloat.of(tryGetFloat(obj.get("start_delay"))));
             if (obj.has("loop_delay"))
-                anim.put("ldel", NbtString.of(obj.get("loop_delay").getAsString()));
+                anim.put("ldel", NbtFloat.of(tryGetFloat(obj.get("loop_delay"))));
 
             //animators
             if (obj.has("animators")) {
@@ -174,9 +185,9 @@ public class BlockbenchModelDeserializer {
                         //keyframe pos/scale/rot
                         JsonObject dataPoints = keyFrameObj.getAsJsonArray("data_points").get(0).getAsJsonObject();
                         NbtList data = new NbtList();
-                        data.add(NbtFloat.of(dataPoints.get("x").getAsFloat()));
-                        data.add(NbtFloat.of(dataPoints.get("y").getAsFloat()));
-                        data.add(NbtFloat.of(dataPoints.get("z").getAsFloat()));
+                        data.add(NbtFloat.of(tryGetFloat(dataPoints.get("x"))));
+                        data.add(NbtFloat.of(tryGetFloat(dataPoints.get("y"))));
+                        data.add(NbtFloat.of(tryGetFloat(dataPoints.get("z"))));
 
                         keyFrame.put("data", data);
                         keyFrames.add(keyFrame);
@@ -206,13 +217,22 @@ public class BlockbenchModelDeserializer {
     public static NbtList buildElements(JsonArray group, Map<String, JsonObject> elementMap, boolean overrideAsPlayerModel, Vec3f offset, Map<String, NbtList> animationMap) {
         NbtList parts = new NbtList();
         for (JsonElement jsonElement : group) {
-            NbtCompound nbt;
+            NbtCompound nbt = null;
 
             //if the element is a json object, it's a group, otherwise its a part
-            if (jsonElement.isJsonObject())
-                nbt = buildGroup(jsonElement.getAsJsonObject(), elementMap, overrideAsPlayerModel, offset, animationMap);
-            else
-                nbt = buildPart(elementMap.get(jsonElement.getAsString()), offset);
+            if (jsonElement.isJsonObject()) {
+                try {
+                    nbt = buildGroup(jsonElement.getAsJsonObject(), elementMap, overrideAsPlayerModel, offset, animationMap);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else {
+                try {
+                    nbt = buildPart(elementMap.get(jsonElement.getAsString()), offset);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
             if (nbt != null)
                 parts.add(nbt);
@@ -469,5 +489,13 @@ public class BlockbenchModelDeserializer {
         nbt.add(NbtFloat.of(vec.getZ()));
 
         return nbt;
+    }
+
+    public static float tryGetFloat(JsonElement element) {
+        try {
+            return element.getAsFloat();
+        } catch (Exception ignored) {
+            return 0f;
+        }
     }
 }

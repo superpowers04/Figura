@@ -44,15 +44,6 @@ public class CustomModel extends FiguraAsset {
     public boolean applyHiddenTransforms = true;
     public CustomModelPart.ParentType renderOnly = null;
 
-    public void tick() {
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            animations.forEach((name, animation) -> {
-                if (animation.playState == Animation.PlayState.PLAYING)
-                    animation.tick();
-            });
-        }
-    }
-
     //This contains all the modifications to origins for stuff like elytra and held items.
     //This is separate from script customizations, as these are groups from blockbench that are the new,
     //override origins against vanilla.
@@ -104,7 +95,7 @@ public class CustomModel extends FiguraAsset {
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
             animations.forEach((s, animation) -> {
                 if (animation.playState != Animation.PlayState.STOPPED)
-                    animation.render(owner.deltaTime);
+                    animation.render();
             });
         }
 
@@ -120,9 +111,6 @@ public class CustomModel extends FiguraAsset {
                 try {
                     if (entity_model instanceof PlayerEntityModel player_model)
                         player_model.setVisible(false);
-
-                    //By default, use blockbench rotation.
-                    part.rotationType = CustomModelPart.RotationType.BlockBench;
 
                     //render only heads in spectator
                     if (owner.lastEntity != null && owner.lastEntity.isSpectator())
@@ -142,12 +130,8 @@ public class CustomModel extends FiguraAsset {
             }
         }
 
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            animations.forEach((s, animation) -> {
-                if (animation.playState != Animation.PlayState.STOPPED)
-                    animation.clearAnimData();
-            });
-        }
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1)
+            animations.forEach((s, animation) -> animation.clearAnimData());
     }
 
     public void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, ModelPart arm, PlayerEntityModel<?> model, float alpha) {
@@ -158,7 +142,7 @@ public class CustomModel extends FiguraAsset {
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
             animations.forEach((s, animation) -> {
                 if (animation.playState != Animation.PlayState.STOPPED)
-                    animation.render(owner.deltaTime);
+                    animation.render();
             });
         }
 
@@ -180,12 +164,8 @@ public class CustomModel extends FiguraAsset {
             //applyHiddenTransforms = true;
         }
 
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            animations.forEach((s, animation) -> {
-                if (animation.playState != Animation.PlayState.STOPPED)
-                    animation.clearAnimData();
-            });
-        }
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1)
+            animations.forEach((s, animation) -> animation.clearAnimData());
     }
 
     public boolean renderSkull(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
