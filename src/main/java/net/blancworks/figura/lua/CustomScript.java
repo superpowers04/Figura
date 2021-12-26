@@ -119,11 +119,9 @@ public class CustomScript extends FiguraAsset {
 
     public String commandPrefix = "\u0000";
 
-    public final Map<String, LuaValue> SHARED_VALUES = new HashMap<>();
+    public final LuaTable sharedValues = new LuaTable();
 
     public HashMap<String, FiguraSound> customSounds = new HashMap<>();
-
-    public boolean allowPlayerTargeting = false;
 
     public static final UnaryOperator<Style> LUA_COLOR = (s) -> s.withColor(0x5555FF);
     public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").styled(LUA_COLOR));
@@ -453,16 +451,7 @@ public class CustomScript extends FiguraAsset {
             @Override
             public LuaValue call(LuaValue arg1, LuaValue arg2) {
                 String key = arg1.checkjstring();
-                SHARED_VALUES.put(key, arg2);
-                return NIL;
-            }
-        });
-
-        //player targeting
-        scriptGlobals.set("setPlayerTargeting", new OneArgFunction() {
-            @Override
-            public LuaValue call(LuaValue arg) {
-                allowPlayerTargeting = arg.checkboolean();
+                sharedValues.set(key, arg2);
                 return NIL;
             }
         });

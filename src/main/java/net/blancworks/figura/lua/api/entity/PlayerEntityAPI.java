@@ -130,8 +130,7 @@ public class PlayerEntityAPI {
                     AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
                     if (data == null || data.script == null) return NIL;
 
-                    LuaValue val = data.script.SHARED_VALUES.get(key);
-                    return val == null ? NIL : val;
+                    return data.script.sharedValues.get(key);
                 }
             });
 
