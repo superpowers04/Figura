@@ -60,4 +60,19 @@ public class MathUtils {
         float w = projectiveCamSpace.getW();
         return new Vector4f(x / w, y / w, z / w, (float) dist);
     }
+
+    public static Vec3f lerpVec3f(Vec3f start, Vec3f end, float delta) {
+        Vec3f ret = start.copy();
+        ret.lerp(end, delta);
+        return ret;
+    }
+
+    public static Vec3f catmullRomVec3f(Vec3f before, Vec3f start, Vec3f end, Vec3f after, float delta) {
+        Vec3d a = new Vec3d(before);
+        Vec3d b = new Vec3d(start);
+        Vec3d c = new Vec3d(end);
+        Vec3d d = new Vec3d(after);
+
+        return new Vec3f(MathHelper.method_34946(a, b, c, d, delta));
+    }
 }

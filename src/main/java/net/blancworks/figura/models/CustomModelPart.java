@@ -49,8 +49,6 @@ public class CustomModelPart {
     public ParentType parentType = ParentType.Model;
     public boolean isMimicMode = false;
 
-    public RotationType rotationType = RotationType.BlockBench;
-
     public ShaderType shaderType = ShaderType.None;
 
     public FiguraRenderLayer customLayer = null;
@@ -561,20 +559,13 @@ public class CustomModelPart {
 
     public void applyTransforms(MatrixStack stack) {
         stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
-
         stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
 
-        if (this.isMimicMode || this.rotationType == RotationType.Vanilla)
-            vanillaRotate(stack, this.rot);
-        else if (this.rotationType == RotationType.BlockBench)
-            rotate(stack, this.rot);
+        if (this.isMimicMode) vanillaRotate(stack, this.rot);
+        else rotate(stack, this.rot);
 
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
-
         stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
-
-        if (this instanceof CustomModelPartGroup group)
-            group.applyAnimationTransforms(stack);
     }
 
     //TODO move these to the mixins, probably.
@@ -699,11 +690,6 @@ public class CustomModelPart {
 
     public boolean isSpecial() {
         return this.parentType.special;
-    }
-
-    public enum RotationType {
-        BlockBench,
-        Vanilla
     }
 
     public enum ShaderType {

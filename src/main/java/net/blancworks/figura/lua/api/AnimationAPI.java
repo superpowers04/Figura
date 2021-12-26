@@ -130,6 +130,7 @@ public class AnimationAPI {
                     @Override
                     public LuaValue call(LuaValue arg) {
                         animation.speed = arg.checknumber().tofloat();
+                        animation.inverted = animation.speed < 0f;
                         return NIL;
                     }
                 });
@@ -151,15 +152,7 @@ public class AnimationAPI {
                             mode = LoopMode.ONCE;
                         }
 
-                        if (animation.loopMode != mode) {
-                            //fix last frame on loop mode
-                            if (animation.loopMode == LoopMode.LOOP) //was "loop"
-                                animation.length += Animation.STEP;
-                            else if (mode == LoopMode.LOOP) //will be "loop"
-                                animation.length -= Animation.STEP;
-
-                            animation.loopMode = mode;
-                        }
+                        animation.loopMode = mode;
                         return NIL;
                     }
                 });
