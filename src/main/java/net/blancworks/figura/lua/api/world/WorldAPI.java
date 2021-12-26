@@ -5,7 +5,6 @@ import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
-import net.blancworks.figura.lua.api.entity.PlayerEntityAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -240,10 +239,10 @@ public class WorldAPI {
 
                     for (PlayerEntity entity : getWorld().getPlayers()) {
                         AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
-                        if (data == null || data.script == null || !data.script.allowPlayerTargeting)
+                        if (data == null || data.script == null)
                             continue;
 
-                        playerList.insert(0, new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> entity).getTable());
+                        playerList.set(entity.getName().getString(), new ReadOnlyLuaTable(data.script.sharedValues));
                     }
 
                     return playerList;

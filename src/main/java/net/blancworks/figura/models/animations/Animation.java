@@ -18,10 +18,10 @@ public class Animation {
     public float length;
     public LoopMode loopMode;
 
-    public final float startOffset;
-    public final float blendWeight;
-    public final float startDelay;
-    public final float loopDelay;
+    public float startOffset;
+    public float blendWeight;
+    public float startDelay;
+    public float loopDelay;
 
     //keyframes
     public HashMap<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> keyFrames = new HashMap<>();
@@ -66,37 +66,21 @@ public class Animation {
         //get keyframe time from current time
         float kfTime = ((newTime - time) / 1000f) * speed;
 
-        boolean finished;
-        if (inverted) {
-            kfTime += this.length;
+        //delay
+        kfTime -= startDelay;
+        if (kfTime < 0f) return;
 
-            //delay
-            kfTime += startDelay;
-            if (kfTime > this.length)
-                return;
-
-            //offset
-            kfTime -= startOffset;
-            finished = kfTime <= 0f;
-        } else {
-            //delay
-            kfTime -= startDelay;
-            if (kfTime < 0f)
-                return;
-
-            //offset
-            kfTime += startOffset;
-            finished = kfTime >= this.length;
-        }
+        //offset
+        kfTime += startOffset;
 
         //process loop
-        if (finished) {
+        if (kfTime >= this.length) {
             switch (loopMode) {
                 case HOLD -> playState = PlayState.ENDED;
                 case ONCE -> stop();
                 case LOOP -> {
                     //loop delay
-                    if (inverted ? kfTime <= 0f - loopDelay : kfTime >= this.length + loopDelay) {
+                    if (kfTime >= this.length + loopDelay) {
                         stop();
                         play();
                     }
@@ -105,7 +89,7 @@ public class Animation {
         }
 
         //keyframe interpolation
-        float finalTime = kfTime;
+        float finalTime = inverted ? length - kfTime : kfTime;
         keyFrames.forEach((group, data) -> {
             //get interpolated data
             Vec3f pos = processKeyFrame(data.get(0), finalTime);

@@ -129,8 +129,9 @@ public class AnimationAPI {
                 set("setSpeed", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
-                        animation.speed = arg.checknumber().tofloat();
-                        animation.inverted = animation.speed < 0f;
+                        float speed = arg.checknumber().tofloat();
+                        animation.speed = Math.abs(speed);
+                        animation.inverted = speed < 0f;
                         return NIL;
                     }
                 });
@@ -161,6 +162,66 @@ public class AnimationAPI {
                     @Override
                     public LuaValue call() {
                         return LuaValue.valueOf(animation.loopMode.name());
+                    }
+                });
+
+                set("setStartOffset", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        animation.startOffset = arg.checknumber().tofloat();
+                        return NIL;
+                    }
+                });
+
+                set("getStartOffset", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.startOffset);
+                    }
+                });
+
+                set("setBlendWeight", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        animation.blendWeight = arg.checknumber().tofloat();
+                        return NIL;
+                    }
+                });
+
+                set("getBlendWeight", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.blendWeight);
+                    }
+                });
+
+                set("setStartDelay", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        animation.startDelay = arg.checknumber().tofloat();
+                        return NIL;
+                    }
+                });
+
+                set("getStartDelay", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.startDelay);
+                    }
+                });
+
+                set("setLoopDelay", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        animation.loopDelay = arg.checknumber().tofloat();
+                        return NIL;
+                    }
+                });
+
+                set("getLoopDelay", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.loopDelay);
                     }
                 });
 
