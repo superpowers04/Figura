@@ -345,15 +345,17 @@ public class LocalAvatarData extends AvatarData {
             soundsArray.forEach(entry -> {
                 String name = entry.getAsString();
                 String path = "sounds/" + name + ".ogg";
-                try {
-                    InputStream str = isZip ? zip.getInputStream(zip.getEntry(path)) : new FileInputStream(modelFile.toPath().resolve(path).toFile());
-                    FiguraSoundManager.registerCustomSound(script, name, str.readAllBytes(), false);
-                } catch (Exception e) {
-                    FiguraMod.LOGGER.error("failed to load custom song \"" + path + "\"");
-                    e.printStackTrace();
-                }
-            });
 
+                FiguraMod.doTask(() -> {
+                    try {
+                        InputStream str = isZip ? zip.getInputStream(zip.getEntry(path)) : new FileInputStream(modelFile.toPath().resolve(path).toFile());
+                        FiguraSoundManager.registerCustomSound(script, name, str.readAllBytes(), false);
+                    } catch (Exception e) {
+                        FiguraMod.LOGGER.error("failed to load custom song \"" + path + "\"");
+                        e.printStackTrace();
+                    }
+                });
+            });
         } catch (IOException e) {
             e.printStackTrace();
         }
