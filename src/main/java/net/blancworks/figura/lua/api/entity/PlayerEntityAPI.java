@@ -144,6 +144,14 @@ public class PlayerEntityAPI {
                 }
             });
 
+            superTable.set("hasAvatar", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
+                    return LuaValue.valueOf(data != null && data.hasAvatar());
+                }
+            });
+
             return superTable;
         }
 

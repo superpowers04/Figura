@@ -6,11 +6,12 @@ import net.minecraft.nbt.*;
 import net.minecraft.util.math.Vec3f;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class BlockbenchModelDeserializer {
 
-    private static final Map<String, PartData> NAME_PARENT_TYPE_TAGS = new HashMap<>() {{
+    private static final Map<String, PartData> NAME_PARENT_TYPE_TAGS = new LinkedHashMap<>() {{
             put("HEAD", new PartData(ParentType.Head));
             put("TORSO", new PartData(ParentType.Torso));
             put("LEFT_ARM", new PartData(ParentType.LeftArm));
@@ -20,8 +21,8 @@ public class BlockbenchModelDeserializer {
             put("NO_PARENT", new PartData(ParentType.WORLD));
             put("LEFT_HELD_ITEM", new PartData(ParentType.LeftItemOrigin));
             put("RIGHT_HELD_ITEM", new PartData(ParentType.RightItemOrigin));
-            put("LEFT_ELYTRA_ORIGIN", new PartData(ParentType.LeftElytraOrigin));
-            put("RIGHT_ELYTRA_ORIGIN", new PartData(ParentType.RightElytraOrigin));
+            put("LEFT_ELYTRA_ORIGIN", new PartData(ParentType.LeftElytraOrigin));   //those needs to be checked first, otherwise "LEFT_ELYTRA" and
+            put("RIGHT_ELYTRA_ORIGIN", new PartData(ParentType.RightElytraOrigin)); //"RIGHT_ELYTRA" will be checked first, giving the wrong entry
             put("LEFT_PARROT", new PartData(ParentType.LeftParrotOrigin));
             put("RIGHT_PARROT", new PartData(ParentType.RightParrotOrigin));
             put("LEFT_ELYTRA", new PartData(ParentType.LeftElytra));
@@ -32,7 +33,7 @@ public class BlockbenchModelDeserializer {
             put("SKULL", new PartData(ParentType.Skull));
             put("HUD", new PartData(ParentType.Hud));
     }};
-    private static final Map<String, PartData> NAME_MIMIC_TYPE_TAGS = new HashMap<>() {{
+    private static final Map<String, PartData> NAME_MIMIC_TYPE_TAGS = new LinkedHashMap<>() {{
             put("MIMIC_HEAD", new PartData(ParentType.Head, true));
             put("MIMIC_TORSO", new PartData(ParentType.Torso, true));
             put("MIMIC_LEFT_ARM", new PartData(ParentType.LeftArm, true));
@@ -40,7 +41,7 @@ public class BlockbenchModelDeserializer {
             put("MIMIC_LEFT_LEG", new PartData(ParentType.LeftLeg, true));
             put("MIMIC_RIGHT_LEG", new PartData(ParentType.RightLeg, true));
     }};
-    private static final Map<String, PartData> PLAYER_SKIN_REMAPS = new HashMap<>() {{
+    private static final Map<String, PartData> PLAYER_SKIN_REMAPS = new LinkedHashMap<>() {{
         put("Head", new PartData(ParentType.Head, new Vec3f(0, -24, 0)));
         put("Body", new PartData(ParentType.Torso, new Vec3f(0, -24, 0)));
         put("RightArm", new PartData(ParentType.RightArm, new Vec3f(-5, -22, 0)));
@@ -242,7 +243,7 @@ public class BlockbenchModelDeserializer {
     }
 
     public static NbtCompound buildGroup(JsonObject group, Map<String, JsonObject> elementMap, boolean playerModel, Vec3f offset, Map<String, NbtList> animationMap) {
-        if ((group.has("visibility") && !group.get("visibility").getAsBoolean()) || !group.has("name"))
+        if (!group.has("name"))
             return null;
 
         NbtCompound groupNbt = new NbtCompound();
@@ -250,6 +251,10 @@ public class BlockbenchModelDeserializer {
         //name
         String name = group.get("name").getAsString();
         groupNbt.put("nm", NbtString.of(name));
+
+        //visibility
+        if (group.has("visibility") && !group.get("visibility").getAsBoolean())
+            groupNbt.put("vb", NbtByte.of(false));
 
         //parent type
         if (!group.has("ignoreKeyword") || !group.get("ignoreKeyword").getAsBoolean()) {
@@ -317,7 +322,7 @@ public class BlockbenchModelDeserializer {
     }
 
     public static NbtCompound buildPart(JsonObject part, Vec3f offset) {
-        if ((part.has("visibility") && !part.get("visibility").getAsBoolean()) || !part.has("name"))
+        if (!part.has("name"))
             return null;
 
         boolean mesh = false;
@@ -336,6 +341,10 @@ public class BlockbenchModelDeserializer {
 
         //name
         partNbt.put("nm", NbtString.of(part.get("name").getAsString()));
+
+        //visibility
+        if (part.has("visibility") && !part.get("visibility").getAsBoolean())
+            partNbt.put("vb", NbtByte.of(false));
 
         //pivot
         if (part.has("origin")) {

@@ -1,6 +1,5 @@
 package net.blancworks.figura.avatar;
 
-
 import com.google.common.io.CharStreams;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -8,10 +7,10 @@ import com.google.gson.JsonParser;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
-import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
@@ -47,6 +46,7 @@ public class LocalAvatarData extends AvatarData {
     public void tick() {
         if (this.loadedPath != null)
             this.lastHash = "";
+
         super.tick();
 
         this.tickFileWatchers();
@@ -306,14 +306,13 @@ public class LocalAvatarData extends AvatarData {
                     scriptSource = CharStreams.toString(reader);
                 }
 
-                //Create script.
-                this.script = new CustomScript();
-
                 //Finalize script source for lambda.
                 String finalScriptSource = scriptSource;
                 //Load script on off-thread.
                 FiguraMod.doTask(() -> {
                     try {
+                        //Create script.
+                        this.script = new CustomScript();
                         this.script.load(this, finalScriptSource);
                     } catch (Exception e) {
                         e.printStackTrace();

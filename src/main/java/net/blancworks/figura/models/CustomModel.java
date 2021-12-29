@@ -93,10 +93,10 @@ public class CustomModel extends FiguraAsset {
 
         //process animations
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            animations.forEach((s, animation) -> {
-                if (animation.playState != Animation.PlayState.STOPPED)
-                    animation.render();
-            });
+            for (Animation anim : animations.values()) {
+                if (anim.playState != Animation.PlayState.STOPPED)
+                    anim.render();
+            }
         }
 
         leftToRender = getMaxRenderAmount();
@@ -130,8 +130,10 @@ public class CustomModel extends FiguraAsset {
             }
         }
 
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1)
-            animations.forEach((s, animation) -> animation.clearAnimData());
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            for (Animation anim : animations.values())
+                anim.clearAnimData();
+        }
     }
 
     public void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, ModelPart arm, PlayerEntityModel<?> model, float alpha) {
@@ -140,10 +142,10 @@ public class CustomModel extends FiguraAsset {
 
         //process animations
         if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            animations.forEach((s, animation) -> {
-                if (animation.playState != Animation.PlayState.STOPPED)
-                    animation.render();
-            });
+            for (Animation anim : animations.values()) {
+                if (anim.playState != Animation.PlayState.STOPPED)
+                    anim.render();
+            }
         }
 
         this.leftToRender = getMaxRenderAmount();
@@ -164,8 +166,10 @@ public class CustomModel extends FiguraAsset {
             //applyHiddenTransforms = true;
         }
 
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1)
-            animations.forEach((s, animation) -> animation.clearAnimData());
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            for (Animation anim : animations.values())
+                anim.clearAnimData();
+        }
     }
 
     public boolean renderSkull(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {

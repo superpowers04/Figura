@@ -17,58 +17,45 @@ public class AnimationAPI {
     }
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
-            set("get", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    Animation anim = getAnimation(script, arg.checkjstring());
-                    if (anim == null) return NIL;
+        LuaTable tbl = new LuaTable();
 
-                    return getTable(anim);
+        CustomModel model = script.avatarData.model;
+        if (model != null)
+            model.animations.forEach((name, anim) -> tbl.set(name, getTable(anim)));
+
+        tbl.set("listAnimations", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                CustomModel model = script.avatarData.model;
+                if (model == null) return NIL;
+
+                int i = 1;
+                LuaTable tbl = new LuaTable();
+                for (Animation animation : model.animations.values()) {
+                    tbl.set(i, LuaValue.valueOf(animation.name));
+                    i++;
                 }
-            });
 
-            set("listAnimations", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    CustomModel model = script.avatarData.model;
-                    if (model == null) return NIL;
+                return tbl;
+            }
+        });
 
-                    int i = 1;
-                    LuaTable tbl = new LuaTable();
-                    for (Animation animation : model.animations.values()) {
-                        tbl.set(i, LuaValue.valueOf(animation.name));
-                        i++;
-                    }
+        tbl.set("stopAll", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                CustomModel model = script.avatarData.model;
+                if (model == null) return NIL;
 
-                    return tbl;
-                }
-            });
+                model.animations.values().forEach(Animation::stop);
+                return NIL;
+            }
+        });
 
-            set("stopAll", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    CustomModel model = script.avatarData.model;
-                    if (model == null) return NIL;
-
-                    for (Animation animation : model.animations.values())
-                        animation.stop();
-
-                    return NIL;
-                }
-            });
-        }});
+        return new ReadOnlyLuaTable(tbl);
     }
 
     public static ReadOnlyLuaTable getTable(Animation anim) {
         return new AnimationTable(anim).getTable();
-    }
-
-    private static Animation getAnimation(CustomScript script, String name) {
-        CustomModel model = script.avatarData.model;
-        if (model == null) return null;
-
-        return model.animations.get(name);
     }
 
     private static class AnimationTable extends ReadOnlyLuaTable {

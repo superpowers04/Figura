@@ -41,6 +41,7 @@
     "another-mod": "*"
   },
   "breaks": {
+    "optifine": "*",
     "optifabric": "*"
   },
   "custom": {

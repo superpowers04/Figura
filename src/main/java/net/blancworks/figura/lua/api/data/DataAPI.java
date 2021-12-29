@@ -52,6 +52,22 @@ public class DataAPI {
                 }
             });
 
+            //world.getPlayers() tracking
+            set("allowTracking", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    script.canBeTracked = arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            set("hasTracking", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.canBeTracked);
+                }
+            });
+
             //store a value
             set("save", new TwoArgFunction() {
                 @Override
