@@ -53,7 +53,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.UnaryOperator;
 
 public class FiguraMod implements ClientModInitializer {
@@ -263,13 +262,13 @@ public class FiguraMod implements ClientModInitializer {
                 int nextLinePos = versionFileContents.indexOf("\n", versionPos);
                 latestVersion = versionFileContents.substring(versionPos, nextLinePos).replaceAll(" ", "").substring(12);
 
-                //only full releases :3
-                if ((int) (Config.RELEASE_CHANNEL.value) == 1)
-                    latestVersion = latestVersion.split("-", 2)[0];
+                //process latest
+                SemanticVersion temp = SemanticVersion.parse(latestVersion);
+                if (temp.getPrereleaseKey().isPresent() && (int) (Config.RELEASE_CHANNEL.value) == 1)
+                    latestVersion = temp.getVersionComponent(0) + "." + temp.getVersionComponent(1) + "." + (temp.getVersionComponent(2) - 1);
 
                 SemanticVersion latest = SemanticVersion.parse(latestVersion);
                 SemanticVersion current = SemanticVersion.parse(MOD_VERSION);
-
                 latestVersionStatus = current.compareTo((Version) latest);
             } catch (Exception e) {
                 latestVersionStatus = 0;

@@ -111,7 +111,10 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
     public void figura$renderExtraElytraPartsWithTexture(AvatarData data, MatrixStack matrices, int light, int overlay, float alpha) {
         //Render left parts.
         matrices.push();
-        getLeftWing().rotate(matrices);
+
+        ModelPart leftWing = getLeftWing();
+        leftWing.rotate(matrices);
+        matrices.translate(-leftWing.pivotX / 16f, 0f, 0f);
 
         synchronized (data.model.specialParts) {
             for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.LeftElytra)) {
@@ -126,7 +129,10 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
 
         //Render right parts.
         matrices.push();
-        getRightWing().rotate(matrices);
+
+        ModelPart rightWing = getRightWing();
+        rightWing.rotate(matrices);
+        matrices.translate(-rightWing.pivotX / 16f, 0f, 0f);
 
         synchronized (data.model.specialParts) {
             for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.RightElytra)) {

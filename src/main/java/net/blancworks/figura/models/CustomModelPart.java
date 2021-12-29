@@ -491,8 +491,8 @@ public class CustomModelPart {
                     }});
                     case LeftElytraOrigin -> data.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        applyTransformsAsElytraOrParrot(transformStack);
+                        applyOriginTransforms(matrices);
+                        applyOriginTransforms(transformStack);
                         stackReference = matrices.peek();
                         part = CustomModelPart.this;
                         visible = true;
@@ -500,8 +500,8 @@ public class CustomModelPart {
                     }});
                     case RightElytraOrigin -> data.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        applyTransformsAsElytraOrParrot(transformStack);
+                        applyOriginTransforms(matrices);
+                        applyOriginTransforms(transformStack);
                         stackReference = matrices.peek();
                         part = CustomModelPart.this;
                         visible = true;
@@ -509,8 +509,8 @@ public class CustomModelPart {
                     }});
                     case LeftParrotOrigin -> data.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        applyTransformsAsElytraOrParrot(transformStack);
+                        applyOriginTransforms(matrices);
+                        applyOriginTransforms(transformStack);
                         stackReference = matrices.peek();
                         part = CustomModelPart.this;
                         visible = true;
@@ -518,8 +518,8 @@ public class CustomModelPart {
                     }});
                     case RightParrotOrigin -> data.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
-                        applyTransformsAsElytraOrParrot(matrices);
-                        applyTransformsAsElytraOrParrot(transformStack);
+                        applyOriginTransforms(matrices);
+                        applyOriginTransforms(transformStack);
                         stackReference = matrices.peek();
                         part = CustomModelPart.this;
                         visible = true;
@@ -527,8 +527,8 @@ public class CustomModelPart {
                     }});
                     case LeftSpyglass -> data.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
-                        applyTransformsAsSpyglass(matrices);
-                        applyTransformsAsSpyglass(transformStack);
+                        applyOriginTransforms(matrices);
+                        applyOriginTransforms(transformStack);
                         stackReference = matrices.peek();
                         part = CustomModelPart.this;
                         visible = true;
@@ -536,8 +536,8 @@ public class CustomModelPart {
                     }});
                     case RightSpyglass -> data.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
                         matrices.push();
-                        applyTransformsAsSpyglass(matrices);
-                        applyTransformsAsSpyglass(transformStack);
+                        applyOriginTransforms(matrices);
+                        applyOriginTransforms(transformStack);
                         stackReference = matrices.peek();
                         part = CustomModelPart.this;
                         visible = true;
@@ -578,15 +578,7 @@ public class CustomModelPart {
         stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
     }
 
-    //TODO move these to the mixins, probably.
-    public void applyTransformsAsElytraOrParrot(MatrixStack stack) {
-        stack.translate(pivot.getX() / 16f, pivot.getY() / 16f, -pivot.getZ() / 16f);
-        rotate(stack, this.rot);
-        stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
-    }
-
-    //TODO move these to the mixins, probably. //OK GOT IT
-    public void applyTransformsAsSpyglass(MatrixStack stack) {
+    public void applyOriginTransforms(MatrixStack stack) {
         stack.translate(-pivot.getX() / 16f, -pivot.getY() / 16f, -pivot.getZ() / 16f);
         rotate(stack, this.rot);
         stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
@@ -625,6 +617,9 @@ public class CustomModelPart {
             this.name = partNbt.getString("nm");
         else
             this.name = "NULL";
+
+        if (partNbt.contains("vb"))
+            this.visible = partNbt.getBoolean("vb");
 
         if (partNbt.contains("pos")) {
             NbtList list = (NbtList) partNbt.get("pos");

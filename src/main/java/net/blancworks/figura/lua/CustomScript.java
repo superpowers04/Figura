@@ -120,6 +120,7 @@ public class CustomScript extends FiguraAsset {
     public String commandPrefix = "\u0000";
 
     public final LuaTable sharedValues = new LuaTable();
+    public boolean canBeTracked = true;
 
     public HashMap<String, FiguraSound> customSounds = new HashMap<>();
 

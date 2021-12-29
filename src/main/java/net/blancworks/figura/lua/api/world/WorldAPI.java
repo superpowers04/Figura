@@ -5,6 +5,7 @@ import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
+import net.blancworks.figura.lua.api.entity.EntityAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -232,17 +233,17 @@ public class WorldAPI {
                 }
             });
 
-            set("getFiguraPlayers", new ZeroArgFunction() {
+            set("getPlayers", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     LuaTable playerList = new LuaTable();
 
-                    for (PlayerEntity entity : getWorld().getPlayers()) {
-                        AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
-                        if (data == null || data.script == null)
+                    for (PlayerEntity player : getWorld().getPlayers()) {
+                        AvatarData data = AvatarDataManager.getDataForPlayer(player.getUuid());
+                        if (data != null && data.script != null && !data.script.canBeTracked)
                             continue;
 
-                        playerList.set(entity.getName().getString(), new ReadOnlyLuaTable(data.script.sharedValues));
+                        playerList.set(player.getName().getString(), EntityAPI.getTableForEntity(player));
                     }
 
                     return playerList;

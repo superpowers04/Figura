@@ -1,5 +1,7 @@
 package net.blancworks.figura.lua.api.entity;
 
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
@@ -254,6 +256,14 @@ public class EntityAPI {
                         Entity entity = targetEntity.get();
                         BlockPos blockPos = entity.getBlockPos();
                         return LuaBoolean.valueOf(entity.world.hasRain(blockPos) || entity.world.hasRain(new BlockPos(blockPos.getX(), entity.getBoundingBox().maxY, blockPos.getZ())));
+                    }
+                });
+
+                set("hasAvatar", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        AvatarData data = AvatarDataManager.getDataForEntity(targetEntity.get());
+                        return LuaBoolean.valueOf(data != null && data.hasAvatar());
                     }
                 });
 
