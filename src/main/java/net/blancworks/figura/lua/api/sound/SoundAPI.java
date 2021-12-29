@@ -81,7 +81,7 @@ public class SoundAPI {
                         LuaTable bufTable = arg2.checktable();
                         bytes = new byte[bufTable.length()];
                         for(int i = 0; i < bytes.length; i++) {
-                            bytes[i] = (byte) bufTable.get(i+1).checkint();
+                            bytes[i] = (byte) bufTable.get(i + 1).checkint();
                         }
                     } else {
                         bytes = Base64.getDecoder().decode(arg2.checkjstring());
@@ -104,7 +104,7 @@ public class SoundAPI {
             set("playCustomSound", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
-                    LuaVector pitchVol = LuaVector.checkOrNew(arg3);
+                    LuaVector pitchVol = arg3.isnil() ? new LuaVector(1f, 1f) : LuaVector.checkOrNew(arg3);
                     FiguraSoundManager.getChannel().playCustomSound(script, arg1.checkjstring(), LuaVector.checkOrNew(arg2).asV3d(), pitchVol.x(), pitchVol.y());
                     return NIL;
                 }
