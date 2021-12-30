@@ -216,7 +216,15 @@ public class CustomModel extends FiguraAsset {
         CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
 
         matrices.translate(-cameraX, -cameraY, -cameraZ);
-        matrices.scale(-1f,-1f,1f);
+        matrices.scale(-1f, -1f, 1f);
+        
+        //process animations
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            for (Animation anim : animations.values()) {
+                if (anim.playState != Animation.PlayState.STOPPED)
+                    anim.render();
+            }
+        }
 
         synchronized (specialParts) {
             for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
@@ -226,7 +234,12 @@ public class CustomModel extends FiguraAsset {
                     break;
             }
         }
-
+        
+        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+            for (Animation anim : animations.values())
+                anim.clearAnimData();
+        }
+        
         CustomModelPart.canRenderHitBox = false;
     }
 
