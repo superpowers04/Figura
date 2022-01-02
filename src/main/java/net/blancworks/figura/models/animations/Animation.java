@@ -160,15 +160,20 @@ public class Animation {
                     return MathUtils.lerpVec3f(start, end, delta);
                 }
                 case CATMULLROM -> {
+                    //get "before" and "after" keyframes
                     Map.Entry<Float, KeyFrame> beforeFloor = map.lowerEntry(curr.time);
                     Map.Entry<Float, KeyFrame> afterCeil = map.higherEntry(next.time);
 
-                    Vec3f bef = beforeFloor != null ? beforeFloor.getValue().data : curr.data;
-                    Vec3f aft = afterCeil != null ? afterCeil.getValue().data : next.data;
+                    Vec3f bef = beforeFloor != null ? beforeFloor.getValue().data.copy() : curr.data.copy();
+                    Vec3f aft = afterCeil != null ? afterCeil.getValue().data.copy() : next.data.copy();
+
+                    //set blend weight
+                    bef.scale(blendWeight);
+                    aft.scale(blendWeight);
 
                     return MathUtils.catmullRomVec3f(bef, start, end, aft, delta);
                 }
-                default -> {
+                default -> { //also STEP
                     return start;
                 }
             }
