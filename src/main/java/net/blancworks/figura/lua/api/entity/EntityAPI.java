@@ -321,10 +321,10 @@ public class EntityAPI {
 
     public static ReadOnlyLuaTable getTableForEntity(Entity entity) {
         if (entity instanceof PlayerEntity player)
-            return new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> player);
+            return new ReadOnlyLuaTable(new PlayerEntityAPI.PlayerEntityLuaAPITable(() -> player).getTable());
         else if (entity instanceof LivingEntity mob)
-            return new LivingEntityAPI.LivingEntityAPITable<>(() -> mob);
+            return new ReadOnlyLuaTable(new LivingEntityAPI.LivingEntityAPITable<>(() -> mob).getTable());
         else
-            return new EntityAPI.EntityLuaAPITable<>(() -> entity);
+            return new ReadOnlyLuaTable(new EntityAPI.EntityLuaAPITable<>(() -> entity).getTable());
     }
 }

@@ -1,6 +1,5 @@
 package net.blancworks.figura.models.tasks;
 
-import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -15,9 +14,9 @@ public class TextRenderTask extends RenderTask {
     public List<Text> text;
     public int lineSpacing = 9;
 
-    public TextRenderTask(Text text, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {
+    public TextRenderTask(List<Text> text, boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {
         super(emissive, pos, rot, scale);
-        this.text = TextUtils.splitText(text, "\n");
+        this.text = text;
     }
 
     @Override
@@ -29,8 +28,8 @@ public class TextRenderTask extends RenderTask {
 
         int instructions = 0;
 
-        for(int i = 0; i < text.size(); i++) {
-            textRenderer.draw(text.get(i), 0, i*lineSpacing, 0xFFFFFF, false, matrices.peek().getPositionMatrix(), vcp, false, 0, emissive ? 0xF000F0 : light);
+        for (int i = 0; i < text.size(); i++) {
+            instructions += textRenderer.draw(text.get(i), 0, i * lineSpacing, 0xFFFFFF, false, matrices.peek().getPositionMatrix(), vcp, false, 0, emissive ? 0xF000F0 : light);
         }
 
         matrices.pop();

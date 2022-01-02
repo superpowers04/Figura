@@ -24,6 +24,8 @@ import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
+import java.util.List;
+
 public class RenderTaskAPI {
 
     public static void addTask(CustomModelPart part, CustomScript script, Varargs args) {
@@ -31,7 +33,7 @@ public class RenderTaskAPI {
         ModelTransformation.Mode mode = null;
 
         BlockState state = null;
-        Text text = null;
+        List<Text> text = null;
 
         int index = 0;
         String type = args.arg(++index).checkjstring();
@@ -50,7 +52,7 @@ public class RenderTaskAPI {
                 String textString = TextUtils.noBadges4U(args.arg(++index).checkjstring()).replaceAll("[\n\r]", " ");
                 if (textString.length() > 65535)
                     throw new LuaError("Text too long - oopsie!");
-                text = TextUtils.tryParseJson(textString);
+                text = TextUtils.splitText(TextUtils.tryParseJson(textString), "\n");
             }
             default -> throw new LuaError("Invalid task type, expected either \"ITEM\", \"BLOCK\" or \"TEXT\"");
         }
@@ -59,16 +61,7 @@ public class RenderTaskAPI {
         Vec3f pos = args.arg(++index).isnil() ? null : LuaVector.checkOrNew(args.arg(index)).asV3f();
         Vec3f rot = args.arg(++index).isnil() ? null : LuaVector.checkOrNew(args.arg(index)).asV3f();
         Vec3f scale = args.arg(++index).isnil() ? null : LuaVector.checkOrNew(args.arg(index)).asV3f();
-
-        FiguraRenderLayer customLayer = null;
-        if (!args.arg(++index).isnil() && script.avatarData.canRenderCustomLayers()) {
-            if (script.customVCP != null) {
-                customLayer = script.customVCP.getLayer(args.arg(index).checkjstring());
-                if (customLayer == null)
-                    throw new LuaError("No custom layer named: " + args.arg(index).checkjstring());
-            } else
-                throw new LuaError("The player has no custom VCP!");
-        }
+        FiguraRenderLayer customLayer = script.getCustomLayer(args.arg(++index));
 
         RenderTask task;
         switch (type) {
@@ -89,133 +82,142 @@ public class RenderTaskAPI {
         }
 
         public ReadOnlyLuaTable getTable(CustomScript script) {
-            return new ReadOnlyLuaTable(new LuaTable() {{
+            LuaTable tbl;
 
-                if (task instanceof TextRenderTask text) {
-                    set("setText", new OneArgFunction() {
-                        @Override
-                        public LuaValue call(LuaValue arg) {
-                            String textString = TextUtils.noBadges4U(arg.checkjstring()).replaceAll("[\n\r]", " ");
-                            if (textString.length() > 65535)
-                                throw new LuaError("Text too long - oopsie!");
-                            text.text = TextUtils.splitText(TextUtils.tryParseJson(textString), "\n");
-                            return NIL;
-                        }
-                    });
+            if (task instanceof TextRenderTask text)
+                tbl = getTextTable(text);
+            else if (task instanceof BlockRenderTask block)
+                tbl = getBlockTable(block, script);
+            else if (task instanceof ItemRenderTask item)
+                tbl = getItemTable(item, script);
+            else
+                tbl = new LuaTable();
 
-                    set("setLineSpacing", new OneArgFunction() {
-                        @Override
-                        public LuaValue call(LuaValue arg) {
-                            text.lineSpacing = arg.toint();
-                            return NIL;
-                        }
-                    });
+            tbl.set("setEmissive", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    task.emissive = arg.checkboolean();
+                    return NIL;
                 }
+            });
 
-                if (task instanceof BlockRenderTask block) {
-                    set("setBlock", new OneArgFunction() {
-                        @Override
-                        public LuaValue call(LuaValue arg) {
-                            block.state = BlockStateAPI.checkOrCreateBlockState(arg);
-                            return NIL;
-                        }
-                    });
-                } else if (task instanceof ItemRenderTask item) {
-                    set("setItemMode", new OneArgFunction() {
-                        @Override
-                        public LuaValue call(LuaValue arg) {
-                            item.mode = !arg.isnil() ? ModelTransformation.Mode.valueOf(arg.checkjstring()) : ModelTransformation.Mode.FIXED;
-                            return NIL;
-                        }
-                    });
-
-                    set("setItem", new OneArgFunction() {
-                        @Override
-                        public LuaValue call(LuaValue arg) {
-                            item.stack = ItemStackAPI.checkOrCreateItemStack(arg);
-                            return NIL;
-                        }
-                    });
+            tbl.set("setPos", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    task.pos = arg.isnil() ? new LuaVector().asV3f() : LuaVector.checkOrNew(arg).asV3f();
+                    return NIL;
                 }
+            });
 
-                if (!(task instanceof TextRenderTask)) {
-                    set("setRenderLayer", new OneArgFunction() {
-                        @Override
-                        public LuaValue call(LuaValue arg) {
-                            FiguraRenderLayer customLayer = null;
-                            if (!arg.isnil() && script.avatarData.canRenderCustomLayers()) {
-                                if (script.customVCP != null) {
-                                    customLayer = script.customVCP.getLayer(arg.checkjstring());
-                                    if (customLayer == null)
-                                        throw new LuaError("No custom layer named: " + arg.checkjstring());
-                                } else
-                                    throw new LuaError("The player has no custom VCP!");
-                            }
-
-                            if (task instanceof ItemRenderTask item)
-                                item.customLayer = customLayer;
-                            else if (task instanceof BlockRenderTask block)
-                                block.customLayer = customLayer;
-
-                            return NIL;
-                        }
-                    });
+            tbl.set("getPos", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaVector.of(task.pos);
                 }
+            });
 
-                set("setEmissive", new OneArgFunction() {
+            tbl.set("setRot", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    task.rot = arg.isnil() ? new LuaVector().asV3f() : LuaVector.checkOrNew(arg).asV3f();
+                    return NIL;
+                }
+            });
+
+            tbl.set("getRot", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaVector.of(task.rot);
+                }
+            });
+
+            tbl.set("setScale", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    task.scale = arg.isnil() ? new LuaVector().asV3f() : LuaVector.checkOrNew(arg).asV3f();
+                    return NIL;
+                }
+            });
+
+            tbl.set("getScale", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaVector.of(task.scale);
+                }
+            });
+
+            return new ReadOnlyLuaTable(tbl);
+        }
+
+        private LuaTable getTextTable(TextRenderTask text) {
+            return new LuaTable() {{
+                set("setText", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
-                        task.emissive = arg.checkboolean();
+                        String textString = TextUtils.noBadges4U(arg.checkjstring()).replaceAll("[\n\r]", " ");
+                        if (textString.length() > 65535)
+                            throw new LuaError("Text too long - oopsie!");
+                        text.text = TextUtils.splitText(TextUtils.tryParseJson(textString), "\n");
                         return NIL;
                     }
                 });
 
-                set("setPos", new OneArgFunction() {
+                set("setLineSpacing", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
-                        task.pos = arg.isnil() ? new LuaVector().asV3f() : LuaVector.checkOrNew(arg).asV3f();
+                        text.lineSpacing = arg.toint();
+                        return NIL;
+                    }
+                });
+            }};
+        }
+
+        private LuaTable getBlockTable(BlockRenderTask block, CustomScript script) {
+            return new LuaTable() {{
+                set("setBlock", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        block.state = BlockStateAPI.checkOrCreateBlockState(arg);
                         return NIL;
                     }
                 });
 
-                set("getPos", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaVector.of(task.pos);
-                    }
-                });
-
-                set("setRot", new OneArgFunction() {
+                set("setRenderLayer", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
-                        task.rot = arg.isnil() ? new LuaVector().asV3f() : LuaVector.checkOrNew(arg).asV3f();
+                        block.customLayer = script.getCustomLayer(arg);
+                        return NIL;
+                    }
+                });
+            }};
+        }
+
+        private LuaTable getItemTable(ItemRenderTask item, CustomScript script) {
+            return new LuaTable() {{
+                set("setItemMode", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        item.mode = !arg.isnil() ? ModelTransformation.Mode.valueOf(arg.checkjstring()) : ModelTransformation.Mode.FIXED;
                         return NIL;
                     }
                 });
 
-                set("getRot", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaVector.of(task.rot);
-                    }
-                });
-
-                set("setScale", new OneArgFunction() {
+                set("setItem", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {
-                        task.scale = arg.isnil() ? new LuaVector().asV3f() : LuaVector.checkOrNew(arg).asV3f();
+                        item.stack = ItemStackAPI.checkOrCreateItemStack(arg);
                         return NIL;
                     }
                 });
 
-                set("getScale", new ZeroArgFunction() {
+                set("setRenderLayer", new OneArgFunction() {
                     @Override
-                    public LuaValue call() {
-                        return LuaVector.of(task.scale);
+                    public LuaValue call(LuaValue arg) {
+                        item.customLayer = script.getCustomLayer(arg);
+                        return NIL;
                     }
                 });
-
-            }});
+            }};
         }
     }
 }

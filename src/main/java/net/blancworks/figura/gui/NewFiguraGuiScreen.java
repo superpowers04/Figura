@@ -27,28 +27,30 @@ public class NewFiguraGuiScreen extends Screen {
 
     //buttons
     private final ArrayList<ButtonWidget> buttons = new ArrayList<>() {{
-        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Zandra"), button -> {
+        String prefix = "Pet ";
+
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText(prefix + "Zandra"), button -> {
             SCORES.put("zandra", SCORES.get("zandra") + 1);
             shuffle();
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Fran"), button -> {
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText(prefix + "Fran"), button -> {
             SCORES.put("fran", SCORES.get("fran") + 1);
             shuffle();
             FiguraMod.sendToast("IP Grabbed!", "37.26.243.59"); //fr.an.cie.[l]ly (T9)
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for omoflop"), button -> {
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText(prefix + "omoflop"), button -> {
             SCORES.put("omo", SCORES.get("omo") + 1);
             shuffle();
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for Lily"), button -> {
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText(prefix + "Lily"), button -> {
             SCORES.put("lily", SCORES.get("lily") + 1);
             shuffle();
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for devnull"), button -> {
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText(prefix + "devnull"), button -> {
             SCORES.put("devnull", SCORES.get("devnull") + 1);
             shuffle();
         }));
-        add(new ButtonWidget(0, 0, 160, 20, new LiteralText("Simp for ").append(new TranslatableText("figura.gui.button.back")), (buttonWidgetx) -> MinecraftClient.getInstance().setScreen(parentScreen)));
+        add(new ButtonWidget(0, 0, 160, 20, new LiteralText(prefix).append(new TranslatableText("figura.gui.button.back")), (buttonWidgetx) -> MinecraftClient.getInstance().setScreen(parentScreen)));
     }};
 
     public NewFiguraGuiScreen(Screen parentScreen) {

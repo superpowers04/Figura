@@ -7,8 +7,6 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.CustomModelPartGroup;
-import net.blancworks.figura.models.shaders.FiguraRenderLayer;
-import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
@@ -47,14 +45,45 @@ public class CustomModelAPI {
         public LuaTable getTable(CustomScript script) {
             LuaTable ret = new LuaTable();
 
-            //int index = 1;
             if (targetPart instanceof CustomModelPartGroup group) {
                 for (CustomModelPart child : group.children) {
                     CustomModelPartTable tbl = new CustomModelPartTable(child, script);
                     ret.set(child.name, tbl);
                     //disabled due to memory issues
-                    //ret.set(index++, tbl);
+                    //ret.set(i, tbl);
                 }
+
+                ret.set("getChildren", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        LuaTable tbl = new LuaTable();
+                        for (CustomModelPart child : group.children)
+                            tbl.set(child.name, new CustomModelPartTable(child, script));
+
+                        return tbl;
+                    }
+                });
+
+                ret.set("getAnimPos", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaVector.of(group.animPos);
+                    }
+                });
+
+                ret.set("getAnimRot", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaVector.of(group.animRot);
+                    }
+                });
+
+                ret.set("getAnimScale", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaVector.of(group.animScale);
+                    }
+                });
             }
 
             ret.set("getPos", new ZeroArgFunction() {
@@ -310,15 +339,7 @@ public class CustomModelAPI {
             ret.set("setRenderLayer", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    if (!targetPart.model.owner.canRenderCustomLayers())
-                        return NIL;
-
-                    FiguraRenderLayer layer = null;
-
-                    if (!arg1.isnil() && targetPart.model.owner.getVCP() instanceof FiguraVertexConsumerProvider)
-                        layer = ((FiguraVertexConsumerProvider)targetPart.model.owner.getVCP()).getLayer(arg1.checkjstring());
-
-                    targetPart.customLayer = layer;
+                    targetPart.customLayer = script.getCustomLayer(arg1);
                     return NIL;
                 }
             });
@@ -454,20 +475,6 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(targetPart.name);
-                }
-            });
-
-            ret.set("getChildren", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    if (!(targetPart instanceof CustomModelPartGroup group))
-                        return NIL;
-
-                    LuaTable tbl = new LuaTable();
-                    for (CustomModelPart child : group.children)
-                        tbl.set(child.name, new CustomModelPartTable(child, script));
-
-                    return tbl;
                 }
             });
 
