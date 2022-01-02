@@ -229,6 +229,21 @@ public class ClientAPI {
                 }
             });
 
+            set("getScaledWindowSize", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    Window window = MinecraftClient.getInstance().getWindow();
+                    return new LuaVector(window.getScaledWidth(), window.getScaledHeight());
+                }
+            });
+
+            set("getScaleFactor", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(MinecraftClient.getInstance().getWindow().getScaleFactor());
+                }
+            });
+
         }});
     }
 }
