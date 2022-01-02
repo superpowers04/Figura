@@ -397,7 +397,7 @@ public class AvatarData {
 
         if (script != null) {
             script.clearSounds();
-            script.clearPings();
+            //script.clearPings();
         } else {
             FiguraSoundManager.getChannel().stopSound(entityId);
         }

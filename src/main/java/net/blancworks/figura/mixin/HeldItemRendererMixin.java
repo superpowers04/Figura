@@ -1,10 +1,12 @@
 package net.blancworks.figura.mixin;
 
+import com.google.common.base.MoreObjects;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.api.model.FirstPersonModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
@@ -12,18 +14,22 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3f;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.LocalCapture;
 
 @Mixin(HeldItemRenderer.class)
 public abstract class HeldItemRendererMixin {
 
+
     @Unique private int figura$pushedMatrixCount = 0;
 
-    @Inject(at = @At("HEAD"), method = "renderFirstPersonItem", cancellable = true)
-    private void onRenderFirstPersonItem(AbstractClientPlayerEntity player, float tickDelta, float pitch, Hand hand, float swingProgress, ItemStack item, float equipProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
+    @Inject(at = @At(value = "INVOKE", target = "Lnet/minecraft/client/render/item/HeldItemRenderer;getHandRenderType(Lnet/minecraft/client/network/ClientPlayerEntity;)Lnet/minecraft/client/render/item/HeldItemRenderer$HandRenderType;", shift = At.Shift.AFTER), method = "renderItem(FLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider$Immediate;Lnet/minecraft/client/network/ClientPlayerEntity;I)V", cancellable = true, locals = LocalCapture.CAPTURE_FAILHARD)
+    private void onRenderFirstPersonItem(float tickDelta, MatrixStack matrices, VertexConsumerProvider.Immediate vertexConsumers, ClientPlayerEntity player, int light, CallbackInfo ci, float f, Hand hand, float g) {
+
         AvatarData data = AvatarDataManager.getDataForPlayer(player.getUuid());
 
         if (data == null || data != AvatarDataManager.localPlayer || data.script == null || data.script.allCustomizations == null)

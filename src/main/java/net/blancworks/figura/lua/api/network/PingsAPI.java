@@ -55,6 +55,10 @@ public class PingsAPI {
             if (targetScript.avatarData != AvatarDataManager.localPlayer)
                 return NIL;
 
+            if (targetScript.newFunctionIDMap.isEmpty()) {
+                throw new LuaError("Ping cannot be sent before it's registered!");
+            }
+
             try {
                 //get ping ID from the function
                 short id = targetScript.newFunctionIDMap.inverse().get(func);

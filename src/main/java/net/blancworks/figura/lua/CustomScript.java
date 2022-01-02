@@ -969,7 +969,7 @@ public class CustomScript extends FiguraAsset {
         }
 
         customSounds.values().forEach(FiguraSound::close);
-        customSounds.clear();
+        //customSounds.clear();
     }
 
     public FiguraRenderLayer getCustomLayer(LuaValue arg) {
