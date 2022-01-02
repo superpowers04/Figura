@@ -85,6 +85,13 @@ public class RendererAPI {
                 }
             });
 
+            set("getCameraRot", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaVector.of(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation().toEulerXyzDegrees());
+                }
+            });
+
             set("setRenderFire", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
