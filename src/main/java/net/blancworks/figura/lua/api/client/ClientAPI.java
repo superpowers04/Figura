@@ -6,8 +6,9 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.Mouse;
+import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec2f;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -157,7 +158,8 @@ public class ClientAPI {
             set("getWindowSize", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(new Vec2f(MinecraftClient.getInstance().getWindow().getWidth(), MinecraftClient.getInstance().getWindow().getHeight()));
+                    Window window = MinecraftClient.getInstance().getWindow();
+                    return new LuaVector(window.getWidth(), window.getHeight());
                 }
             });
 
@@ -216,6 +218,14 @@ public class ClientAPI {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(System.currentTimeMillis());
+                }
+            });
+
+            set("getMousePos", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    Mouse mouse = MinecraftClient.getInstance().mouse;
+                    return new LuaVector((float) mouse.getX(), (float) mouse.getY());
                 }
             });
 
