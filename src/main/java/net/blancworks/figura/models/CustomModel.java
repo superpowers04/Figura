@@ -91,14 +91,6 @@ public class CustomModel extends FiguraAsset {
         if (owner.script != null)
             owner.script.render(owner.deltaTime);
 
-        //process animations
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            for (Animation anim : animations.values()) {
-                if (anim.playState != Animation.PlayState.STOPPED)
-                    anim.render();
-            }
-        }
-
         leftToRender = getMaxRenderAmount();
 
         synchronized (this.allParts) {
@@ -129,24 +121,11 @@ public class CustomModel extends FiguraAsset {
                 matrices.pop();
             }
         }
-
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            for (Animation anim : animations.values())
-                anim.clearAnimData();
-        }
     }
 
     public void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, ModelPart arm, PlayerEntityModel<?> model, float alpha) {
         if (owner.script != null)
             owner.script.render(owner.deltaTime);
-
-        //process animations
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            for (Animation anim : animations.values()) {
-                if (anim.playState != Animation.PlayState.STOPPED)
-                    anim.render();
-            }
-        }
 
         this.leftToRender = getMaxRenderAmount();
 
@@ -164,11 +143,6 @@ public class CustomModel extends FiguraAsset {
                 this.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
             }
             //applyHiddenTransforms = true;
-        }
-
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            for (Animation anim : animations.values())
-                anim.clearAnimData();
         }
     }
 
@@ -217,14 +191,6 @@ public class CustomModel extends FiguraAsset {
 
         matrices.translate(-cameraX, -cameraY, -cameraZ);
         matrices.scale(-1f, -1f, 1f);
-        
-        //process animations
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            for (Animation anim : animations.values()) {
-                if (anim.playState != Animation.PlayState.STOPPED)
-                    anim.render();
-            }
-        }
 
         synchronized (specialParts) {
             for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
@@ -234,12 +200,7 @@ public class CustomModel extends FiguraAsset {
                     break;
             }
         }
-        
-        if (owner.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-            for (Animation anim : animations.values())
-                anim.clearAnimData();
-        }
-        
+
         CustomModelPart.canRenderHitBox = false;
     }
 
@@ -260,7 +221,7 @@ public class CustomModel extends FiguraAsset {
 
     public void renderHudParts(MatrixStack matrices) {
         MinecraftClient client = MinecraftClient.getInstance();
-        float scale = (float) (128f / client.getWindow().getScaleFactor());
+        float scale = 40f;
         float w = client.getWindow().getScaledWidth() / 2f;
         float h = client.getWindow().getScaledHeight() / 2f;
 

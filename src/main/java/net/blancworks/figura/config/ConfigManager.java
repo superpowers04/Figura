@@ -249,7 +249,7 @@ public final class ConfigManager {
         try {
             if (FILE.exists()) {
                 BufferedReader br = new BufferedReader(new FileReader(FILE));
-                JsonObject json = new JsonParser().parse(br).getAsJsonObject();
+                JsonObject json = JsonParser.parseReader(br).getAsJsonObject();
 
                 JsonElement version = json.get("CONFIG_VERSION");
                 if (version == null || version.getAsInt() < CONFIG_VERSION) {

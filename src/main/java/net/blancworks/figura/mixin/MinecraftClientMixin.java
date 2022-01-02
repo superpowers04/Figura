@@ -8,7 +8,9 @@ import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
+import net.blancworks.figura.models.animations.Animation;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.hud.InGameHud;
@@ -44,11 +46,43 @@ public class MinecraftClientMixin {
     @Shadow @Nullable public ClientPlayerEntity player;
     @Shadow @Nullable public Entity cameraEntity;
 
+    @Inject(at = @At("HEAD"), method = "render")
+    public void preRender(boolean tick, CallbackInfo ci) {
+        //process animations
+        synchronized (AvatarDataManager.LOADED_PLAYER_DATA) {
+            for (AvatarData data : AvatarDataManager.LOADED_PLAYER_DATA.values()) {
+                if (data == null || data.model == null || !data.model.isDone)
+                    continue;
+
+                if (data.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+                    for (Animation anim : data.model.animations.values()) {
+                        if (anim.playState != Animation.PlayState.STOPPED)
+                            anim.render();
+                    }
+                }
+            }
+        }
+    }
+
     @Inject(at = @At("RETURN"), method = "render")
-    public void copyFramebuffer(boolean tick, CallbackInfo ci) {
+    public void afterRender(boolean tick, CallbackInfo ci) {
+        //save last framebuffer
         if (FiguraVertexConsumerProvider.isUsingLastFramebuffer) {
             RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);
             FiguraVertexConsumerProvider.isUsingLastFramebuffer = false;
+        }
+
+        //clear animations
+        synchronized (AvatarDataManager.LOADED_PLAYER_DATA) {
+            for (AvatarData data : AvatarDataManager.LOADED_PLAYER_DATA.values()) {
+                if (data == null || data.model == null || !data.model.isDone)
+                    continue;
+
+                if (data.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
+                    for (Animation anim : data.model.animations.values())
+                        anim.clearAnimData();
+                }
+            }
         }
     }
 

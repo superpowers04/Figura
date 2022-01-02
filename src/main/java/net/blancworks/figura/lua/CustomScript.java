@@ -18,6 +18,7 @@ import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.lua.api.sound.FiguraSound;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
+import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
@@ -266,12 +267,14 @@ public class CustomScript extends FiguraAsset {
     }
 
     public void toNBT(NbtCompound tag) {
-        if (source.length() < 60000) {
-            tag.putString("src", cleanScriptSource(source));
+        String script = cleanScriptSource(source);
+
+        if (script.length() < 60000) {
+            tag.putString("src", script);
         } else {
             int i = 0;
-            for (String substring : Splitter.fixedLength(60000).split(cleanScriptSource(source))) {
-                tag.putString("src_" + i, cleanScriptSource(substring));
+            for (String substring : Splitter.fixedLength(60000).split(script)) {
+                tag.putString("src_" + i, substring);
                 i++;
             }
         }
@@ -408,9 +411,11 @@ public class CustomScript extends FiguraAsset {
                             sendChatMessage(message);
                         }
                     }
-                } catch (Exception e){
-                    e.printStackTrace();
+                } catch (Exception error) {
+                    if (error instanceof LuaError e) throw e;
+                    else handleError(error);
                 }
+
                 return NIL;
             }
         });
@@ -439,8 +444,9 @@ public class CustomScript extends FiguraAsset {
 
                         logTableContents(table, 1, "");
                     }
-                } catch (Throwable e){
-                    e.printStackTrace();
+                } catch (Exception error) {
+                    if (error instanceof LuaError e) throw e;
+                    else handleError(error);
                 }
 
                 return NIL;
@@ -964,5 +970,20 @@ public class CustomScript extends FiguraAsset {
 
         customSounds.values().forEach(FiguraSound::close);
         customSounds.clear();
+    }
+
+    public FiguraRenderLayer getCustomLayer(LuaValue arg) {
+        if (!arg.isnil() && avatarData.canRenderCustomLayers()) {
+            if (customVCP != null) {
+                FiguraRenderLayer customLayer = customVCP.getLayer(arg.checkjstring());
+                if (customLayer == null) throw new LuaError("No custom layer named: " + arg.checkjstring());
+
+                return customLayer;
+            } else {
+                throw new LuaError("The player has no custom VCP!");
+            }
+        }
+
+        return null;
     }
 }
