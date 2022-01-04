@@ -1,6 +1,7 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.access.InGameHudAccess;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.ActionWheel;
@@ -10,7 +11,9 @@ import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
@@ -19,7 +22,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 @Mixin(InGameHud.class)
-public abstract class InGameHudMixin {
+public class InGameHudMixin implements InGameHudAccess {
+
+    @Shadow private Text title;
+    @Shadow private Text subtitle;
+    @Shadow private Text overlayMessage;
 
     @Inject(at = @At ("HEAD"), method = "render")
     public void preRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
@@ -74,5 +81,20 @@ public abstract class InGameHudMixin {
             args.set(1, (int) ((int) args.get(1) + currentData.script.crossHairPos.x));
             args.set(2, (int) ((int) args.get(2) + currentData.script.crossHairPos.y));
         }
+    }
+
+    @Override
+    public Text getTitle() {
+        return title;
+    }
+
+    @Override
+    public Text getSubtitle() {
+        return subtitle;
+    }
+
+    @Override
+    public Text getOverlayMessage() {
+        return overlayMessage;
     }
 }
