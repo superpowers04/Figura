@@ -20,6 +20,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -40,7 +41,20 @@ public class DataAPI {
             set("setName", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    script.scriptName = arg.checkjstring();
+                    String name = arg.checkjstring();
+
+                    try {
+                        Path root = getContentDirectory().toAbsolutePath();
+                        Path test = root.resolve(Paths.get(name + ".json")).toAbsolutePath();
+
+                        if (root.compareTo(test.getParent()) != 0)
+                            throw new Exception("Folder access is forbidden");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new LuaError(e.getMessage());
+                    }
+
+                    script.scriptName = name;
                     return NIL;
                 }
             });

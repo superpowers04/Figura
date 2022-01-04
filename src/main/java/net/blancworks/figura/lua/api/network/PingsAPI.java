@@ -29,17 +29,20 @@ public class PingsAPI {
                 throw new LuaError("Error while registering ping");
 
             //register ping
-            targetScript.registerPing(value);
+            LuaTable tbl = new LuaTable();
+            tbl.set("key", key);
+            tbl.set("value", value);
 
-            super.rawset(key, new PingFunction(targetScript, value.checkfunction()));
+            targetScript.registerPing(tbl);
+            super.rawset(key, new PingFunction(targetScript, tbl));
         }
     }
 
     private static class PingFunction extends LuaFunction {
         private final CustomScript targetScript;
-        private final LuaFunction func;
+        private final LuaTable func;
 
-        public PingFunction(CustomScript script, LuaFunction func) {
+        public PingFunction(CustomScript script, LuaTable func) {
             this.targetScript = script;
             this.func = func;
         }
@@ -55,13 +58,13 @@ public class PingsAPI {
             if (targetScript.avatarData != AvatarDataManager.localPlayer)
                 return NIL;
 
-            if (targetScript.newFunctionIDMap.isEmpty()) {
+            if (targetScript.functionMap.isEmpty()) {
                 throw new LuaError("Ping cannot be sent before it's registered!");
             }
 
             try {
                 //get ping ID from the function
-                short id = targetScript.newFunctionIDMap.inverse().get(func);
+                short id = targetScript.functionMap.inverse().get(func);
 
                 //local ping is handled immediately
                 targetScript.handlePing(id, arg);

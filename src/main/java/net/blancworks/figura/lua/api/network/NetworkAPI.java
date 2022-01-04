@@ -50,7 +50,7 @@ public class NetworkAPI {
                         String s = arg1.checkjstring();
 
                         //Get ID from string.
-                        short id = targetScript.functionIDMap.inverse().get(s);
+                        short id = targetScript.oldFunctionIDMap.inverse().get(s);
 
                         //Script handles local ping immediately.
                         targetScript.handlePing(id, arg2);

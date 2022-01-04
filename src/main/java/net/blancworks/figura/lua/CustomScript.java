@@ -110,6 +110,8 @@ public class CustomScript extends FiguraAsset {
     public Vec2f crossHairPos = null;
     public boolean crossHairEnabled = true;
 
+    public boolean unlockCursor = false;
+
     // If the player should render the entity their riding
     public boolean renderMount = true;
     public boolean renderMountShadow = true;
@@ -126,7 +128,9 @@ public class CustomScript extends FiguraAsset {
     public HashMap<String, FiguraSound> customSounds = new HashMap<>();
 
     public static final UnaryOperator<Style> LUA_COLOR = (s) -> s.withColor(0x5555FF);
+    public static final UnaryOperator<Style> PING_COLOR = (s) -> s.withColor(0xDD1133);
     public static final Text LOG_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[lua] ").styled(LUA_COLOR));
+    public static final Text PING_PREFIX = new LiteralText("").formatted(Formatting.ITALIC).append(new LiteralText("[ping] ").styled(PING_COLOR));
 
     //Custom Rendering
     public static final int maxShaders = 16;
@@ -137,9 +141,8 @@ public class CustomScript extends FiguraAsset {
 
     //Maps functions from lua to shorts for data saving.
     @Deprecated
-    public BiMap<Short, String> functionIDMap = HashBiMap.create();
-
-    public BiMap<Short, LuaValue> newFunctionIDMap = HashBiMap.create();
+    public BiMap<Short, String> oldFunctionIDMap = HashBiMap.create();
+    public BiMap<Short, LuaTable> functionMap = HashBiMap.create();
 
     private short lastPingID = Short.MIN_VALUE;
 
@@ -433,16 +436,11 @@ public class CustomScript extends FiguraAsset {
                         MutableText message = LOG_PREFIX.shallowCopy();
                         if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
+                        message.append(tableToText(table, LUA_COLOR, FiguraMod.ACCENT_COLOR, 1, ""));
 
                         int config = (int) Config.SCRIPT_LOG_LOCATION.value;
-                        if (config != 2) {
-                            FiguraMod.LOGGER.info(message.getString());
-                        }
-                        if (config != 1) {
-                            sendChatMessage(message);
-                        }
-
-                        logTableContents(table, 1, "");
+                        if (config != 2) FiguraMod.LOGGER.info(message.getString());
+                        if (config != 1) sendChatMessage(message);
                     }
                 } catch (Exception error) {
                     if (error instanceof LuaError e) throw e;
@@ -561,6 +559,10 @@ public class CustomScript extends FiguraAsset {
                 pingReceived++;
                 LuaPing p = incomingPingQueue.poll();
                 p.function.call(p.args);
+
+                //log pings
+                int config = (int) Config.PINGS_LOG_LOCATION.value;
+                if (config != 3) logPing(p, config, avatarData.name.copy());
             }
 
             //Batch-send pings.
@@ -797,50 +799,49 @@ public class CustomScript extends FiguraAsset {
         error.printStackTrace();
     }
 
-    public void logTableContents(LuaTable table, int depth, String depthString) {
+    public static MutableText tableToText(LuaTable table, UnaryOperator<Style> keyColor, UnaryOperator<Style> valColor, int depth, String depthString) {
         String spacing = "  ";
         depthString = spacing.substring(2) + depthString;
-
-        int config = (int) Config.SCRIPT_LOG_LOCATION.value;
-        if (config != 2) {
-            FiguraMod.LOGGER.info(depthString + "{");
-        }
-        if (config != 1) {
-            sendChatMessage(new LiteralText(depthString + "{").formatted(Formatting.ITALIC));
-        }
+        MutableText back = new LiteralText("{\n").formatted(Formatting.ITALIC);
 
         for (LuaValue key : table.keys()) {
             LuaValue value = table.get(key);
 
-            MutableText valString = new LiteralText(spacing + depthString + '"').formatted(Formatting.ITALIC)
-                    .append(new LiteralText(key.toString()).styled(LUA_COLOR))
-                    .append('"' + " : ")
-                    .append(new LiteralText(value.toString()).styled(FiguraMod.ACCENT_COLOR));
+            MutableText valString = new LiteralText("");
+            valString.append(new LiteralText(depthString + spacing + "\"").setStyle(Style.EMPTY.withItalic(false)));
+            valString.append(new LiteralText(key.toString()).styled(keyColor)).append("\" : ");
 
             if (value.istable()) {
-                if (config != 2) {
-                    FiguraMod.LOGGER.info(valString.getString());
-                }
-                if (config != 1) {
-                    sendChatMessage(valString);
-                }
-
-                logTableContents(value.checktable(), depth + 1, spacing + depthString);
+                valString.append(tableToText(value.checktable(), keyColor, valColor, depth + 1, spacing + depthString));
             } else {
-                if (config != 2) {
-                    FiguraMod.LOGGER.info(valString.getString() + ",");
-                }
-                if (config != 1) {
-                    sendChatMessage(valString.append(","));
-                }
+                valString.append(new LiteralText(value.toString()).styled(valColor)).append(",\n");
             }
+
+            back.append(valString);
         }
-        if (config != 2) {
-            FiguraMod.LOGGER.info(depthString + "},");
-        }
-        if (config != 1) {
-            sendChatMessage(new LiteralText(depthString + "},").formatted(Formatting.ITALIC));
-        }
+
+        back.append(new LiteralText(depthString + "},\n"));
+        return back;
+    }
+
+    public static void logPing(LuaPing p, int config, Text pingOwner) {
+        Text name = new LiteralText(p.name);
+        MutableText arg;
+
+        if (p.args instanceof LuaVector vec)
+            arg = (MutableText) vec.toJsonText();
+        else if (p.args instanceof LuaTable tbl)
+            arg = tableToText(tbl, PING_COLOR, FiguraMod.ACCENT_COLOR, 1, "");
+        else
+            arg = new LiteralText(p.args.toString());
+
+        MutableText message = PING_PREFIX.shallowCopy();
+        message.append(pingOwner).append(" ");
+        message.append(new LiteralText(">> ").styled(PING_COLOR));
+        message.append(name).append(" : ").append(arg);
+
+        if (config != 2) FiguraMod.LOGGER.info(message.getString());
+        if (config != 1) sendChatMessage(message);
     }
 
     public static void sendChatMessage(Text text) {
@@ -914,24 +915,24 @@ public class CustomScript extends FiguraAsset {
     //--Pings--
     @Deprecated
     public void registerPingName(String s) {
-        functionIDMap.put(lastPingID++, s);
+        oldFunctionIDMap.put(lastPingID++, s);
     }
 
-    public void registerPing(LuaValue func) {
-        if (!newFunctionIDMap.containsValue(func))
-            newFunctionIDMap.put(lastPingID++, func);
+    public void registerPing(LuaTable func) {
+        if (!functionMap.containsValue(func))
+            functionMap.put(lastPingID++, func);
     }
 
     public void handlePing(short id, LuaValue args) {
         try {
-            String functionName = functionIDMap.get(id);
-            LuaValue function = newFunctionIDMap.get(id);
+            String functionName = oldFunctionIDMap.get(id);
+            LuaTable function = functionMap.get(id);
 
             if (function != null) {
-                addPing(function, args, id);
+                addPing(function.get("value"), args, id, function.get("key").tojstring());
             } else if (functionName != null) {
                 LuaValue func = scriptGlobals.get(functionName);
-                addPing(func, args, id);
+                addPing(func, args, id, functionName);
             }
         } catch (Exception error) {
             if (error instanceof LuaError err)
@@ -941,11 +942,12 @@ public class CustomScript extends FiguraAsset {
         }
     }
 
-    public void addPing(LuaValue function, LuaValue args, short id) {
+    public void addPing(LuaValue function, LuaValue args, short id, String name) {
         LuaPing p = new LuaPing();
         p.function = function.checkfunction();
         p.args = args;
         p.functionID = id;
+        p.name = name;
 
         incomingPingQueue.add(p);
     }
@@ -954,12 +956,7 @@ public class CustomScript extends FiguraAsset {
         public short functionID;
         public LuaFunction function;
         public LuaValue args;
-    }
-
-    public void clearPings() {
-        lastPingID = Short.MIN_VALUE;
-        functionIDMap.clear();
-        newFunctionIDMap.clear();
+        public String name;
     }
 
     //--Misc--
