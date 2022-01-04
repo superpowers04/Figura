@@ -9,8 +9,11 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.mixin.AbstractBlockAccessorMixin;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Material;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.command.argument.BlockArgumentParser;
 import net.minecraft.command.argument.BlockStateArgumentType;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.tag.BlockTags;
@@ -252,16 +255,21 @@ public class BlockStateAPI {
                 }
             });
 
+            tbl.javaRawSet(LuaValue.valueOf("getEntityData"), new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    BlockEntity entity = world.getBlockEntity(blockPos);
+                    return NBTAPI.fromTag(entity != null ? entity.createNbt() : new NbtCompound());
+                }
+            });
+
             tbl.javaRawSet(LuaValue.valueOf("toStateString"), new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    try {
-                        String ret = state.toString().split("\\{", 2)[1];
-                        String[] split = ret.split("}", 2);
-                        return LuaValue.valueOf(split[0] + split[1]);
-                    } catch (Exception ignored) {
-                        return LuaValue.valueOf(state.toString());
-                    }
+                    BlockEntity entity = world.getBlockEntity(blockPos);
+                    NbtCompound tag = entity != null ? entity.createNbt() : new NbtCompound();
+
+                    return LuaValue.valueOf(BlockArgumentParser.stringifyBlockState(state) + tag);
                 }
             });
 

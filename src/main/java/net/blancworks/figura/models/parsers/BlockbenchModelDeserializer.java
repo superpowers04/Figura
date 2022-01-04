@@ -409,8 +409,12 @@ public class BlockbenchModelDeserializer {
 
         //texture
         JsonElement texture = faceObj.get("texture");
-        if (texture != null && !texture.isJsonNull())
-            face.put("texture", NbtFloat.of(texture.getAsFloat()));
+        if (texture != null) {
+            if (!texture.isJsonNull())
+                face.put("texture", NbtFloat.of(texture.getAsFloat()));
+        } else {
+            face.put("texture", NbtFloat.of(0f));
+        }
 
         //rotation
         if (faceObj.has("rotation"))

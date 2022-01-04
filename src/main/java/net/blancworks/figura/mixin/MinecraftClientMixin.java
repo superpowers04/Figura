@@ -46,6 +46,8 @@ public class MinecraftClientMixin {
     @Shadow @Nullable public ClientPlayerEntity player;
     @Shadow @Nullable public Entity cameraEntity;
 
+    @Unique private boolean wasMouseScriptUnlocked = false;
+
     @Inject(at = @At("HEAD"), method = "render")
     public void preRender(boolean tick, CallbackInfo ci) {
         //process animations
@@ -139,6 +141,15 @@ public class MinecraftClientMixin {
             if (this.options.keysHotbar[i].isPressed()) {
                 PlayerPopup.hotbarKeyPressed(i);
             }
+        }
+
+        AvatarData data = AvatarDataManager.localPlayer;
+        if (data != null && data.script != null && data.script.unlockCursor) {
+            this.mouse.unlockCursor();
+            wasMouseScriptUnlocked = true;
+        } else if (wasMouseScriptUnlocked) {
+            this.mouse.lockCursor();
+            wasMouseScriptUnlocked = false;
         }
     }
 

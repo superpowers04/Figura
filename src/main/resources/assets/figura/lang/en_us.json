@@ -79,6 +79,11 @@
   "figura.config.actionwheel": "Action Wheel",
   "figura.config.dev": "Developer Settings",
 
+  "figura.config.log_location.1": "Console/Chat",
+  "figura.config.log_location.2": "Console",
+  "figura.config.log_location.3": "Chat",
+  "figura.config.log_location.4": "None",
+
   "figura.config.preview_nameplate": "Show Preview NameTag",
   "figura.config.preview_nameplate.tooltip": "Displays your NameTag on the model preview screen",
 
@@ -107,9 +112,6 @@
 
   "figura.config.script_log_location": "Script Log",
   "figura.config.script_log_location.tooltip": "Script debug log output location",
-  "figura.config.script_log_location.1": "Console/Chat",
-  "figura.config.script_log_location.2": "Console",
-  "figura.config.script_log_location.3": "Chat",
 
   "figura.config.player_popup_button": "Player Popup key",
   "figura.config.player_popup_button.tooltip": "Player Popup Keybind",
@@ -158,6 +160,9 @@
 
   "figura.config.panic_button": "Toggle Avatar Rendering",
   "figura.config.panic_button.tooltip": "This keybind toggles the avatar rendering of everyone! Beware!",
+
+  "figura.config.pings_log_location": "Pings Logging",
+  "figura.config.pings_log_location.tooltip": "Change the logging of received pings",
 
 
   "figura.toast.upload.success.title": "Avatar Uploaded!",

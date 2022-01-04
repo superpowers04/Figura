@@ -1,6 +1,5 @@
 package net.blancworks.figura.lua.api.client;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.access.InGameHudAccess;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
@@ -10,12 +9,14 @@ import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
-import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.util.Window;
-import net.minecraft.server.command.TitleCommand;
 import net.minecraft.util.Identifier;
-import org.luaj.vm2.*;
-import org.luaj.vm2.lib.*;
+import org.luaj.vm2.LuaString;
+import org.luaj.vm2.LuaTable;
+import org.luaj.vm2.LuaValue;
+import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.ThreeArgFunction;
+import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ClientAPI {
 
@@ -266,9 +267,7 @@ public class ClientAPI {
             set("setTitle", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    String content = arg1.checkjstring();
-
-                    client.inGameHud.setTitle(TextUtils.tryParseJson(content));
+                    client.inGameHud.setTitle(TextUtils.tryParseJson(arg1.checkjstring()));
                     return NIL;
                 }
             });
@@ -276,9 +275,7 @@ public class ClientAPI {
             set("setSubtitle", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    String content = arg1.checkjstring();
-
-                    client.inGameHud.setSubtitle(TextUtils.tryParseJson(content));
+                    client.inGameHud.setSubtitle(TextUtils.tryParseJson(arg1.checkjstring()));
                     return NIL;
                 }
             });
@@ -286,7 +283,7 @@ public class ClientAPI {
             set("getTitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess)client.inGameHud).getTitle().asString());
+                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getTitle().asString());
                 }
             });
 
@@ -294,7 +291,7 @@ public class ClientAPI {
             set("getSubtitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess)client.inGameHud).getSubtitle().asString());
+                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getSubtitle().asString());
                 }
             });
 
@@ -302,15 +299,24 @@ public class ClientAPI {
             set("getActionbar", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess)client.inGameHud).getOverlayMessage().asString());
+                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getOverlayMessage().asString());
                 }
             });
 
             set("setActionbar", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    String content = arg1.checkjstring();
-                    client.player.sendMessage(TextUtils.tryParseJson(content), true);
+                    if (client.player != null)
+                        client.player.sendMessage(TextUtils.tryParseJson(arg1.checkjstring()), true);
+
+                    return NIL;
+                }
+            });
+
+            set("setMouseUnlocked", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    script.unlockCursor = arg.checkboolean();
                     return NIL;
                 }
             });

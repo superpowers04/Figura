@@ -57,7 +57,14 @@ public final class ConfigManager {
         Misc,
 
         FIGURA_BUTTON_LOCATION(4, 5),
-        SCRIPT_LOG_LOCATION(0, 3),
+        SCRIPT_LOG_LOCATION(0, 3) {{
+            String path = "figura.config.log_location.";
+            this.enumList = List.of(
+                    new TranslatableText(path + "1"),
+                    new TranslatableText(path + "2"),
+                    new TranslatableText(path + "3")
+            );
+        }},
         PLAYER_POPUP_BUTTON(GLFW.GLFW_KEY_R, FiguraMod.PLAYER_POPUP_BUTTON),
         ACCENT_COLOR(0x55FFFF, InputType.HEX_COLOR),
         RELEASE_CHANNEL(0, 3) {
@@ -86,13 +93,23 @@ public final class ConfigManager {
         },
         LOG_OTHERS_SCRIPT(false),
         RENDER_DEBUG_PARTS_PIVOT(true) {{
-            this.tooltip = new TranslatableText("figura.config.render_debug_parts_pivot.tooltip",
-                    new TranslatableText("figura.config.render_debug_parts_pivot.tooltip.cubes").setStyle(Style.EMPTY.withColor(0xff72b7)),
-                    new TranslatableText("figura.config.render_debug_parts_pivot.tooltip.groups").setStyle(Style.EMPTY.withColor(0xaff2ff)));
+            String tooltip = "figura.config.render_debug_parts_pivot.tooltip";
+            this.tooltip = new TranslatableText(tooltip,
+                    new TranslatableText(tooltip + ".cubes").setStyle(Style.EMPTY.withColor(0xff72b7)),
+                    new TranslatableText(tooltip + ".groups").setStyle(Style.EMPTY.withColor(0xaff2ff)));
         }},
         RENDER_OWN_NAMEPLATE(false),
         MODEL_FOLDER_PATH("", InputType.FOLDER_PATH),
-        PANIC_BUTTON(GLFW.GLFW_KEY_UNKNOWN, FiguraMod.PANIC_BUTTON);
+        PANIC_BUTTON(GLFW.GLFW_KEY_UNKNOWN, FiguraMod.PANIC_BUTTON),
+        PINGS_LOG_LOCATION(3, 4) {{
+            String path = "figura.config.log_location.";
+            this.enumList = List.of(
+                    new TranslatableText(path + "1"),
+                    new TranslatableText(path + "2"),
+                    new TranslatableText(path + "3"),
+                    new TranslatableText(path + "4")
+            );
+        }};
 
         //config data
         public Object value;
