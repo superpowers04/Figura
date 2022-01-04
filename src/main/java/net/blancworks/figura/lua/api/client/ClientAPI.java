@@ -1,18 +1,21 @@
 package net.blancworks.figura.lua.api.client;
 
+import com.mojang.blaze3d.systems.RenderSystem;
+import net.blancworks.figura.access.InGameHudAccess;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.util.Window;
+import net.minecraft.server.command.TitleCommand;
 import net.minecraft.util.Identifier;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.ZeroArgFunction;
+import org.luaj.vm2.*;
+import org.luaj.vm2.lib.*;
 
 public class ClientAPI {
 
@@ -244,6 +247,73 @@ public class ClientAPI {
                 }
             });
 
+            set("setTitleTimes", new ThreeArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+                    client.inGameHud.setTitleTicks(arg1.checkint(), arg2.checkint(), arg3.checkint());
+                    return NIL;
+                }
+            });
+
+            set("clearTitle", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    client.inGameHud.clearTitle();
+                    return NIL;
+                }
+            });
+
+            set("setTitle", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    String content = arg1.checkjstring();
+
+                    client.inGameHud.setTitle(TextUtils.tryParseJson(content));
+                    return NIL;
+                }
+            });
+
+            set("setSubtitle", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    String content = arg1.checkjstring();
+
+                    client.inGameHud.setSubtitle(TextUtils.tryParseJson(content));
+                    return NIL;
+                }
+            });
+
+            set("getTitle", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(((InGameHudAccess)client.inGameHud).getTitle().asString());
+                }
+            });
+
+
+            set("getSubtitle", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(((InGameHudAccess)client.inGameHud).getSubtitle().asString());
+                }
+            });
+
+
+            set("getActionbar", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaString.valueOf(((InGameHudAccess)client.inGameHud).getOverlayMessage().asString());
+                }
+            });
+
+            set("setActionbar", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    String content = arg1.checkjstring();
+                    client.player.sendMessage(TextUtils.tryParseJson(content), true);
+                    return NIL;
+                }
+            });
         }});
     }
 }
