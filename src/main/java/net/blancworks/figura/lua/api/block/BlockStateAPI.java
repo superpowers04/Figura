@@ -259,7 +259,7 @@ public class BlockStateAPI {
                 @Override
                 public LuaValue call() {
                     BlockEntity entity = world.getBlockEntity(blockPos);
-                    return NBTAPI.fromTag(entity != null ? entity.createNbt() : new NbtCompound());
+                    return NBTAPI.fromTag(entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound());
                 }
             });
 
@@ -267,7 +267,7 @@ public class BlockStateAPI {
                 @Override
                 public LuaValue call() {
                     BlockEntity entity = world.getBlockEntity(blockPos);
-                    NbtCompound tag = entity != null ? entity.createNbt() : new NbtCompound();
+                    NbtCompound tag = entity != null ? entity.writeNbt(new NbtCompound()) : new NbtCompound();
 
                     return LuaValue.valueOf(BlockArgumentParser.stringifyBlockState(state) + tag);
                 }
