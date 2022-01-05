@@ -70,8 +70,9 @@ public class CustomScript extends FiguraAsset {
     public int tickInstructionCount = 0;
     public int renderInstructionCount = 0;
     public int worldRenderInstructionCount = 0;
-    public int pingSent = 0;
-    public int pingReceived = 0;
+
+    public static int pingSent = 0;
+    public static int pingReceived = 0;
 
     //References to the tick and render functions for easy use elsewhere.
     private LuaEvent tickLuaEvent = null;
@@ -403,7 +404,14 @@ public class CustomScript extends FiguraAsset {
                         if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
 
-                        Text log = arg instanceof LuaVector logText ? logText.toJsonText() : arg2.isnil() || !arg2.checkboolean() ? new LiteralText(arg.toString()) : TextUtils.tryParseJson(arg.toString());
+                        Text log;
+                        if (arg instanceof LuaVector logText)
+                            log = logText.toJsonText(LUA_COLOR, FiguraMod.ACCENT_COLOR);
+                        else if (arg2.isnil() || !arg2.checkboolean())
+                            log = new LiteralText(arg.toString());
+                        else
+                            log = TextUtils.tryParseJson(arg.toString());
+
                         message.append(log);
 
                         int config = (int) Config.SCRIPT_LOG_LOCATION.value;
@@ -829,7 +837,7 @@ public class CustomScript extends FiguraAsset {
         MutableText arg;
 
         if (p.args instanceof LuaVector vec)
-            arg = (MutableText) vec.toJsonText();
+            arg = (MutableText) vec.toJsonText(PING_COLOR, FiguraMod.ACCENT_COLOR);
         else if (p.args instanceof LuaTable tbl)
             arg = tableToText(tbl, PING_COLOR, FiguraMod.ACCENT_COLOR, 1, "");
         else

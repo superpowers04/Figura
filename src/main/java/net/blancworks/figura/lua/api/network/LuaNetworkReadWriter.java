@@ -2,6 +2,8 @@ package net.blancworks.figura.lua.api.network;
 
 import com.google.common.io.LittleEndianDataInputStream;
 import com.google.common.io.LittleEndianDataOutputStream;
+import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.lua.api.math.VectorAPI;
 import org.luaj.vm2.*;
 
 import java.io.IOException;
@@ -17,10 +19,12 @@ public class LuaNetworkReadWriter {
     public static final byte BOOL_ID = 3;
     public static final byte STRING_ID = 4;
     public static final byte NIL_ID = 5;
-
+    public static final byte VECTOR_ID = 6;
 
     public static void writeLuaValue(LuaValue val, LittleEndianDataOutputStream stream) throws Exception {
-        if (val.isint()) {
+        if (val instanceof LuaVector vec)
+            writeLuaValue(vec, stream);
+        else if (val.isint()) {
             writeLuaValue(val.checkinteger(), stream);
         } else if (val.isnumber()) {
             writeLuaValue(val.checkdouble(), stream);
@@ -38,7 +42,9 @@ public class LuaNetworkReadWriter {
     public static LuaValue readLuaValue(LittleEndianDataInputStream stream) throws IOException {
         byte type = stream.readByte();
 
-        if (type == TABLE_ID) {
+        if (type == VECTOR_ID) {
+            return readLuaVector(stream);
+        } else if (type == TABLE_ID) {
             return readLuaTable(stream);
         } else if (type == INT_ID) {
             return readLuaInt(stream);
@@ -51,6 +57,13 @@ public class LuaNetworkReadWriter {
         }
 
         return LuaValue.NIL;
+    }
+
+    public static void writeLuaValue(LuaVector vec, LittleEndianDataOutputStream stream) throws Exception {
+        stream.writeByte(VECTOR_ID);
+        LuaTable tbl = VectorAPI.toTable(vec);
+
+        writeLuaValue(tbl, stream);
     }
 
     public static void writeLuaValue(LuaTable val, LittleEndianDataOutputStream stream) throws Exception {
@@ -107,6 +120,11 @@ public class LuaNetworkReadWriter {
         stream.write(data);
     }
 
+    public static LuaVector readLuaVector(LittleEndianDataInputStream stream) throws IOException {
+        LuaTable tbl = (LuaTable) readLuaValue(stream);
+        return (LuaVector) LuaVector.of(tbl);
+    }
+
     public static LuaTable readLuaTable(LittleEndianDataInputStream stream) throws IOException {
         short count = stream.readShort();
 
@@ -127,8 +145,8 @@ public class LuaNetworkReadWriter {
         return LuaInteger.valueOf(stream.readInt());
     }
 
-    public static LuaDouble readLuaDouble(LittleEndianDataInputStream stream) throws IOException {
-        return (LuaDouble) LuaDouble.valueOf(stream.readFloat());
+    public static LuaNumber readLuaDouble(LittleEndianDataInputStream stream) throws IOException {
+        return LuaDouble.valueOf(stream.readFloat());
     }
 
     public static LuaBoolean readLuaBool(LittleEndianDataInputStream stream) throws IOException {

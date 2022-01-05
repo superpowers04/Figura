@@ -37,9 +37,9 @@ public class DebugHudMixin {
                 lines.add(++i, String.format("Init instructions: %d", script.initInstructionCount));
                 lines.add(++i, String.format("Tick instructions: %d", script.tickInstructionCount));
                 lines.add(++i, String.format("Render instructions: %d",script.renderInstructionCount));
-                lines.add(++i, String.format("Pings per second: ↑%d, ↓%d", script.pingSent, script.pingReceived));
             }
         }
+        lines.add(++i, String.format("Pings per second: ↑%d, ↓%d", CustomScript.pingSent, CustomScript.pingReceived));
 
         lines.add(++i, "");
     }
