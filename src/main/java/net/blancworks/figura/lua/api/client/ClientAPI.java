@@ -26,6 +26,7 @@ public class ClientAPI {
 
     public static ReadOnlyLuaTable getForScript(CustomScript script) {
         MinecraftClient client = MinecraftClient.getInstance();
+        final boolean isHost = script.avatarData == AvatarDataManager.localPlayer;
 
         return new ReadOnlyLuaTable(new LuaTable() {{
             set("getOpenScreen", new ZeroArgFunction() {
@@ -267,15 +268,7 @@ public class ClientAPI {
             set("setTitle", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    client.inGameHud.setTitle(TextUtils.tryParseJson(arg1.checkjstring()));
-                    return NIL;
-                }
-            });
-
-            set("setSubtitle", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1) {
-                    client.inGameHud.setSubtitle(TextUtils.tryParseJson(arg1.checkjstring()));
+                    if (isHost) client.inGameHud.setTitle(TextUtils.tryParseJson(arg1.checkjstring()));
                     return NIL;
                 }
             });
@@ -287,6 +280,13 @@ public class ClientAPI {
                 }
             });
 
+            set("setSubtitle", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    if (isHost) client.inGameHud.setSubtitle(TextUtils.tryParseJson(arg1.checkjstring()));
+                    return NIL;
+                }
+            });
 
             set("getSubtitle", new ZeroArgFunction() {
                 @Override
@@ -294,7 +294,6 @@ public class ClientAPI {
                     return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getSubtitle().asString());
                 }
             });
-
 
             set("getActionbar", new ZeroArgFunction() {
                 @Override
@@ -306,7 +305,7 @@ public class ClientAPI {
             set("setActionbar", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    if (client.player != null)
+                    if (isHost && client.player != null)
                         client.player.sendMessage(TextUtils.tryParseJson(arg1.checkjstring()), true);
 
                     return NIL;

@@ -40,7 +40,8 @@ public final class AvatarDataManager {
     public static boolean panic = false;
 
     public static AvatarData getDataForPlayer(UUID id) {
-        if (panic) return null;
+        if (panic || id == null)
+            return null;
 
         if (OFFLINE_SWAP_DATA.containsKey(id)) {
             AvatarData data = LOADED_PLAYER_DATA.get(OFFLINE_SWAP_DATA.get(id));
@@ -91,7 +92,8 @@ public final class AvatarDataManager {
                         GameProfile gameProfile = new GameProfile(null, name);
                         SkullBlockEntity.loadProperties(gameProfile, profile -> {
                             UUID profileID = profile.getId();
-                            if (id.compareTo(profileID) == 0) return;
+                            if (profileID == null || id.compareTo(profileID) == 0)
+                                return;
 
                             getPlayerAvatarFromServerOrCache(profileID, getData);
                             OFFLINE_SWAP_DATA.put(id, profileID);
@@ -123,7 +125,8 @@ public final class AvatarDataManager {
     }
 
     public static AvatarData getDataForEntity(Entity entity) {
-        if (panic) return null;
+        if (panic || entity == null)
+            return null;
 
         UUID id = entity.getUuid();
         EntityAvatarData getData;
