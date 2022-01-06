@@ -149,6 +149,7 @@ public class FiguraMod implements ClientModInitializer {
             public void reload(ResourceManager manager) {
                 AvatarDataManager.reloadAssets();
                 EntityAvatarData.loadCemModels();
+                LocalAvatarManager.loadResourceAvatars();
 
                 try {
                     cheese = NbtIo.readCompressed(manager.getResource(new Identifier("figura", "cheese/cheese.nbt")).getInputStream());

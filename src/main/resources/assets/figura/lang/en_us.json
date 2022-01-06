@@ -33,6 +33,9 @@
   "figura.gui.newver.tooltip": "New Figura version detected",
   "figura.gui.newver.tooltip2": "Check the discord server for new updates!",
 
+  "figura.gui.button.cache": "Cache Avatar",
+  "figura.gui.button.cache.done": "Avatar Cached!",
+
   "figura.gui.button.trustmenu": "Trust Menu",
   "figura.gui.button.configmenu": "Settings",
   "figura.gui.button.back": "Back",

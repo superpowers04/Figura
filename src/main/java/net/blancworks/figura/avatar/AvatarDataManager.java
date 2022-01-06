@@ -9,6 +9,7 @@ import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.entity.PlayerEntityRenderer;
 import net.minecraft.entity.Entity;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.text.LiteralText;
 import net.minecraft.util.registry.Registry;
 
@@ -46,8 +47,14 @@ public final class AvatarDataManager {
         if (OFFLINE_SWAP_DATA.containsKey(id)) {
             AvatarData data = LOADED_PLAYER_DATA.get(OFFLINE_SWAP_DATA.get(id));
             if (data != null) {
-                data.entityId = id;
-                LOADED_PLAYER_DATA.put(id, data);
+                AvatarData newData = new AvatarData(id);
+
+                //copy avatar nbt
+                NbtCompound nbt = new NbtCompound();
+                data.writeNbt(nbt);
+                newData.readNbt(nbt);
+
+                LOADED_PLAYER_DATA.put(id, newData);
                 OFFLINE_SWAP_DATA.remove(id);
             }
         }
@@ -60,8 +67,7 @@ public final class AvatarDataManager {
                 return localPlayer;
             }
 
-            localPlayer = new LocalAvatarData();
-            localPlayer.entityId = client.player.getUuid();
+            localPlayer = new LocalAvatarData(client.player.getUuid());
             LOADED_PLAYER_DATA.put(client.player.getUuid(), localPlayer);
             didInitLocalPlayer = true;
 
@@ -81,8 +87,7 @@ public final class AvatarDataManager {
 
         AvatarData getData;
         if (!LOADED_PLAYER_DATA.containsKey(id)) {
-            getData = new AvatarData();
-            getData.entityId = id;
+            getData = new AvatarData(id);
 
             if (client.getNetworkHandler() != null) {
                 PlayerListEntry playerEntry = client.getNetworkHandler().getPlayerListEntry(id);
@@ -131,7 +136,7 @@ public final class AvatarDataManager {
         UUID id = entity.getUuid();
         EntityAvatarData getData;
         if (!LOADED_PLAYER_DATA.containsKey(id)) {
-            getData = new EntityAvatarData();
+            getData = new EntityAvatarData(id);
             NbtCompound avatar = EntityAvatarData.CEM_MAP.get(Registry.ENTITY_TYPE.getId(entity.getType()));
 
             if (avatar != null) {
@@ -191,7 +196,7 @@ public final class AvatarDataManager {
                 FileInputStream fis = new FileInputStream(nbtFilePath.toFile());
                 DataInputStream dis = new DataInputStream(fis);
 
-                targetData.loadFromNbt(dis);
+                targetData.loadFromNbt(NbtIo.readCompressed(dis));
                 targetData.lastHash = hash;
 
                 FiguraMod.LOGGER.debug("Used cached model.");

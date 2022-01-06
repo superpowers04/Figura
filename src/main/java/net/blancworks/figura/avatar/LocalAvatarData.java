@@ -10,15 +10,15 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.FiguraTexture;
-import net.blancworks.figura.models.parsers.BlockbenchModelDeserializer;
+import net.blancworks.figura.parsers.BlockbenchModelDeserializer;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.util.Identifier;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -40,6 +40,10 @@ public class LocalAvatarData extends AvatarData {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public LocalAvatarData(UUID id) {
+        super(id);
     }
 
     @Override
@@ -91,8 +95,24 @@ public class LocalAvatarData extends AvatarData {
         byte data = 0;
         HashMap<String, Path> avatarPaths = new HashMap<>();
 
+        //figura avatar data
+        if (path.endsWith(".moon")) {
+            watchedFiles.add(file.toString());
+
+            try {
+                FileInputStream fis = new FileInputStream(file);
+                NbtCompound getTag = NbtIo.readCompressed(fis);
+
+                readNbt(getTag);
+
+                fis.close();
+                return;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         //zip
-        if (isZip) {
+        else if (isZip) {
             //add zip to watched files, even if you cant edit opened zip files, you might be able to
             watchedFiles.add(file.toString());
 
@@ -302,9 +322,7 @@ public class LocalAvatarData extends AvatarData {
             if (inputStream != null) {
                 //Try to read from input stream
                 String scriptSource;
-                try (final Reader reader = new InputStreamReader(inputStream)) {
-                    scriptSource = CharStreams.toString(reader);
-                }
+                scriptSource = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
                 //Finalize script source for lambda.
                 String finalScriptSource = scriptSource;

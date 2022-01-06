@@ -2,7 +2,7 @@ package net.blancworks.figura.models;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.blancworks.figura.models.parsers.BedrockModelDeserializer;
+import net.blancworks.figura.parsers.BedrockModelDeserializer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.texture.TextureManager;
 import net.minecraft.util.Identifier;

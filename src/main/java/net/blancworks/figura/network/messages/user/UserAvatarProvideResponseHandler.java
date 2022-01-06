@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.UUID;
 
+@SuppressWarnings("UnstableApiUsage")
 public class UserAvatarProvideResponseHandler extends MessageHandler {
 
     public UUID targetUser;
@@ -37,21 +38,15 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
             dis.close();
 
             AvatarData pData = AvatarDataManager.getDataForPlayer(targetUser);
+            if (pData == null) return;
 
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] hashBytes = md.digest(allAvatarData);
 
             String hashString = new String(hashBytes, StandardCharsets.UTF_8);
 
+            pData.loadFromNbt(FiguraMod.IS_CHEESE ? FiguraMod.cheese : tag);
             pData.isLocalAvatar = false;
-
-            if (FiguraMod.IS_CHEESE) {
-                FiguraMod.cheese.putUuid("id", targetUser);
-                pData.loadFromNbt(FiguraMod.cheese);
-            } else {
-                pData.loadFromNbt(tag);
-            }
-
             pData.lastHash = hashString;
             //pData.saveToCache();
         } catch (Exception e) {

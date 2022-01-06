@@ -53,14 +53,10 @@ public class NetworkAPI {
                         short id = targetScript.oldFunctionIDMap.inverse().get(s);
 
                         //Script handles local ping immediately.
-                        targetScript.handlePing(id, arg2);
+                        CustomScript.LuaPing ping = targetScript.handlePing(id, arg2, null);
 
-                        CustomScript.LuaPing lp = new CustomScript.LuaPing();
-                        lp.args = arg2;
-                        lp.functionID = id;
-
-                        if (!targetScript.avatarData.isLocalAvatar)
-                            targetScript.outgoingPingQueue.add(lp);
+                        if (ping != null && !targetScript.avatarData.isLocalAvatar)
+                            targetScript.outgoingPingQueue.add(ping);
                     } catch (Exception e) {
                         e.printStackTrace();
                         throw new LuaError("Failed to send ping! Make sure the ping is registered before sending it!");

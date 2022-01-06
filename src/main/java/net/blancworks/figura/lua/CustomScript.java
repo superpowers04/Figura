@@ -841,11 +841,15 @@ public class CustomScript extends FiguraAsset {
         else if (p.args instanceof LuaTable tbl)
             arg = tableToText(tbl, PING_COLOR, FiguraMod.ACCENT_COLOR, 1, "");
         else
-            arg = new LiteralText(p.args.toString());
+            arg = new LiteralText(p.args.toString()).styled(FiguraMod.ACCENT_COLOR);
 
         MutableText message = PING_PREFIX.shallowCopy();
         message.append(pingOwner).append(" ");
         message.append(new LiteralText(">> ").styled(PING_COLOR));
+
+        if (p.size != null)
+            message.append(new LiteralText("(" + p.size + "b) ").styled(PING_COLOR));
+
         message.append(name).append(" : ").append(arg);
 
         if (config != 2) FiguraMod.LOGGER.info(message.getString());
@@ -931,16 +935,16 @@ public class CustomScript extends FiguraAsset {
             functionMap.put(lastPingID++, func);
     }
 
-    public void handlePing(short id, LuaValue args) {
+    public LuaPing handlePing(short id, LuaValue args, Integer size) {
         try {
             String functionName = oldFunctionIDMap.get(id);
             LuaTable function = functionMap.get(id);
 
             if (function != null) {
-                addPing(function.get("value"), args, id, function.get("key").tojstring());
+                return addPing(function.get("value"), args, id, function.get("key").tojstring(), size);
             } else if (functionName != null) {
                 LuaValue func = scriptGlobals.get(functionName);
-                addPing(func, args, id, functionName);
+                return addPing(func, args, id, functionName, size);
             }
         } catch (Exception error) {
             if (error instanceof LuaError err)
@@ -948,24 +952,17 @@ public class CustomScript extends FiguraAsset {
             else
                 error.printStackTrace();
         }
+
+        return null;
     }
 
-    public void addPing(LuaValue function, LuaValue args, short id, String name) {
-        LuaPing p = new LuaPing();
-        p.function = function.checkfunction();
-        p.args = args;
-        p.functionID = id;
-        p.name = name;
-
+    public LuaPing addPing(LuaValue function, LuaValue args, short id, String name, Integer size) {
+        LuaPing p = new LuaPing(id, function, args, name, size);
         incomingPingQueue.add(p);
+        return p;
     }
 
-    public static class LuaPing {
-        public short functionID;
-        public LuaFunction function;
-        public LuaValue args;
-        public String name;
-    }
+    public record LuaPing(short functionID, LuaValue function, LuaValue args, String name, Integer size) {}
 
     //--Misc--
     public void clearSounds() {

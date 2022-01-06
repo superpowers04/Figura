@@ -113,15 +113,6 @@ public class VectorAPI {
                 }
             });
 
-
-            set("asTable", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    LuaVector vec = LuaVector.checkOrNew(arg);
-                    return toTable(vec);
-                }
-            });
-
             set("toQuaternion", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -189,14 +180,6 @@ public class VectorAPI {
 
         //we cant use the quaternion to euler from the quaternion class because NaN and weird rotations
         return LuaVector.of(MathUtils.quaternionToEulerXYZ(quat));
-    }
-
-    public static LuaTable toTable(LuaVector vector) {
-        LuaTable tbl = new LuaTable();
-        for (int i = 1; i < 7; i++) {
-            tbl.insert(i, vector.get(i));
-        }
-        return tbl;
     }
 
     public static LuaValue toCameraSpace(LuaVector vec) {

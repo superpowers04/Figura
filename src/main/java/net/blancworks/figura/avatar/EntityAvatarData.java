@@ -5,10 +5,15 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Identifier;
 
 import java.util.HashMap;
+import java.util.UUID;
 
 public class EntityAvatarData extends AvatarData {
 
     public static final HashMap<Identifier, NbtCompound> CEM_MAP = new HashMap<>();
+
+    public EntityAvatarData(UUID id) {
+        super(id);
+    }
 
     public static void loadCemModels() {
         CEM_MAP.clear();
