@@ -35,7 +35,7 @@ public class FiguraTexture extends ResourceTexture {
 
     public boolean isDone = false;
 
-    public static final Identifier DEFAULT_ID = new Identifier("figura", "cheese/cheese.png");
+    public static final Identifier DEFAULT_ID = new Identifier("figura", "textures/cheese.png");
 
     public FiguraTexture() {
         super(DEFAULT_ID);

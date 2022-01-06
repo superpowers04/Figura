@@ -182,7 +182,7 @@ public class FiguraTrustScreen extends Screen {
 
                         AvatarData data = AvatarDataManager.getDataForPlayer(entry.getProfile().getId());
                         if (data != null) {
-                            data.readNbt(nbt);
+                            data.loadFromNbt(nbt);
                             data.isLocalAvatar = true;
 
                             net.blancworks.figura.FiguraMod.sendToast("done", "");
@@ -194,8 +194,8 @@ public class FiguraTrustScreen extends Screen {
             }
         });
 
-        this.addSelectableChild(uuidBox);
-        this.addDrawableChild(setAvatarButton);
+        //this.addSelectableChild(uuidBox);
+        //this.addDrawableChild(setAvatarButton);
 
         playerList.reloadFilters();
         permissionList.rebuild();
@@ -208,7 +208,7 @@ public class FiguraTrustScreen extends Screen {
         this.playerList.render(matrices, mouseX, mouseY, delta);
         this.permissionList.render(matrices, mouseX, mouseY, delta);
         this.searchBox.render(matrices, mouseX, mouseY, delta);
-        this.uuidBox.render(matrices, mouseX, mouseY, delta);
+        //this.uuidBox.render(matrices, mouseX, mouseY, delta);
 
         if (playerListState.selected instanceof PlayerListEntry entry) {
             UUID id = entry.getProfile().getId();

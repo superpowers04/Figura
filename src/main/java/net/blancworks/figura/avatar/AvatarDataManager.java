@@ -52,7 +52,7 @@ public final class AvatarDataManager {
                 //copy avatar nbt
                 NbtCompound nbt = new NbtCompound();
                 data.writeNbt(nbt);
-                newData.readNbt(nbt);
+                newData.loadFromNbt(nbt);
 
                 LOADED_PLAYER_DATA.put(id, newData);
                 OFFLINE_SWAP_DATA.remove(id);

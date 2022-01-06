@@ -23,6 +23,7 @@ import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.text.*;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -246,7 +247,7 @@ public class FiguraGuiScreen extends Screen {
             }
         });
 
-        this.addDrawableChild(serializeAvatar);
+        //this.addDrawableChild(serializeAvatar);
         this.addDrawableChild(exportNbt);
 
         //back button
@@ -505,10 +506,14 @@ public class FiguraGuiScreen extends Screen {
         tessellator.draw();
     }
 
-    public void loadLocalAvatar(String fileName, String path) {
+    public void loadLocalAvatar(String fileName, Object path) {
         AvatarDataManager.lastLoadedFileName = fileName;
         AvatarDataManager.localPlayer.isLocalAvatar = true;
-        AvatarDataManager.localPlayer.loadModelFile(path);
+
+        if (path instanceof String str)
+            AvatarDataManager.localPlayer.loadModelFile(str);
+        else if (path instanceof NbtCompound nbt)
+            AvatarDataManager.localPlayer.loadFromNbt(nbt);
     }
 
     public void updateAvatarData() {

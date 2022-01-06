@@ -22,7 +22,7 @@ public class FiguraAvatarSerializer {
         FiguraMod.doTask(() -> {
             try {
                 String fileName = "avatar-" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date());
-                Path rootFolder = FiguraMod.getModContentDirectory().resolve("model_files/[§9Figura§r] Saved Models");
+                Path rootFolder = FiguraMod.getModContentDirectory().resolve("model_files/[§9Figura§r] Saved Avatars");
                 Path dest = rootFolder.resolve(Path.of(fileName));
 
                 if (!Files.exists(dest))

@@ -103,7 +103,7 @@ public class LocalAvatarData extends AvatarData {
                 FileInputStream fis = new FileInputStream(file);
                 NbtCompound getTag = NbtIo.readCompressed(fis);
 
-                readNbt(getTag);
+                loadFromNbt(getTag);
 
                 fis.close();
                 return;

@@ -195,7 +195,7 @@ public class AvatarData {
      *
      * @param nbt the nbt to read
      */
-    public void readNbt(NbtCompound nbt) {
+    private void readNbt(NbtCompound nbt) {
         model = null;
         texture = null;
         script = null;
@@ -344,7 +344,7 @@ public class AvatarData {
         //We run this as a task to make sure all the previous load operations are done (since those are all also tasks)
         FiguraMod.doTask(() -> {
             String id = "cache-" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date());
-            Path rootFolder = FiguraMod.getModContentDirectory().resolve("model_files/[§9Figura§r] Cached Models");
+            Path rootFolder = FiguraMod.getModContentDirectory().resolve("model_files/[§9Figura§r] Cached Avatars");
             Path dest = rootFolder.resolve(Path.of(id + ".moon"));
 
             try {
