@@ -1,4 +1,4 @@
-package net.blancworks.figura.models.parsers;
+package net.blancworks.figura.parsers;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
@@ -21,16 +21,16 @@ public class FiguraAvatarSerializer {
     public static void serialize(NbtCompound nbt) {
         FiguraMod.doTask(() -> {
             try {
-                String fileName = new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date());
+                String fileName = "avatar-" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date());
                 Path rootFolder = FiguraMod.getModContentDirectory().resolve("model_files/[§9Figura§r] Saved Models");
                 Path dest = rootFolder.resolve(Path.of(fileName));
+
+                if (!Files.exists(dest))
+                    Files.createDirectories(dest);
 
                 boolean hasTexture = false;
                 int stuff = 0;
                 int success = 0;
-
-                if (!Files.exists(dest))
-                    Files.createDirectories(dest);
 
                 //script
                 try {

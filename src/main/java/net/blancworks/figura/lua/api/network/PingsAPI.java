@@ -67,15 +67,11 @@ public class PingsAPI {
                 short id = targetScript.functionMap.inverse().get(func);
 
                 //local ping is handled immediately
-                targetScript.handlePing(id, arg);
+                CustomScript.LuaPing ping = targetScript.handlePing(id, arg, null);
 
                 //add outgoing ping
-                CustomScript.LuaPing lp = new CustomScript.LuaPing();
-                lp.args = arg;
-                lp.functionID = id;
-
-                if (!targetScript.avatarData.isLocalAvatar)
-                    targetScript.outgoingPingQueue.add(lp);
+                if (ping != null && !targetScript.avatarData.isLocalAvatar)
+                    targetScript.outgoingPingQueue.add(ping);
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new LuaError("Something went wrong while sending ping!");

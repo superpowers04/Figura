@@ -69,6 +69,12 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
                     return _toDeg();
                 }
             })
+            .put("asTable", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return asTable();
+                }
+            })
 
             .build();
 
@@ -184,6 +190,14 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public BlockPos asBlockPos() {
         return new BlockPos(x(), y(), z());
+    }
+
+    public LuaTable asTable() {
+        LuaTable tbl = new LuaTable();
+        for (int i = 1; i < 7; i++) {
+            tbl.insert(i, LuaValue.valueOf(this._get(i)));
+        }
+        return tbl;
     }
 
     @Override

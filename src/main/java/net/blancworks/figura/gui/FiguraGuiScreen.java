@@ -1,7 +1,7 @@
 package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.*;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.avatar.LocalAvatarData;
@@ -215,7 +215,7 @@ public class FiguraGuiScreen extends Screen {
                     String path = AvatarDataManager.localPlayer.loadedPath;
                     modelDir = Path.of(path);
 
-                    if (path.endsWith(".zip"))
+                    if (path.endsWith(".zip") || path.endsWith(".moon"))
                         modelDir = modelDir.getParent();
                 }
 
@@ -229,25 +229,25 @@ public class FiguraGuiScreen extends Screen {
         this.addDrawableChild(openFolderButton);
 
         //save model
-        serializeAvatar = new ButtonWidget(this.width - width - 5, this.height - 75, width, 20, new TranslatableText("Save model"), (buttonWidgetx) -> {
+        serializeAvatar = new ButtonWidget(this.width - width - 5, this.height - 75, width, 20, new TranslatableText("Save Model"), (buttonWidgetx) -> {
             AvatarData local = AvatarDataManager.localPlayer;
             if (local != null && local.hasAvatar()) {
                 net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
                 local.writeNbt(nbt);
-                net.blancworks.figura.models.parsers.FiguraAvatarSerializer.serialize(nbt);
+                net.blancworks.figura.parsers.FiguraAvatarSerializer.serialize(nbt);
             }
         });
 
         //export nbt
-        exportNbt = new ButtonWidget(this.width - width - 5, this.height - 50, width, 20, new TranslatableText("Cache nbt"), (buttonWidgetx) -> {
+        exportNbt = new ButtonWidget(this.width - width - 5, this.height - 50, width, 20, new TranslatableText("figura.gui.button.cache"), (buttonWidgetx) -> {
             if (AvatarDataManager.localPlayer != null) {
                 AvatarDataManager.localPlayer.saveToCache();
-                FiguraMod.sendToast("done", "");
+                FiguraMod.sendToast(new TranslatableText("figura.gui.button.cache.done"), "");
             }
         });
 
-        //this.addDrawableChild(serializeAvatar);
-        //this.addDrawableChild(exportNbt);
+        this.addDrawableChild(serializeAvatar);
+        this.addDrawableChild(exportNbt);
 
         //back button
         this.addDrawableChild(new ButtonWidget(this.width - 145, this.height - 25, 140, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> {
@@ -488,6 +488,8 @@ public class FiguraGuiScreen extends Screen {
                 matrices.pop();
             }
         }
+
+        exportNbt.active = AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.hasAvatar() && AvatarDataManager.localPlayer.isAvatarLoaded();
     }
 
     public void renderAsBackground(int vOffset) {
@@ -513,7 +515,13 @@ public class FiguraGuiScreen extends Screen {
         if (AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.hasAvatar()) {
             if (AvatarDataManager.lastLoadedFileName != null) {
                 nameText = new TranslatableText("figura.gui.status.name");
-                nameText.append(new LiteralText(this.textRenderer.trimToWidth(" " + AvatarDataManager.lastLoadedFileName, this.width / 2 - modelBgSize / 2 - 41 - this.textRenderer.getWidth(nameText))).styled(FiguraMod.ACCENT_COLOR));
+                int maxWidth = this.width / 2 - modelBgSize / 2 - 41 - this.textRenderer.getWidth(nameText);
+                String toTrim = " " + AvatarDataManager.lastLoadedFileName;
+
+                if (this.textRenderer.getWidth(toTrim) > maxWidth)
+                    toTrim = this.textRenderer.trimToWidth(toTrim, maxWidth - this.textRenderer.getWidth("...")) + "...";
+
+                nameText.append(new LiteralText(toTrim).styled(FiguraMod.ACCENT_COLOR));
             } else {
                 nameText = null;
             }
@@ -823,6 +831,7 @@ public class FiguraGuiScreen extends Screen {
     }
 
     public static void drawEntity(int x, int y, int size, float rotationX, float rotationY, LivingEntity entity) {
+        if (entity == null) return;
         MatrixStack matrixStack = RenderSystem.getModelViewStack();
         matrixStack.push();
         matrixStack.translate(x, y, 1500.0D);

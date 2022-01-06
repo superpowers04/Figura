@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.entity.EntityAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.utils.MathUtils;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
@@ -88,7 +89,7 @@ public class RendererAPI {
             set("getCameraRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation().toEulerXyzDegrees());
+                    return LuaVector.of(MathUtils.quaternionToEulerXYZ(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation()));
                 }
             });
 

@@ -24,7 +24,7 @@
       "net.blancworks.figura.FiguraMod"
     ],
     "modmenu": [
-      "net.blancworks.figura.othermods.modmenu.ModMenuConfig"
+      "net.blancworks.figura.config.ModMenuConfig"
     ]
   },
   "mixins": [

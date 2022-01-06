@@ -165,8 +165,12 @@ public class LocalAvatarManager {
         try {
             byte load = 0;
 
+            //moon (figura avatar data) load
+            if (file.getName().endsWith(".moon")) {
+                return true;
+            }
             //zip load
-            if (file.getName().endsWith(".zip")) {
+            else if (file.getName().endsWith(".zip")) {
                 ZipFile zipFile = new ZipFile(file.getPath());
 
                 if (zipFile.getEntry("model.bbmodel") != null) load = (byte) (load | 1);
@@ -188,6 +192,10 @@ public class LocalAvatarManager {
         }
 
         return false;
+    }
+
+    public static void loadResourceAvatars() {
+        
     }
 
     public static class LocalAvatar {

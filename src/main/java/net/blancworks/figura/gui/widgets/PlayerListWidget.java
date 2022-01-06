@@ -42,7 +42,7 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         ArrayList<PlayerListEntry> figuraPlayers = new ArrayList<>();
         List<String> addedPlayers = new ArrayList<>();
 
-        List<PlayerListEntry> orderedPlayerList = PlayerListHudAccessorMixin.getEntryOrdering().sortedCopy(client.getNetworkHandler().getPlayerList());
+        List<PlayerListEntry> orderedPlayerList = PlayerListHudAccessorMixin.getEntryOrdering().sortedCopy(client.getNetworkHandler() == null ? new ArrayList<>() : client.getNetworkHandler().getPlayerList());
         for (PlayerListEntry listEntry : orderedPlayerList) {
             String name = listEntry.getProfile().getName().toLowerCase();
             if (addedPlayers.contains(name))

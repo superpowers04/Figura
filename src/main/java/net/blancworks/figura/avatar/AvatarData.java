@@ -2,10 +2,10 @@ package net.blancworks.figura.avatar;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
 import net.blancworks.figura.models.FiguraTexture;
-import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -24,12 +24,13 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,7 +41,7 @@ public class AvatarData {
     private static TextureManager textureManager;
 
     //ID of the owner
-    public UUID entityId;
+    public final UUID entityId;
 
     //The custom model associated with the player
     public CustomModel model;
@@ -79,6 +80,10 @@ public class AvatarData {
 
     public static final int FILESIZE_WARNING_THRESHOLD = 75000;
     public static final int FILESIZE_LARGE_THRESHOLD = 100000;
+
+    public AvatarData(UUID id) {
+        this.entityId = id;
+    }
 
     public VertexConsumerProvider getVCP() {
         if (script != null && script.customVCP != null) return script.customVCP;
@@ -144,9 +149,6 @@ public class AvatarData {
         if (!hasAvatar())
             return false;
 
-        //Put ID.
-        nbt.putUuid("id", entityId);
-
         //Put Model.
         if (model != null)
             nbt.put("model", model.modelNbt);
@@ -194,9 +196,6 @@ public class AvatarData {
      * @param nbt the nbt to read
      */
     public void readNbt(NbtCompound nbt) {
-        if (!nbt.contains("id")) return;
-        entityId = nbt.getUuid("id");
-
         model = null;
         texture = null;
         script = null;
@@ -322,11 +321,6 @@ public class AvatarData {
         }
     }
 
-    public void loadFromNbt(DataInputStream input) throws Exception {
-        NbtCompound nbt = NbtIo.readCompressed(input);
-        loadFromNbt(nbt);
-    }
-
     public void loadFromNbt(NbtCompound tag) {
         this.readNbt(tag);
         getFileSize();
@@ -345,25 +339,22 @@ public class AvatarData {
         return ret;
     }
 
-    //Saves this playerdata to the cache.
+    //cache this avatar data
     public void saveToCache() {
         //We run this as a task to make sure all the previous load operations are done (since those are all also tasks)
         FiguraMod.doTask(() -> {
-            Path destinationPath = FiguraMod.getModContentDirectory().resolve("cache");
-            String id = this.entityId.toString();
-
-            Path nbtFilePath = destinationPath.resolve(id + ".nbt");
-            //Path hashFilePath = destinationPath.resolve(id + ".hsh");
+            String id = "cache-" + new SimpleDateFormat("yyyy_MM_dd-HH_mm_ss").format(new Date());
+            Path rootFolder = FiguraMod.getModContentDirectory().resolve("model_files/[§9Figura§r] Cached Models");
+            Path dest = rootFolder.resolve(Path.of(id + ".moon"));
 
             try {
+                if (!Files.exists(rootFolder))
+                    Files.createDirectories(rootFolder);
+
                 NbtCompound targetTag = new NbtCompound();
                 this.writeNbt(targetTag);
 
-                if (!Files.exists(nbtFilePath.getParent()))
-                    Files.createDirectories(nbtFilePath.getParent());
-
-                NbtIo.writeCompressed(targetTag, new FileOutputStream(nbtFilePath.toFile()));
-                //Files.writeString(hashFilePath, this.lastHash);
+                NbtIo.writeCompressed(targetTag, new FileOutputStream(dest.toFile()));
             } catch (Exception e) {
                 e.printStackTrace();
             }

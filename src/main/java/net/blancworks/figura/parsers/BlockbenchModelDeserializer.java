@@ -1,4 +1,4 @@
-package net.blancworks.figura.models.parsers;
+package net.blancworks.figura.parsers;
 
 import com.google.gson.*;
 import net.blancworks.figura.models.CustomModelPart.ParentType;

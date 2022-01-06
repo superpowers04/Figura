@@ -12,16 +12,17 @@ public class PingMessageHandler extends ChannelMessageHandler {
     @Override
     public void handleMessage(LittleEndianDataInputStream stream) throws Exception {
         super.handleMessage(stream);
-        
+
+        int size = stream.available();
         short count = (short) Math.max(Math.min(stream.readShort(), 32), 0);
-        
+
         AvatarData data = AvatarDataManager.getDataForPlayer(senderID);
 
         if (data != null && data.script != null) {
             for (int i = 0; i < count; i++) {
                 short id = stream.readShort();
                 LuaValue val = LuaNetworkReadWriter.readLuaValue(stream);
-                data.script.handlePing(id, val);
+                data.script.handlePing(id, val, size);
             }
         }
     }

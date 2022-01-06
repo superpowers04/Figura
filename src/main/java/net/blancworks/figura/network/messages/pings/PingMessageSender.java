@@ -4,14 +4,13 @@ import com.google.common.io.LittleEndianDataOutputStream;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.network.LuaNetworkReadWriter;
 import net.blancworks.figura.network.messages.MessageSender;
-import org.luaj.vm2.LuaValue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
+@SuppressWarnings("UnstableApiUsage")
 public class PingMessageSender extends MessageSender {
 
     public Queue<CustomScript.LuaPing> pingSet = new LinkedList<>();
@@ -35,11 +34,14 @@ public class PingMessageSender extends MessageSender {
         
         //System.out.println("Wrote " + pingSet.size() + " pings");
         
-        for(int i = 0; i < setSize; i++){
+        for (int i = 0; i < setSize; i++) {
             CustomScript.LuaPing p = pingSet.poll();
-            outWriter.writeShort(p.functionID);
+            if (p == null)
+                continue;
+
             try {
-                LuaNetworkReadWriter.writeLuaValue(p.args, outWriter);
+                outWriter.writeShort(p.functionID());
+                LuaNetworkReadWriter.writeLuaValue(p.args(), outWriter);
             } catch (Exception e) {
                 e.printStackTrace();
             }

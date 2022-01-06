@@ -1,12 +1,12 @@
-package net.blancworks.figura.othermods.modmenu;
+package net.blancworks.figura.config;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import net.blancworks.figura.config.ConfigScreen;
+import net.blancworks.figura.gui.FiguraGuiScreen;
 
 public class ModMenuConfig implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return ConfigScreen::new;
+        return FiguraGuiScreen::new;
     }
 }

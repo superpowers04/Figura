@@ -177,15 +177,12 @@ public class FiguraTrustScreen extends Screen {
                     AvatarData newData = AvatarDataManager.getDataForPlayer(profile.getId());
 
                     if (newData != null && newData.hasAvatar() && playerListState.selected instanceof PlayerListEntry entry) {
-                        UUID id = entry.getProfile().getId();
-
                         net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
                         newData.writeNbt(nbt);
-                        nbt.putUuid("id", id);
 
-                        AvatarData data = AvatarDataManager.getDataForPlayer(id);
+                        AvatarData data = AvatarDataManager.getDataForPlayer(entry.getProfile().getId());
                         if (data != null) {
-                            data.loadFromNbt(nbt);
+                            data.readNbt(nbt);
                             data.isLocalAvatar = true;
 
                             net.blancworks.figura.FiguraMod.sendToast("done", "");
@@ -197,8 +194,8 @@ public class FiguraTrustScreen extends Screen {
             }
         });
 
-        //this.addSelectableChild(uuidBox);
-        //this.addDrawableChild(setAvatarButton);
+        this.addSelectableChild(uuidBox);
+        this.addDrawableChild(setAvatarButton);
 
         playerList.reloadFilters();
         permissionList.rebuild();
@@ -211,7 +208,7 @@ public class FiguraTrustScreen extends Screen {
         this.playerList.render(matrices, mouseX, mouseY, delta);
         this.permissionList.render(matrices, mouseX, mouseY, delta);
         this.searchBox.render(matrices, mouseX, mouseY, delta);
-        //this.uuidBox.render(matrices, mouseX, mouseY, delta);
+        this.uuidBox.render(matrices, mouseX, mouseY, delta);
 
         if (playerListState.selected instanceof PlayerListEntry entry) {
             UUID id = entry.getProfile().getId();
