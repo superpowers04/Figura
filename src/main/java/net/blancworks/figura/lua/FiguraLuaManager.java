@@ -5,6 +5,7 @@ import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.lua.api.AnimationAPI;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
+import net.blancworks.figura.lua.api.actionWheel.ActionWheel2API;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelAPI;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.chat.ChatAPI;
@@ -93,6 +94,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(BlockStateAPI.getID(), BlockStateAPI::getForScript);
         apiSuppliers.put(FirstPersonModelAPI.getID(), FirstPersonModelAPI::getForScript);
         apiSuppliers.put(AnimationAPI.getID(), AnimationAPI::getForScript);
+        apiSuppliers.put(ActionWheel2API.getID(), ActionWheel2API::getForScript);
 
         FiguraMod.CUSTOM_APIS.forEach(api -> apiSuppliers.put(api.getID(), api::getForScript));
     }

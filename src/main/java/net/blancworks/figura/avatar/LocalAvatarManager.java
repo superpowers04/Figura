@@ -2,6 +2,7 @@ package net.blancworks.figura.avatar;
 
 import net.blancworks.figura.FiguraMod;
 import net.minecraft.nbt.*;
+import net.minecraft.resource.Resource;
 import net.minecraft.resource.ResourceManager;
 import net.minecraft.util.Identifier;
 
@@ -40,20 +41,20 @@ public class LocalAvatarManager {
 
             //loading
             NbtList groupList = nbt.getList("folders", NbtElement.COMPOUND_TYPE);
-            groupList.forEach(value -> {
+            for (NbtElement value : groupList) {
                 NbtCompound compound = (NbtCompound) value;
 
                 String path = compound.getString("path");
                 boolean expanded = compound.getBoolean("expanded");
                 FOLDER_DATA.put(path, expanded);
-            });
+            }
 
             fis.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        RESOURCE_FOLDER.expanded = !FOLDER_DATA.containsKey(RESOURCE_FOLDER_NAME) || FOLDER_DATA.get(RESOURCE_FOLDER_NAME);
+        updateResourceExpanded(RESOURCE_FOLDER);
     }
 
     public static void saveFolderNbt() {
@@ -117,7 +118,7 @@ public class LocalAvatarManager {
         if (files == null || parent == null)
             return;
 
-        Map<String, LocalAvatar> newParent =  new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        Map<String, LocalAvatar> newParent = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         //for all files in folder
         for (File file : files) {
@@ -157,15 +158,8 @@ public class LocalAvatarManager {
         if (parent == AVATARS && !RESOURCE_FOLDER.children.isEmpty())
             AVATARS.put(RESOURCE_FOLDER_NAME, RESOURCE_FOLDER);
 
-        //sort folders first
-        newParent.forEach((k, v) -> {
-            if (v instanceof LocalAvatarFolder)
-                parent.put(k, v);
-        });
-        newParent.forEach((k, v) -> {
-            if (!(v instanceof LocalAvatarFolder))
-                parent.put(k, v);
-        });
+        //sort folders
+        sortFolders(newParent, parent);
     }
 
     private static boolean hasAvatar(File file) {
@@ -201,21 +195,84 @@ public class LocalAvatarManager {
         return false;
     }
 
+    public static void sortFolders(Map<String, LocalAvatar> toSort, Map<String, LocalAvatar> target) {
+        toSort.forEach((k, v) -> {
+            if (v instanceof LocalAvatarFolder)
+                target.put(k, v);
+        });
+        toSort.forEach((k, v) -> {
+            if (!(v instanceof LocalAvatarFolder))
+                target.put(k, v);
+        });
+    }
+
     public static void loadResourceAvatars(ResourceManager manager) {
+        //clear old entries, since we're going to re-add them, if existent
         RESOURCE_FOLDER.children.clear();
 
-        try {
-            Collection<Identifier> resources = manager.findResources("avatars", s -> s.endsWith(".moon"));
-            for (Identifier id : resources) {
+        //find all moon files inside the avatar folder
+        Collection<Identifier> resources = manager.findResources("avatars", s -> s.endsWith(".moon"));
+
+        for (Identifier id : resources) {
+            try {
+                //get name and its upper-folders
                 String[] split = id.getPath().split("/");
                 String name = split[split.length - 1];
                 name = name.substring(0, name.length() - 5);
 
-                ResourceAvatar avatar = new ResourceAvatar(name, NbtIo.readCompressed(manager.getResource(id).getInputStream()));
-                RESOURCE_FOLDER.children.put(name, avatar);
+                Resource res = manager.getResource(id);
+
+                //get root folder (resource pack name)
+                String folder = res.getResourcePackName();
+                LocalAvatar avatar = RESOURCE_FOLDER.children.get(folder);
+
+                LocalAvatarFolder folderAvatar = null;
+                if (avatar == null) {
+                    folderAvatar = new LocalAvatarFolder(folder, true);
+                    RESOURCE_FOLDER.children.put(folder, folderAvatar);
+                } else if (avatar instanceof LocalAvatarFolder avatarFolder) {
+                    folderAvatar = avatarFolder;
+                }
+
+                if (folderAvatar == null)
+                    throw new Exception();
+
+                //get parent folder
+                for (int i = 1; i < split.length - 1; i++) {
+                    String parent = split[i];
+                    LocalAvatar parentFolder = folderAvatar.children.get(parent);
+
+                    if (parentFolder == null) {
+                        parentFolder = new LocalAvatarFolder(parent, true);
+                        folderAvatar.children.put(parent, parentFolder);
+                        folderAvatar = (LocalAvatarFolder) parentFolder;
+                    } else if (parentFolder instanceof LocalAvatarFolder avatarFolder) {
+                        folderAvatar = avatarFolder;
+                    }
+                }
+
+                //add avatar
+                ResourceAvatar resourceAvatar = new ResourceAvatar(name, NbtIo.readCompressed(res.getInputStream()));
+                folderAvatar.children.put(name, resourceAvatar);
+
+                FiguraMod.LOGGER.info("Loaded avatar: [" + res.getResourcePackName() + "] -> " + id.getPath().split("/", 2)[1]);
+            } catch (Exception e) {
+                e.printStackTrace();
+                FiguraMod.LOGGER.error("Failed to load resource avatar: " + id.getPath());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        }
+
+        updateResourceExpanded(RESOURCE_FOLDER);
+    }
+
+    public static void updateResourceExpanded(LocalAvatarFolder folder) {
+        //folder
+        folder.expanded = !FOLDER_DATA.containsKey(folder.name) || FOLDER_DATA.get(folder.name);
+
+        //children
+        for (LocalAvatar localAvatar : folder.children.values()) {
+            if (localAvatar instanceof LocalAvatarFolder child)
+                updateResourceExpanded(child);
         }
     }
 

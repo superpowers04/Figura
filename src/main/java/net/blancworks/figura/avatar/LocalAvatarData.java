@@ -29,7 +29,6 @@ import java.util.zip.ZipFile;
  */
 public class LocalAvatarData extends AvatarData {
     public String loadedName;
-    public String loadedPath;
     private final Map<String, WatchKey> watchKeys = new Object2ObjectOpenHashMap<>();
     private final Set<String> watchedFiles = new HashSet<>();
     public static WatchService ws;
@@ -48,12 +47,16 @@ public class LocalAvatarData extends AvatarData {
 
     @Override
     public void tick() {
-        if (this.loadedPath != null)
-            this.lastHash = "";
-
         super.tick();
-
         this.tickFileWatchers();
+    }
+
+    @Override
+    public void loadFromNbt(NbtCompound tag) {
+        loadedName = null;
+        AvatarDataManager.localPlayerPath = null;
+        AvatarDataManager.localPlayerNbt = tag;
+        super.loadFromNbt(tag);
     }
 
     public static Path getContentDirectory() {
@@ -70,6 +73,7 @@ public class LocalAvatarData extends AvatarData {
         this.model = null;
         this.texture = null;
         this.script = null;
+        AvatarDataManager.localPlayerNbt = null;
 
         watchedFiles.clear();
         clearData();
@@ -81,8 +85,8 @@ public class LocalAvatarData extends AvatarData {
         File file = new File(path);
 
         //set loaded name
-        loadedPath = path;
         loadedName = file.getName();
+        AvatarDataManager.localPlayerPath = path;
 
         //set root directory
         Path contentDirectory = Path.of(file.getParent());
@@ -210,11 +214,15 @@ public class LocalAvatarData extends AvatarData {
         loadExtraTextures(file, isZip, modelZip);
 
         //Close ZIP stream.
-        try {
-            if (isZip)
-                modelZip.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (isZip) {
+            ZipFile finalModelZip = modelZip;
+            FiguraMod.doTask(() -> {
+                try {
+                    finalModelZip.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
@@ -424,7 +432,6 @@ public class LocalAvatarData extends AvatarData {
     }
 
     public void tickFileWatchers() {
-
         boolean doReload = false;
 
         for (Map.Entry<String, WatchKey> entry : watchKeys.entrySet()) {
@@ -465,8 +472,10 @@ public class LocalAvatarData extends AvatarData {
         watchKeys.clear();
         clearData();
 
-        AvatarDataManager.lastLoadedFileName = loadedName;
-        loadModelFile(loadedPath);
+        if (AvatarDataManager.localPlayerPath != null)
+            loadModelFile(AvatarDataManager.localPlayerPath);
+        else if (AvatarDataManager.localPlayerNbt != null)
+            loadFromNbt(AvatarDataManager.localPlayerNbt);
         isLocalAvatar = true;
     }
 }

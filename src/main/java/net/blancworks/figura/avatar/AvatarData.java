@@ -149,6 +149,9 @@ public class AvatarData {
         if (!hasAvatar())
             return false;
 
+        //Put ID. - backwards compatibility
+        nbt.putUuid("id", entityId);
+
         //Put Model.
         if (model != null)
             nbt.put("model", model.modelNbt);

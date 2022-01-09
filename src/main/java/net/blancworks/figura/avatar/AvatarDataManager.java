@@ -35,8 +35,8 @@ public final class AvatarDataManager {
     public static final Set<UUID> TO_REFRESH_SET = new HashSet<>();
 
     public static LocalAvatarData localPlayer;
-
-    public static String lastLoadedFileName;
+    public static NbtCompound localPlayerNbt;
+    public static String localPlayerPath;
 
     public static boolean panic = false;
 
@@ -74,9 +74,9 @@ public final class AvatarDataManager {
             if (client.getNetworkHandler() != null)
                 localPlayer.playerListEntry = client.getNetworkHandler().getPlayerListEntry(localPlayer.entityId);
 
-            if (lastLoadedFileName != null) {
+            if (localPlayerPath != null || localPlayerNbt != null) {
                 localPlayer.vanillaModel = ((PlayerEntityRenderer) client.getEntityRenderDispatcher().getRenderer(client.player)).getModel();
-                localPlayer.loadModelFile(lastLoadedFileName);
+                localPlayer.reloadAvatar();
                 return localPlayer;
             }
 
@@ -215,7 +215,7 @@ public final class AvatarDataManager {
         if (localPlayer != null && id.compareTo(localPlayer.entityId) == 0) {
             if (!localPlayer.isLocalAvatar)
                 clearLocalPlayer();
-            else if (localPlayer.loadedPath != null)
+            else if (localPlayerPath != null || localPlayerNbt != null)
                 localPlayer.reloadAvatar();
         }
         else {
@@ -228,7 +228,8 @@ public final class AvatarDataManager {
         LOADED_PLAYER_DATA.clear();
         localPlayer = null;
         didInitLocalPlayer = false;
-        lastLoadedFileName = null;
+        localPlayerNbt = null;
+        localPlayerPath = null;
     }
 
     public static void clearLocalPlayer() {
@@ -238,7 +239,8 @@ public final class AvatarDataManager {
         LOADED_PLAYER_DATA.remove(localPlayer.entityId);
         localPlayer = null;
         didInitLocalPlayer = false;
-        lastLoadedFileName = null;
+        localPlayerNbt = null;
+        localPlayerPath = null;
     }
 
     private static int hashCheckCooldown = 0;

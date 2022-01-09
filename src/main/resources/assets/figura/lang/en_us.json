@@ -141,6 +141,12 @@
   "figura.config.action_wheel_title_pos.3": "Bottom",
   "figura.config.action_wheel_title_pos.4": "Center",
 
+  "figura.config.action_wheel_execute_on_close": "Execute on Close",
+  "figura.config.action_wheel_execute_on_close.tooltip": "Executes the selected action when closing the Action Wheel, otherwise actions only run on mouse click",
+
+  "figura.config.new_action_wheel": "Use New Action Wheel",
+  "figura.config.new_action_wheel.tooltip": "Changes the Action Wheel to a newer implementation of it",
+
   "figura.config.use_local_server": "Use Local Server",
   "figura.config.use_local_server.tooltip": "Toggles between using a local server or the main online server for online models",
 

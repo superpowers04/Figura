@@ -3,8 +3,10 @@ package net.blancworks.figura.mixin;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
+import net.blancworks.figura.gui.widgets.NewActionWheel;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
@@ -115,11 +117,16 @@ public class MinecraftClientMixin {
 
         if (FiguraMod.ACTION_WHEEL_BUTTON.isPressed()) {
             this.mouse.unlockCursor();
-        } else if (ActionWheel.enabled) {
-            this.mouse.lockCursor();
+        } else if (ActionWheel.enabled || NewActionWheel.enabled) {
+            if ((boolean) Config.ACTION_WHEEL_EXECUTE_ON_CLOSE.value) {
+                ActionWheel.play();
+                NewActionWheel.play();
+            }
 
-            ActionWheel.play();
             ActionWheel.enabled = false;
+            NewActionWheel.enabled = false;
+
+            this.mouse.lockCursor();
         }
 
         if (FiguraMod.PLAYER_POPUP_BUTTON.isPressed()) {
@@ -155,8 +162,15 @@ public class MinecraftClientMixin {
 
     @Inject(at = @At("HEAD"), method = "setScreen")
     public void setScreen(Screen screen, CallbackInfo ci) {
-        if (ActionWheel.enabled)
-            ActionWheel.play();
+        if (ActionWheel.enabled || NewActionWheel.enabled) {
+            if ((boolean) Config.ACTION_WHEEL_EXECUTE_ON_CLOSE.value) {
+                ActionWheel.play();
+                NewActionWheel.play();
+            }
+
+            ActionWheel.enabled = false;
+            NewActionWheel.enabled = false;
+        }
 
         FiguraKeybind.unpressAll();
     }

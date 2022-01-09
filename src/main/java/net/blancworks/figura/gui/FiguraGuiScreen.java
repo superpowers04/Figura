@@ -212,8 +212,8 @@ public class FiguraGuiScreen extends Screen {
         openFolderButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("figura.gui.button.openfolder"), (buttonWidgetx) -> {
             Path modelDir = LocalAvatarData.getContentDirectory();
             try {
-                if (isHoldingShift && AvatarDataManager.localPlayer.loadedPath != null) {
-                    String path = AvatarDataManager.localPlayer.loadedPath;
+                if (isHoldingShift && AvatarDataManager.localPlayerPath != null) {
+                    String path = AvatarDataManager.localPlayerPath;
                     modelDir = Path.of(path);
 
                     if (path.endsWith(".zip") || path.endsWith(".moon"))
@@ -248,7 +248,7 @@ public class FiguraGuiScreen extends Screen {
         });
 
         //this.addDrawableChild(serializeAvatar);
-        this.addDrawableChild(exportNbt);
+        //this.addDrawableChild(exportNbt);
 
         //back button
         this.addDrawableChild(new ButtonWidget(this.width - 145, this.height - 25, 140, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> {
@@ -506,22 +506,21 @@ public class FiguraGuiScreen extends Screen {
         tessellator.draw();
     }
 
-    public void loadLocalAvatar(String fileName, Object path) {
-        AvatarDataManager.lastLoadedFileName = fileName;
+    public void loadLocalAvatar(Object stuff) {
         AvatarDataManager.localPlayer.isLocalAvatar = true;
 
-        if (path instanceof String str)
+        if (stuff instanceof String str)
             AvatarDataManager.localPlayer.loadModelFile(str);
-        else if (path instanceof NbtCompound nbt)
+        else if (stuff instanceof NbtCompound nbt)
             AvatarDataManager.localPlayer.loadFromNbt(nbt);
     }
 
     public void updateAvatarData() {
         if (AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.hasAvatar()) {
-            if (AvatarDataManager.lastLoadedFileName != null) {
+            if (AvatarDataManager.localPlayer.loadedName != null) {
                 nameText = new TranslatableText("figura.gui.status.name");
                 int maxWidth = this.width / 2 - modelBgSize / 2 - 41 - this.textRenderer.getWidth(nameText);
-                String toTrim = " " + AvatarDataManager.lastLoadedFileName;
+                String toTrim = " " + AvatarDataManager.localPlayer.loadedName;
 
                 if (this.textRenderer.getWidth(toTrim) > maxWidth)
                     toTrim = this.textRenderer.trimToWidth(toTrim, maxWidth - this.textRenderer.getWidth("...")) + "...";
