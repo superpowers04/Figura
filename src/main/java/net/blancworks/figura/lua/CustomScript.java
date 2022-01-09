@@ -93,6 +93,7 @@ public class CustomScript extends FiguraAsset {
 
     //Action Wheel customizations
     public Map<String, ActionWheelCustomization> actionWheelCustomizations = new HashMap<>();
+    public Map<String, ActionWheelCustomization> newActionWheelSlots = new HashMap<>();
     public int actionWheelLeftSize = 4;
     public int actionWheelRightSize = 4;
 

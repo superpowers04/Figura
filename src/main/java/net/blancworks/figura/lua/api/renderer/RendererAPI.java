@@ -173,7 +173,7 @@ public class RendererAPI {
                     FiguraRaycastContext context = FiguraRaycastContext.of(start, end, shapeType, fluidHandling, func);
                     BlockHitResult result = raycastBlocks(getWorld(), context);
 
-                    if (result.getType() == HitResult.Type.MISS)
+                    if (result == null || result.getType() == HitResult.Type.MISS)
                         return NIL;
 
                     LuaTable ret = new LuaTable();

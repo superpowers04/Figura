@@ -386,19 +386,18 @@ public class ActionWheel extends DrawableHelper {
     }
 
     public static void play() {
-        if (selectedSlot != -1) {
-            AvatarData currentData = AvatarDataManager.localPlayer;
+        if (selectedSlot == -1)
+            return;
 
-            if (currentData != null && currentData.script != null) {
-                ActionWheelCustomization customization = currentData.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
+        AvatarData currentData = AvatarDataManager.localPlayer;
+        if (currentData != null && currentData.script != null) {
+            ActionWheelCustomization customization = currentData.script.getActionWheelCustomization("SLOT_" + (selectedSlot + 1));
 
-                if (customization != null && customization.function != null) {
-                    currentData.script.runActionWheelFunction(customization.function);
-                }
+            if (customization != null && customization.function != null) {
+                currentData.script.runActionWheelFunction(customization.function);
             }
         }
 
-        enabled = false;
         selectedSlot = -1;
     }
 }

@@ -253,7 +253,7 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     LuaVector vec = LuaVector.checkOrNew(arg);
-                    targetPart.uvOffset = new Vec2f(vec.x(), vec.y());
+                    targetPart.uvOffset = new Vec2f(vec.x() % 1, vec.y() % 1);
                     return NIL;
                 }
             });
@@ -312,7 +312,7 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     targetPart.visible = arg.checkboolean();
-                    return null;
+                    return NIL;
                 }
             });
 
@@ -378,7 +378,7 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     targetPart.extraTex = arg.checkboolean();
-                    return null;
+                    return NIL;
                 }
             });
 
@@ -393,7 +393,7 @@ public class CustomModelAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     targetPart.cull = arg.checkboolean();
-                    return null;
+                    return NIL;
                 }
             });
 

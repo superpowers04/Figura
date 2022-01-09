@@ -67,9 +67,9 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Custo
             FiguraGuiScreen parent = (FiguraGuiScreen) getParent();
 
             if (file.avatar instanceof LocalAvatarManager.ResourceAvatar res) {
-                parent.loadLocalAvatar(res.name, res.nbt);
+                parent.loadLocalAvatar(res.nbt);
             } else {
-                parent.loadLocalAvatar(file.getName(), file.getIdentifier());
+                parent.loadLocalAvatar(file.getIdentifier());
             }
         }
 
