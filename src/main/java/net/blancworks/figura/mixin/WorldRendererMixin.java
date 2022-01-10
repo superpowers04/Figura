@@ -2,6 +2,8 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
+import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.EntityRenderDispatcher;
@@ -50,5 +52,13 @@ public class WorldRendererMixin {
 
             matrices.pop();
         }
+    }
+
+    @Inject(at = @At("TAIL"), method = "onResized")
+    public void resizeFiguraFramebuffers(int width, int height, CallbackInfo ci) {
+        if (RenderLayerAPI.lastFramebufferCopy != null)
+            RenderLayerAPI.lastFramebufferCopy.resize(width, height, MinecraftClient.IS_SYSTEM_MAC);
+        if (RenderLayerAPI.mainFramebufferCopy != null)
+            RenderLayerAPI.mainFramebufferCopy.resize(width, height, MinecraftClient.IS_SYSTEM_MAC);
     }
 }

@@ -5,6 +5,7 @@ import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
@@ -317,6 +318,13 @@ public class ClientAPI {
                 public LuaValue call(LuaValue arg) {
                     script.unlockCursor = arg.checkboolean();
                     return NIL;
+                }
+            });
+
+            set("getIrisShadersEnabled", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(RenderLayerAPI.areIrisShadersEnabled());
                 }
             });
         }});

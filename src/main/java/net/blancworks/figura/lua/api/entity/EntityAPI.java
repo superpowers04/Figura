@@ -18,6 +18,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.*;
@@ -76,7 +77,8 @@ public class EntityAPI {
                 set("getVelocity", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaVector.of(targetEntity.get().getVelocity());
+                        Entity e = targetEntity.get();
+                        return LuaVector.of(e.getPos().subtract(new Vec3d(e.prevX, e.prevY, e.prevZ)));
                     }
                 });
 

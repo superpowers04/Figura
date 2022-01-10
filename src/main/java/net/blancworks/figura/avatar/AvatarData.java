@@ -2,6 +2,7 @@ package net.blancworks.figura.avatar;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
@@ -334,12 +335,8 @@ public class AvatarData {
     }
 
     public boolean canRenderCustomLayers() {
-        boolean ret = getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1;
-
-        if (FabricLoader.getInstance().isModLoaded("iris"))
-            return ret && net.coderbot.iris.Iris.getCurrentPack().isEmpty();
-
-        return ret;
+        boolean trusted = getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1;
+        return trusted && !RenderLayerAPI.areIrisShadersEnabled();
     }
 
     //cache this avatar data

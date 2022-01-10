@@ -71,7 +71,10 @@ public class RenderTaskAPI {
             default -> throw new LuaError("Invalid task type, expected either \"ITEM\", \"BLOCK\" or \"TEXT\"");
         }
 
-        part.renderTasks.put(name, new RenderTaskTable(task));
+        RenderTaskTable taskTable = new RenderTaskTable(task);
+        synchronized (part.renderTasks) {
+            part.renderTasks.put(name, taskTable);
+        }
     }
 
     public static class RenderTaskTable extends ReadOnlyLuaTable {

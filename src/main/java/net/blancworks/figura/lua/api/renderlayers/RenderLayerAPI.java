@@ -9,6 +9,7 @@ import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.trust.TrustContainer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
 import net.minecraft.client.gl.WindowFramebuffer;
@@ -631,6 +632,10 @@ public class RenderLayerAPI {
         GlStateManager._glBlitFrameBuffer(0, 0, mainFramebuffer.textureWidth, mainFramebuffer.textureHeight, 0, 0, target.textureWidth, target.textureHeight, GL30.GL_COLOR_BUFFER_BIT, GL30.GL_NEAREST);
         GlStateManager._glBindFramebuffer(GL30.GL_READ_FRAMEBUFFER, readId);
         GlStateManager._glBindFramebuffer(GL30.GL_DRAW_FRAMEBUFFER, writeId);
+    }
+
+    public static boolean areIrisShadersEnabled() {
+        return FabricLoader.getInstance().isModLoaded("iris") && !net.coderbot.iris.Iris.getCurrentPack().isEmpty();
     }
 
     public static final Map<String, VertexFormat> vertexFormatMap;
