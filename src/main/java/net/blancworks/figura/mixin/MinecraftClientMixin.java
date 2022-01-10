@@ -49,6 +49,7 @@ public class MinecraftClientMixin {
     @Shadow @Nullable public Entity cameraEntity;
 
     @Unique private boolean wasMouseScriptUnlocked = false;
+    @Unique private boolean wereIrisShadersEnabled = false;
 
     @Inject(at = @At("HEAD"), method = "render")
     public void preRender(boolean tick, CallbackInfo ci) {
@@ -70,6 +71,14 @@ public class MinecraftClientMixin {
 
     @Inject(at = @At("RETURN"), method = "render")
     public void afterRender(boolean tick, CallbackInfo ci) {
+        //refresh framebuffers if necessary
+        if (RenderLayerAPI.areIrisShadersEnabled() != wereIrisShadersEnabled) {
+            //"resize" the framebuffers, causing a full framebuffer reset
+            //this happens whenever Iris shaders are toggled on or off
+            MinecraftClient.getInstance().onResolutionChanged();
+        }
+        wereIrisShadersEnabled = RenderLayerAPI.areIrisShadersEnabled();
+
         //save last framebuffer
         if (FiguraVertexConsumerProvider.isUsingLastFramebuffer) {
             RenderLayerAPI.blitMainFramebuffer(RenderLayerAPI.lastFramebufferCopy);

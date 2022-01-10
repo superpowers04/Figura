@@ -234,7 +234,7 @@ public class CustomModel extends FiguraAsset {
 
         synchronized (specialParts) {
             for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.Hud)) {
-                leftToRender = part.render(owner, matrices, new MatrixStack(), owner.tryGetImmediate(), 0xF000F0, OverlayTexture.DEFAULT_UV, 1f);
+                leftToRender = part.render(owner, matrices, new MatrixStack(), owner.getVCP(), 0xF000F0, OverlayTexture.DEFAULT_UV, 1f);
 
                 if (leftToRender <= 0)
                     break;
