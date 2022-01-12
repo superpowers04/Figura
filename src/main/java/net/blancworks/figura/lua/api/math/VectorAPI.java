@@ -7,6 +7,7 @@ import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
+import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -113,6 +114,22 @@ public class VectorAPI {
                 }
             });
 
+            set("rotateAroundAxis", new ThreeArgFunction() {
+                @Override
+                public LuaValue call(LuaValue vector, LuaValue axis, LuaValue degrees) {
+                    return rotateAroundAxis(LuaVector.checkOrNew(vector), LuaVector.checkOrNew(axis), degrees.checknumber());
+                }
+            });
+
+            set("axisAngleToEuler", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue luaAxis, LuaValue luaAngle) {
+                    Vec3f axis = LuaVector.checkOrNew(luaAxis).asV3f();
+                    float angle = luaAngle.checknumber().tofloat();
+                    return LuaVector.of(MathUtils.quaternionToEulerXYZ(new Quaternion(axis, angle, true)));
+                }
+            });
+
             set("toQuaternion", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -180,6 +197,18 @@ public class VectorAPI {
 
         //we cant use the quaternion to euler from the quaternion class because NaN and weird rotations
         return LuaVector.of(MathUtils.quaternionToEulerXYZ(quat));
+    }
+
+    public static LuaValue rotateAroundAxis(LuaVector vector, LuaVector axis, LuaNumber degrees) {
+        Vec3f normalizedAxis = axis.asV3f();
+        normalizedAxis.normalize();
+        Quaternion rotatorQuat = new Quaternion(normalizedAxis, degrees.tofloat(), true);
+        Quaternion rotatorQuatConj = new Quaternion(rotatorQuat);
+        rotatorQuatConj.conjugate();
+        Quaternion vectorQuat = new Quaternion(vector.x(), vector.y(), vector.z(), 0);
+        rotatorQuat.hamiltonProduct(vectorQuat);
+        rotatorQuat.hamiltonProduct(rotatorQuatConj);
+        return LuaVector.of(new Vec3f(rotatorQuat.getX(), rotatorQuat.getY(), rotatorQuat.getZ()));
     }
 
     public static LuaValue toCameraSpace(LuaVector vec) {
