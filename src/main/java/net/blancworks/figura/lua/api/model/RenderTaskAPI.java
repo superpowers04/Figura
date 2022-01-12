@@ -28,7 +28,7 @@ import java.util.List;
 
 public class RenderTaskAPI {
 
-    public static void addTask(CustomModelPart part, CustomScript script, Varargs args) {
+    public static RenderTaskTable addTask(CustomModelPart part, CustomScript script, Varargs args) {
         ItemStack stack = null;
         ModelTransformation.Mode mode = null;
 
@@ -75,6 +75,8 @@ public class RenderTaskAPI {
         synchronized (part.renderTasks) {
             part.renderTasks.put(name, taskTable);
         }
+
+        return taskTable;
     }
 
     public static class RenderTaskTable extends ReadOnlyLuaTable {

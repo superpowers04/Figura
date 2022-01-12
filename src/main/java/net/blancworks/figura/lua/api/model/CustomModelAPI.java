@@ -481,8 +481,7 @@ public class CustomModelAPI {
             ret.set("addRenderTask", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
-                    RenderTaskAPI.addTask(targetPart, script, args);
-                    return NIL;
+                    return RenderTaskAPI.addTask(targetPart, script, args);
                 }
             });
 
