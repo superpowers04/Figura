@@ -4,7 +4,7 @@ import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
-import net.blancworks.figura.gui.widgets.NewActionWheel;
+import net.blancworks.figura.gui.NewActionWheel;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
@@ -42,7 +42,8 @@ public class MouseMixin {
     @Inject(method = "onMouseScroll", at = @At("HEAD"), cancellable = true)
     private void onMouseScroll(long window, double horizontal, double vertical, CallbackInfo ci) {
         if (window == MinecraftClient.getInstance().getWindow().getHandle()) {
-            if (PlayerPopup.mouseScrolled(Math.signum(vertical)))
+            double amount = Math.signum(vertical);
+            if (NewActionWheel.mouseScrolled(amount) || PlayerPopup.mouseScrolled(amount))
                 ci.cancel();
         }
     }

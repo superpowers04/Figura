@@ -6,7 +6,7 @@ import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
-import net.blancworks.figura.gui.widgets.NewActionWheel;
+import net.blancworks.figura.gui.NewActionWheel;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;

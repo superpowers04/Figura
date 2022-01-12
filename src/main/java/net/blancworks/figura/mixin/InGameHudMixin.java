@@ -7,7 +7,7 @@ import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
-import net.blancworks.figura.gui.widgets.NewActionWheel;
+import net.blancworks.figura.gui.NewActionWheel;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.option.KeyBinding;

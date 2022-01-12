@@ -1,7 +1,7 @@
 package net.blancworks.figura.lua.api.actionWheel;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.gui.widgets.NewActionWheel;
+import net.blancworks.figura.gui.NewActionWheel;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
