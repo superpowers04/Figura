@@ -70,7 +70,7 @@ public class AnimationAPI {
                 set("play", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        animation.play();
+                        animation.start();
                         return NIL;
                     }
                 });
