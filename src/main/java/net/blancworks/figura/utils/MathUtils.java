@@ -7,6 +7,8 @@ import net.minecraft.util.math.*;
 
 public class MathUtils {
 
+    public static final Vec3f Vec3f_ONE = new Vec3f(1f, 1f, 1f);
+
     //yoinked from wikipedia
     public static Vec3f quaternionToEulerXYZ(Quaternion q) {
         double pitch, yaw, roll;
@@ -24,7 +26,7 @@ public class MathUtils {
         // pitch (y-axis rotation)
         double sinp = 2 * (w * y - z * x);
         if (Math.abs(sinp) >= 1)
-            pitch = Math.copySign(Math.PI / 2, sinp); // use 90 degrees if out of range
+            pitch = Math.copySign(Math.PI / 2d, sinp); // use 90 degrees if out of range
         else
             pitch = Math.asin(sinp);
 

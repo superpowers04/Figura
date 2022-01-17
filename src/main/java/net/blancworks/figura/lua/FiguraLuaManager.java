@@ -94,7 +94,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(BlockStateAPI.getID(), BlockStateAPI::getForScript);
         apiSuppliers.put(FirstPersonModelAPI.getID(), FirstPersonModelAPI::getForScript);
         apiSuppliers.put(AnimationAPI.getID(), AnimationAPI::getForScript);
-        apiSuppliers.put(ActionWheel2API.getID(), ActionWheel2API::getForScript);
+        //apiSuppliers.put(ActionWheel2API.getID(), ActionWheel2API::getForScript);
 
         FiguraMod.CUSTOM_APIS.forEach(api -> apiSuppliers.put(api.getID(), api::getForScript));
     }

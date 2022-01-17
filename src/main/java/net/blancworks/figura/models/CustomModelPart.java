@@ -3,6 +3,7 @@ package net.blancworks.figura.models;
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
+import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
@@ -35,8 +36,8 @@ public class CustomModelPart {
     public Vec3f pivot = Vec3f.ZERO.copy();
     public Vec3f pos = Vec3f.ZERO.copy();
     public Vec3f rot = Vec3f.ZERO.copy();
-    public Vec3f scale = new Vec3f(1f, 1f, 1f);
-    public Vec3f color = new Vec3f(1f, 1f, 1f);
+    public Vec3f scale = MathUtils.Vec3f_ONE.copy();
+    public Vec3f color = MathUtils.Vec3f_ONE.copy();
 
     //uv stuff
     public Map<UV, uvData> UVCustomizations = new HashMap<>();
@@ -77,6 +78,9 @@ public class CustomModelPart {
     public static boolean canRenderHitBox = false;
     public static boolean canRenderTasks = true;
 
+    private static final Vector4f FULL_VERT = new Vector4f();
+    private static final Vec3f NORMAL_VERT = new Vec3f();
+
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
     public int render(AvatarData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
         //no model to render
@@ -91,20 +95,20 @@ public class CustomModelPart {
 
         //main texture
         Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
-        ret = renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, getTexture(data), layerFunction, false, applyHiddenTransforms, renderOnly);
+        ret = renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, MathUtils.Vec3f_ONE, alpha, false, getTexture(data), layerFunction, false, applyHiddenTransforms, renderOnly);
 
         //extra textures
         for (FiguraTexture figuraTexture : data.extraTextures) {
             Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
 
             if (renderLayerGetter != null) {
-                renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
+                renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, MathUtils.Vec3f_ONE, alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
             }
         }
         draw(vcp);
 
         //shaders
-        ret = renderShaders(data, ret, matrices, vcp, light, overlay, 0, 0, new Vec3f(1f, 1f, 1f), alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
+        ret = renderShaders(data, ret, matrices, vcp, light, overlay, 0, 0, MathUtils.Vec3f_ONE, alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
         draw(vcp);
 
         //extra stuff and hitboxes
@@ -312,7 +316,7 @@ public class CustomModelPart {
                 textureId = data.playerListEntry.getElytraTexture();
 
             if (textureId == null)
-                textureId = new Identifier("minecraft", "textures/entity/elytra.png");
+                textureId = FiguraTexture.ELYTRA_ID;
         } else if (data.playerListEntry != null && textureType != TextureType.Custom) {
             textureId = this.textureType == TextureType.Cape ? data.playerListEntry.getCapeTexture() : data.playerListEntry.getSkinTexture();
         } else if (data.texture != null) {
@@ -332,7 +336,7 @@ public class CustomModelPart {
             int startIndex = (i - 1) * 8;
 
             //Get vertex.
-            Vector4f fullVert = new Vector4f(
+            FULL_VERT.set(
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex++),
@@ -342,22 +346,22 @@ public class CustomModelPart {
             float vertU = this.vertexData.getFloat(startIndex++);
             float vertV = this.vertexData.getFloat(startIndex++);
 
-            Vec3f normal = new Vec3f(
+            NORMAL_VERT.set(
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex)
             );
 
-            fullVert.transform(modelMatrix);
-            normal.transform(normalMatrix);
+            FULL_VERT.transform(modelMatrix);
+            NORMAL_VERT.transform(normalMatrix);
 
             //Push vertex.
             vertices.vertex(
-                    fullVert.getX(), fullVert.getY(), fullVert.getZ(),
+                    FULL_VERT.getX(), FULL_VERT.getY(), FULL_VERT.getZ(),
                     color.getX(), color.getY(), color.getZ(), alpha,
                     vertU + u, vertV + v,
                     overlay, light,
-                    normal.getX(), normal.getY(), normal.getZ()
+                    NORMAL_VERT.getX(), NORMAL_VERT.getY(), NORMAL_VERT.getZ()
             );
 
             //Every 4 verts (1 face)
@@ -388,11 +392,11 @@ public class CustomModelPart {
         Vec3f color;
         float boxSize;
         if (this.getPartType() == PartType.CUBE) {
-            color = new Vec3f(1f, 0.45f, 0.72f); //0xff72b7 aka fran_pink
+            color = FiguraMod.FRAN_PINK;
             boxSize = 1 / 48f;
         }
         else {
-            color = new Vec3f(0.69f, 0.95f, 1f); //0xaff2ff aka ace_blue
+            color = FiguraMod.ACE_BLUE;
             boxSize = 1 / 24f;
         }
 

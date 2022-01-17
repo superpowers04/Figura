@@ -36,6 +36,7 @@ public class FiguraTexture extends ResourceTexture {
     public boolean isDone = false;
 
     public static final Identifier DEFAULT_ID = new Identifier("figura", "cheese/cheese.png");
+    public static final Identifier ELYTRA_ID = new Identifier("minecraft", "textures/entity/elytra.png");
 
     public FiguraTexture() {
         super(DEFAULT_ID);

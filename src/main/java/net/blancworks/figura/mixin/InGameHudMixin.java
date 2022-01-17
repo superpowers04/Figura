@@ -4,10 +4,9 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.access.InGameHudAccess;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
-import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.ActionWheel;
-import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.gui.NewActionWheel;
+import net.blancworks.figura.gui.PlayerPopup;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.option.KeyBinding;
@@ -39,8 +38,12 @@ public class InGameHudMixin implements InGameHudAccess {
     @Inject(at = @At ("RETURN"), method = "render")
     public void postRender(MatrixStack matrices, float tickDelta, CallbackInfo ci) {
         if (!AvatarDataManager.panic && FiguraMod.ACTION_WHEEL_BUTTON.isPressed()) {
-            if ((boolean) Config.NEW_ACTION_WHEEL.value) NewActionWheel.render(matrices);
-            else ActionWheel.render(matrices);
+            /*
+            if ((boolean) Config.NEW_ACTION_WHEEL.value)
+                NewActionWheel.render(matrices);
+            else
+            */
+                ActionWheel.render(matrices);
         }
 
         //render hud parts
