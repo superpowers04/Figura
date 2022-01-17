@@ -86,15 +86,15 @@ public class AnimationAPI {
                 set("stop", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        animation.stop();
+                        animation.playState = PlayState.STOPPING;
                         return NIL;
                     }
                 });
 
-                set("isPlaying", new ZeroArgFunction() {
+                set("getPlayState", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        return LuaValue.valueOf(animation.playState == PlayState.PLAYING);
+                        return LuaValue.valueOf(animation.playState.name());
                     }
                 });
 
@@ -209,6 +209,21 @@ public class AnimationAPI {
                     @Override
                     public LuaValue call() {
                         return LuaValue.valueOf(animation.loopDelay);
+                    }
+                });
+
+                set("setBlendTime", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        animation.blendTime = arg.checknumber().tofloat();
+                        return NIL;
+                    }
+                });
+
+                set("getBlendTime", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.blendTime);
                     }
                 });
 

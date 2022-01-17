@@ -80,7 +80,7 @@ public final class ConfigManager {
         ACTION_WHEEL_BUTTON(GLFW.GLFW_KEY_B, FiguraMod.ACTION_WHEEL_BUTTON),
         ACTION_WHEEL_TITLE_POS(0, 4),
         ACTION_WHEEL_EXECUTE_ON_CLOSE(true),
-        NEW_ACTION_WHEEL(false),
+        //NEW_ACTION_WHEEL(false),
 
         Dev {{this.name = new TranslatableText("figura.config.dev").formatted(Formatting.RED);}},
 

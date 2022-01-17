@@ -1,6 +1,7 @@
 package net.blancworks.figura.models;
 
 import net.blancworks.figura.models.animations.KeyFrame;
+import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
@@ -18,7 +19,7 @@ public class CustomModelPartGroup extends CustomModelPart {
     public ArrayList<CustomModelPart> children = new ArrayList<>();
     public Vec3f animRot = Vec3f.ZERO.copy();
     public Vec3f animPos = Vec3f.ZERO.copy();
-    public Vec3f animScale = new Vec3f(1f, 1f, 1f);
+    public Vec3f animScale = MathUtils.Vec3f_ONE.copy();
 
     @Override
     public void applyTransforms(MatrixStack stack) {

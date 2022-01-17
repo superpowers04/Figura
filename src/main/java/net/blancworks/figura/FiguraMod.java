@@ -36,6 +36,7 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3f;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -60,6 +61,8 @@ public class FiguraMod implements ClientModInitializer {
 
     public static final Identifier FIGURA_FONT = new Identifier("figura", "default");
     public static final UnaryOperator<Style> ACCENT_COLOR = FiguraMod::getAccentColor;
+    public static final Vec3f ACE_BLUE = new Vec3f(0.69f, 0.95f, 1f); //0xaff2ff
+    public static final Vec3f FRAN_PINK = new Vec3f(1f, 0.45f, 0.72f); //0xff72b7
 
     public static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("figura").get().getMetadata().getVersion().getFriendlyString();
 

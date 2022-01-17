@@ -23,6 +23,8 @@ public class Animation {
     public float startDelay;
     public float loopDelay;
 
+    public float blendTime = 1f;
+
     //keyframes
     public HashMap<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> keyFrames = new HashMap<>();
 
@@ -33,6 +35,7 @@ public class Animation {
 
     private float time = 0f;
     private float newTime = 0f;
+    private float blendEndTime = -1f;
 
     public Animation(String name, float length, LoopMode loopMode, float startOffset, float blendWeight, float startDelay, float loopDelay) {
         this.name = name;
@@ -52,10 +55,11 @@ public class Animation {
     }
 
     public enum PlayState {
-        STOPPED,
-        PLAYING,
-        PAUSED,
-        ENDED
+        STOPPED, //not playing
+        PLAYING, //is playing
+        PAUSED,  //is on hold
+        ENDED,   //hold on last frame
+        STOPPING //is blending backing to default
     }
 
     public void render() {
@@ -74,10 +78,10 @@ public class Animation {
         kfTime += startOffset;
 
         //process loop
-        if (kfTime >= this.length) {
+        if (playState != PlayState.STOPPING && kfTime >= this.length) {
             switch (loopMode) {
                 case HOLD -> playState = PlayState.ENDED;
-                case ONCE -> stop();
+                case ONCE -> playState = PlayState.STOPPING;
                 case LOOP -> {
                     //loop delay
                     if (kfTime >= this.length + loopDelay) {
@@ -85,6 +89,17 @@ public class Animation {
                         play();
                     }
                 }
+            }
+        }
+
+        //blend
+        if (playState == PlayState.STOPPING) {
+            if (blendEndTime == -1f)
+                blendEndTime = (kfTime + blendTime) * speed;
+
+            if (kfTime >= blendEndTime) {
+                stop();
+                return;
             }
         }
 
@@ -96,6 +111,16 @@ public class Animation {
             Vec3f rot = processKeyFrame(data.get(1), finalTime);
             Vec3f scale = processKeyFrame(data.get(2), finalTime);
 
+            //blending
+            if (playState == PlayState.STOPPING) {
+                float blendStartTime = blendEndTime - (blendTime * speed);
+                float delta = (finalTime - blendStartTime) / (blendEndTime - blendStartTime);
+
+                if (pos != null) pos = MathUtils.lerpVec3f(pos, Vec3f.ZERO, delta);
+                if (rot != null) rot = MathUtils.lerpVec3f(rot, Vec3f.ZERO, delta);
+                if (scale != null) scale = MathUtils.lerpVec3f(scale, MathUtils.Vec3f_ONE, delta);
+            }
+
             //apply data, if not null
             if (pos != null) group.animPos.add(pos);
             if (rot != null) group.animRot.add(rot);
@@ -104,7 +129,7 @@ public class Animation {
     }
 
     public void play() {
-        if (this.playState == PlayState.ENDED)
+        if (this.playState == PlayState.ENDED || this.playState == PlayState.STOPPING)
             stop();
 
         long offset = Util.getMeasuringTimeMs();
@@ -116,16 +141,17 @@ public class Animation {
     }
 
     public void stop() {
+        this.blendEndTime = -1f;
         this.time = 0f;
         this.playState = PlayState.STOPPED;
     }
 
     public void clearAnimData() {
-        keyFrames.keySet().forEach(group -> {
+        for (CustomModelPartGroup group : keyFrames.keySet()) {
             group.animRot = Vec3f.ZERO.copy();
             group.animPos = Vec3f.ZERO.copy();
-            group.animScale = new Vec3f(1f, 1f, 1f);
-        });
+            group.animScale = MathUtils.Vec3f_ONE.copy();
+        }
     }
 
     public Vec3f processKeyFrame(TreeMap<Float, KeyFrame> map, float time) {

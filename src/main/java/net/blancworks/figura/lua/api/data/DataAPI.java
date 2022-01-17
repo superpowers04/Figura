@@ -240,7 +240,9 @@ public class DataAPI {
             JsonObject table = element.getAsJsonObject().get("entries").getAsJsonObject();
             LuaTable luaTable = new LuaTable();
 
-            table.entrySet().forEach(entry -> luaTable.set(LuaValue.valueOf(entry.getKey()), loadElementEntry(entry.getValue())));
+            for (Map.Entry<String, JsonElement> entry : table.entrySet()) {
+                luaTable.set(LuaValue.valueOf(entry.getKey()), loadElementEntry(entry.getValue()));
+            }
 
             return luaTable;
         }

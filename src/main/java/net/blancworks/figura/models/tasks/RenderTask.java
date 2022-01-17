@@ -2,6 +2,7 @@ package net.blancworks.figura.models.tasks;
 
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3f;
@@ -17,7 +18,7 @@ public abstract class RenderTask {
         this.emissive = emissive;
         this.pos = pos == null ? Vec3f.ZERO : pos;
         this.rot = rot == null ? Vec3f.ZERO : rot;
-        this.scale = scale == null ? new Vec3f(1f, 1f, 1f) : scale;
+        this.scale = scale == null ? MathUtils.Vec3f_ONE : scale;
     }
 
     public abstract int render(MatrixStack matrices, VertexConsumerProvider vcp, int light);
