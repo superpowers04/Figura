@@ -17,9 +17,14 @@ import java.util.TreeMap;
 public class CustomModelPartGroup extends CustomModelPart {
 
     public ArrayList<CustomModelPart> children = new ArrayList<>();
+
     public Vec3f animRot = Vec3f.ZERO.copy();
     public Vec3f animPos = Vec3f.ZERO.copy();
     public Vec3f animScale = MathUtils.Vec3f_ONE.copy();
+
+    public Vec3f prevAnimRot = animRot;
+    public Vec3f prevAnimPos = animPos;
+    public Vec3f prevAnimScale = animScale;
 
     @Override
     public void applyTransforms(MatrixStack stack) {

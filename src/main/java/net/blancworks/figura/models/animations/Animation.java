@@ -23,7 +23,7 @@ public class Animation {
     public float startDelay;
     public float loopDelay;
 
-    public float blendTime = 1f;
+    public float blendTime = 1f / 20f; //1 tick
 
     //keyframes
     public HashMap<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> keyFrames = new HashMap<>();
@@ -55,11 +55,12 @@ public class Animation {
     }
 
     public enum PlayState {
-        STOPPED, //not playing
-        PLAYING, //is playing
-        PAUSED,  //is on hold
-        ENDED,   //hold on last frame
-        STOPPING //is blending backing to default
+        STOPPED,  //not playing
+        PLAYING,  //is playing
+        PAUSED,   //don't animate but render
+        ENDED,    //hold on last frame
+        STOPPING, //blend back to default
+        STARTING  //blend from previous anim
     }
 
     public void render() {
@@ -76,6 +77,11 @@ public class Animation {
 
         //offset
         kfTime += startOffset;
+
+        if (playState == PlayState.STARTING && kfTime >= blendEndTime) {
+            play();
+            return;
+        }
 
         //process loop
         if (playState != PlayState.STOPPING && kfTime >= this.length) {
@@ -106,13 +112,21 @@ public class Animation {
         //keyframe interpolation
         float finalTime = inverted ? length - kfTime : kfTime;
         keyFrames.forEach((group, data) -> {
+            float time = playState == PlayState.STARTING ? 0f : finalTime;
+
             //get interpolated data
-            Vec3f pos = processKeyFrame(data.get(0), finalTime);
-            Vec3f rot = processKeyFrame(data.get(1), finalTime);
-            Vec3f scale = processKeyFrame(data.get(2), finalTime);
+            Vec3f pos = processKeyFrame(data.get(0), time);
+            Vec3f rot = processKeyFrame(data.get(1), time);
+            Vec3f scale = processKeyFrame(data.get(2), time);
 
             //blending
-            if (playState == PlayState.STOPPING) {
+            if (playState == PlayState.STARTING) {
+                float delta = finalTime / blendEndTime;
+
+                if (pos != null) pos = MathUtils.lerpVec3f(group.prevAnimPos, pos, delta);
+                if (rot != null) rot = MathUtils.lerpVec3f(group.prevAnimRot, rot, delta);
+                if (scale != null) scale = MathUtils.lerpVec3f(group.prevAnimScale, scale, delta);
+            } else if (playState == PlayState.STOPPING) {
                 float blendStartTime = blendEndTime - (blendTime * speed);
                 float delta = (finalTime - blendStartTime) / (blendEndTime - blendStartTime);
 
@@ -129,15 +143,27 @@ public class Animation {
     }
 
     public void play() {
-        if (this.playState == PlayState.ENDED || this.playState == PlayState.STOPPING)
-            stop();
-
         long offset = Util.getMeasuringTimeMs();
         if (this.playState == PlayState.PAUSED)
             offset -= newTime - time;
 
-        this.playState = PlayState.PLAYING;
+        this.blendEndTime = -1f;
         this.time = offset;
+        this.playState = PlayState.PLAYING;
+    }
+
+    public void start() {
+        if (this.playState == PlayState.ENDED || this.playState == PlayState.STOPPING)
+            stop();
+
+        if (this.playState == PlayState.PAUSED) {
+            play();
+            return;
+        }
+
+        this.blendEndTime = blendTime * speed;
+        this.time = Util.getMeasuringTimeMs();
+        this.playState = PlayState.STARTING;
     }
 
     public void stop() {
@@ -148,6 +174,10 @@ public class Animation {
 
     public void clearAnimData() {
         for (CustomModelPartGroup group : keyFrames.keySet()) {
+            group.prevAnimRot = group.animRot;
+            group.prevAnimPos = group.animPos;
+            group.prevAnimScale = group.animScale;
+
             group.animRot = Vec3f.ZERO.copy();
             group.animPos = Vec3f.ZERO.copy();
             group.animScale = MathUtils.Vec3f_ONE.copy();
@@ -174,6 +204,11 @@ public class Animation {
             //set blend weight
             start.scale(blendWeight);
             end.scale(blendWeight);
+
+            //start blending
+            if (playState == PlayState.STARTING) {
+                return start;
+            }
 
             //get delta
             float delta;
