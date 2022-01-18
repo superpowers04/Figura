@@ -36,6 +36,11 @@
   "figura.gui.button.cache": "Cache Avatar",
   "figura.gui.button.cache.done": "Avatar Cached!",
 
+  "figura.gui.button.save": "Save Avatar",
+  "figura.gui.button.save.done": "Avatar Saved!",
+  "figura.gui.button.save.error": "oopsie!",
+  "figura.gui.button.save.error.message": "Failed to save Avatar",
+
   "figura.gui.button.trustmenu": "Trust Menu",
   "figura.gui.button.configmenu": "Settings",
   "figura.gui.button.back": "Back",

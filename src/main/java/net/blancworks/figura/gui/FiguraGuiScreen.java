@@ -230,12 +230,15 @@ public class FiguraGuiScreen extends Screen {
         this.addDrawableChild(openFolderButton);
 
         //save model
-        serializeAvatar = new ButtonWidget(this.width - width - 5, this.height - 75, width, 20, new TranslatableText("Save Model"), (buttonWidgetx) -> {
+        serializeAvatar = new ButtonWidget(this.width - width - 5, this.height - 75, width, 20, new TranslatableText("figura.gui.button.save"), (buttonWidgetx) -> {
             AvatarData local = AvatarDataManager.localPlayer;
             if (local != null && local.hasAvatar()) {
                 net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
                 local.writeNbt(nbt);
-                net.blancworks.figura.parsers.FiguraAvatarSerializer.serialize(nbt);
+                String result = net.blancworks.figura.parsers.FiguraAvatarSerializer.serialize(nbt);
+
+                if (result == null) FiguraMod.sendToast(new TranslatableText("figura.gui.button.save.error"), new TranslatableText("figura.gui.button.save.error.message"));
+                else FiguraMod.sendToast(new TranslatableText("figura.gui.button.save.done"), result);
             }
         });
 
@@ -247,8 +250,8 @@ public class FiguraGuiScreen extends Screen {
             }
         });
 
-        //this.addDrawableChild(serializeAvatar);
-        //this.addDrawableChild(exportNbt);
+        this.addDrawableChild(serializeAvatar);
+        this.addDrawableChild(exportNbt);
 
         //back button
         this.addDrawableChild(new ButtonWidget(this.width - 145, this.height - 25, 140, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> {
@@ -424,9 +427,13 @@ public class FiguraGuiScreen extends Screen {
         }
 
         //tooltips
-        boolean hasBackend = connectionStatus == 3;
         AvatarData local = AvatarDataManager.localPlayer;
-        uploadButton.active = hasBackend && local != null && local.hasAvatar() && local.isAvatarLoaded() && local.isLocalAvatar;
+        boolean hasBackend = connectionStatus == 3;
+        boolean hasLoadedAvatar = local != null && local.hasAvatar() && local.isAvatarLoaded();
+
+        exportNbt.active = hasLoadedAvatar;
+        serializeAvatar.active = hasLoadedAvatar;
+        uploadButton.active = hasBackend && hasLoadedAvatar && local.isLocalAvatar;
 
         boolean wasUploadActive = uploadButton.active;
         uploadButton.active = true;
@@ -489,8 +496,6 @@ public class FiguraGuiScreen extends Screen {
                 matrices.pop();
             }
         }
-
-        exportNbt.active = AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.hasAvatar() && AvatarDataManager.localPlayer.isAvatarLoaded();
     }
 
     public void renderAsBackground(int vOffset) {
