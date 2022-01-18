@@ -1,5 +1,6 @@
 package net.blancworks.figura.models.tasks;
 
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.utils.MathUtils;
@@ -21,7 +22,7 @@ public abstract class RenderTask {
         this.scale = scale == null ? MathUtils.Vec3f_ONE : scale;
     }
 
-    public abstract int render(MatrixStack matrices, VertexConsumerProvider vcp, int light);
+    public abstract int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light);
 
     public void transform(MatrixStack matrices) {
         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));

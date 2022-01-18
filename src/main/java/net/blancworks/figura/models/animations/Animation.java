@@ -172,6 +172,10 @@ public class Animation {
         this.playState = PlayState.STOPPED;
     }
 
+    public boolean isPlaying() {
+        return playState == PlayState.PLAYING || playState == PlayState.STARTING || playState == PlayState.STOPPING;
+    }
+
     public void clearAnimData() {
         for (CustomModelPartGroup group : keyFrames.keySet()) {
             group.prevAnimRot = group.animRot;

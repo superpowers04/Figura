@@ -4,7 +4,7 @@
       "type": "bitmap",
       "file": "figura:font/badges.png",
       "ascent": 8,
-      "chars": ["△▲★✯☆✭\uD83E\uDDC0"]
+      "chars": ["△▲!★✯☆✭\uD83E\uDDC0"]
     },
     {
       "type": "bitmap",

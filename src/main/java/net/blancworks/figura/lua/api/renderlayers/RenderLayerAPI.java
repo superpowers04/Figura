@@ -16,8 +16,7 @@ import net.minecraft.client.gl.WindowFramebuffer;
 import net.minecraft.client.render.VertexFormat;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.text.LiteralText;
-import net.minecraft.text.Style;
-import net.minecraft.text.TextColor;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.*;
@@ -44,8 +43,6 @@ public class RenderLayerAPI {
             set("registerShader", new VarArgFunction() {
                 @Override
                 public Varargs invoke(Varargs args) {
-                    if (!script.avatarData.canRenderCustomLayers())
-                        return NIL;
                     if (script.shaders.size() >= CustomScript.maxShaders)
                         throw new LuaError("You've registered too many (" + CustomScript.maxShaders + ") shaders. Ignoring further ones.");
                     String name = args.checkjstring(1);
@@ -85,7 +82,7 @@ public class RenderLayerAPI {
                             script.shaders.put(name, newShader);
                         } catch (IOException e) {
                             if (script.avatarData.isLocalAvatar)
-                                CustomScript.sendChatMessage(new LiteralText(e.getMessage()).setStyle(Style.EMPTY.withColor(TextColor.parse("red"))));
+                                CustomScript.sendChatMessage(new LiteralText(e.getMessage()).formatted(Formatting.RED));
                             e.printStackTrace();
                         } catch (Exception e) {
                             script.handleError(e);
@@ -97,8 +94,6 @@ public class RenderLayerAPI {
             set("registerRenderLayer", new VarArgFunction() {
                 @Override
                 public Varargs invoke(Varargs args) {
-                    if (!script.avatarData.canRenderCustomLayers())
-                        return NIL;
                     if (script.customVCP != null && !script.customVCP.canAddLayer())
                         throw new LuaError("Cannot add anymore render layers, already reached cap (" + script.customVCP.maxSize + ").");
                     String name = args.checkjstring(1);
@@ -635,7 +630,7 @@ public class RenderLayerAPI {
     }
 
     public static boolean areIrisShadersEnabled() {
-        return FabricLoader.getInstance().isModLoaded("iris") && !net.coderbot.iris.Iris.getCurrentPack().isEmpty();
+        return FabricLoader.getInstance().isModLoaded("iris") && net.coderbot.iris.Iris.getCurrentPack().isPresent();
     }
 
     public static final Map<String, VertexFormat> vertexFormatMap;

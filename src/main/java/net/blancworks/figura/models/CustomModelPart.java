@@ -8,6 +8,7 @@ import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
@@ -164,11 +165,10 @@ public class CustomModelPart {
             //get vertex consumer
             VertexConsumer consumer;
 
-            if (customLayer != null) {
+            if (customLayer != null && data.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1) {
                 consumer = vcp.getBuffer(customLayer);
                 layer = customLayer;
-            }
-            else if (layer instanceof FiguraRenderLayer) {
+            } else if (layer instanceof FiguraRenderLayer) {
                 consumer = vcp.getBuffer(layer);
             } else {
                 consumer = vcp.getBuffer(layerFunction.apply(texture));
@@ -275,7 +275,7 @@ public class CustomModelPart {
         //render!
         if (canRender) {
             //render tasks
-            if (canRenderTasks) leftToRender = renderExtras(leftToRender, matrices, vcp, light);
+            if (canRenderTasks) leftToRender = renderExtras(leftToRender, data, matrices, vcp, light);
 
             //render hit box
             if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
@@ -376,11 +376,11 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    public int renderExtras(int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+    public int renderExtras(int leftToRender, AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
         //render extra parts
         synchronized (this.renderTasks) {
             for (RenderTaskAPI.RenderTaskTable tbl : this.renderTasks.values()) {
-                leftToRender -= tbl.task.render(matrices, vcp, light);
+                leftToRender -= tbl.task.render(data, matrices, vcp, light);
                 if (leftToRender <= 0) break;
             }
         }

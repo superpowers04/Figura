@@ -2,7 +2,6 @@ package net.blancworks.figura.avatar;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.CustomModelPart;
@@ -10,7 +9,6 @@ import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -332,11 +330,6 @@ public class AvatarData {
 
     public TrustContainer getTrustContainer() {
         return PlayerTrustManager.getContainer(getTrustIdentifier());
-    }
-
-    public boolean canRenderCustomLayers() {
-        boolean trusted = getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1;
-        return trusted && !RenderLayerAPI.areIrisShadersEnabled();
     }
 
     //cache this avatar data

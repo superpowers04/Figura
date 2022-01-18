@@ -272,22 +272,34 @@ public class NamePlateAPI {
         Identifier font = (boolean) Config.BADGE_AS_ICONS.value ? FiguraMod.FIGURA_FONT : Style.DEFAULT_FONT_ID;
         String badges = " ";
 
-        //the mark
         if (currentData.hasAvatar()) {
+            //the mark
             if (!currentData.isAvatarLoaded()) {
                 if ((boolean) Config.BADGE_AS_ICONS.value)
                     badges += Integer.toHexString(Math.abs(FiguraMod.ticksElapsed) % 16);
                 else
                     badges += LOADING.charAt(Math.abs(FiguraMod.ticksElapsed) % 4);
             }
-            else if (currentData.getComplexity() > currentData.getTrustContainer().getTrust(TrustContainer.Trust.COMPLEXITY))
-                badges += "▲";
             else if (currentData.script != null && currentData.script.scriptError)
                 badges += "▲";
             else if (FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
             else
                 badges += "△";
+
+            //trust
+            TrustContainer tc = currentData.getTrustContainer();
+            if ((currentData.getComplexity() > tc.getTrust(TrustContainer.Trust.COMPLEXITY)) || (currentData.model != null && !currentData.model.animations.isEmpty() && tc.getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 0)) {
+                badges += "!";
+            } else if (currentData.script != null) {
+                CustomScript script = currentData.script;
+                if ((script.customVCP != null && script.customVCP.hasLayers() && tc.getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 0) ||
+                        (!script.nameplateCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 0) ||
+                        (!script.allCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0) ||
+                        (!script.customSounds.isEmpty() && tc.getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0)) {
+                    badges += "!";
+                }
+            }
         }
 
         //special badges
