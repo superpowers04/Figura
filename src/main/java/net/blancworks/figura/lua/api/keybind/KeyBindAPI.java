@@ -139,6 +139,14 @@ public class KeyBindAPI {
                 }
             });
 
+            set("reset", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    keybind.reset();
+                    return NIL;
+                }
+            });
+
             set("getKey", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
