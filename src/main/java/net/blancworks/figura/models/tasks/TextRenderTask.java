@@ -1,5 +1,6 @@
 package net.blancworks.figura.models.tasks;
 
+import net.blancworks.figura.avatar.AvatarData;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.render.VertexConsumerProvider;
@@ -20,7 +21,7 @@ public class TextRenderTask extends RenderTask {
     }
 
     @Override
-    public int render(MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+    public int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
         matrices.push();
 
         this.transform(matrices);

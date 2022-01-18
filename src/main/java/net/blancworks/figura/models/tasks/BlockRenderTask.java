@@ -1,6 +1,8 @@
 package net.blancworks.figura.models.tasks;
 
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
+import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.block.BlockState;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.render.OverlayTexture;
@@ -19,16 +21,17 @@ public class BlockRenderTask extends RenderTask {
     }
 
     @Override
-    public int render(MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+    public int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
         matrices.push();
 
         this.transform(matrices);
         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(180));
 
-        RenderTask.renderLayerOverride(vcp, customLayer);
+        boolean renderLayer = data.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1;
+        if (renderLayer) RenderTask.renderLayerOverride(vcp, customLayer);
         MinecraftClient client = MinecraftClient.getInstance();
         client.getBlockRenderManager().renderBlockAsEntity(state, matrices, vcp, emissive ? 0xF000F0 : light, OverlayTexture.DEFAULT_UV);
-        RenderTask.resetOverride(vcp);
+        if (renderLayer) RenderTask.resetOverride(vcp);
 
         int complexity = 4 * client.getBlockRenderManager().getModel(state).getQuads(state, null, client.world.random).size();
 

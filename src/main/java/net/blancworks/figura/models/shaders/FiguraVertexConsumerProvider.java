@@ -62,6 +62,10 @@ public class FiguraVertexConsumerProvider implements VertexConsumerProvider {
         return stringLayerMap.get(name);
     }
 
+    public boolean hasLayers() {
+        return !sortedLayers.isEmpty();
+    }
+
     public VertexConsumer getBuffer(RenderLayer layer) {
         if (overrideLayer != null) {
             if (VANILLA_GLINT_LAYERS.contains(layer))

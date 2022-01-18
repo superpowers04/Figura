@@ -91,6 +91,21 @@ public class AnimationAPI {
                     }
                 });
 
+                set("cease", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        animation.stop();
+                        return NIL;
+                    }
+                });
+
+                set("isPlaying", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(animation.isPlaying());
+                    }
+                });
+
                 set("getPlayState", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {

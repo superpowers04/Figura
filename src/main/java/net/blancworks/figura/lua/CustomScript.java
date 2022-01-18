@@ -16,6 +16,7 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
+import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSound;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
@@ -976,7 +977,7 @@ public class CustomScript extends FiguraAsset {
     }
 
     public FiguraRenderLayer getCustomLayer(LuaValue arg) {
-        if (!arg.isnil() && avatarData.canRenderCustomLayers()) {
+        if (!arg.isnil() && !RenderLayerAPI.areIrisShadersEnabled()) {
             if (customVCP != null) {
                 FiguraRenderLayer customLayer = customVCP.getLayer(arg.checkjstring());
                 if (customLayer == null) throw new LuaError("No custom layer named: " + arg.checkjstring());
