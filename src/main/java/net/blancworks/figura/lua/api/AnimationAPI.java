@@ -46,6 +46,19 @@ public class AnimationAPI {
                 CustomModel model = script.avatarData.model;
                 if (model == null) return NIL;
 
+                for (Animation anim : model.animations.values()) {
+                    anim.playState = PlayState.STOPPING;
+                }
+                return NIL;
+            }
+        });
+
+        tbl.set("ceaseAll", new ZeroArgFunction() {
+            @Override
+            public LuaValue call() {
+                CustomModel model = script.avatarData.model;
+                if (model == null) return NIL;
+
                 model.animations.values().forEach(Animation::stop);
                 return NIL;
             }

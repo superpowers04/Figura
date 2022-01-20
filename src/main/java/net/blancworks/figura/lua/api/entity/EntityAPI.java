@@ -269,6 +269,41 @@ public class EntityAPI {
                     }
                 });
 
+                set("isSprinting", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(targetEntity.get().isSprinting());
+                    }
+                });
+
+                set("getEyeY", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(targetEntity.get().getEyeY());
+                    }
+                });
+
+                set("isGlowing", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(targetEntity.get().isGlowing());
+                    }
+                });
+
+                set("isInvisible", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(targetEntity.get().isInvisible());
+                    }
+                });
+
+                set("isSilent", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(targetEntity.get().isSilent());
+                    }
+                });
+
                 set("getNbtValue", new OneArgFunction() {
                     @Override
                     public LuaValue call(LuaValue arg) {

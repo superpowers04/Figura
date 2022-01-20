@@ -6,7 +6,9 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
@@ -149,6 +151,26 @@ public class PlayerEntityAPI {
                 public LuaValue call() {
                     AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
                     return LuaValue.valueOf(data != null && data.hasAvatar());
+                }
+            });
+
+            superTable.set("getGamemode", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
+                    PlayerListEntry playerListEntry = null;
+
+                    if (networkHandler != null)
+                        playerListEntry = networkHandler.getPlayerListEntry(targetEntity.get().getGameProfile().getId());
+
+                    return playerListEntry == null || playerListEntry.getGameMode() == null ? NIL : LuaValue.valueOf(playerListEntry.getGameMode().name());
+                }
+            });
+
+            superTable.set("isFlying", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(targetEntity.get().getAbilities().flying);
                 }
             });
 

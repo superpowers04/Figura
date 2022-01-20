@@ -166,6 +166,13 @@ public class LivingEntityAPI {
                 }
             });
 
+            superTable.set("isClimbing", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(targetEntity.get().isClimbing());
+                }
+            });
+
             return superTable;
         }
     }
