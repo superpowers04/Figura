@@ -29,20 +29,24 @@ public class CustomModelPartGroup extends CustomModelPart {
     @Override
     public void applyTransforms(MatrixStack stack) {
         //pos
-        stack.translate(animPos.getX() / 16f, -animPos.getY() / 16f, animPos.getZ() / 16f);
+        stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
+        stack.translate(this.animPos.getX() / 16f, -this.animPos.getY() / 16f, this.animPos.getZ() / 16f);
 
-        //part transforms
-        super.applyTransforms(stack);
-
-        //rotation and scale
+        //pivot
         stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
 
-        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(animRot.getZ()));
-        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(animRot.getY()));
-        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(animRot.getX()));
+        //rotation
+        Vec3f rotation = this.rot.copy();
+        rotation.add(-this.animRot.getX(), -this.animRot.getY(), this.animRot.getZ());
 
-        stack.scale(animScale.getX(), animScale.getY(), animScale.getZ());
+        if (this.isMimicMode) vanillaRotate(stack, rotation);
+        else rotate(stack, rotation);
 
+        //scale
+        stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
+        stack.scale(this.animScale.getX(), this.animScale.getY(), this.animScale.getZ());
+
+        //undo pivot
         stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
     }
 

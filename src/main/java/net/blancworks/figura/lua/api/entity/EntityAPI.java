@@ -172,7 +172,7 @@ public class EntityAPI {
                     }
                 });
 
-                set("isGrounded", new ZeroArgFunction() {
+                set("isOnGround", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
                         return LuaBoolean.valueOf(targetEntity.get().isOnGround());
@@ -301,6 +301,20 @@ public class EntityAPI {
                     @Override
                     public LuaValue call() {
                         return LuaValue.valueOf(targetEntity.get().isSilent());
+                    }
+                });
+
+                set("isSneaking", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaValue.valueOf(targetEntity.get().isSneaking());
+                    }
+                });
+
+                set("isSneaky", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        return LuaNumber.valueOf(targetEntity.get().isSneaky());
                     }
                 });
 
