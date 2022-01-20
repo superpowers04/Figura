@@ -112,13 +112,6 @@ public class LivingEntityAPI {
                 }
             });
 
-            superTable.set("isSneaky", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaNumber.valueOf(targetEntity.get().isSneaky());
-                }
-            });
-
             superTable.set("getStuckArrowCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {

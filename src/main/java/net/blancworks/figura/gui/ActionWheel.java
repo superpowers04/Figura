@@ -7,12 +7,14 @@ import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
 import net.blancworks.figura.models.FiguraTexture;
+import net.blancworks.figura.utils.MathUtils;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.text.Text;
 import net.minecraft.text.TranslatableText;
 import net.minecraft.util.Formatting;
@@ -21,7 +23,6 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Quaternion;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
-import net.minecraft.util.registry.Registry;
 
 import java.util.List;
 import java.util.Objects;
@@ -30,7 +31,7 @@ public class ActionWheel extends DrawableHelper {
 
     private static final Identifier ACTION_WHEEL = new Identifier("figura", "textures/gui/action_wheel.png");
     private static final Identifier ACTION_WHEEL_SELECTED = new Identifier("figura", "textures/gui/action_wheel_selected.png");
-    private static final Vec3f ERROR_COLOR = new Vec3f(1.0f, 0.28f, 0.28f);
+    private static final Vec3f ERROR_COLOR = new Vec3f(1f, 0.28f, 0.28f);
     private static final List<Text> NO_FUNCTION_MESSAGE = ImmutableList.of(new TranslatableText("figura.actionwheel.nofunction"));
 
     public static int selectedSlot = -1;
@@ -40,7 +41,7 @@ public class ActionWheel extends DrawableHelper {
         MinecraftClient client = MinecraftClient.getInstance();
 
         //screen
-        Vec2f screenSize = new Vec2f(client.getWindow().getWidth() / 2.0f, client.getWindow().getHeight() / 2.0f);
+        Vec2f screenSize = new Vec2f(client.getWindow().getWidth() / 2f, client.getWindow().getHeight() / 2f);
         float screenScale = (float) client.getWindow().getScaleFactor();
 
         //mouse
@@ -50,11 +51,11 @@ public class ActionWheel extends DrawableHelper {
 
         //wheel
         Vec2f wheelPos = new Vec2f(screenSize.x / screenScale, screenSize.y / screenScale);
-        int wheelSize = 192;
+        int wheelSize = 180;
 
         //item
-        Vec2f itemOffset = new Vec2f((wheelPos.x * 2.0f / 3.0f) - 8, (wheelPos.y * 2.0f / 3.0f) - 8);
-        int itemRadius = 42;
+        Vec2f itemOffset = new Vec2f((wheelPos.x * 2f / 3f) - 8f, (wheelPos.y * 2f / 3f) - 8f);
+        int itemRadius = 39;
 
         //script data
         AvatarData data = AvatarDataManager.localPlayer;
@@ -67,11 +68,11 @@ public class ActionWheel extends DrawableHelper {
             int rightSegments = data.script.actionWheelRightSize;
 
             //set selected slot
-            if (distance > 30 * screenScale) {
+            if (distance > 28 * screenScale) {
                 if (angle < 180) {
-                    selectedSlot = MathHelper.floor((rightSegments / 180.0) * angle);
+                    selectedSlot = MathHelper.floor((rightSegments / 180f) * angle);
                 } else {
-                    selectedSlot = MathHelper.floor((leftSegments / 180.0) * (angle - 180)) + rightSegments;
+                    selectedSlot = MathHelper.floor((leftSegments / 180f) * (angle - 180)) + rightSegments;
                 }
             } else {
                 selectedSlot = -1;
@@ -105,13 +106,13 @@ public class ActionWheel extends DrawableHelper {
                     matrices, MinecraftClient.getInstance().textRenderer,
                     new TranslatableText("figura.actionwheel.warning").formatted(Formatting.UNDERLINE).asOrderedText(),
                     (int) wheelPos.x, (int) wheelPos.y - 4,
-                    16733525
+                    Formatting.RED.getColorValue()
             );
             drawCenteredTextWithShadow(
                     matrices, MinecraftClient.getInstance().textRenderer,
                     new TranslatableText("figura.actionwheel.warninginfo").asOrderedText(),
-                    (int) wheelPos.x, (int) Math.max(wheelPos.y - wheelSize / 2.0 - 10, 4),
-                    16733525
+                    (int) wheelPos.x, (int) Math.max(wheelPos.y - wheelSize / 2f - 10, 4),
+                    Formatting.RED.getColorValue()
             );
         }
 
@@ -131,19 +132,19 @@ public class ActionWheel extends DrawableHelper {
         //draw right side
         matrices.push();
 
-        matrices.translate(Math.round(pos.x), Math.round(pos.y - size / 2.0d), 0.0d);
-        drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (rightSegments - 1), 0.0f, 8, 16, 32, 16);
+        matrices.translate(Math.round(pos.x), Math.round(pos.y - size / 2f), 0f);
+        drawTexture(matrices, 0, 0, size / 2, size, 8f * (rightSegments - 1), 0f, 8, 16, 32, 16);
 
         matrices.pop();
 
         //draw left side
         matrices.push();
 
-        matrices.translate(Math.round(pos.x), Math.round(pos.y + size / 2.0d), 0.0d);
+        matrices.translate(Math.round(pos.x), Math.round(pos.y + size / 2f), 0f);
         Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(180);
         matrices.multiply(quaternion);
 
-        drawTexture(matrices, 0, 0, size / 2, size, 8.0f * (leftSegments - 1), 0.0f, 8, 16, 32, 16);
+        drawTexture(matrices, 0, 0, size / 2, size, 8f * (leftSegments - 1), 0f, 8, 16, 32, 16);
 
         matrices.pop();
     }
@@ -157,7 +158,7 @@ public class ActionWheel extends DrawableHelper {
         boolean hasHoverColor = false;
         boolean isSelected = selectedSlot == i;
         int slot = i < rightSegments ? i : i - rightSegments + 4;
-        Vec3f overlayColor = new Vec3f(1.0f, 1.0f, 1.0f);
+        Vec3f overlayColor = MathUtils.Vec3f_ONE;
 
         if (customization != null) {
             hasFunction = customization.function != null;
@@ -194,45 +195,45 @@ public class ActionWheel extends DrawableHelper {
         }
 
         double y = pos.y;
-        float angle = 0.0f;
+        float angle = 0f;
         int height = size / 2;
-        float u = 0.0f;
-        float v = 0.0f;
+        float u = 0f;
+        float v = 0f;
         int regionHeight = 8;
 
         switch (segments) {
             case 1 -> {
-                y = selected % 2 == 1 ? pos.y + size / 2.0d : pos.y - size / 2.0d;
+                y = selected % 2 == 1 ? pos.y + size / 2f : pos.y - size / 2f;
                 angle = 180f * selected;
                 height = size;
                 regionHeight = 16;
             }
             case 2 -> {
                 angle = 90f * (selected - 1f);
-                u = 8.0f;
+                u = 8f;
             }
             case 3 -> {
                 if (selected % 3 != 2) {
-                    y += (selected < 3 ? -1 : 1) * size / 2.0d;
+                    y += (selected < 3 ? -1 : 1) * size / 2f;
 
                     if (selected % 3 == 1) {
-                        y += (selected < 3 ? 1 : -1) * size / 4.0d;
-                        v = 8.0f;
+                        y += (selected < 3 ? 1 : -1) * size / 4f;
+                        v = 8f;
                     }
 
-                    u = 16.0f;
+                    u = 16f;
                 }
                 else {
-                    u = 8.0f;
-                    v = 8.0f;
+                    u = 8f;
+                    v = 8f;
                 }
 
-                angle = 180f * MathHelper.floor(selected / 3.0d);
+                angle = 180f * MathHelper.floor(selected / 3f);
             }
             case 4 -> {
-                angle = 90f * (MathHelper.floor(selected / 2.0d) + 3f);
-                u = 24.0f;
-                v = selected % 2 == 1 ? 8.0f : 0.0f;
+                angle = 90f * (MathHelper.floor(selected / 2f) + 3f);
+                u = 24f;
+                v = selected % 2 == 1 ? 8f : 0f;
             }
         }
 
@@ -242,11 +243,11 @@ public class ActionWheel extends DrawableHelper {
         //draw
         matrices.push();
 
-        matrices.translate(Math.round(pos.x), Math.round(y), 0.0d);
+        matrices.translate(Math.round(pos.x), Math.round(y), 0f);
         Quaternion quaternion = Vec3f.POSITIVE_Z.getDegreesQuaternion(angle);
         matrices.multiply(quaternion);
 
-        RenderSystem.setShaderColor(overlayColor.getX(), overlayColor.getY(), overlayColor.getZ(), 1.0f);
+        RenderSystem.setShaderColor(overlayColor.getX(), overlayColor.getY(), overlayColor.getZ(), 1f);
         drawTexture(matrices, 0, 0, size / 2, height, u, v, 8, regionHeight, 32, 16);
 
         matrices.pop();
@@ -259,10 +260,10 @@ public class ActionWheel extends DrawableHelper {
             float angle;
             if (i < rightSegments) {
                 index = i;
-                angle = (float) Math.toRadians(180.0 / rightSegments * (index - ((rightSegments - 1) * 0.5)));
+                angle = (float) Math.toRadians(180f / rightSegments * (index - ((rightSegments - 1) * 0.5f)));
             } else {
                 index = i - rightSegments + 4;
-                angle = (float) Math.toRadians(180.0 / leftSegments * (index - 4 - ((leftSegments - 1) * 0.5) + leftSegments));
+                angle = (float) Math.toRadians(180f / leftSegments * (index - 4 - ((leftSegments - 1) * 0.5f) + leftSegments));
             }
 
             //radius * cos/sin angle in rads + offset
@@ -322,9 +323,9 @@ public class ActionWheel extends DrawableHelper {
 
         switch ((int) Config.ACTION_WHEEL_TITLE_POS.value) {
             //top
-            case 1 -> textPos = new Vec2f(pos.x - titleLen, (float) Math.max(pos.y - size / 2.0 - 10, 4));
+            case 1 -> textPos = new Vec2f(pos.x - titleLen, Math.max(pos.y - size / 2f - 10, 4));
             //bottom
-            case 2 -> textPos = new Vec2f(pos.x - titleLen, (float) Math.min(pos.y + size / 2.0 + 4, client.getWindow().getHeight() - 12));
+            case 2 -> textPos = new Vec2f(pos.x - titleLen, Math.min(pos.y + size / 2f + 4, client.getWindow().getHeight() - 12));
             //center
             case 3 -> textPos = new Vec2f(pos.x - titleLen, pos.y - 4);
             //default mouse
@@ -349,17 +350,17 @@ public class ActionWheel extends DrawableHelper {
             float angle;
             if (i < rightSegments) {
                 index = i;
-                angle = (float) Math.toRadians(180.0 / rightSegments * (index - ((rightSegments - 1) * 0.5)));
+                angle = (float) Math.toRadians(180f / rightSegments * (index - ((rightSegments - 1) * 0.5f)));
             } else {
                 index = i - rightSegments + 4;
-                angle = (float) Math.toRadians(180.0 / leftSegments * (index - 4 - ((leftSegments - 1) * 0.5) + leftSegments));
+                angle = (float) Math.toRadians(180f / leftSegments * (index - 4 - ((leftSegments - 1) * 0.5f) + leftSegments));
             }
 
             //radius * cos/sin angle in rads + offset
             Vec2f pos = new Vec2f(radius * MathHelper.cos(angle) + offset.x, radius * MathHelper.sin(angle) + offset.y);
 
             //get item - defaults to air
-            ItemStack item = Registry.ITEM.get(Identifier.tryParse("minecraft:air")).getDefaultStack();
+            ItemStack item = Items.AIR.getDefaultStack();
 
             ActionWheelCustomization cust = data.script.getActionWheelCustomization("SLOT_" + (i + 1));
             if (cust != null) {

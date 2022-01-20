@@ -47,7 +47,8 @@ public class AnimationAPI {
                 if (model == null) return NIL;
 
                 for (Animation anim : model.animations.values()) {
-                    anim.playState = PlayState.STOPPING;
+                    if (anim.playState != PlayState.STOPPED)
+                        anim.playState = PlayState.STOPPING;
                 }
                 return NIL;
             }
@@ -99,7 +100,8 @@ public class AnimationAPI {
                 set("stop", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        animation.playState = PlayState.STOPPING;
+                        if (animation.playState != PlayState.STOPPED)
+                            animation.playState = PlayState.STOPPING;
                         return NIL;
                     }
                 });
