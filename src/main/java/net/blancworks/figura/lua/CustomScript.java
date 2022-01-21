@@ -632,7 +632,7 @@ public class CustomScript extends FiguraAsset {
         boolean inString = false;
         boolean inChar = false;
         boolean inBlockString = false;
-        boolean inComment = false;
+        boolean inComment = s.startsWith("#");
         boolean inBlock = false;
         int blockDepth = 0;
 

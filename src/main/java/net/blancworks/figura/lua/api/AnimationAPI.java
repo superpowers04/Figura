@@ -6,6 +6,7 @@ import net.blancworks.figura.models.animations.Animation;
 import net.blancworks.figura.models.animations.Animation.LoopMode;
 import net.blancworks.figura.models.animations.Animation.PlayState;
 import net.minecraft.util.Identifier;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -118,6 +119,19 @@ public class AnimationAPI {
                     @Override
                     public LuaValue call() {
                         return LuaValue.valueOf(animation.isPlaying());
+                    }
+                });
+
+                set("setPlayState", new OneArgFunction() {
+                    @Override
+                    public LuaValue call(LuaValue arg) {
+                        try {
+                            animation.playState = PlayState.valueOf(arg.checkjstring());
+                        } catch (Exception ignored) {
+                            throw new LuaError("Invalid playstate type");
+                        }
+
+                        return NIL;
                     }
                 });
 
