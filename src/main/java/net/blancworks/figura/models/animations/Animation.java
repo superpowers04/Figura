@@ -31,11 +31,14 @@ public class Animation {
     //animation status
     public float speed = 1f;
     public boolean inverted = false;
+
     public PlayState playState = PlayState.STOPPED;
+    private PlayState lastState = PlayState.STOPPED;
+    private boolean wasStarting = false;
 
     private float time = 0f;
     private float newTime = 0f;
-    private float blendEndTime = -1f;
+    private float lastTime = 0f;
 
     public Animation(String name, float length, LoopMode loopMode, float startOffset, float blendWeight, float startDelay, float loopDelay) {
         this.name = name;
@@ -63,7 +66,14 @@ public class Animation {
         STARTING  //blend from previous anim
     }
 
+    //render cuntions
     public void render() {
+        //start/end blend
+        if (this.playState == PlayState.STARTING || this.playState == PlayState.STOPPING || (this.playState == PlayState.PAUSED && (this.lastState == PlayState.STARTING || this.lastState == PlayState.STOPPING))) {
+            renderBlend(this.playState == PlayState.STOPPING || (this.playState == PlayState.PAUSED && this.lastState == PlayState.STOPPING));
+            return;
+        }
+
         //if running, store current time
         if (this.playState != PlayState.PAUSED && this.playState != PlayState.ENDED)
             newTime = Util.getMeasuringTimeMs();
@@ -71,69 +81,31 @@ public class Animation {
         //get keyframe time from current time
         float kfTime = ((newTime - time) / 1000f) * speed;
 
-        //delay
-        kfTime -= startDelay;
-        if (kfTime < 0f) return;
-
         //offset
         kfTime += startOffset;
 
-        if (playState == PlayState.STARTING && kfTime >= blendEndTime) {
-            play();
-            return;
-        }
-
         //process loop
-        if (playState != PlayState.STOPPING && kfTime >= this.length) {
+        if (kfTime >= this.length) {
             switch (loopMode) {
                 case HOLD -> playState = PlayState.ENDED;
-                case ONCE -> playState = PlayState.STOPPING;
+                case ONCE -> stop();
                 case LOOP -> {
                     //loop delay
                     if (kfTime >= this.length + loopDelay) {
-                        stop();
-                        play();
+                        cease();
+                        start();
                     }
                 }
             }
         }
 
-        //blend
-        if (playState == PlayState.STOPPING) {
-            if (blendEndTime == -1f)
-                blendEndTime = (kfTime + blendTime) * speed;
-
-            if (kfTime >= blendEndTime) {
-                stop();
-                return;
-            }
-        }
-
         //keyframe interpolation
-        float finalTime = inverted ? length - kfTime : kfTime;
+        lastTime = inverted ? length - kfTime : kfTime;
         keyFrames.forEach((group, data) -> {
-            float time = playState == PlayState.STARTING ? 0f : finalTime;
-
             //get interpolated data
-            Vec3f pos = processKeyFrame(data.get(0), time);
-            Vec3f rot = processKeyFrame(data.get(1), time);
-            Vec3f scale = processKeyFrame(data.get(2), time);
-
-            //blending
-            if (playState == PlayState.STARTING) {
-                float delta = finalTime / blendEndTime;
-
-                if (pos != null) pos = MathUtils.lerpVec3f(group.prevAnimPos, pos, delta);
-                if (rot != null) rot = MathUtils.lerpVec3f(group.prevAnimRot, rot, delta);
-                if (scale != null) scale = MathUtils.lerpVec3f(group.prevAnimScale, scale, delta);
-            } else if (playState == PlayState.STOPPING) {
-                float blendStartTime = blendEndTime - (blendTime * speed);
-                float delta = (finalTime - blendStartTime) / (blendEndTime - blendStartTime);
-
-                if (pos != null) pos = MathUtils.lerpVec3f(pos, Vec3f.ZERO, delta);
-                if (rot != null) rot = MathUtils.lerpVec3f(rot, Vec3f.ZERO, delta);
-                if (scale != null) scale = MathUtils.lerpVec3f(scale, MathUtils.Vec3f_ONE, delta);
-            }
+            Vec3f pos = processKeyFrame(data.get(0), lastTime);
+            Vec3f rot = processKeyFrame(data.get(1), lastTime);
+            Vec3f scale = processKeyFrame(data.get(2), lastTime);
 
             //apply data, if not null
             if (pos != null) group.animPos.add(pos);
@@ -142,46 +114,118 @@ public class Animation {
         });
     }
 
-    public void play() {
-        long offset = Util.getMeasuringTimeMs();
-        if (this.playState == PlayState.PAUSED)
-            offset -= newTime - time;
+    private void renderBlend(boolean ending) {
+        if (this.playState != PlayState.PAUSED)
+            newTime = Util.getMeasuringTimeMs();
 
-        this.blendEndTime = -1f;
+        //get keyframe time from current time
+        float kfTime = ((newTime - time) / 1000f) * speed;
+
+        //delay
+        if (!ending) {
+            kfTime -= startDelay;
+            if (kfTime < 0f) return;
+        }
+
+        //end
+        if (kfTime >= this.blendTime) {
+            if (ending) cease();
+            else start();
+        }
+
+        //process keyframes
+        if (!ending) lastTime = kfTime;
+        float finalTime = kfTime;
+        keyFrames.forEach((group, data) -> {
+            //get interpolated data
+            Vec3f pos = ending && !wasStarting ? processKeyFrame(data.get(0), lastTime) : getKeyFrameData(data.get(0), startOffset, inverted);
+            Vec3f rot = ending && !wasStarting ? processKeyFrame(data.get(1), lastTime) : getKeyFrameData(data.get(1), startOffset, inverted);
+            Vec3f scale = ending && !wasStarting ? processKeyFrame(data.get(2), lastTime) : getKeyFrameData(data.get(2), startOffset, inverted);
+
+            //apply data, if not null
+            float delta = finalTime / blendTime;
+            if (pos != null) {
+                if (ending) {
+                    if (wasStarting)
+                        pos = MathUtils.lerpVec3f(Vec3f.ZERO, pos, lastTime / blendTime);
+                    pos = MathUtils.lerpVec3f(pos, Vec3f.ZERO, delta);
+                } else {
+                    pos = MathUtils.lerpVec3f(Vec3f.ZERO, pos, delta);
+                }
+                group.animPos.add(pos);
+            }
+            if (rot != null) {
+                if (ending) {
+                    if (wasStarting)
+                        rot = MathUtils.lerpVec3f(Vec3f.ZERO, rot, lastTime / blendTime);
+                    rot = MathUtils.lerpVec3f(rot, Vec3f.ZERO, delta);
+                } else {
+                    rot = MathUtils.lerpVec3f(Vec3f.ZERO, rot, delta);
+                }
+                group.animRot.add(rot);
+            }
+            if (scale != null) {
+                if (ending) {
+                    if (wasStarting)
+                        scale = MathUtils.lerpVec3f(MathUtils.Vec3f_ONE, scale, lastTime / blendTime);
+                    scale = MathUtils.lerpVec3f(scale, MathUtils.Vec3f_ONE, delta);
+                } else {
+                    scale = MathUtils.lerpVec3f(MathUtils.Vec3f_ONE, scale, delta);
+                }
+                group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
+            }
+        });
+    }
+
+    //state functions
+    public void play() {
+        if (this.playState == PlayState.ENDED || this.playState == PlayState.STOPPING)
+            cease();
+
+        long offset = Util.getMeasuringTimeMs();
+        if (this.playState == PlayState.PAUSED) {
+            offset -= newTime - time;
+            this.playState = this.lastState;
+        }
+
+        if (this.playState == PlayState.STOPPED)
+            this.playState = PlayState.STARTING;
+
         this.time = offset;
-        this.playState = PlayState.PLAYING;
     }
 
     public void start() {
-        if (this.playState == PlayState.ENDED || this.playState == PlayState.STOPPING)
-            stop();
-
-        if (this.playState == PlayState.PAUSED) {
-            play();
-            return;
-        }
-
-        this.blendEndTime = blendTime * speed;
         this.time = Util.getMeasuringTimeMs();
-        this.playState = PlayState.STARTING;
+        this.playState = PlayState.PLAYING;
     }
 
     public void stop() {
-        this.blendEndTime = -1f;
+        if (this.playState != PlayState.STOPPED) {
+            this.time = Util.getMeasuringTimeMs();
+            this.wasStarting = this.playState == PlayState.STARTING;
+            this.playState = PlayState.STOPPING;
+        }
+    }
+
+    public void cease() {
         this.time = 0f;
         this.playState = PlayState.STOPPED;
+    }
+
+    public void pause() {
+        if (this.playState != PlayState.ENDED && this.playState != PlayState.PAUSED && this.playState != PlayState.STOPPED) {
+            this.lastState = this.playState;
+            this.playState = PlayState.PAUSED;
+        }
     }
 
     public boolean isPlaying() {
         return playState == PlayState.PLAYING || playState == PlayState.STARTING || playState == PlayState.STOPPING;
     }
 
+    //keyframe functions
     public void clearAnimData() {
         for (CustomModelPartGroup group : keyFrames.keySet()) {
-            group.prevAnimRot = group.animRot;
-            group.prevAnimPos = group.animPos;
-            group.prevAnimScale = group.animScale;
-
             group.animRot = Vec3f.ZERO.copy();
             group.animPos = Vec3f.ZERO.copy();
             group.animScale = MathUtils.Vec3f_ONE.copy();
@@ -208,11 +252,6 @@ public class Animation {
             //set blend weight
             start.scale(blendWeight);
             end.scale(blendWeight);
-
-            //start blending
-            if (playState == PlayState.STARTING) {
-                return start;
-            }
 
             //get delta
             float delta;
@@ -249,6 +288,26 @@ public class Animation {
         return null;
     }
 
+    public Vec3f getKeyFrameData(TreeMap<Float, KeyFrame> map, float offset, boolean inverted) {
+        //get keyframes
+        Map.Entry<Float, KeyFrame> floor = map.floorEntry(offset);
+        Map.Entry<Float, KeyFrame> ceil = map.ceilingEntry(offset);
+
+        if (floor == null && ceil == null)
+            return null;
+
+        //set current and next keyframes
+        KeyFrame curr = Objects.requireNonNullElse(floor, ceil).getValue();
+        KeyFrame next = Objects.requireNonNullElse(ceil, floor).getValue();
+
+        //weight
+        Vec3f ret = inverted ? next.data : curr.data;
+        ret.scale(blendWeight);
+
+        return ret;
+    }
+
+    //nbt parser
     public static Animation fromNbt(NbtCompound animTag) {
         String name = animTag.getString("nm");
         float length = animTag.getFloat("len");

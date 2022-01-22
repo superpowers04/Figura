@@ -47,10 +47,7 @@ public class AnimationAPI {
                 CustomModel model = script.avatarData.model;
                 if (model == null) return NIL;
 
-                for (Animation anim : model.animations.values()) {
-                    if (anim.playState != PlayState.STOPPED)
-                        anim.playState = PlayState.STOPPING;
-                }
+                model.animations.values().forEach(Animation::stop);
                 return NIL;
             }
         });
@@ -61,7 +58,7 @@ public class AnimationAPI {
                 CustomModel model = script.avatarData.model;
                 if (model == null) return NIL;
 
-                model.animations.values().forEach(Animation::stop);
+                model.animations.values().forEach(Animation::cease);
                 return NIL;
             }
         });
@@ -85,7 +82,7 @@ public class AnimationAPI {
                 set("play", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        animation.start();
+                        animation.play();
                         return NIL;
                     }
                 });
@@ -93,7 +90,7 @@ public class AnimationAPI {
                 set("pause", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        animation.playState = PlayState.PAUSED;
+                        animation.pause();
                         return NIL;
                     }
                 });
@@ -101,8 +98,7 @@ public class AnimationAPI {
                 set("stop", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        if (animation.playState != PlayState.STOPPED)
-                            animation.playState = PlayState.STOPPING;
+                        animation.stop();
                         return NIL;
                     }
                 });
@@ -110,7 +106,7 @@ public class AnimationAPI {
                 set("cease", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
-                        animation.stop();
+                        animation.cease();
                         return NIL;
                     }
                 });
