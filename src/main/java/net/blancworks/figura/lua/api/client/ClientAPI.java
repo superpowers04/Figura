@@ -7,16 +7,20 @@ import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.utils.TextUtils;
+import net.fabricmc.loader.api.SemanticVersion;
+import net.fabricmc.loader.api.Version;
 import net.minecraft.SharedConstants;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ClientAPI {
@@ -325,6 +329,20 @@ public class ClientAPI {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(RenderLayerAPI.areIrisShadersEnabled());
+                }
+            });
+
+            set("checkVersion", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    try {
+                        SemanticVersion latest = SemanticVersion.parse(arg1.checkjstring());
+                        SemanticVersion current = SemanticVersion.parse(arg2.checkjstring());
+                        return LuaValue.valueOf(latest.compareTo((Version) current));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        throw new LuaError("Failed to compare versions!");
+                    }
                 }
             });
         }});
