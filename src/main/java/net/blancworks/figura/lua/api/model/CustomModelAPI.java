@@ -514,6 +514,21 @@ public class CustomModelAPI {
                 }
             });
 
+            ret.set("getLight", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return targetPart.light == null ? NIL : LuaNumber.valueOf(targetPart.light);
+                }
+            });
+
+            ret.set("setLight", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    targetPart.light = arg1.isnil() ? null : arg1.checkint();
+                    return NIL;
+                }
+            });
+
             return ret;
         }
     }

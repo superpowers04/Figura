@@ -26,6 +26,7 @@
   "figura.gui.config.title": "Figura Config Menu",
   "figura.gui.menu.title": "Figura Menu",
   "figura.gui.keybinds.title": "Figura Script Keybinds Menu",
+  "figura.gui.sounds.title": "Figura Custom Sounds Preview Menu",
 
   "figura.gui.dropconfirm": "Do you want to add the following models to Figura?",
   "figura.gui.panic.warning": "Limited usage of Figura! // Avatar rendering is Disabled! *panik*",
@@ -65,6 +66,7 @@
   "figura.gui.button.resetperm.tooltip": "Hold LEFT SHIFT and click to reset the selected permissions",
   "figura.gui.button.clearcache.tooltip": "Hold LEFT SHIFT and click to clear all loaded avatar data",
   "figura.gui.button.keybinds.tooltip": "Current Script Keybinds",
+  "figura.gui.button.sounds.tooltip": "Preview Custom Sounds",
   "figura.gui.button.openfolder.tooltip": "Hold LEFT SHIFT and click to open the selected avatar folder",
 
   "figura.gui.button.status.tooltip": "none | not found",

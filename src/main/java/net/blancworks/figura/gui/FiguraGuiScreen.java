@@ -54,6 +54,7 @@ public class FiguraGuiScreen extends Screen {
     public Identifier deleteTexture = new Identifier("figura", "textures/gui/delete.png");
     public Identifier expandTexture = new Identifier("figura", "textures/gui/expand.png");
     public Identifier keybindsTexture = new Identifier("figura", "textures/gui/keybinds.png");
+    public Identifier soundsTexture = new Identifier("figura", "textures/gui/sounds.png");
     public Identifier playerBackgroundTexture = new Identifier("figura", "textures/gui/player_background.png");
     public Identifier expandedBackgroundTexture = new Identifier("figura", "textures/gui/expanded_background.png");
 
@@ -108,6 +109,7 @@ public class FiguraGuiScreen extends Screen {
 
     public static final Text RELOAD_TOOLTIP = new TranslatableText("figura.gui.button.reloadavatar.tooltip");
     public static final Text KEYBIND_TOOLTIP = new TranslatableText("figura.gui.button.keybinds.tooltip");
+    public static final Text SOUND_TOOLTIP = new TranslatableText("figura.gui.button.sounds.tooltip");
     public static final Text MODEL_FOLDER_TOOLTIP = new TranslatableText("figura.gui.button.openfolder.tooltip");
 
     private static final int[] OvO = {265, 265, 264, 264, 263, 262, 263, 262, 66, 65, 257};
@@ -118,6 +120,7 @@ public class FiguraGuiScreen extends Screen {
     public TexturedButtonWidget deleteButton;
     public TexturedButtonWidget expandButton;
     public TexturedButtonWidget keybindsButton;
+    public TexturedButtonWidget soundsButton;
 
     public ButtonWidget openFolderButton;
     public ButtonWidget exportNbt;
@@ -165,6 +168,7 @@ public class FiguraGuiScreen extends Screen {
 
     public FiguraTrustScreen trustScreen = new FiguraTrustScreen(this);
     public FiguraKeyBindsScreen keyBindsScreen = new FiguraKeyBindsScreen(this);
+    public FiguraSoundScreen soundsScreen = new FiguraSoundScreen(this);
     public ConfigScreen configScreen = new ConfigScreen(this);
 
     public CustomListWidgetState<Object> modelFileListState = new CustomListWidgetState<>();
@@ -283,6 +287,17 @@ public class FiguraGuiScreen extends Screen {
         );
         this.addDrawableChild(keybindsButton);
         keybindsButton.active = false;
+
+        //sounds button
+        soundsButton = new TexturedButtonWidget(
+                this.width - width - 55, 15,
+                20, 20,
+                0, 0, 20,
+                soundsTexture, 40, 40,
+                (bx) -> this.client.setScreen(soundsScreen)
+        );
+        this.addDrawableChild(soundsButton);
+        soundsButton.active = false;
 
         //delete button
         deleteButton = new TexturedButtonWidget(
@@ -483,6 +498,18 @@ public class FiguraGuiScreen extends Screen {
             matrices.pop();
         }
         keybindsButton.active = wasKeybindsActive;
+
+        soundsButton.active = AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.script != null;
+
+        boolean wasSoundsActive = soundsButton.active;
+        soundsButton.active = true;
+        if (soundsButton.isMouseOver(mouseX, mouseY)) {
+            matrices.push();
+            matrices.translate(0, 0, 599);
+            renderTooltip(matrices, SOUND_TOOLTIP, mouseX, mouseY);
+            matrices.pop();
+        }
+        soundsButton.active = wasSoundsActive;
 
         if (!deleteButton.active) {
             deleteButton.active = true;

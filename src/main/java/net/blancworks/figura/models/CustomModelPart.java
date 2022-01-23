@@ -62,6 +62,7 @@ public class CustomModelPart {
     public boolean cull = false;
 
     public float alpha = 1f;
+    public Integer light = null;
 
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
@@ -153,6 +154,9 @@ public class CustomModelPart {
 
         alpha = this.alpha * alpha;
 
+        if (this.light != null)
+            light = this.light;
+
         if (!isExtraTex && this.cull)
             layerFunction = RenderLayer::getEntityTranslucentCull;
 
@@ -224,6 +228,9 @@ public class CustomModelPart {
 
         alpha = this.alpha * alpha;
 
+        if (this.light != null)
+            light = this.light;
+
         byte shaders = shadersToRender;
         if (this.shaderType != ShaderType.None)
             shaders = (byte) (shaders | this.shaderType.id);
@@ -271,6 +278,9 @@ public class CustomModelPart {
 
         if (renderOnly == null || this.parentType == renderOnly)
             canRender = true;
+
+        if (this.light != null)
+            light = this.light;
 
         //render!
         if (canRender) {

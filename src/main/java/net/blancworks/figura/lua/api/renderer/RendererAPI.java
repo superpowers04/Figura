@@ -13,9 +13,11 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.MarkerEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.fluid.FluidState;
 import net.minecraft.text.Text;
+import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
@@ -144,6 +146,17 @@ public class RendererAPI {
                 @Override
                 public LuaValue call() {
                     return LuaBoolean.valueOf(script.renderMountShadow);
+                }
+            });
+
+            set("swingArm", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    PlayerEntity player = MinecraftClient.getInstance().player;
+                    if (player != null && AvatarDataManager.localPlayer == script.avatarData)
+                        player.swingHand(arg.isnil() || !arg.checkboolean() ? Hand.MAIN_HAND : Hand.OFF_HAND);
+
+                    return NIL;
                 }
             });
 
