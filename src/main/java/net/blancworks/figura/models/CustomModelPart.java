@@ -62,7 +62,8 @@ public class CustomModelPart {
     public boolean cull = false;
 
     public float alpha = 1f;
-    public Integer light = null;
+    public Vec2f light = null;
+    public Vec2f overlay = null;
 
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
@@ -114,7 +115,7 @@ public class CustomModelPart {
         draw(vcp);
 
         //extra stuff and hitboxes
-        ret = renderExtraParts(data, ret, matrices, vcp, light, false, applyHiddenTransforms, renderOnly);
+        ret = renderExtraParts(data, ret, matrices, vcp, light, overlay, false, applyHiddenTransforms, renderOnly);
         draw(vcp);
 
         return ret;
@@ -155,7 +156,9 @@ public class CustomModelPart {
         alpha = this.alpha * alpha;
 
         if (this.light != null)
-            light = this.light;
+            light = LightmapTextureManager.pack((int) this.light.x, (int) this.light.y);
+        if (this.overlay != null)
+            overlay = OverlayTexture.packUv((int) this.overlay.x, (int) this.overlay.y);
 
         if (!isExtraTex && this.cull)
             layerFunction = RenderLayer::getEntityTranslucentCull;
@@ -229,7 +232,9 @@ public class CustomModelPart {
         alpha = this.alpha * alpha;
 
         if (this.light != null)
-            light = this.light;
+            light = LightmapTextureManager.pack((int) this.light.x, (int) this.light.y);
+        if (this.overlay != null)
+            overlay = OverlayTexture.packUv((int) this.overlay.x, (int) this.overlay.y);
 
         byte shaders = shadersToRender;
         if (this.shaderType != ShaderType.None)
@@ -262,7 +267,7 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    public int renderExtraParts(AvatarData data, int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, boolean canRender, boolean applyHiddenTransforms, ParentType renderOnly) {
+    public int renderExtraParts(AvatarData data, int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, boolean canRender, boolean applyHiddenTransforms, ParentType renderOnly) {
         //do not render invisible parts
         if (!this.visible)
             return leftToRender;
@@ -280,12 +285,14 @@ public class CustomModelPart {
             canRender = true;
 
         if (this.light != null)
-            light = this.light;
+            light = LightmapTextureManager.pack((int) this.light.x, (int) this.light.y);
+        if (this.overlay != null)
+            overlay = OverlayTexture.packUv((int) this.overlay.x, (int) this.overlay.y);
 
         //render!
         if (canRender) {
             //render tasks
-            if (canRenderTasks) leftToRender = renderExtras(leftToRender, data, matrices, vcp, light);
+            if (canRenderTasks) leftToRender = renderExtras(leftToRender, data, matrices, vcp, light, overlay);
 
             //render hit box
             if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
@@ -301,7 +308,7 @@ public class CustomModelPart {
                     continue;
 
                 //render part
-                leftToRender = child.renderExtraParts(data, leftToRender, matrices, vcp, light, canRender, applyHiddenTransforms, renderOnly);
+                leftToRender = child.renderExtraParts(data, leftToRender, matrices, vcp, light, overlay, canRender, applyHiddenTransforms, renderOnly);
             }
         }
 
@@ -386,11 +393,11 @@ public class CustomModelPart {
         return leftToRender;
     }
 
-    public int renderExtras(int leftToRender, AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+    public int renderExtras(int leftToRender, AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
         //render extra parts
         synchronized (this.renderTasks) {
             for (RenderTaskAPI.RenderTaskTable tbl : this.renderTasks.values()) {
-                leftToRender -= tbl.task.render(data, matrices, vcp, light);
+                leftToRender -= tbl.task.render(data, matrices, vcp, light, overlay);
                 if (leftToRender <= 0) break;
             }
         }

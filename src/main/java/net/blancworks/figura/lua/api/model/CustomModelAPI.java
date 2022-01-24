@@ -517,14 +517,29 @@ public class CustomModelAPI {
             ret.set("getLight", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return targetPart.light == null ? NIL : LuaNumber.valueOf(targetPart.light);
+                    return targetPart.light == null ? NIL : LuaVector.of(targetPart.light);
                 }
             });
 
             ret.set("setLight", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    targetPart.light = arg1.isnil() ? null : arg1.checkint();
+                    targetPart.light = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV2f();
+                    return NIL;
+                }
+            });
+
+            ret.set("getOverlay", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return targetPart.overlay == null ? NIL : LuaVector.of(targetPart.overlay);
+                }
+            });
+
+            ret.set("setOverlay", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    targetPart.overlay = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV2f();
                     return NIL;
                 }
             });
