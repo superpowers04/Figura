@@ -5,7 +5,7 @@ import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.model.json.ModelTransformation;
 import net.minecraft.client.util.math.MatrixStack;
@@ -25,7 +25,7 @@ public class ItemRenderTask extends RenderTask {
     }
 
     @Override
-    public int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+    public int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
         matrices.push();
 
         this.transform(matrices);
@@ -34,7 +34,7 @@ public class ItemRenderTask extends RenderTask {
         boolean renderLayer = data.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1;
         if (renderLayer) RenderTask.renderLayerOverride(vcp, customLayer);
         MinecraftClient client = MinecraftClient.getInstance();
-        client.getItemRenderer().renderItem(stack, mode, emissive ? 0xF000F0 : light, OverlayTexture.DEFAULT_UV, matrices, vcp, 0);
+        client.getItemRenderer().renderItem(stack, mode, emissive ? LightmapTextureManager.MAX_LIGHT_COORDINATE : light, overlay, matrices, vcp, 0);
         if (renderLayer) RenderTask.resetOverride(vcp);
 
         int complexity = 4 * client.getItemRenderer().getHeldItemModel(stack, null, null, 0).getQuads(null, null, client.world.random).size();

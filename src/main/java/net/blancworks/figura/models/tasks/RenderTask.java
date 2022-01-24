@@ -22,7 +22,7 @@ public abstract class RenderTask {
         this.scale = scale == null ? MathUtils.Vec3f_ONE : scale;
     }
 
-    public abstract int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light);
+    public abstract int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay);
 
     public void transform(MatrixStack matrices) {
         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));

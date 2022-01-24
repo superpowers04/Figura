@@ -9,10 +9,7 @@ import net.blancworks.figura.models.animations.Animation;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
@@ -234,7 +231,7 @@ public class CustomModel extends FiguraAsset {
 
         synchronized (specialParts) {
             for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.Hud)) {
-                leftToRender = part.render(owner, matrices, new MatrixStack(), owner.getVCP(), 0xF000F0, OverlayTexture.DEFAULT_UV, 1f);
+                leftToRender = part.render(owner, matrices, new MatrixStack(), owner.getVCP(), LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 1f);
 
                 if (leftToRender <= 0)
                     break;

@@ -3,6 +3,7 @@ package net.blancworks.figura.models.tasks;
 import net.blancworks.figura.avatar.AvatarData;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.text.Text;
@@ -21,7 +22,7 @@ public class TextRenderTask extends RenderTask {
     }
 
     @Override
-    public int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light) {
+    public int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
         matrices.push();
 
         this.transform(matrices);
@@ -30,7 +31,7 @@ public class TextRenderTask extends RenderTask {
         int instructions = 0;
 
         for (int i = 0; i < text.size(); i++) {
-            instructions += textRenderer.draw(text.get(i), 0, i * lineSpacing, 0xFFFFFF, false, matrices.peek().getModel(), vcp, false, 0, emissive ? 0xF000F0 : light);
+            instructions += textRenderer.draw(text.get(i), 0, i * lineSpacing, 0xFFFFFF, false, matrices.peek().getModel(), vcp, false, 0, emissive ? LightmapTextureManager.MAX_LIGHT_COORDINATE : light);
         }
 
         matrices.pop();

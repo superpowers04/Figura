@@ -15,6 +15,7 @@ import net.minecraft.client.gui.hud.PlayerListHud;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.render.LightmapTextureManager;
 import net.minecraft.client.util.Window;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.player.PlayerEntity;
@@ -117,7 +118,7 @@ public class PlayerListHudMixin {
         stack.scale(-16, 16, 16);
         stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180));
 
-        if (!data.model.renderSkull(stack, data.tryGetImmediate(), 0xF000F0)) {
+        if (!data.model.renderSkull(stack, data.tryGetImmediate(), LightmapTextureManager.MAX_LIGHT_COORDINATE)) {
             matrices.push();
             matrices.translate(0f, 0f, 4f);
 
