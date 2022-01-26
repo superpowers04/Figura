@@ -79,6 +79,17 @@ public class AnimationAPI {
 
         public ReadOnlyLuaTable getTable() {
             return new ReadOnlyLuaTable(new LuaTable() {{
+                //bruh
+                set("start", new ZeroArgFunction() {
+                    @Override
+                    public LuaValue call() {
+                        //really, was that even needed?
+                        if (!animation.isPlaying())
+                            animation.play();
+                        return NIL;
+                    }
+                });
+
                 set("play", new ZeroArgFunction() {
                     @Override
                     public LuaValue call() {
