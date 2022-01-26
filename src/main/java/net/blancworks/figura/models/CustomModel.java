@@ -36,6 +36,8 @@ public class CustomModel extends FiguraAsset {
     public Vec2f defaultTextureSize;
 
     public int leftToRender = 0;
+    public int animRendered = 0;
+    public int animMaxRender = 0;
 
     //used during rendering
     public boolean applyHiddenTransforms = true;

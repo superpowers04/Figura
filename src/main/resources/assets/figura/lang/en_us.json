@@ -19,7 +19,7 @@
   "figura.trust.allowoffscreenrendering": "Offscreen Rendering",
   "figura.trust.allowcustomrenderlayers": "Custom Render Layers",
   "figura.trust.allowcustomsounds": "Custom Sounds",
-  "figura.trust.bbanimations": "Blockbench Animations",
+  "figura.trust.bbanimations": "Max Animations Complexity",
 
 
   "figura.gui.trustmenu.title": "Figura Trust Menu",

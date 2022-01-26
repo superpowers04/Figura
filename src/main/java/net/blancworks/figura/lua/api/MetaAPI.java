@@ -66,6 +66,13 @@ public class MetaAPI {
                 }
             });
 
+            set("getCanUseBBAnimations", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.BB_ANIMATIONS));
+                }
+            });
+
             set("getDoesRenderOffscreen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -91,13 +98,6 @@ public class MetaAPI {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.CUSTOM_SOUNDS) == 1);
-                }
-            });
-
-            set("getCanUseBBAnimations", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.BB_ANIMATIONS) == 1);
                 }
             });
 

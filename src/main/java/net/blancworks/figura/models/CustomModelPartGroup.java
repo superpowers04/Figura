@@ -21,6 +21,7 @@ public class CustomModelPartGroup extends CustomModelPart {
     public Vec3f animRot = Vec3f.ZERO.copy();
     public Vec3f animPos = Vec3f.ZERO.copy();
     public Vec3f animScale = MathUtils.Vec3f_ONE.copy();
+    public boolean wasAnimated = false;
 
     @Override
     public void applyTransforms(MatrixStack stack) {
