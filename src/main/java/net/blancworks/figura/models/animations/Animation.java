@@ -67,11 +67,10 @@ public class Animation {
     }
 
     //render cuntions
-    public void render() {
+    public int render(int renderCount, int renderLimit) {
         //start/end blend
         if (this.playState == PlayState.STARTING || this.playState == PlayState.STOPPING || (this.playState == PlayState.PAUSED && (this.lastState == PlayState.STARTING || this.lastState == PlayState.STOPPING))) {
-            renderBlend(this.playState == PlayState.STOPPING || (this.playState == PlayState.PAUSED && this.lastState == PlayState.STOPPING));
-            return;
+            return renderBlend(this.playState == PlayState.STOPPING || (this.playState == PlayState.PAUSED && this.lastState == PlayState.STOPPING), renderCount, renderLimit);
         }
 
         //if running, store current time
@@ -101,20 +100,39 @@ public class Animation {
 
         //keyframe interpolation
         lastTime = inverted ? length - kfTime : kfTime;
-        keyFrames.forEach((group, data) -> {
+        for (Map.Entry<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> entry : keyFrames.entrySet()) {
+            CustomModelPartGroup group = entry.getKey();
+            List<TreeMap<Float, KeyFrame>> data = entry.getValue();
+
             //get interpolated data
             Vec3f pos = processKeyFrame(data.get(0), lastTime);
             Vec3f rot = processKeyFrame(data.get(1), lastTime);
             Vec3f scale = processKeyFrame(data.get(2), lastTime);
 
             //apply data, if not null
-            if (pos != null) group.animPos.add(pos);
-            if (rot != null) group.animRot.add(rot);
-            if (scale != null) group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
-        });
+            if (pos != null) {
+                group.animPos.add(pos);
+                renderCount++;
+            }
+            if (rot != null) {
+                group.animRot.add(rot);
+                renderCount++;
+            }
+            if (scale != null) {
+                group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
+                renderCount++;
+            }
+
+            group.wasAnimated = pos != null || rot != null || scale != null;
+
+            if (renderCount > renderLimit)
+                break;
+        }
+
+        return renderCount;
     }
 
-    private void renderBlend(boolean ending) {
+    private int renderBlend(boolean ending, int renderCount, int renderLimit) {
         if (this.playState != PlayState.PAUSED)
             newTime = Util.getMeasuringTimeMs();
 
@@ -124,7 +142,7 @@ public class Animation {
         //delay
         if (!ending) {
             kfTime -= startDelay;
-            if (kfTime < 0f) return;
+            if (kfTime < 0f) return renderCount;
         }
 
         //end
@@ -135,15 +153,17 @@ public class Animation {
 
         //process keyframes
         if (!ending) lastTime = kfTime;
-        float finalTime = kfTime;
-        keyFrames.forEach((group, data) -> {
+        for (Map.Entry<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> entry : keyFrames.entrySet()) {
+            CustomModelPartGroup group = entry.getKey();
+            List<TreeMap<Float, KeyFrame>> data = entry.getValue();
+
             //get interpolated data
             Vec3f pos = ending && !wasStarting ? processKeyFrame(data.get(0), lastTime) : getKeyFrameData(data.get(0), startOffset, inverted);
             Vec3f rot = ending && !wasStarting ? processKeyFrame(data.get(1), lastTime) : getKeyFrameData(data.get(1), startOffset, inverted);
             Vec3f scale = ending && !wasStarting ? processKeyFrame(data.get(2), lastTime) : getKeyFrameData(data.get(2), startOffset, inverted);
 
             //apply data, if not null
-            float delta = finalTime / blendTime;
+            float delta = kfTime / blendTime;
             if (pos != null) {
                 if (ending) {
                     if (wasStarting)
@@ -153,6 +173,7 @@ public class Animation {
                     pos = MathUtils.lerpVec3f(Vec3f.ZERO, pos, delta);
                 }
                 group.animPos.add(pos);
+                renderCount++;
             }
             if (rot != null) {
                 if (ending) {
@@ -163,6 +184,7 @@ public class Animation {
                     rot = MathUtils.lerpVec3f(Vec3f.ZERO, rot, delta);
                 }
                 group.animRot.add(rot);
+                renderCount++;
             }
             if (scale != null) {
                 if (ending) {
@@ -173,8 +195,16 @@ public class Animation {
                     scale = MathUtils.lerpVec3f(MathUtils.Vec3f_ONE, scale, delta);
                 }
                 group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
+                renderCount++;
             }
-        });
+
+            group.wasAnimated = pos != null || rot != null || scale != null;
+
+            if (renderCount > renderLimit)
+                break;
+        }
+
+        return renderCount;
     }
 
     //state functions
@@ -226,9 +256,12 @@ public class Animation {
     //keyframe functions
     public void clearAnimData() {
         for (CustomModelPartGroup group : keyFrames.keySet()) {
-            group.animRot = Vec3f.ZERO.copy();
-            group.animPos = Vec3f.ZERO.copy();
-            group.animScale = MathUtils.Vec3f_ONE.copy();
+            if (group.wasAnimated) {
+                group.animRot = Vec3f.ZERO.copy();
+                group.animPos = Vec3f.ZERO.copy();
+                group.animScale = MathUtils.Vec3f_ONE.copy();
+                group.wasAnimated = false;
+            }
         }
     }
 

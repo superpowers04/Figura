@@ -1,6 +1,7 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.minecraft.client.gui.hud.DebugHud;
@@ -29,8 +30,12 @@ public class DebugHudMixin {
         lines.add(++i, "§b[FIGURA]§r");
         lines.add(++i, "Version: " + FiguraMod.MOD_VERSION);
 
-        if (AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.hasAvatar()) {
-            lines.add(++i, String.format("Complexity: %d", AvatarDataManager.localPlayer.getComplexity()));
+        AvatarData data = AvatarDataManager.localPlayer;
+        if (data != null && data.hasAvatar()) {
+            lines.add(++i, String.format("Complexity: %d", data.getComplexity()));
+
+            if (data.model != null)
+                lines.add(++i, String.format("Animations Complexity: %d", data.model.animRendered));
 
             CustomScript script = AvatarDataManager.localPlayer.script;
             if (script != null) {

@@ -8,6 +8,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.text.*;
@@ -289,7 +290,9 @@ public class NamePlateAPI {
 
             //trust
             TrustContainer tc = currentData.getTrustContainer();
-            if ((currentData.getComplexity() > tc.getTrust(TrustContainer.Trust.COMPLEXITY)) || (currentData.model != null && !currentData.model.animations.isEmpty() && tc.getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 0)) {
+            CustomModel model = currentData.model;
+            if ((currentData.getComplexity() > tc.getTrust(TrustContainer.Trust.COMPLEXITY)) ||
+                    (model != null && (model.animRendered > model.animMaxRender || (!model.animations.isEmpty() && model.animMaxRender == 0)))) {
                 badges += "!";
             } else if (currentData.script != null) {
                 CustomScript script = currentData.script;
