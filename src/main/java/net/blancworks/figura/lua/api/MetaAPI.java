@@ -66,7 +66,7 @@ public class MetaAPI {
                 }
             });
 
-            set("getCanUseBBAnimations", new ZeroArgFunction() {
+            set("getAnimationLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.BB_ANIMATIONS));
