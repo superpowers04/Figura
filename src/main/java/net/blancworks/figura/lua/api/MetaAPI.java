@@ -144,6 +144,12 @@ public class MetaAPI {
                 }
             });
 
+            set("getCurrentAnimationCount", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.avatarData.model == null ? 0 : script.avatarData.model.animRendered);
+                }
+            });
 
             set("getFiguraVersion", new ZeroArgFunction() {
                 @Override
