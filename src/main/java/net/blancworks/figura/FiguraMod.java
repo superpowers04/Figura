@@ -292,6 +292,7 @@ public class FiguraMod implements ClientModInitializer {
             UUID.fromString("45361fcf-f188-46de-ae96-43d89afd6658"), //money
             UUID.fromString("d47ce8af-b942-47de-8790-f602241531e3"), //omo
             UUID.fromString("0d04770a-9482-4a39-8011-fcbb7c99b8e1"), //lily
-            UUID.fromString("10c4a29c-78fd-428c-bf51-f70b93e2ab45")  //rambles
+            UUID.fromString("10c4a29c-78fd-428c-bf51-f70b93e2ab45"), //rambles
+            UUID.fromString("50de3aff-e8ef-4d55-9092-f96b7b40de7a")  //devnull
     );
 }
