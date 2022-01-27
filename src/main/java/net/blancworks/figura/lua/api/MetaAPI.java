@@ -15,8 +15,8 @@ public class MetaAPI {
         return new Identifier("default", "meta");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ScriptLocalAPITable(script, new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set("getInitLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -199,6 +199,6 @@ public class MetaAPI {
                     return LuaValue.valueOf(NewFiguraNetworkManager.connectionStatus + 1);
                 }
             });
-        }});
+        }};
     }
 }

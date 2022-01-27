@@ -2,7 +2,6 @@ package net.blancworks.figura.lua.api.renderer;
 
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.entity.EntityAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -42,8 +41,8 @@ public class RendererAPI {
         return new Identifier("default", "renderer");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable(){{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set("setShadowSize", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -220,8 +219,7 @@ public class RendererAPI {
                     return ret;
                 }
             });
-
-        }});
+        }};
     }
 
     private static final LuaFunction returnTrue = new ZeroArgFunction() {

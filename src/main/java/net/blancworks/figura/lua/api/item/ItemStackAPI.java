@@ -4,7 +4,6 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.NBTAPI;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.ItemStack;
@@ -25,8 +24,8 @@ public class ItemStackAPI {
         return new Identifier("default", "item_stack");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set("createItem", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
@@ -35,14 +34,12 @@ public class ItemStackAPI {
                     return getTable(item);
                 }
             });
-        }});
+        }};
     }
 
-    public static ReadOnlyLuaTable getTable(ItemStack stack) {
-
-        return new ReadOnlyLuaTable(new LuaTable() {{
-
-            set("stack", LuaValue.userdataOf(stack));
+    public static LuaTable getTable(ItemStack stack) {
+        return new LuaTable() {{
+            set("figura$item_stack", LuaValue.userdataOf(stack));
 
             set("getType", new ZeroArgFunction() {
                 @Override
@@ -92,7 +89,7 @@ public class ItemStackAPI {
                 public LuaValue call() {
                     LuaTable table = new LuaTable();
                     ItemTags.getTagGroup().getTagsFor(stack.getItem()).forEach(identifier -> table.insert(0, LuaValue.valueOf(String.valueOf(identifier))));
-                    return new ReadOnlyLuaTable(table);
+                    return new LuaTable(table);
                 }
             });
 
@@ -217,8 +214,7 @@ public class ItemStackAPI {
                     return LuaValue.valueOf(ret);
                 }
             });
-
-        }});
+        }};
     }
 
     public static void setItemNbt(ItemStack item, String s) {
@@ -234,15 +230,14 @@ public class ItemStackAPI {
     }
 
     public static ItemStack checkOrCreateItemStack(LuaValue arg1) {
-        ItemStack item = (ItemStack) arg1.get("stack").touserdata(ItemStack.class);
-        if (item == null) {
-            try {
-                return  ItemStackArgumentType.itemStack().parse(new StringReader(arg1.checkjstring())).createStack(1, false);
-            } catch (CommandSyntaxException e) {
-                throw new LuaError("Could not create item stack\n" + e.getMessage());
-            }
-        }
+        ItemStack item = (ItemStack) arg1.get("figura$item_stack").touserdata(ItemStack.class);
+        if (item != null)
+            return item;
 
-        return item;
+        try {
+            return ItemStackArgumentType.itemStack().parse(new StringReader(arg1.checkjstring())).createStack(1, false);
+        } catch (CommandSyntaxException e) {
+            throw new LuaError("Could not create item stack\n" + e.getMessage());
+        }
     }
 }

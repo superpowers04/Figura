@@ -1,7 +1,6 @@
 package net.blancworks.figura.lua.api.particle;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -38,8 +37,8 @@ public class ParticleAPI {
         return new Identifier("default", "particle");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set("addParticle", new VarArgFunction() {
                 @Override
                 public Varargs onInvoke(Varargs args) {
@@ -101,7 +100,7 @@ public class ParticleAPI {
                     return NIL;
                 }
             });
-        }});
+        }};
     }
 
     private static AbstractMap.Entry<Identifier, ParticleType<?>> particleSetup(CustomScript script, LuaValue id) {

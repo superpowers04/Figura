@@ -1,11 +1,9 @@
 package net.blancworks.figura.lua;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.lua.api.AnimationAPI;
 import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.actionWheel.ActionWheelAPI;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.camera.CameraAPI;
@@ -28,7 +26,6 @@ import net.blancworks.figura.lua.api.world.WorldAPI;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
-import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.PackageLib;
@@ -57,8 +54,6 @@ public class FiguraLuaManager {
 
         LoadState.install(modGlobals);
         LuaC.install(modGlobals);
-
-        LuaString.s_metatable = new ReadOnlyLuaTable(LuaString.s_metatable);
 
         registerEvents();
         registerAPI();
@@ -105,10 +100,6 @@ public class FiguraLuaManager {
         registerEvent("render");
         registerEvent("onCommand");
         registerEvent("onDamage");
-    }
-
-    public static void loadScript(AvatarData data, String content) {
-        data.script = new CustomScript(data, content);
     }
 
     public static void setupScriptAPI(CustomScript script) {

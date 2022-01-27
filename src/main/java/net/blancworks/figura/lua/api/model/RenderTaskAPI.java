@@ -1,7 +1,6 @@
 package net.blancworks.figura.lua.api.model;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -79,14 +78,14 @@ public class RenderTaskAPI {
         return taskTable;
     }
 
-    public static class RenderTaskTable extends ReadOnlyLuaTable {
+    public static class RenderTaskTable extends LuaTable {
         public final RenderTask task;
 
         public RenderTaskTable(RenderTask task) {
             this.task = task;
         }
 
-        public ReadOnlyLuaTable getTable(CustomScript script) {
+        public LuaTable getTable(CustomScript script) {
             LuaTable tbl;
 
             if (task instanceof TextRenderTask text)
@@ -151,7 +150,7 @@ public class RenderTaskAPI {
                 }
             });
 
-            return new ReadOnlyLuaTable(tbl);
+            return tbl;
         }
 
         private LuaTable getTextTable(TextRenderTask text) {

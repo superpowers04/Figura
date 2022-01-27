@@ -1,7 +1,6 @@
 package net.blancworks.figura.lua.api.block;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaTable;
 
@@ -9,18 +8,13 @@ import org.luaj.vm2.LuaTable;
 //Eventually provides blocks, with properties and all, to lua.
 public class BlockAPI {
 
-    private static final ReadOnlyLuaTable globalLuaTable = new ReadOnlyLuaTable(new LuaTable() {{
-        
-        
-
-    }});
-
+    private static final LuaTable globalLuaTable = new LuaTable();
 
     public static Identifier getID() {
         return new Identifier("default", "blocks");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
+    public static LuaTable getForScript(CustomScript script) {
         return globalLuaTable;
     }
 }

@@ -3,7 +3,6 @@ package net.blancworks.figura.lua.api.entity;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
@@ -29,27 +28,22 @@ public class PlayerEntityAPI {
         return new Identifier("default", "player");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        //Global table will get the local player.
-        //why I can not use EntityAPI.getTableForEntity() ?
+    //Global table will get the local player
+    public static LuaTable getForScript(CustomScript script) {
         return new PlayerEntityLuaAPITable(() -> (PlayerEntity) script.avatarData.lastEntity);
-    }
-
-    public static ReadOnlyLuaTable get(PlayerEntity entity) {
-        return new PlayerEntityLuaAPITable(() -> entity);
     }
 
     public static class PlayerEntityLuaAPITable extends LivingEntityAPI.LivingEntityAPITable<PlayerEntity> {
 
         public PlayerEntityLuaAPITable(Supplier<PlayerEntity> entitySupplier) {
             super(entitySupplier);
-            super.setTable(getTable());
         }
 
-        public LuaTable getTable() {
-            LuaTable superTable = super.getTable();
+        @Override
+        public void setTable() {
+            super.setTable();
 
-            superTable.set("getHeldItem", new OneArgFunction() {
+            set("getHeldItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     int hand = arg.checkint();
@@ -70,35 +64,35 @@ public class PlayerEntityAPI {
                 }
             });
 
-            superTable.set("getFood", new ZeroArgFunction() {
+            set("getFood", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().getHungerManager().getFoodLevel());
                 }
             });
 
-            superTable.set("getSaturation", new ZeroArgFunction() {
+            set("getSaturation", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().getHungerManager().getSaturationLevel());
                 }
             });
 
-            superTable.set("getExperienceProgress", new ZeroArgFunction() {
+            set("getExperienceProgress", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().experienceProgress);
                 }
             });
 
-            superTable.set("getExperienceLevel", new ZeroArgFunction() {
+            set("getExperienceLevel", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().experienceLevel);
                 }
             });
 
-            superTable.set("getTargetedEntity", new ZeroArgFunction() {
+            set("getTargetedEntity", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     if (targetEntity.get() instanceof ClientPlayerEntity) {
@@ -113,7 +107,7 @@ public class PlayerEntityAPI {
                 }
             });
 
-            superTable.set("lastDamageSource", new ZeroArgFunction() {
+            set("lastDamageSource", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
@@ -124,7 +118,7 @@ public class PlayerEntityAPI {
                 }
             });
 
-            superTable.set("getStoredValue", new OneArgFunction() {
+            set("getStoredValue", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     String key = arg1.checkjstring();
@@ -136,7 +130,7 @@ public class PlayerEntityAPI {
                 }
             });
 
-            superTable.set("getModelType", new OneArgFunction() {
+            set("getModelType", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
@@ -146,7 +140,7 @@ public class PlayerEntityAPI {
                 }
             });
 
-            superTable.set("hasAvatar", new ZeroArgFunction() {
+            set("hasAvatar", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     AvatarData data = AvatarDataManager.getDataForPlayer(targetEntity.get().getUuid());
@@ -154,7 +148,7 @@ public class PlayerEntityAPI {
                 }
             });
 
-            superTable.set("getGamemode", new ZeroArgFunction() {
+            set("getGamemode", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     ClientPlayNetworkHandler networkHandler = MinecraftClient.getInstance().getNetworkHandler();
@@ -167,14 +161,12 @@ public class PlayerEntityAPI {
                 }
             });
 
-            superTable.set("isFlying", new ZeroArgFunction() {
+            set("isFlying", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(targetEntity.get().getAbilities().flying);
                 }
             });
-
-            return superTable;
         }
 
         @Override
