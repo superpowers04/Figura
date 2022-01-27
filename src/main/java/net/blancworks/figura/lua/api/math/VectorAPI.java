@@ -1,7 +1,6 @@
 package net.blancworks.figura.lua.api.math;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
 import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.client.MinecraftClient;
@@ -17,14 +16,14 @@ import org.luaj.vm2.lib.TwoArgFunction;
 import java.awt.*;
 
 public class VectorAPI {
-    private static ReadOnlyLuaTable globalLuaTable;
+    private static LuaTable globalLuaTable;
     private static boolean initialized;
 
     public static Identifier getID() {
         return new Identifier("default", "vectors");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
+    public static LuaTable getForScript(CustomScript script) {
         if (!initialized) {
             updateGlobalTable();
             initialized = true;
@@ -34,7 +33,7 @@ public class VectorAPI {
     }
 
     public static void updateGlobalTable() {
-        globalLuaTable = new ReadOnlyLuaTable(new LuaTable() {{
+        globalLuaTable = new LuaTable() {{
             set("of", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -152,7 +151,7 @@ public class VectorAPI {
                     return LuaVector.of(MathUtils.worldToScreenSpace(LuaVector.checkOrNew(arg).asV3f()));
                 }
             });
-        }});
+        }};
     }
 
     public static LuaVector lerp(LuaVector first, LuaVector second, float delta) {

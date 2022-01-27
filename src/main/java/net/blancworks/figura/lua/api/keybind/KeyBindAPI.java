@@ -1,7 +1,6 @@
 package net.blancworks.figura.lua.api.keybind;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.mixin.KeyBindingAccessorMixin;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.util.Identifier;
@@ -18,9 +17,8 @@ public class KeyBindAPI {
         return new Identifier("default", "keybind");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
-
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set("newKey", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
@@ -82,14 +80,12 @@ public class KeyBindAPI {
                     return list;
                 }
             });
-
-        }});
+        }};
     }
 
     //vanilla keybinds
-    public static ReadOnlyLuaTable getTable(KeyBinding keybind) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
-
+    public static LuaTable getTable(KeyBinding keybind) {
+        return new LuaTable() {{
             set("isPressed", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -117,14 +113,12 @@ public class KeyBindAPI {
                     return LuaValue.valueOf(keybind.getTranslationKey());
                 }
             });
-
-        }});
+        }};
     }
 
     //custom keybinds
-    public static ReadOnlyLuaTable getTable(FiguraKeybind keybind) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
-
+    public static LuaTable getTable(FiguraKeybind keybind) {
+        return new LuaTable() {{
             set("isPressed", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -174,7 +168,6 @@ public class KeyBindAPI {
                     return LuaValue.valueOf(keybind.name);
                 }
             });
-
-        }});
+        }};
     }
 }

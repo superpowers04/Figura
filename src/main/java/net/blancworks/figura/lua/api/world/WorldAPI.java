@@ -3,7 +3,6 @@ package net.blancworks.figura.lua.api.world;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.entity.EntityAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -26,21 +25,20 @@ public class WorldAPI {
         return MinecraftClient.getInstance().world;
     }
 
-    private static ReadOnlyLuaTable globalLuaTable;
-
+    private static LuaTable globalLuaTable;
 
     public static Identifier getID() {
         return new Identifier("default", "world");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
+    public static LuaTable getForScript(CustomScript script) {
         if (globalLuaTable == null)
             updateGlobalTable();
         return globalLuaTable;
     }
 
     public static void updateGlobalTable(){
-        globalLuaTable = new ReadOnlyLuaTable(new LuaTable() {{
+        globalLuaTable = new LuaTable() {{
             set("getBlockState", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -256,7 +254,6 @@ public class WorldAPI {
                     return getWorld() == null ? FALSE : TRUE;
                 }
             });
-
-        }});
+        }};
     }
 }

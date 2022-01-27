@@ -2,7 +2,6 @@ package net.blancworks.figura.lua.api.network;
 
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
@@ -16,30 +15,20 @@ public class NetworkAPI {
         return new Identifier("default", "network");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new NetworkAPILuaTable(script);
-    }
-    
-    public static class NetworkAPILuaTable extends ReadOnlyLuaTable {
-        public CustomScript targetScript;
-        
-        public NetworkAPILuaTable(CustomScript script) {
-            this.targetScript = script;
-
-            LuaTable table = new LuaTable();
-            
-            table.set("registerPing", new OneArgFunction() {
+    public static LuaTable getForScript(CustomScript targetScript) {
+        return new LuaTable() {{
+            set("registerPing", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     String s = arg.checkjstring();
-                    
+
                     targetScript.registerPingName(s);
-                    
+
                     return NIL;
                 }
             });
-            
-            table.set("ping", new TwoArgFunction() {
+
+            set("ping", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     //Only allow sending pings on local player avatar.
@@ -65,8 +54,6 @@ public class NetworkAPI {
                     return NIL;
                 }
             });
-            
-            super.setTable(table);
-        }
+        }};
     }
 }

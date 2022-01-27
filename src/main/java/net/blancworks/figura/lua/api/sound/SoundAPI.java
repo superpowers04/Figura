@@ -2,7 +2,6 @@ package net.blancworks.figura.lua.api.sound;
 
 import net.blancworks.figura.access.SourceManagerAccessor;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.mixin.SoundManagerAccessorMixin;
 import net.blancworks.figura.mixin.SoundSystemAccessorMixin;
@@ -45,8 +44,8 @@ public class SoundAPI {
         return new Identifier("default", "sound");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set("playSound", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
@@ -61,10 +60,10 @@ public class SoundAPI {
                 public LuaValue call() {
                     Map<SoundInstance, Channel.SourceManager> sources = new HashMap<>(((SoundSystemAccessorMixin) ((SoundManagerAccessorMixin) MinecraftClient.getInstance().getSoundManager()).getSoundSystem()).getSources());
 
-                    ReadOnlyLuaTable tbl = new ReadOnlyLuaTable();
+                    LuaTable tbl = new LuaTable();
                     int i = 1;
                     for (SoundInstance sound : sources.keySet()) {
-                        tbl.javaRawSet(i, LuaString.valueOf(sound.getId().toString()));
+                        tbl.set(i, LuaString.valueOf(sound.getId().toString()));
                         i++;
                     }
                     return tbl;
@@ -115,16 +114,16 @@ public class SoundAPI {
                 public LuaTable call(LuaValue arg) {
                     boolean showUUIDs = !arg.isnil(1) && arg.checkboolean(1);
 
-                    ReadOnlyLuaTable tbl = new ReadOnlyLuaTable();
+                    LuaTable tbl = new LuaTable();
                     int i = 1;
                     for (Channel.SourceManager sourceManager : new HashSet<>(FiguraSoundManager.getChannel().getSourceManagers())) {
                         String soundName = ((SourceManagerAccessor)sourceManager).getName();
-                        tbl.javaRawSet(i, LuaString.valueOf(soundName));
+                        tbl.set(i, LuaString.valueOf(soundName));
                         i++;
 
                         if (showUUIDs) {
                             UUID owner = FiguraChannel.getSourceOwner(sourceManager);
-                            tbl.javaRawSet(i, LuaString.valueOf(owner.toString()));
+                            tbl.set(i, LuaString.valueOf(owner.toString()));
                             i++;
                         }
                     }
@@ -135,10 +134,10 @@ public class SoundAPI {
             set("getRegisteredCustomSounds", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    ReadOnlyLuaTable tbl = new ReadOnlyLuaTable();
+                    LuaTable tbl = new LuaTable();
                     int i = 1;
                     for(String name : script.customSounds.keySet()) {
-                        tbl.javaRawSet(i, LuaString.valueOf(name));
+                        tbl.set(i, LuaString.valueOf(name));
                         i++;
                     }
                     return tbl;
@@ -152,7 +151,7 @@ public class SoundAPI {
                     return NIL;
                 }
             });
-        }});
+        }};
     }
 
     public static void playSound(CustomScript script, LuaValue arg1, LuaValue arg2, LuaValue arg3) {

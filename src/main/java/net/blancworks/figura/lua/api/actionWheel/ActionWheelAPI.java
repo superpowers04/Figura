@@ -3,19 +3,11 @@ package net.blancworks.figura.lua.api.actionWheel;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.lua.api.ScriptLocalAPITable;
-import net.blancworks.figura.lua.api.item.ItemStackAPI;
-import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.ThreeArgFunction;
-import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ActionWheelAPI {
@@ -32,8 +24,8 @@ public class ActionWheelAPI {
         return new Identifier("default", "action_wheel");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ScriptLocalAPITable(script, new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set(SLOT_1, ActionWheelCustomization.getTableForPart(SLOT_1, script));
             set(SLOT_2, ActionWheelCustomization.getTableForPart(SLOT_2, script));
             set(SLOT_3, ActionWheelCustomization.getTableForPart(SLOT_3, script));
@@ -97,7 +89,6 @@ public class ActionWheelAPI {
                     return NIL;
                 }
             });
-
-        }});
+        }};
     }
 }
