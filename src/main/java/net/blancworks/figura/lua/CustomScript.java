@@ -114,6 +114,7 @@ public class CustomScript extends FiguraAsset {
     public boolean crossHairEnabled = true;
 
     public boolean unlockCursor = false;
+    public static double mouseScroll = 0d;
 
     // If the player should render the entity their riding
     public boolean renderMount = true;
