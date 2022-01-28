@@ -14,7 +14,6 @@ import net.minecraft.client.Mouse;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaError;
-import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -280,7 +279,7 @@ public class ClientAPI {
             set("getTitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getTitle().asString());
+                    return LuaValue.valueOf(((InGameHudAccess) client.inGameHud).getTitle().asString());
                 }
             });
 
@@ -295,14 +294,14 @@ public class ClientAPI {
             set("getSubtitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getSubtitle().asString());
+                    return LuaValue.valueOf(((InGameHudAccess) client.inGameHud).getSubtitle().asString());
                 }
             });
 
             set("getActionbar", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getOverlayMessage().asString());
+                    return LuaValue.valueOf(((InGameHudAccess) client.inGameHud).getOverlayMessage().asString());
                 }
             });
 
@@ -342,6 +341,15 @@ public class ClientAPI {
                         e.printStackTrace();
                         throw new LuaError("Failed to compare versions!");
                     }
+                }
+            });
+
+            set("getMouseScroll", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    LuaValue ret = LuaValue.valueOf(CustomScript.mouseScroll);
+                    CustomScript.mouseScroll = 0d;
+                    return ret;
                 }
             });
         }};
