@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.api.camera.CameraAPI;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.minecraft.client.render.Camera;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.BlockView;
 import org.spongepowered.asm.mixin.Mixin;
@@ -25,7 +26,7 @@ public abstract class CameraMixin {
     @Inject(method = "update", at = @At(value = "RETURN"))
     private void updateTail(BlockView area, Entity focusedEntity, boolean thirdPerson, boolean inverseView, float tickDelta, CallbackInfo ci) {
 
-        AvatarData currentData = AvatarDataManager.getDataForPlayer(focusedEntity.getUuid());
+        AvatarData currentData = focusedEntity instanceof PlayerEntity ? AvatarDataManager.getDataForPlayer(focusedEntity.getUuid()) : AvatarDataManager.getDataForEntity(focusedEntity);
         if (currentData == null || currentData.script == null)
             return;
 

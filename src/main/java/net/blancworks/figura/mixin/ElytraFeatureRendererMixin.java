@@ -16,6 +16,7 @@ import net.minecraft.client.render.entity.model.ElytraEntityModel;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -37,7 +38,7 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
 
     @Inject(at = @At("HEAD"), method = "render")
     public void onRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
-        AvatarData data = AvatarDataManager.getDataForPlayer(livingEntity.getUuid());
+        AvatarData data = livingEntity instanceof PlayerEntity ? AvatarDataManager.getDataForPlayer(livingEntity.getUuid()) : AvatarDataManager.getDataForEntity(livingEntity);
 
         if (data != null && data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1) {
             figura$applyPartCustomization(ElytraModelAPI.VANILLA_LEFT_WING, ((ElytraEntityModelAccess) elytra).getLeftWing(), data);

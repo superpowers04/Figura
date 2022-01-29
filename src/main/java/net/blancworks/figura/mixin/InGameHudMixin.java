@@ -12,6 +12,7 @@ import net.minecraft.client.gui.hud.InGameHud;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -49,7 +50,7 @@ public class InGameHudMixin implements InGameHudAccess {
         //render hud parts
         Entity entity = MinecraftClient.getInstance().getCameraEntity();
         if (entity != null) {
-            AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
+            AvatarData data = entity instanceof PlayerEntity ? AvatarDataManager.getDataForPlayer(entity.getUuid()) : AvatarDataManager.getDataForEntity(entity);
             if (data != null && data.model != null)
                 data.model.renderHudParts(matrices);
         }

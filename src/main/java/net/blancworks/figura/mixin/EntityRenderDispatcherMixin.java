@@ -60,7 +60,7 @@ public abstract class EntityRenderDispatcherMixin {
             return;
         }
 
-        AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
+        AvatarData data = entity instanceof PlayerEntity ? AvatarDataManager.getDataForPlayer(entity.getUuid()) : AvatarDataManager.getDataForEntity(entity);
         if (data == null || data.script == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0 || data.script.shouldRenderFire == null)
             return;
 

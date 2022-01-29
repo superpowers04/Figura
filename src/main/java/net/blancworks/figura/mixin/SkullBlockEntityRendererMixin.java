@@ -52,6 +52,6 @@ public abstract class SkullBlockEntityRendererMixin {
         data = null;
 
         if (profile != null && profile.getId() != null)
-            data = AvatarDataManager.getDataForPlayer(profile.getId());
+            data = AvatarDataManager.getLocalDataForPlayer(profile.getId());
     }
 }

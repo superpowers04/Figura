@@ -15,6 +15,7 @@ import net.minecraft.client.render.entity.model.BipedEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -35,7 +36,7 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
 
     @Inject(at = @At("HEAD"), method = "renderArmor")
     private void onRenderArmor(MatrixStack matrices, VertexConsumerProvider vertexConsumers, T livingEntity, EquipmentSlot equipmentSlot, int i, A bipedEntityModel, CallbackInfo ci) {
-        if (partMap.size() == 0) {
+        if (partMap.isEmpty()) {
             partMap.put(EquipmentSlot.HEAD, ArmorModelAPI.VANILLA_HELMET);
             partMap.put(EquipmentSlot.CHEST, ArmorModelAPI.VANILLA_CHESTPLATE);
             partMap.put(EquipmentSlot.LEGS, ArmorModelAPI.VANILLA_LEGGINGS);
@@ -45,7 +46,7 @@ public class ArmorFeatureRendererMixin<T extends LivingEntity, M extends BipedEn
         String partID = partMap.get(equipmentSlot);
 
         if (partID != null) {
-            AvatarData data = AvatarDataManager.getDataForPlayer(livingEntity.getUuid());
+            AvatarData data = livingEntity instanceof PlayerEntity ? AvatarDataManager.getDataForPlayer(livingEntity.getUuid()) : AvatarDataManager.getDataForEntity(livingEntity);
 
             if (data != null && data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1) {
                 figura$applyPartCustomization(partID, bipedEntityModel.head, data);
