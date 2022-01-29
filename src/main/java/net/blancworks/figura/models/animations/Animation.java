@@ -230,7 +230,7 @@ public class Animation {
     }
 
     public void stop() {
-        if (this.playState != PlayState.STOPPED) {
+        if (this.playState != PlayState.STOPPED && this.playState != PlayState.STOPPING) {
             this.time = Util.getMeasuringTimeMs();
             this.wasStarting = this.playState == PlayState.STARTING;
             this.playState = PlayState.STOPPING;
