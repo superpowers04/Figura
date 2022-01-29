@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 
@@ -154,7 +155,13 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
             tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
 
             //Auth user ASAP
-            doTask(() -> authUser(true));
+            doTask(() -> {
+                try {
+                    authUser(true).get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
@@ -327,7 +334,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     //Opens a connection
     public CompletableFuture<Void> openNewConnection() {
         //Ensure user is authed, we need the JWT to verify this user.
-        return authUser().thenComposeAsync(unused -> {
+        return authUser(false).thenComposeAsync(unused -> {
             try {
                 closeSocketConnection();
                 String connectionString = String.format("%s/connect/", mainServerURL());
@@ -368,10 +375,6 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
 
         currWebSocket.sendClose(0);
         currWebSocket = null;
-    }
-
-    public CompletableFuture<Void> authUser() {
-        return authUser(false);
     }
 
     public CompletableFuture<Void> authUser(boolean force) {

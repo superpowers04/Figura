@@ -238,13 +238,20 @@ public class CustomScript extends FiguraAsset {
                     scriptError = true;
                     String error = "Script overran resource limits";
 
-                    if (data == AvatarDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
+                    boolean logOthers = (boolean) Config.LOG_OTHERS_SCRIPT.value;
+                    if (data != null && (data == AvatarDataManager.localPlayer || logOthers)) {
+                        //prefix
                         MutableText message = LOG_PREFIX.shallowCopy();
-                        if (data != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(data.name.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
+
+                        //name
+                        if (logOthers) message.append(data.name.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
+
+                        //error
                         message.append(new LiteralText(">> ").styled(LUA_COLOR)).append(error).formatted(Formatting.RED);
 
                         sendChatMessage(message);
                     }
+
                     throw new RuntimeException(error);
                 }
             };
@@ -760,24 +767,35 @@ public class CustomScript extends FiguraAsset {
     //--Debugging--
 
     public void logLuaError(LuaError error) {
-        //Never even log errors for other players, only the local player.
-        if (avatarData != AvatarDataManager.localPlayer && !(boolean) Config.LOG_OTHERS_SCRIPT.value)
+        boolean logOthers = (boolean) Config.LOG_OTHERS_SCRIPT.value;
+
+        //log only local player if not everyone
+        if (avatarData == null || (avatarData != AvatarDataManager.localPlayer && !logOthers))
             return;
 
+        //error string
         String msg = error.getMessage();
         msg = msg.replace("\t", "   ");
         String[] messageParts = msg.split("\n");
 
+        //prefix
         MutableText message = LOG_PREFIX.shallowCopy();
-        if (avatarData != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
+
+        //name
+        if (logOthers) message.append(avatarData.name.copy()).append(" ");
+
+        //error
         message.append(new LiteralText(">> ").styled(LUA_COLOR));
+
         sendChatMessage(message);
 
+        //java path
         for (String part : messageParts) {
             if (!part.trim().equals("[Java]: in ?"))
                 sendChatMessage(new LiteralText(part).formatted(Formatting.RED));
         }
 
+        //script path
         String location = "?";
         try {
             //split the line at the first :
