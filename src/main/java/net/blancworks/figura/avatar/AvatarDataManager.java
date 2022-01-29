@@ -129,21 +129,28 @@ public final class AvatarDataManager {
         return getData;
     }
 
+    public static AvatarData getLocalDataForPlayer(UUID id) {
+        if (panic || id == null)
+            return null;
+
+        return LOADED_PLAYER_DATA.get(id);
+    }
+
     public static AvatarData getDataForEntity(Entity entity) {
-        if (panic || entity == null)
+        //return if panic
+        if (panic || entity == null || EntityAvatarData.CEM_MAP.isEmpty())
+            return null;
+
+        //return if no CEM
+        NbtCompound avatar = EntityAvatarData.CEM_MAP.get(Registry.ENTITY_TYPE.getId(entity.getType()));
+        if (avatar == null)
             return null;
 
         UUID id = entity.getUuid();
         EntityAvatarData getData;
-        if (!LOADED_PLAYER_DATA.containsKey(id)) {
+        if (!LOADED_ENTITY_DATA.containsKey(id)) {
             getData = new EntityAvatarData(id);
-            NbtCompound avatar = EntityAvatarData.CEM_MAP.get(Registry.ENTITY_TYPE.getId(entity.getType()));
-
-            if (avatar != null) {
-                avatar.putUuid("id", id);
-                getData.loadFromNbt(avatar);
-            }
-
+            getData.loadFromNbt(avatar);
             LOADED_ENTITY_DATA.put(id, getData);
         } else {
             getData = LOADED_ENTITY_DATA.get(id);

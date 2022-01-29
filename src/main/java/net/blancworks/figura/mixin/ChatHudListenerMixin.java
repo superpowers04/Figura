@@ -53,11 +53,13 @@ public class ChatHudListenerMixin {
             playerName = playerEntry.getProfile().getName();
         }
 
+        //player not found
+        if (playerName.equals(""))
+            return;
+
         //get player data
         AvatarData currentData = AvatarDataManager.getDataForPlayer(uuid);
-
-        //player not found or no data
-        if (playerName.equals("") || currentData == null)
+        if (currentData == null)
             return;
 
         //apply formatting
