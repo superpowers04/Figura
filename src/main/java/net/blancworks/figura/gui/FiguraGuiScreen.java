@@ -420,10 +420,10 @@ public class FiguraGuiScreen extends Screen {
             Text panic = new LiteralText("").append(new TranslatableText("figura.gui.panic.warning").formatted(Formatting.YELLOW)).append(new LiteralText(" =").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)));
             drawCenteredText(matrices, this.textRenderer, panic, this.width / 2, this.height - 12, 0xFFFFFF);
         }
-        else if (FiguraMod.latestVersionStatus >= 0) {
-            Text version = new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)).formatted(Formatting.DARK_GRAY);
+        else if (FiguraMod.latestVersionStatus == 0) {
+            Text version = new LiteralText("Figura " + FiguraMod.MOD_VERSION).formatted(Formatting.DARK_GRAY, Formatting.ITALIC);
             drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
-        } else {
+        } else if (FiguraMod.latestVersionStatus < 0) {
             Text version = new LiteralText("").append(new LiteralText("Figura " + FiguraMod.MOD_VERSION).formatted(Formatting.YELLOW, Formatting.ITALIC)).append(new LiteralText(" =").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)));
             drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
 
@@ -433,6 +433,23 @@ public class FiguraGuiScreen extends Screen {
                 List<Text> tooltipText = List.of(
                         new LiteralText("").append(new TranslatableText("figura.gui.newver.tooltip")).append(" ").append(new LiteralText(FiguraMod.latestVersion).formatted(Formatting.YELLOW, Formatting.UNDERLINE)),
                         new TranslatableText("figura.gui.newver.tooltip2")
+                );
+                matrices.push();
+                matrices.translate(0, 0, 599);
+                renderTooltip(matrices, tooltipText, mouseX, mouseY);
+                matrices.pop();
+            }
+        } else {
+            String load = Integer.toHexString(Math.abs(FiguraMod.ticksElapsed) % 16);
+            Text version = new LiteralText("Figura " + FiguraMod.MOD_VERSION).formatted(Formatting.DARK_PURPLE, Formatting.ITALIC);
+            drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
+
+            //status tooltip
+            int textWidth = this.textRenderer.getWidth(version);
+            if (mouseX >= this.width / 2 - textWidth / 2 && mouseX < this.width / 2 + textWidth / 2 && mouseY >= this.height - 12 && mouseY < this.height - 1) {
+                List<Text> tooltipText = List.of(
+                        new LiteralText("Are you a time traveller?").formatted(Formatting.LIGHT_PURPLE),
+                        new LiteralText("Latest version is: ").formatted(Formatting.LIGHT_PURPLE).append(new LiteralText(FiguraMod.latestVersion).formatted(Formatting.AQUA, Formatting.UNDERLINE))
                 );
                 matrices.push();
                 matrices.translate(0, 0, 599);
