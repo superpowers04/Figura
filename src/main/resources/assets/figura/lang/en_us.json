@@ -69,10 +69,21 @@
   "figura.gui.button.sounds.tooltip": "Preview Custom Sounds",
   "figura.gui.button.openfolder.tooltip": "Hold LEFT SHIFT and click to open the selected avatar folder",
 
-  "figura.gui.button.status.tooltip": "none | not found",
-  "figura.gui.button.statustwo.tooltip": "100kb+ | error | disconnected",
-  "figura.gui.button.statusthree.tooltip": "75kb+ | connecting",
-  "figura.gui.button.statusfour.tooltip": "ok | connected",
+  "figura.gui.button.status.model.0": "none",
+  "figura.gui.button.status.model.1": "100kb+",
+  "figura.gui.button.status.model.2": "75kb+",
+  "figura.gui.button.status.model.3": "ok",
+
+  "figura.gui.button.status.texture.0": "none",
+  "figura.gui.button.status.texture.3": "ok",
+
+  "figura.gui.button.status.script.0": "none",
+  "figura.gui.button.status.script.1": "error",
+  "figura.gui.button.status.script.3": "ok",
+
+  "figura.gui.button.status.backend.1": "disconnected",
+  "figura.gui.button.status.backend.2": "connecting",
+  "figura.gui.button.status.backend.3": "connected",
 
   "figura.gui.status.model": "Model",
   "figura.gui.status.texture": "Texture",
