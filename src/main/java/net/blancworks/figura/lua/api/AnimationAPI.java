@@ -164,7 +164,7 @@ public class AnimationAPI {
             set("getSpeed", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(animation.speed);
+                    return LuaValue.valueOf(animation.inverted ? -animation.speed : animation.speed);
                 }
             });
 
