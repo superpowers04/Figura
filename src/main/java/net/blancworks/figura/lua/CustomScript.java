@@ -120,6 +120,8 @@ public class CustomScript extends FiguraAsset {
     public boolean renderMount = true;
     public boolean renderMountShadow = true;
 
+    public boolean renderPlayerHead = true;
+
     public boolean hasPlayer = false;
 
     public DamageSource lastDamageSource;

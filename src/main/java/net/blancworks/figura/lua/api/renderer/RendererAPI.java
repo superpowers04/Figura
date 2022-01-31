@@ -159,6 +159,21 @@ public class RendererAPI {
                 }
             });
 
+            set("setRenderPlayerHead", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    script.renderPlayerHead = arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            set("getRenderPlayerHead", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(script.renderPlayerHead);
+                }
+            });
+
             set("raycastBlocks", new VarArgFunction() {
                 @Override
                 public LuaValue invoke(Varargs args) {
