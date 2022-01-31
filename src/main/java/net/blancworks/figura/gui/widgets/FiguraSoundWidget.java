@@ -12,11 +12,17 @@ import net.minecraft.client.gui.Selectable;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.ElementListWidget;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.text.LiteralText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 public class FiguraSoundWidget extends ElementListWidget<FiguraSoundWidget.Entry> {
 
@@ -42,7 +48,13 @@ public class FiguraSoundWidget extends ElementListWidget<FiguraSoundWidget.Entry
 
         AvatarData data = AvatarDataManager.localPlayer;
         if (data != null && data.script != null) {
-            data.script.customSounds.forEach((name, sound) -> this.addEntry(new SoundEntry(Text.of(name), sound)));
+            data.script.customSounds.forEach((name, sound) -> {
+                DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
+                df.setRoundingMode(RoundingMode.HALF_UP);
+                float size = Float.parseFloat(df.format(sound.sample().length / 1000.0f));
+
+                this.addEntry(new SoundEntry(new LiteralText(name).append(new LiteralText(" (" + size + "kb)").formatted(Formatting.DARK_GRAY)), sound));
+            });
         }
     }
 

@@ -630,7 +630,7 @@ public class FiguraGuiScreen extends Screen {
         //format file size
         DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
         df.setRoundingMode(RoundingMode.HALF_UP);
-        float size = Float.parseFloat(df.format(fileSize / 1024.0f));
+        float size = Float.parseFloat(df.format(fileSize / 1000.0f));
 
         MutableText fsText = new TranslatableText("figura.gui.status.filesize").append(new LiteralText(" " + size).styled(FiguraMod.ACCENT_COLOR));
 
