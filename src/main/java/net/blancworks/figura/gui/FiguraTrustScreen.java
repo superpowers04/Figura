@@ -257,7 +257,7 @@ public class FiguraTrustScreen extends Screen {
                 //format file size
                 DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
                 df.setRoundingMode(RoundingMode.HALF_UP);
-                float fileSize = Float.parseFloat(df.format(size / 1024.0f));
+                float fileSize = Float.parseFloat(df.format(size / 1000.0f));
 
                 MutableText sizeText = new TranslatableText("figura.gui.status.filesize").formatted(Formatting.GRAY).append(" " + fileSize);
                 if (size >= AvatarData.FILESIZE_LARGE_THRESHOLD)
