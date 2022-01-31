@@ -11,10 +11,8 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.LightType;
 import net.minecraft.world.World;
-import net.minecraft.world.biome.Biome;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
@@ -164,29 +162,6 @@ public class WorldAPI {
                 }
             });
 
-            set("getBiomeID", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue a) {
-
-                    LuaVector vec = LuaVector.checkOrNew(a);
-                    BlockPos pos = new BlockPos(vec.asV3iFloored());
-
-                    if (getWorld().getChunk(pos) == null) return NIL;
-
-                    Biome b = getWorld().getBiome(pos);
-
-                    if (b == null)
-                        return NIL;
-
-                    Identifier id = getWorld().getRegistryManager().get(Registry.BIOME_KEY).getId(b);
-
-                    if (id == null)
-                        return NIL;
-
-                    return LuaString.valueOf(id.toString());
-                }
-            });
-
             set("isOpenSky", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue a) {
@@ -196,38 +171,6 @@ public class WorldAPI {
                     if (getWorld().getChunk(pos) == null) return NIL;
 
                     return LuaBoolean.valueOf(getWorld().isSkyVisible(pos));
-                }
-            });
-
-            set("getBiomeTemperature", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue a) {
-                    LuaVector vec = LuaVector.checkOrNew(a);
-                    BlockPos pos = new BlockPos(vec.asV3iFloored());
-
-                    if (getWorld().getChunk(pos) == null) return NIL;
-
-                    Biome b = getWorld().getBiome(pos);
-
-                    if (b == null) return NIL;
-
-                    return LuaNumber.valueOf(b.getTemperature());
-                }
-            });
-
-            set("getBiomePrecipitation", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue a) {
-                    LuaVector vec = LuaVector.checkOrNew(a);
-                    BlockPos pos = new BlockPos(vec.asV3iFloored());
-
-                    if (getWorld().getChunk(pos) == null) return NIL;
-
-                    Biome b = getWorld().getBiome(pos);
-
-                    if (b == null) return NIL;
-
-                    return LuaString.valueOf(b.getPrecipitation().name());
                 }
             });
 
@@ -245,6 +188,14 @@ public class WorldAPI {
                     }
 
                     return playerList;
+                }
+            });
+
+            set("getBiome", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    BlockPos pos = LuaVector.checkOrNew(arg).asBlockPos();
+                    return BiomeAPI.getTable(getWorld().getBiome(pos));
                 }
             });
 
