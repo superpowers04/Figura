@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.actionWheel;
+package net.blancworks.figura.lua.api.actionwheel;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;

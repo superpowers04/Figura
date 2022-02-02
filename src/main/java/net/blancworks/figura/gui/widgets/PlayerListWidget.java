@@ -23,6 +23,7 @@ import net.minecraft.util.Identifier;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerListWidget.PlayerListWidgetEntry> {
 
@@ -89,7 +90,6 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
 
     @Override
     public void select(PlayerListWidgetEntry entry) {
-
         if (entry instanceof GroupListWidgetEntry) {
             if (state.selected == entry.entryValue) {
                 TrustContainer tc = PlayerTrustManager.getContainer((Identifier) state.selected);
@@ -104,6 +104,20 @@ public class PlayerListWidget extends CustomListWidget<PlayerListEntry, PlayerLi
         super.select(entry);
 
         ((FiguraTrustScreen) getParent()).permissionList.rebuild();
+    }
+
+    public PlayerListWidgetEntry getEntry(UUID id) {
+        for (CustomListEntry customListEntry : this.children()) {
+            if (customListEntry instanceof PlayerListWidgetEntry player && !(player instanceof GroupListWidgetEntry)) {
+                UUID playerId = UUID.fromString(player.getIdentifier());
+
+                if (playerId.compareTo(id) == 0) {
+                    return player;
+                }
+            }
+        }
+
+        return null;
     }
 
     public static class PlayerListWidgetEntry extends CustomListEntry {

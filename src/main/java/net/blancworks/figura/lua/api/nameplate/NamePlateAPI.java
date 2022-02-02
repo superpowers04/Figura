@@ -257,6 +257,22 @@ public class NamePlateAPI {
         String badges = " ";
 
         if (currentData.hasAvatar()) {
+            //trust
+            TrustContainer tc = currentData.getTrustContainer();
+            CustomModel model = currentData.model;
+            if ((currentData.getComplexity() > tc.getTrust(TrustContainer.Trust.COMPLEXITY)) ||
+                    (model != null && (model.animRendered > model.animMaxRender || (!model.animations.isEmpty() && model.animMaxRender == 0)))) {
+                currentData.trustIssues = true;
+            } else if (currentData.script != null) {
+                CustomScript script = currentData.script;
+                currentData.trustIssues = (script.customVCP != null && script.customVCP.hasLayers() && tc.getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 0) ||
+                        (!script.nameplateCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 0) ||
+                        (!script.allCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0) ||
+                        (!script.customSounds.isEmpty() && tc.getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0);
+            } else {
+                currentData.trustIssues = false;
+            }
+
             //the mark
             if (!currentData.isAvatarLoaded()) {
                 if ((boolean) Config.BADGE_AS_ICONS.value)
@@ -266,26 +282,12 @@ public class NamePlateAPI {
             }
             else if (currentData.script != null && currentData.script.scriptError)
                 badges += "▲";
+            else if (currentData.trustIssues)
+                badges += "!";
             else if (FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
             else
                 badges += "△";
-
-            //trust
-            TrustContainer tc = currentData.getTrustContainer();
-            CustomModel model = currentData.model;
-            if ((currentData.getComplexity() > tc.getTrust(TrustContainer.Trust.COMPLEXITY)) ||
-                    (model != null && (model.animRendered > model.animMaxRender || (!model.animations.isEmpty() && model.animMaxRender == 0)))) {
-                badges += "!";
-            } else if (currentData.script != null) {
-                CustomScript script = currentData.script;
-                if ((script.customVCP != null && script.customVCP.hasLayers() && tc.getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 0) ||
-                        (!script.nameplateCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 0) ||
-                        (!script.allCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0) ||
-                        (!script.customSounds.isEmpty() && tc.getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0)) {
-                    badges += "!";
-                }
-            }
         }
 
         //special badges

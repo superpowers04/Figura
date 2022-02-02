@@ -8,15 +8,14 @@ import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.config.ConfigManager.Config;
-import net.blancworks.figura.lua.api.LuaEvent;
-import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
+import net.blancworks.figura.lua.api.RenderLayerAPI;
+import net.blancworks.figura.lua.api.actionwheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSound;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
@@ -707,10 +706,7 @@ public class CustomScript extends FiguraAsset {
             }
 
             //format then append queue
-            queue = new StringBuilder(queue.toString().replaceAll("[\\t\\n\\r]+", " "));
-            queue = new StringBuilder(queue.toString().replaceAll("\\s+", " "));
-
-            ret.append(queue);
+            ret.append(queue.toString().replaceAll("\\s+", " "));
             queue = new StringBuilder();
 
             //add string contents
@@ -786,12 +782,15 @@ public class CustomScript extends FiguraAsset {
         //name
         if (logOthers) message.append(avatarData.name.copy()).append(" ");
 
-        //error
+        //header
         message.append(new LiteralText(">> ").styled(LUA_COLOR));
-
         sendChatMessage(message);
 
-        //java path
+        //non-local warning
+        if (avatarData == AvatarDataManager.localPlayer && !avatarData.isLocalAvatar)
+            sendChatMessage(new LiteralText("non-local avatar script!\n").formatted(Formatting.RED, Formatting.UNDERLINE));
+
+        //error
         for (String part : messageParts) {
             if (!part.trim().equals("[Java]: in ?"))
                 sendChatMessage(new LiteralText(part).formatted(Formatting.RED));
@@ -825,7 +824,8 @@ public class CustomScript extends FiguraAsset {
             }
         } catch (Exception ignored) {}
 
-        sendChatMessage(new LiteralText("script:\n   " + location).formatted(Formatting.RED));
+        sendChatMessage(new LiteralText("script:").formatted(Formatting.RED));
+        sendChatMessage(new LiteralText("   " + location).formatted(Formatting.RED));
 
         error.printStackTrace();
     }

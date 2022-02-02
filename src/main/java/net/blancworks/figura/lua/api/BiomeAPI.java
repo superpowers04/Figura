@@ -1,22 +1,58 @@
-package net.blancworks.figura.lua.api.world;
+package net.blancworks.figura.lua.api;
 
+import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.BuiltinRegistries;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import org.luaj.vm2.LuaError;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.OneArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class BiomeAPI {
 
-    public static LuaTable getTable(Biome biome) {
+    public static Identifier getID() {
+        return new Identifier("default", "biome");
+    }
+
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
+            set("getBiome", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    World world = MinecraftClient.getInstance().world;
+                    if (world == null) return NIL;
+
+                    BlockPos pos = LuaVector.checkOrNew(arg2).asBlockPos();
+                    Biome biome = world.getRegistryManager().get(Registry.BIOME_KEY).get(new Identifier(arg1.checkjstring()));
+
+                    if (biome == null)
+                        throw new LuaError("Biome not found");
+
+                    return getTable(world, pos, biome);
+                }
+            });
+        }};
+    }
+
+    public static LuaTable getTable(World world, BlockPos pos) {
+        return getTable(world, pos, world.getBiome(pos));
+    }
+
+    public static LuaTable getTable(World world, BlockPos pos, Biome biome) {
+        if (world == null)
+            return new LuaTable();
+
         return new LuaTable() {{
             set("getID", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Identifier identifier = BuiltinRegistries.BIOME.getId(biome);
+                    Identifier identifier = world.getRegistryManager().get(Registry.BIOME_KEY).getId(biome);
                     return identifier == null ? NIL : LuaValue.valueOf(identifier.toString());
                 }
             });
@@ -91,24 +127,24 @@ public class BiomeAPI {
                 }
             });
 
-            set("isHot", new OneArgFunction() {
+            set("isHot", new ZeroArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1) {
-                    return LuaValue.valueOf(biome.isHot(LuaVector.checkOrNew(arg1).asBlockPos()));
+                public LuaValue call() {
+                    return LuaValue.valueOf(biome.isHot(pos));
                 }
             });
 
-            set("isCold", new OneArgFunction() {
+            set("isCold", new ZeroArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1) {
-                    return LuaValue.valueOf(biome.isCold(LuaVector.checkOrNew(arg1).asBlockPos()));
+                public LuaValue call() {
+                    return LuaValue.valueOf(biome.isCold(pos));
                 }
             });
 
-            set("canSnow", new OneArgFunction() {
+            set("canSnow", new ZeroArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1) {
-                    return LuaValue.valueOf(!biome.doesNotSnow(LuaVector.checkOrNew(arg1).asBlockPos()));
+                public LuaValue call() {
+                    return LuaValue.valueOf(!biome.doesNotSnow(pos));
                 }
             });
         }};

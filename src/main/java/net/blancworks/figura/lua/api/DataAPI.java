@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.data;
+package net.blancworks.figura.lua.api;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;

@@ -1,10 +1,9 @@
-package net.blancworks.figura.lua.api.client;
+package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.access.InGameHudAccess;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.utils.TextUtils;
 import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;

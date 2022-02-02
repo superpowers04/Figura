@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.actionWheel;
+package net.blancworks.figura.lua.api.actionwheel;
 
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.gui.ActionWheel;

@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.particle;
+package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
