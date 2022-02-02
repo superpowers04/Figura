@@ -1,6 +1,6 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
+import net.blancworks.figura.lua.api.RenderLayerAPI;
 import net.minecraft.client.gl.Framebuffer;
 import org.lwjgl.opengl.GL30;
 import org.spongepowered.asm.mixin.Mixin;

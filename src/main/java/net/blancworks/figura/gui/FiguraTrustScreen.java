@@ -38,7 +38,7 @@ public class FiguraTrustScreen extends Screen {
 
     public Screen parentScreen;
 
-    private CustomTextFieldWidget searchBox;
+    public CustomTextFieldWidget searchBox;
     private CustomTextFieldWidget uuidBox;
 
     private int paneY;

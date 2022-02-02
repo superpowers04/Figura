@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.renderer;
+package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;

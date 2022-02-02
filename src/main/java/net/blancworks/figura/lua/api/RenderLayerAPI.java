@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.renderlayers;
+package net.blancworks.figura.lua.api;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;

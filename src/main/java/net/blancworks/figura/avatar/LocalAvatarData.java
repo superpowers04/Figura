@@ -85,7 +85,7 @@ public class LocalAvatarData extends AvatarData {
         File file = new File(path);
 
         //set loaded name
-        loadedName = file.getName();
+        loadedName = file.getName() + "§r";
         AvatarDataManager.localPlayerPath = path;
 
         //set root directory

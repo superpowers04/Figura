@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.world;
+package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
@@ -195,7 +195,7 @@ public class WorldAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     BlockPos pos = LuaVector.checkOrNew(arg).asBlockPos();
-                    return BiomeAPI.getTable(getWorld().getBiome(pos));
+                    return BiomeAPI.getTable(getWorld(), pos);
                 }
             });
 

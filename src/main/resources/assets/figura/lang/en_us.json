@@ -212,6 +212,10 @@
   "figura.playerpopup.reload": "Reload Avatar",
   "figura.playerpopup.increasetrust": "Increase Trust",
   "figura.playerpopup.decreasetrust": "Decrease Trust",
+  "figura.playerpopup.trustmenu": "Open Trust Menu",
+
+  "figura.playerpopup.trustissue": "Avatar has features that requires more trust!",
+  "figura.playerpopup.scriptissue": "Avatar has an script error!",
 
 
   "figura.models.unselect": "-unselect-",

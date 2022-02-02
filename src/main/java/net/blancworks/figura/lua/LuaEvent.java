@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api;
+package net.blancworks.figura.lua;
 
 import org.luaj.vm2.LuaFunction;
 import org.luaj.vm2.LuaTable;
