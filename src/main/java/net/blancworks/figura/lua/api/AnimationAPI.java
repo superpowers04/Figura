@@ -253,7 +253,7 @@ public class AnimationAPI {
             set("setBlendTime", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    animation.blendTime = arg.checknumber().tofloat();
+                    animation.blendTime = Math.max(arg.checknumber().tofloat(), 0f);
                     return NIL;
                 }
             });

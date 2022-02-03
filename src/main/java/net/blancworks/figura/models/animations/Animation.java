@@ -4,6 +4,7 @@ import net.blancworks.figura.models.CustomModelPartGroup;
 import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3f;
 
 import java.util.HashMap;
@@ -163,7 +164,7 @@ public class Animation {
             Vec3f scale = ending && !wasStarting ? processKeyFrame(data.get(2), lastTime) : getKeyFrameData(data.get(2), startOffset, inverted);
 
             //apply data, if not null
-            float delta = kfTime / blendTime;
+            float delta = MathHelper.clamp(kfTime / blendTime, 0f, 1f);
             if (pos != null) {
                 if (ending) {
                     if (wasStarting)
@@ -289,7 +290,7 @@ public class Animation {
             //get delta
             float delta;
             if (next.time == curr.time) delta = 1f;
-            else delta = (time - curr.time) / (next.time - curr.time);
+            else delta = MathHelper.clamp((time - curr.time) / (next.time - curr.time), 0f, 1f);
 
             //return interpolated keyframe
             switch (curr.interpolation) {
