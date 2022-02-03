@@ -123,7 +123,7 @@ public class BiomeAPI {
             set("isHot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(biome.isHot(pos));
+                    return LuaValue.valueOf(biome.getTemperature(pos) > 1f);
                 }
             });
 
