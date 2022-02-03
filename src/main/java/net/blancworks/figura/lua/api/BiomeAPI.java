@@ -120,13 +120,6 @@ public class BiomeAPI {
                 }
             });
 
-            set("hasHighHumidity", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(biome.hasHighHumidity());
-                }
-            });
-
             set("isHot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -138,13 +131,6 @@ public class BiomeAPI {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(biome.isCold(pos));
-                }
-            });
-
-            set("canSnow", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(!biome.doesNotSnow(pos));
                 }
             });
         }};
