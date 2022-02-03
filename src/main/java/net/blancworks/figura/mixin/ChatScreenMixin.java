@@ -2,6 +2,7 @@ package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.minecraft.client.gui.screen.ChatScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,6 +23,6 @@ public class ChatScreenMixin {
         if (data == null || data.script == null)
             return;
 
-        this.chatField.setEditableColor(chatText.startsWith(data.script.commandPrefix) ? 0x5555FF : 0xFFFFFF);
+        this.chatField.setEditableColor(chatText.startsWith(data.script.commandPrefix) ? (int) Config.ACCENT_COLOR.value : 0xFFFFFF);
     }
 }

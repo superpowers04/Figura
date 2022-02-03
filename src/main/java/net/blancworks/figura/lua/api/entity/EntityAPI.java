@@ -25,6 +25,7 @@ import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.Iterator;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 public class EntityAPI {
@@ -313,6 +314,13 @@ public class EntityAPI {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().isSneaky());
+                }
+            });
+
+            set("isHamburger", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaBoolean.valueOf(targetEntity.get().getUuid().compareTo(UUID.fromString("66a6c5c4-963b-4b73-a0d9-162faedd8b7f")) == 0);
                 }
             });
 
