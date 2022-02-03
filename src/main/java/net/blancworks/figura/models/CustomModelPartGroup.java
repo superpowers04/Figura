@@ -34,10 +34,13 @@ public class CustomModelPartGroup extends CustomModelPart {
 
         //rotation
         Vec3f rotation = this.rot.copy();
-        rotation.add(-this.animRot.getX(), -this.animRot.getY(), this.animRot.getZ());
-
-        if (this.isMimicMode) vanillaRotate(stack, rotation);
-        else rotate(stack, rotation);
+        if (this.isMimicMode) {
+            rotation.add(this.animRot.getX(), this.animRot.getY(), this.animRot.getZ());
+            vanillaRotate(stack, rotation);
+        } else {
+            rotation.add(-this.animRot.getX(), -this.animRot.getY(), this.animRot.getZ());
+            rotate(stack, rotation);
+        }
 
         //scale
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());

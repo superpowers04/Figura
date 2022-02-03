@@ -64,19 +64,21 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         //Reset this here because... Execution order.
 
         if (data != null && data.script != null && data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 1) {
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().body, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, this.getModel().rightArm, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, this.getModel().leftLeg, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, this.getModel().rightLeg, entity);
+            PlayerEntityModel<AbstractClientPlayerEntity> model = this.getModel();
 
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().hat, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, this.getModel().jacket, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, this.getModel().leftSleeve, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPants, entity);
-            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, model.head, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, model.body, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, model.leftArm, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, model.rightArm, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, model.leftLeg, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, model.rightLeg, entity);
+
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, model.hat, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, model.jacket, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, model.leftSleeve, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, model.rightSleeve, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, model.leftPants, entity);
+            figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, model.rightPants, entity);
 
             if (data.script.customShadowSize != null) {
                 shadowRadius = data.script.customShadowSize;
@@ -86,7 +88,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
     @Inject(at = @At("RETURN"), method = "render")
     public void postRender(AbstractClientPlayerEntity entity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
-        AvatarData data = AvatarDataManager.getDataForPlayer(entity.getGameProfile().getId());
+        AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
 
         if (data != null && data.script != null && data.script.isDone) {
             for (VanillaModelAPI.ModelPartTable partTable : data.script.vanillaModelPartTables) {
@@ -107,19 +109,21 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
 
         if (data == null) return;
 
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, this.getModel().head, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, this.getModel().body, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, this.getModel().leftArm, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, this.getModel().rightArm, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, this.getModel().leftLeg, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, this.getModel().rightLeg, entity);
+        PlayerEntityModel<AbstractClientPlayerEntity> model = this.getModel();
 
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, this.getModel().hat, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, this.getModel().jacket, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, this.getModel().leftSleeve, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, this.getModel().rightSleeve, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, this.getModel().leftPants, entity);
-        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, this.getModel().rightPants, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HEAD, model.head, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_TORSO, model.body, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_ARM, model.leftArm, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_ARM, model.rightArm, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_LEG, model.leftLeg, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_LEG, model.rightLeg, entity);
+
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_HAT, model.hat, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_JACKET, model.jacket, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_SLEEVE, model.leftSleeve, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_SLEEVE, model.rightSleeve, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_LEFT_PANTS, model.leftPants, entity);
+        figura$applyPartCustomization(VanillaModelAPI.VANILLA_RIGHT_PANTS, model.rightPants, entity);
     }
 
     @Inject(at = @At("RETURN"), method = "renderArm")
