@@ -58,7 +58,8 @@ public class NamePlateAPI {
             set("getEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(targetScript.getOrMakeNameplateCustomization(accessor).enabled);
+                    Boolean enabled = targetScript.getOrMakeNameplateCustomization(accessor).enabled;
+                    return enabled == null ? NIL : LuaValue.valueOf(enabled);
                 }
             });
 
@@ -112,7 +113,8 @@ public class NamePlateAPI {
             set("getText", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(targetScript.getOrMakeNameplateCustomization(accessor).text);
+                    String text = targetScript.getOrMakeNameplateCustomization(accessor).text;
+                    return text == null ? NIL : LuaValue.valueOf(text);
                 }
             });
         }};

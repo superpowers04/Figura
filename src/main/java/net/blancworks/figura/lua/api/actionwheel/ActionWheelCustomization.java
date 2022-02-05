@@ -9,7 +9,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -51,7 +50,8 @@ public class ActionWheelCustomization {
             set("getFunction", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return targetScript.getOrMakeActionWheelCustomization(accessor).function;
+                    LuaFunction func = targetScript.getOrMakeActionWheelCustomization(accessor).function;
+                    return func == null ? NIL : func;
                 }
             });
 
@@ -67,7 +67,8 @@ public class ActionWheelCustomization {
             set("getItem", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return ItemStackAPI.getTable(targetScript.getOrMakeActionWheelCustomization(accessor).item);
+                    ItemStack item = targetScript.getOrMakeActionWheelCustomization(accessor).item;
+                    return item == null ? NIL : ItemStackAPI.getTable(item);
                 }
             });
 
@@ -82,7 +83,8 @@ public class ActionWheelCustomization {
             set("getHoverItem", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return ItemStackAPI.getTable(targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem);
+                    ItemStack item = targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem;
+                    return item == null ? NIL : ItemStackAPI.getTable(item);
                 }
             });
 
@@ -127,7 +129,8 @@ public class ActionWheelCustomization {
             set("getTitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(targetScript.getOrMakeActionWheelCustomization(accessor).title);
+                    String title = targetScript.getOrMakeActionWheelCustomization(accessor).title;
+                    return title == null ? NIL : LuaValue.valueOf(title);
                 }
             });
 
@@ -142,7 +145,8 @@ public class ActionWheelCustomization {
             set("getTexture", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(targetScript.getOrMakeActionWheelCustomization(accessor).texture.toString());
+                    String texture = targetScript.getOrMakeActionWheelCustomization(accessor).texture.toString();
+                    return texture == null ? NIL : LuaValue.valueOf(texture);
                 }
             });
 

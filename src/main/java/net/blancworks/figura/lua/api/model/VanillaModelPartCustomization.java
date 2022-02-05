@@ -5,7 +5,6 @@ import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.CustomModelPart;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3f;
-import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -31,9 +30,7 @@ public class VanillaModelPartCustomization {
             set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-                    customization.pos = LuaVector.checkOrNew(arg1).asV3f();
-
+                    targetScript.getOrMakePartCustomization(accessor).pos = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -48,8 +45,7 @@ public class VanillaModelPartCustomization {
             set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-                    customization.rot = LuaVector.checkOrNew(arg1).asV3f();
+                    targetScript.getOrMakePartCustomization(accessor).rot = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -64,8 +60,7 @@ public class VanillaModelPartCustomization {
             set("setScale", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-                    customization.scale = LuaVector.checkOrNew(arg1).asV3f();
+                    targetScript.getOrMakePartCustomization(accessor).scale = LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
@@ -73,27 +68,15 @@ public class VanillaModelPartCustomization {
             set("getEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-
-                    if (customization != null)
-                        return LuaBoolean.valueOf(customization.visible);
-
-                    return NIL;
+                    Boolean enabled = targetScript.getOrMakePartCustomization(accessor).visible;
+                    return enabled == null ? NIL : LuaValue.valueOf(enabled);
                 }
             });
 
             set("setEnabled", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-
-                    if (arg.isnil()) {
-                        customization.visible = null;
-                        return NIL;
-                    }
-
-                    customization.visible = arg.checkboolean();
-
+                    targetScript.getOrMakePartCustomization(accessor).visible = arg.isnil() ? null : arg.checkboolean();
                     return NIL;
                 }
             });
