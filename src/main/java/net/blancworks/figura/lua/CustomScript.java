@@ -343,14 +343,14 @@ public class CustomScript extends FiguraAsset {
         });
     }
 
-    public void runActionWheelFunction(LuaFunction function) {
+    public void runActionWheelFunction(LuaFunction function, LuaValue arg) {
         if (!isDone || scriptError || !hasPlayer || avatarData.lastEntity == null)
             return;
 
         queueTask(() -> {
             setInstructionLimitPermission(TrustContainer.Trust.TICK_INST, tickInstructionCount);
             try {
-                function.call();
+                function.call(arg == null ? LuaValue.NIL : arg);
             } catch (Exception error) {
                 handleError(error);
             }
