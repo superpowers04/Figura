@@ -86,7 +86,7 @@ public class NewActionWheel extends DrawableHelper {
             ActionWheelCustomization slot = currentData.script.newActionWheelSlots.get(selectedSlot);
 
             if (slot != null && slot.function != null) {
-                currentData.script.runActionWheelFunction(slot.function);
+                currentData.script.runActionWheelFunction(slot.function, slot.arg);
             }
         }
 

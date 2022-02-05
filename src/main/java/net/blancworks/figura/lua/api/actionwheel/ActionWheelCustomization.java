@@ -19,6 +19,7 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ActionWheelCustomization {
     public LuaFunction function;
+    public LuaValue arg;
 
     public ItemStack item;
     public ItemStack hoverItem;
@@ -54,10 +55,11 @@ public class ActionWheelCustomization {
                 }
             });
 
-            set("setFunction", new OneArgFunction() {
+            set("setFunction", new TwoArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1) {
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     targetScript.getOrMakeActionWheelCustomization(accessor).function = arg1.isnil() ? null : arg1.checkfunction();
+                    targetScript.getOrMakeActionWheelCustomization(accessor).arg = arg2;
                     return NIL;
                 }
             });
