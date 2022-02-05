@@ -2,6 +2,7 @@ package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.lua.api.math.VectorAPI;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
@@ -81,35 +82,42 @@ public class BiomeAPI {
             set("getSkyColor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(biome.getSkyColor());
+                    return VectorAPI.RGBfromInt(biome.getSkyColor());
                 }
             });
 
             set("getFoliageColor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(biome.getFoliageColor());
+                    return VectorAPI.RGBfromInt(biome.getFoliageColor());
+                }
+            });
+
+            set("getGrassColor", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return VectorAPI.RGBfromInt(biome.getGrassColorAt(pos.getX(), pos.getZ()));
                 }
             });
 
             set("getFogColor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(biome.getFogColor());
+                    return VectorAPI.RGBfromInt(biome.getFogColor());
                 }
             });
 
             set("getWaterColor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(biome.getWaterColor());
+                    return VectorAPI.RGBfromInt(biome.getWaterColor());
                 }
             });
 
             set("getWaterFogColor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(biome.getWaterFogColor());
+                    return VectorAPI.RGBfromInt(biome.getWaterFogColor());
                 }
             });
 

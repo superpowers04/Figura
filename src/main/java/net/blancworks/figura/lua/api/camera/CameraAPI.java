@@ -29,8 +29,7 @@ public class CameraAPI {
             set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vec3f pos = targetScript.getOrMakeCameraCustomization(accessor).position;
-                    return pos == null ? NIL : LuaVector.of(pos);
+                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).position);
                 }
             });
 
@@ -45,8 +44,7 @@ public class CameraAPI {
             set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vec3f rot = targetScript.getOrMakeCameraCustomization(accessor).rotation;
-                    return rot == null ? NIL : LuaVector.of(rot);
+                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).rotation);
                 }
             });
 
@@ -61,8 +59,7 @@ public class CameraAPI {
             set("getPivot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    Vec3f piv = targetScript.getOrMakeCameraCustomization(accessor).pivot;
-                    return piv == null ? NIL : LuaVector.of(piv);
+                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).pivot);
                 }
             });
 
