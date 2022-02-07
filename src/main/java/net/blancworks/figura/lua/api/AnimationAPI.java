@@ -294,6 +294,21 @@ public class AnimationAPI {
                     return LuaValue.valueOf(animation.replace);
                 }
             });
+
+            set("setPriority", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.priority = arg.checkint();
+                    return NIL;
+                }
+            });
+
+            set("getPriority", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.priority);
+                }
+            });
         }};
     }
 }

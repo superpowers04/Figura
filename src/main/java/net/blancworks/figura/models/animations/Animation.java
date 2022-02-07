@@ -27,8 +27,8 @@ public class Animation {
     public boolean override;
 
     public float blendTime = 1f / 20f; //1 tick
-
     public boolean replace = false;
+    public int priority = 0;
 
     //keyframes
     public HashMap<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> keyFrames = new HashMap<>();
@@ -110,6 +110,12 @@ public class Animation {
             CustomModelPartGroup group = entry.getKey();
             List<TreeMap<Float, KeyFrame>> data = entry.getValue();
 
+            //priority check
+            if (this.priority < group.lastPriority)
+                continue;
+
+            boolean replace = this.priority > group.lastPriority;
+
             //get interpolated data
             Vec3f pos = processKeyFrame(data.get(0), lastTime);
             Vec3f rot = processKeyFrame(data.get(1), lastTime);
@@ -117,21 +123,30 @@ public class Animation {
 
             //apply data, if not null
             if (pos != null) {
-                if (override) group.animPosOverride.add(pos);
-                else group.animPos.add(pos);
+                if (override) {
+                    if (replace) group.animPosOverride = pos;
+                    else group.animPosOverride.add(pos);
+                } else {
+                    if (replace) group.animPos = pos;
+                    else group.animPos.add(pos);
+                }
                 renderCount++;
             }
             if (rot != null) {
-                group.animRot.add(rot);
+                if (replace) group.animRot = rot;
+                else group.animRot.add(rot);
                 renderCount++;
             }
             if (scale != null) {
-                group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
+                if (replace) group.animScale = scale;
+                else group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
                 renderCount++;
             }
 
+            //group vars
             group.wasAnimated = pos != null || rot != null || scale != null;
-            group.replaced = this.replace;
+            group.replaced = group.replaced || this.replace;
+            group.lastPriority = this.priority;
 
             if (renderCount > renderLimit)
                 break;
@@ -165,6 +180,12 @@ public class Animation {
             CustomModelPartGroup group = entry.getKey();
             List<TreeMap<Float, KeyFrame>> data = entry.getValue();
 
+            //priority check
+            if (this.priority < group.lastPriority)
+                continue;
+
+            boolean replace = this.priority > group.lastPriority;
+
             //get interpolated data
             Vec3f pos = ending && !wasStarting ? processKeyFrame(data.get(0), lastTime) : getKeyFrameData(data.get(0), startOffset, inverted);
             Vec3f rot = ending && !wasStarting ? processKeyFrame(data.get(1), lastTime) : getKeyFrameData(data.get(1), startOffset, inverted);
@@ -181,8 +202,13 @@ public class Animation {
                     pos = MathUtils.lerpVec3f(Vec3f.ZERO, pos, delta);
                 }
 
-                if (override) group.animPosOverride.add(pos);
-                else group.animPos.add(pos);
+                if (override) {
+                    if (replace) group.animPosOverride = pos;
+                    else group.animPosOverride.add(pos);
+                } else {
+                    if (replace) group.animPos = pos;
+                    else group.animPos.add(pos);
+                }
                 renderCount++;
             }
             if (rot != null) {
@@ -193,7 +219,9 @@ public class Animation {
                 } else {
                     rot = MathUtils.lerpVec3f(Vec3f.ZERO, rot, delta);
                 }
-                group.animRot.add(rot);
+
+                if (replace) group.animRot = rot;
+                else group.animRot.add(rot);
                 renderCount++;
             }
             if (scale != null) {
@@ -204,12 +232,16 @@ public class Animation {
                 } else {
                     scale = MathUtils.lerpVec3f(MathUtils.Vec3f_ONE, scale, delta);
                 }
-                group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
+
+                if (replace) group.animScale = scale;
+                else group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
                 renderCount++;
             }
 
+            //group vars
             group.wasAnimated = pos != null || rot != null || scale != null;
-            group.replaced = this.replace;
+            group.replaced = group.replaced || this.replace;
+            group.lastPriority = this.priority;
 
             if (renderCount > renderLimit)
                 break;
