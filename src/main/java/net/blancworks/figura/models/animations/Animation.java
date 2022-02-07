@@ -347,7 +347,7 @@ public class Animation {
         KeyFrame next = Objects.requireNonNullElse(ceil, floor).getValue();
 
         //weight
-        Vec3f ret = inverted ? next.data : curr.data;
+        Vec3f ret = inverted ? next.data.copy() : curr.data.copy();
         ret.scale(blendWeight);
 
         return ret;
