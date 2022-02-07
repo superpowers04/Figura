@@ -144,7 +144,7 @@ public class Animation {
             }
 
             //group vars
-            group.wasAnimated = pos != null || rot != null || scale != null;
+            group.wasAnimated = true;
             group.replaced = group.replaced || this.replace;
             group.lastPriority = this.priority;
 
@@ -239,7 +239,7 @@ public class Animation {
             }
 
             //group vars
-            group.wasAnimated = pos != null || rot != null || scale != null;
+            group.wasAnimated = true;
             group.replaced = group.replaced || this.replace;
             group.lastPriority = this.priority;
 
@@ -306,6 +306,7 @@ public class Animation {
                 group.animScale = MathUtils.Vec3f_ONE.copy();
                 group.wasAnimated = false;
                 group.replaced = false;
+                group.lastPriority = 0;
             }
         }
     }
