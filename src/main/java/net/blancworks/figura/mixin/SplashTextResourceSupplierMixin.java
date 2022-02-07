@@ -30,10 +30,16 @@ public class SplashTextResourceSupplierMixin {
                     if (day == 1) cir.setReturnValue(bday + "Lily!");
                 }
                 case 3 -> {
-                    switch (day) {
-                        case 5 -> cir.setReturnValue(bday + "devnull!");
-                        case 7 -> cir.setReturnValue(bday + "omoflop!");
-                        case 11 -> cir.setReturnValue(bday + "Zandra!");
+                    if (day > 20 && day < 26) {
+                        int diff = 26 - day;
+                        cir.setReturnValue(diff + " day" + (diff > 1 ? "s!" : "!"));
+                    } else {
+                        switch (day) {
+                            case 5 -> cir.setReturnValue(bday + "devnull!");
+                            case 7 -> cir.setReturnValue(bday + "omoflop!");
+                            case 11 -> cir.setReturnValue(bday + "Zandra!");
+                            case 26 -> cir.setReturnValue(bday + "Figura!");
+                        }
                     }
                 }
                 case 9 -> {
