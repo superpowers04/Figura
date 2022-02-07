@@ -40,7 +40,7 @@ public class PlayerPopup extends DrawableHelper {
 
     public static AvatarData data;
 
-    private static final List<Text> BUTTONS = List.of(
+    public static final List<Text> BUTTONS = List.of(
             new TranslatableText("figura.playerpopup.cancel"),
             new TranslatableText("figura.playerpopup.reload"),
             new TranslatableText("figura.playerpopup.increasetrust"),

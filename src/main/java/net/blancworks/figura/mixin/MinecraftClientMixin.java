@@ -156,7 +156,7 @@ public class MinecraftClientMixin {
             PlayerPopup.execute();
         }
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < PlayerPopup.BUTTONS.size(); ++i) {
             if (this.options.keysHotbar[i].isPressed()) {
                 PlayerPopup.hotbarKeyPressed(i);
             }
