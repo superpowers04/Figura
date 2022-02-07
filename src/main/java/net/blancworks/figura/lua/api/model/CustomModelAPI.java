@@ -54,7 +54,10 @@ public class CustomModelAPI {
             ret.set("getAnimPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(group.animPos);
+                    Vec3f pos = group.animPos.copy();
+                    pos.add(group.animPosOverride);
+
+                    return LuaVector.of(pos);
                 }
             });
 

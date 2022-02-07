@@ -24,7 +24,11 @@ public class Animation {
     public float startDelay;
     public float loopDelay;
 
+    public boolean override;
+
     public float blendTime = 1f / 20f; //1 tick
+
+    public boolean replace = false;
 
     //keyframes
     public HashMap<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> keyFrames = new HashMap<>();
@@ -41,7 +45,7 @@ public class Animation {
     private float newTime = 0f;
     private float lastTime = 0f;
 
-    public Animation(String name, float length, LoopMode loopMode, float startOffset, float blendWeight, float startDelay, float loopDelay) {
+    public Animation(String name, float length, LoopMode loopMode, float startOffset, float blendWeight, float startDelay, float loopDelay, boolean override) {
         this.name = name;
         this.length = length;
         this.loopMode = loopMode;
@@ -50,6 +54,7 @@ public class Animation {
         this.blendWeight = blendWeight;
         this.startDelay = startDelay;
         this.loopDelay = loopDelay;
+        this.override = override;
     }
 
     public enum LoopMode {
@@ -112,7 +117,8 @@ public class Animation {
 
             //apply data, if not null
             if (pos != null) {
-                group.animPos.add(pos);
+                if (override) group.animPosOverride.add(pos);
+                else group.animPos.add(pos);
                 renderCount++;
             }
             if (rot != null) {
@@ -125,6 +131,7 @@ public class Animation {
             }
 
             group.wasAnimated = pos != null || rot != null || scale != null;
+            group.replaced = this.replace;
 
             if (renderCount > renderLimit)
                 break;
@@ -173,7 +180,9 @@ public class Animation {
                 } else {
                     pos = MathUtils.lerpVec3f(Vec3f.ZERO, pos, delta);
                 }
-                group.animPos.add(pos);
+
+                if (override) group.animPosOverride.add(pos);
+                else group.animPos.add(pos);
                 renderCount++;
             }
             if (rot != null) {
@@ -200,6 +209,7 @@ public class Animation {
             }
 
             group.wasAnimated = pos != null || rot != null || scale != null;
+            group.replaced = this.replace;
 
             if (renderCount > renderLimit)
                 break;
@@ -260,8 +270,10 @@ public class Animation {
             if (group.wasAnimated) {
                 group.animRot = Vec3f.ZERO.copy();
                 group.animPos = Vec3f.ZERO.copy();
+                group.animPosOverride = Vec3f.ZERO.copy();
                 group.animScale = MathUtils.Vec3f_ONE.copy();
                 group.wasAnimated = false;
+                group.replaced = false;
             }
         }
     }
@@ -352,6 +364,8 @@ public class Animation {
         float startDelay = animTag.contains("sdel") ? animTag.getFloat("sdel") : 0f;
         float loopDelay = animTag.contains("ldel") ? animTag.getFloat("ldel") : 0f;
 
-        return new Animation(name, length, loopMode, startOffset, blendWeight, startDelay, loopDelay);
+        boolean override = animTag.contains("ovr") && animTag.getBoolean("ovr");
+
+        return new Animation(name, length, loopMode, startOffset, blendWeight, startDelay, loopDelay, override);
     }
 }

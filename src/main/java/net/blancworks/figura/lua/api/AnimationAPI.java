@@ -264,6 +264,36 @@ public class AnimationAPI {
                     return LuaValue.valueOf(animation.blendTime);
                 }
             });
+
+            set("setOverride", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.override = arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            set("getOverride", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.override);
+                }
+            });
+
+            set("setReplace", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.replace = arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            set("getReplace", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.replace);
+                }
+            });
         }};
     }
 }

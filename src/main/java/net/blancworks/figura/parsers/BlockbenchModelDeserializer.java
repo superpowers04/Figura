@@ -147,21 +147,29 @@ public class BlockbenchModelDeserializer {
             anim.put("loop", NbtString.of(obj.get("loop").getAsString()));
             anim.put("len", NbtFloat.of(obj.get("length").getAsFloat()));
 
-            if (obj.has("anim_time_update"))
-                anim.put("time", NbtFloat.of(tryGetFloat(obj.get("anim_time_update"))));
-            if (obj.has("blend_weight")) {
-                float f;
+            boolean override = obj.get("override").getAsBoolean();
+            if (override) anim.put("ovr", NbtByte.of(true));
+
+            if (obj.has("anim_time_update")) {
                 try {
-                    f = obj.get("blend_weight").getAsFloat();
-                } catch (Exception ignored) {
-                    f = 1f;
-                }
-                anim.put("bld", NbtFloat.of(f));
+                    anim.put("time", NbtFloat.of(obj.get("anim_time_update").getAsFloat()));
+                } catch (Exception ignored) {}
             }
-            if (obj.has("start_delay"))
-                anim.put("sdel", NbtFloat.of(tryGetFloat(obj.get("start_delay"))));
-            if (obj.has("loop_delay"))
-                anim.put("ldel", NbtFloat.of(tryGetFloat(obj.get("loop_delay"))));
+            if (obj.has("blend_weight")) {
+                try {
+                    anim.put("bld", NbtFloat.of(obj.get("blend_weight").getAsFloat()));
+                } catch (Exception ignored) {}
+            }
+            if (obj.has("start_delay")) {
+                try {
+                    anim.put("sdel", NbtFloat.of(obj.get("start_delay").getAsFloat()));
+                } catch (Exception ignored) {}
+            }
+            if (obj.has("loop_delay")) {
+                try {
+                    anim.put("ldel", NbtFloat.of(obj.get("loop_delay").getAsFloat()));
+                } catch (Exception ignored) {}
+            }
 
             //animators
             if (obj.has("animators")) {

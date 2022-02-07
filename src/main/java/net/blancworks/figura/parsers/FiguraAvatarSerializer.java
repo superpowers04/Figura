@@ -166,14 +166,14 @@ public class FiguraAvatarSerializer {
                                 animObj.addProperty("name", anim.getString("nm"));
                                 animObj.addProperty("loop", anim.getString("loop"));
                                 animObj.addProperty("length", anim.getFloat("len"));
-                                animObj.addProperty("anim_time_update", anim.getFloat("time"));
-                                animObj.addProperty("blend_weight", anim.getFloat("bld"));
-                                animObj.addProperty("start_delay", anim.getFloat("sdel"));
-                                animObj.addProperty("loop_delay", anim.getFloat("ldel"));
+                                animObj.addProperty("anim_time_update", anim.contains("time") ? anim.getFloat("time") + "" : "");
+                                animObj.addProperty("blend_weight", anim.contains("bld") ? anim.getFloat("bld") + "" : "");
+                                animObj.addProperty("start_delay", anim.contains("sdel") ? anim.getFloat("sdel") + "" : "");
+                                animObj.addProperty("loop_delay", anim.contains("ldel") ? anim.getFloat("ldel") + "" : "");
 
                                 //required
                                 animObj.addProperty("uuid", UUID.randomUUID().toString());
-                                animObj.addProperty("override", false);
+                                animObj.addProperty("override", anim.contains("ovr") && anim.getBoolean("ovr"));
                                 animObj.addProperty("snapping", 500f);
                                 animObj.addProperty("selected", false);
                                 animObj.add("animators", new JsonObject());
