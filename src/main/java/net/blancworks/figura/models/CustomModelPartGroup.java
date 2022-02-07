@@ -1,8 +1,11 @@
 package net.blancworks.figura.models;
 
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.models.animations.KeyFrame;
 import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
+import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -20,8 +23,10 @@ public class CustomModelPartGroup extends CustomModelPart {
 
     public Vec3f animRot = Vec3f.ZERO.copy();
     public Vec3f animPos = Vec3f.ZERO.copy();
+    public Vec3f animPosOverride = Vec3f.ZERO.copy();
     public Vec3f animScale = MathUtils.Vec3f_ONE.copy();
     public boolean wasAnimated = false;
+    public boolean replaced = false;
 
     @Override
     public void applyTransforms(MatrixStack stack) {
@@ -48,6 +53,28 @@ public class CustomModelPartGroup extends CustomModelPart {
 
         //undo pivot
         stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
+    }
+
+    @Override
+    public void applyVanillaTransforms(AvatarData data, MatrixStack matrices, MatrixStack transformStack) {
+        //anim pos, pivot override
+        matrices.translate(this.animPosOverride.getX() / 16f, -this.animPosOverride.getY() / 16f, this.animPosOverride.getZ() / 16f);
+        transformStack.translate(this.animPosOverride.getX() / 16f, -this.animPosOverride.getY() / 16f, this.animPosOverride.getZ() / 16f);
+
+        //apply only pivot
+        if (replaced) {
+            if (data.vanillaModel instanceof PlayerEntityModel model) {
+                ModelPart part = getModelPart(model, this.parentType);
+                if (part != null) {
+                    matrices.translate(part.pivotX / 16f, part.pivotY / 16f, part.pivotZ / 16f);
+                    transformStack.translate(part.pivotX / 16f, part.pivotY / 16f, part.pivotZ / 16f);
+                }
+            }
+        }
+        //apply pivot and rot
+        else {
+            super.applyVanillaTransforms(data, matrices, transformStack);
+        }
     }
 
     @Override

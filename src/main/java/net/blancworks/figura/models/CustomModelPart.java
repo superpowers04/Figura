@@ -12,6 +12,7 @@ import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.MissingSprite;
@@ -446,135 +447,82 @@ public class CustomModelPart {
             return;
 
         try {
-            PlayerEntityModel<?> model;
-            if (data.vanillaModel instanceof PlayerEntityModel)
-                model = (PlayerEntityModel<?>) data.vanillaModel;
-            else return;
+            ModelPart part = null;
+            if (data.vanillaModel instanceof PlayerEntityModel model)
+                part = getModelPart(model, this.parentType);
 
-            //mimic rotations
-            if (this.isMimicMode) {
-                switch (this.parentType) {
-                    case Head -> this.rot = new Vec3f(model.head.pitch, model.head.yaw, model.head.roll);
-                    case Torso -> this.rot = new Vec3f(model.body.pitch, model.body.yaw, model.body.roll);
-                    case LeftArm -> this.rot = new Vec3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
-                    case LeftLeg -> this.rot = new Vec3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
-                    case RightArm -> this.rot = new Vec3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
-                    case RightLeg -> this.rot = new Vec3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
+            if (part != null) {
+                //mimic rotations
+                if (this.isMimicMode) {
+                    this.rot = new Vec3f(part.pitch, part.yaw, part.roll);
+                    this.rot.scale(MathHelper.DEGREES_PER_RADIAN);
                 }
-
-                float multiply = MathHelper.DEGREES_PER_RADIAN;
-                this.rot.multiplyComponentwise(multiply, multiply, multiply);
+                //vanilla rotations
+                else {
+                    part.rotate(matrices);
+                    part.rotate(transformStack);
+                }
             }
-            //custom rotations
+            //camera
+            else if (this.parentType == ParentType.Camera) {
+                Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
+                Vec3f euler = MathUtils.quaternionToEulerXYZ(rot);
+                matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
+                matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
+                matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
+            }
+            //custom parts
             else {
+                HashMap<Identifier, VanillaModelPartCustomization> oriModifications = data.model.originModifications;
+                VanillaModelPartCustomization cust = new VanillaModelPartCustomization() {{
+                    matrices.push();
+                    applyTransformsAsItem(matrices);
+                    applyTransformsAsItem(transformStack);
+                    stackReference = matrices.peek();
+                    part = CustomModelPart.this;
+                    visible = true;
+                    matrices.pop();
+                }};
+
                 switch (this.parentType) {
-                    case Head -> {
-                        model.head.rotate(matrices);
-                        model.head.rotate(transformStack);
-                    }
-                    case Torso -> {
-                        model.body.rotate(matrices);
-                        model.body.rotate(transformStack);
-                    }
-                    case LeftArm -> {
-                        model.leftArm.rotate(matrices);
-                        model.leftArm.rotate(transformStack);
-                    }
-                    case LeftLeg -> {
-                        model.leftLeg.rotate(matrices);
-                        model.leftLeg.rotate(transformStack);
-                    }
-                    case RightArm -> {
-                        model.rightArm.rotate(matrices);
-                        model.rightArm.rotate(transformStack);
-                    }
-                    case RightLeg -> {
-                        model.rightLeg.rotate(matrices);
-                        model.rightLeg.rotate(transformStack);
-                    }
-                    case LeftItemOrigin -> data.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsItem(matrices);
-                        applyTransformsAsItem(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightItemOrigin -> data.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyTransformsAsItem(matrices);
-                        applyTransformsAsItem(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftElytraOrigin -> data.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyOriginTransforms(matrices);
-                        applyOriginTransforms(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightElytraOrigin -> data.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyOriginTransforms(matrices);
-                        applyOriginTransforms(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftParrotOrigin -> data.model.originModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyOriginTransforms(matrices);
-                        applyOriginTransforms(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightParrotOrigin -> data.model.originModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyOriginTransforms(matrices);
-                        applyOriginTransforms(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case LeftSpyglass -> data.model.originModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyOriginTransforms(matrices);
-                        applyOriginTransforms(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case RightSpyglass -> data.model.originModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, new VanillaModelPartCustomization() {{
-                        matrices.push();
-                        applyOriginTransforms(matrices);
-                        applyOriginTransforms(transformStack);
-                        stackReference = matrices.peek();
-                        part = CustomModelPart.this;
-                        visible = true;
-                        matrices.pop();
-                    }});
-                    case Camera -> {
-                        Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
-                        Vec3f euler = MathUtils.quaternionToEulerXYZ(rot);
-                        matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
-                        matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
-                        matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
-                    }
+                    case LeftItemOrigin -> oriModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, cust);
+                    case RightItemOrigin -> oriModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, cust);
+                    case LeftElytraOrigin -> oriModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, cust);
+                    case RightElytraOrigin -> oriModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, cust);
+                    case LeftParrotOrigin -> oriModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, cust);
+                    case RightParrotOrigin -> oriModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, cust);
+                    case LeftSpyglass -> oriModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, cust);
+                    case RightSpyglass -> oriModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, cust);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public static ModelPart getModelPart(PlayerEntityModel<?> model, ParentType parent) {
+        switch (parent) {
+            case Head -> {
+                return model.head;
+            }
+            case Torso -> {
+                return model.body;
+            }
+            case LeftArm -> {
+                return model.leftArm;
+            }
+            case LeftLeg -> {
+                return model.leftLeg;
+            }
+            case RightArm -> {
+                return model.rightArm;
+            }
+            case RightLeg -> {
+                return model.rightLeg;
+            }
+            default -> {
+                return null;
+            }
         }
     }
 
