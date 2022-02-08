@@ -66,11 +66,16 @@ public class AnimationAPI {
 
     public static LuaTable getTableForAnimation(Animation animation) {
         return new LuaTable() {{
-            //bruh
+            set("getName", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.name);
+                }
+            });
+
             set("start", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    //really, was that even needed?
                     if (!animation.isPlaying())
                         animation.play();
                     return NIL;

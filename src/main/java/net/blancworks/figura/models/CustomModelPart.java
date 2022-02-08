@@ -398,8 +398,10 @@ public class CustomModelPart {
         //render extra parts
         synchronized (this.renderTasks) {
             for (RenderTaskAPI.RenderTaskTable tbl : this.renderTasks.values()) {
-                leftToRender -= tbl.task.render(data, matrices, vcp, light, overlay);
-                if (leftToRender <= 0) break;
+                if (tbl.task.enabled) {
+                    leftToRender -= tbl.task.render(data, matrices, vcp, light, overlay);
+                    if (leftToRender <= 0) break;
+                }
             }
         }
 
@@ -467,17 +469,21 @@ public class CustomModelPart {
             else if (this.parentType == ParentType.Camera) {
                 Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
                 Vec3f euler = MathUtils.quaternionToEulerXYZ(rot);
-                matrices.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(euler.getZ()));
-                matrices.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-euler.getY()));
-                matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-euler.getX()));
+                rotate(matrices, euler);
+                rotate(transformStack, euler);
             }
             //custom parts
             else {
                 HashMap<Identifier, VanillaModelPartCustomization> oriModifications = data.model.originModifications;
                 VanillaModelPartCustomization cust = new VanillaModelPartCustomization() {{
                     matrices.push();
-                    applyTransformsAsItem(matrices);
-                    applyTransformsAsItem(transformStack);
+                    if (parentType == ParentType.LeftItemOrigin || parentType == ParentType.RightItemOrigin) {
+                        applyTransformsAsItem(matrices);
+                        applyTransformsAsItem(transformStack);
+                    } else {
+                        applyOriginTransforms(matrices);
+                        applyOriginTransforms(transformStack);
+                    }
                     stackReference = matrices.peek();
                     part = CustomModelPart.this;
                     visible = true;
@@ -501,29 +507,17 @@ public class CustomModelPart {
     }
 
     public static ModelPart getModelPart(PlayerEntityModel<?> model, ParentType parent) {
+        ModelPart part;
         switch (parent) {
-            case Head -> {
-                return model.head;
-            }
-            case Torso -> {
-                return model.body;
-            }
-            case LeftArm -> {
-                return model.leftArm;
-            }
-            case LeftLeg -> {
-                return model.leftLeg;
-            }
-            case RightArm -> {
-                return model.rightArm;
-            }
-            case RightLeg -> {
-                return model.rightLeg;
-            }
-            default -> {
-                return null;
-            }
+            case Head -> part = model.head;
+            case Torso -> part = model.body;
+            case LeftArm -> part = model.leftArm;
+            case LeftLeg -> part = model.leftLeg;
+            case RightArm -> part = model.rightArm;
+            case RightLeg -> part = model.rightLeg;
+            default -> part = null;
         }
+        return part;
     }
 
     public void applyTransforms(MatrixStack stack) {
