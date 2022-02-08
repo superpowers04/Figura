@@ -445,17 +445,18 @@ public class CustomScript extends FiguraAsset {
         //Re-map print to log.
         scriptGlobals.set("print", scriptGlobals.get("log"));
 
-        scriptGlobals.set("logTableContent", new OneArgFunction() {
+        scriptGlobals.set("logTable", new TwoArgFunction() {
             @Override
-            public LuaValue call(LuaValue arg) {
+            public LuaValue call(LuaValue arg1, LuaValue arg2) {
                 try {
-                    LuaTable table = arg.checktable();
+                    LuaTable table = arg1.checktable();
+                    boolean deep = arg2.isnil() || arg2.checkboolean();
 
                     if (avatarData == AvatarDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
                         if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
-                        message.append(tableToText(table, LUA_COLOR, FiguraMod.ACCENT_COLOR, 1, ""));
+                        message.append(tableToText(table, deep, LUA_COLOR, FiguraMod.ACCENT_COLOR, 1, ""));
 
                         int config = (int) Config.SCRIPT_LOG_LOCATION.value;
                         if (config != 2) FiguraMod.LOGGER.info(message.getString());
@@ -469,6 +470,8 @@ public class CustomScript extends FiguraAsset {
                 return NIL;
             }
         });
+
+        scriptGlobals.set("logTableContent", scriptGlobals.get("logTable"));
 
         //store a value to be read from others scripts
         scriptGlobals.set("storeValue", new TwoArgFunction() {
@@ -830,7 +833,7 @@ public class CustomScript extends FiguraAsset {
         error.printStackTrace();
     }
 
-    public static MutableText tableToText(LuaTable table, UnaryOperator<Style> keyColor, UnaryOperator<Style> valColor, int depth, String depthString) {
+    public static MutableText tableToText(LuaTable table, boolean deep, UnaryOperator<Style> keyColor, UnaryOperator<Style> valColor, int depth, String depthString) {
         String spacing = "  ";
         depthString = spacing.substring(2) + depthString;
         MutableText back = new LiteralText("{\n").formatted(Formatting.ITALIC);
@@ -842,8 +845,8 @@ public class CustomScript extends FiguraAsset {
             valString.append(new LiteralText(depthString + spacing + "\"").setStyle(Style.EMPTY.withItalic(false)));
             valString.append(new LiteralText(key.toString()).styled(keyColor)).append("\" : ");
 
-            if (value.istable()) {
-                valString.append(tableToText(value.checktable(), keyColor, valColor, depth + 1, spacing + depthString));
+            if (value.istable() && deep) {
+                valString.append(tableToText(value.checktable(), true, keyColor, valColor, depth + 1, spacing + depthString));
             } else {
                 valString.append(new LiteralText(value.toString()).styled(valColor)).append(",\n");
             }
@@ -862,7 +865,7 @@ public class CustomScript extends FiguraAsset {
         if (p.args instanceof LuaVector vec)
             arg = (MutableText) vec.toJsonText(PING_COLOR, FiguraMod.ACCENT_COLOR);
         else if (p.args instanceof LuaTable tbl)
-            arg = tableToText(tbl, PING_COLOR, FiguraMod.ACCENT_COLOR, 1, "");
+            arg = tableToText(tbl, true, PING_COLOR, FiguraMod.ACCENT_COLOR, 1, "");
         else
             arg = new LiteralText(p.args.toString()).styled(FiguraMod.ACCENT_COLOR);
 

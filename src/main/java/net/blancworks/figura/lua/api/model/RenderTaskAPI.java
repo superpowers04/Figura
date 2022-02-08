@@ -97,11 +97,33 @@ public class RenderTaskAPI {
             else
                 tbl = new LuaTable();
 
+            tbl.set("setEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    task.enabled = arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            tbl.set("getEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return LuaValue.valueOf(task.enabled);
+                }
+            });
+
             tbl.set("setEmissive", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     task.emissive = arg.checkboolean();
                     return NIL;
+                }
+            });
+
+            tbl.set("getEmissive", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return LuaValue.valueOf(task.emissive != null && task.emissive);
                 }
             });
 
