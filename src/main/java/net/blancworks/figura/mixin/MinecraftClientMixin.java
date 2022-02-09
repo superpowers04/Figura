@@ -64,7 +64,7 @@ public class MinecraftClientMixin {
                 model.animRendered = 0;
                 model.animMaxRender = data.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS);
                 if (model.animMaxRender <= 0)
-                    break;
+                    continue;
 
                 for (Animation anim : model.animations.values()) {
                     if (anim.playState != Animation.PlayState.STOPPED)
