@@ -111,9 +111,10 @@ public class PlayerPopup extends DrawableHelper {
 
         //trust/script warning
         float offset = -4.5f;
-        if (data.script != null && data.script.scriptError || data.trustIssues) {
-            Text toRender = data.trustIssues ? TRUST_TEXT : SCRIPT_TEXT;
-            int color = data.trustIssues ? Formatting.YELLOW.getColorValue() : Formatting.RED.getColorValue();
+        boolean scriptError = data.script != null && data.script.scriptError;
+        if (scriptError || data.trustIssues) {
+            Text toRender = scriptError ? SCRIPT_TEXT : TRUST_TEXT;
+            int color = scriptError ? Formatting.RED.getColorValue() : Formatting.YELLOW.getColorValue();
 
             matrices.push();
             matrices.scale(0.5f, 0.5f, 0.5f);
