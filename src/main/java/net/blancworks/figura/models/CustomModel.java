@@ -129,19 +129,23 @@ public class CustomModel extends FiguraAsset {
         this.leftToRender = getMaxRenderAmount();
 
         synchronized (this.allParts) {
-            //applyHiddenTransforms = !(boolean) Config.FIX_FIRST_PERSON_HANDS.value;
+            matrices.push();
+
+            if ((boolean) Config.FIX_HANDS.value) {
+                arm.rotate(matrices);
+                applyHiddenTransforms = false;
+            }
+
             for (CustomModelPart part : this.allParts) {
                 if (part.isSpecial() || !part.visible)
                     continue;
 
-                if (arm == model.rightArm)
-                    renderOnly = CustomModelPart.ParentType.RightArm;
-                else if (arm == model.leftArm)
-                    renderOnly = CustomModelPart.ParentType.LeftArm;
-
+                renderOnly = arm == model.leftArm ? CustomModelPart.ParentType.LeftArm : CustomModelPart.ParentType.RightArm;
                 this.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
             }
-            //applyHiddenTransforms = true;
+
+            applyHiddenTransforms = true;
+            matrices.pop();
         }
     }
 
