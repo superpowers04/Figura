@@ -1,17 +1,15 @@
 package net.blancworks.figura.lua;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.lua.api.AnimationAPI;
-import net.blancworks.figura.lua.api.LuaEvent;
 import net.blancworks.figura.lua.api.MetaAPI;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.lua.api.actionWheel.ActionWheelAPI;
+import net.blancworks.figura.lua.api.actionwheel.ActionWheelAPI;
+import net.blancworks.figura.lua.api.BiomeAPI;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.camera.CameraAPI;
-import net.blancworks.figura.lua.api.chat.ChatAPI;
-import net.blancworks.figura.lua.api.client.ClientAPI;
-import net.blancworks.figura.lua.api.data.DataAPI;
+import net.blancworks.figura.lua.api.ChatAPI;
+import net.blancworks.figura.lua.api.ClientAPI;
+import net.blancworks.figura.lua.api.DataAPI;
 import net.blancworks.figura.lua.api.entity.PlayerEntityAPI;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.keybind.KeyBindAPI;
@@ -20,15 +18,14 @@ import net.blancworks.figura.lua.api.model.*;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.lua.api.network.NetworkAPI;
 import net.blancworks.figura.lua.api.network.PingsAPI;
-import net.blancworks.figura.lua.api.particle.ParticleAPI;
-import net.blancworks.figura.lua.api.renderer.RendererAPI;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
+import net.blancworks.figura.lua.api.ParticleAPI;
+import net.blancworks.figura.lua.api.RendererAPI;
+import net.blancworks.figura.lua.api.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.SoundAPI;
-import net.blancworks.figura.lua.api.world.WorldAPI;
+import net.blancworks.figura.lua.api.WorldAPI;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.Globals;
 import org.luaj.vm2.LoadState;
-import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.PackageLib;
@@ -57,8 +54,6 @@ public class FiguraLuaManager {
 
         LoadState.install(modGlobals);
         LuaC.install(modGlobals);
-
-        LuaString.s_metatable = new ReadOnlyLuaTable(LuaString.s_metatable);
 
         registerEvents();
         registerAPI();
@@ -93,6 +88,7 @@ public class FiguraLuaManager {
         apiSuppliers.put(BlockStateAPI.getID(), BlockStateAPI::getForScript);
         apiSuppliers.put(FirstPersonModelAPI.getID(), FirstPersonModelAPI::getForScript);
         apiSuppliers.put(AnimationAPI.getID(), AnimationAPI::getForScript);
+        apiSuppliers.put(BiomeAPI.getID(), BiomeAPI::getForScript);
         //apiSuppliers.put(ActionWheel2API.getID(), ActionWheel2API::getForScript);
 
         FiguraMod.CUSTOM_APIS.forEach(api -> apiSuppliers.put(api.getID(), api::getForScript));
@@ -105,10 +101,6 @@ public class FiguraLuaManager {
         registerEvent("render");
         registerEvent("onCommand");
         registerEvent("onDamage");
-    }
-
-    public static void loadScript(AvatarData data, String content) {
-        data.script = new CustomScript(data, content);
     }
 
     public static void setupScriptAPI(CustomScript script) {

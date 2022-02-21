@@ -8,15 +8,14 @@ import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.assets.FiguraAsset;
 import net.blancworks.figura.config.ConfigManager.Config;
-import net.blancworks.figura.lua.api.LuaEvent;
-import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
+import net.blancworks.figura.lua.api.RenderLayerAPI;
+import net.blancworks.figura.lua.api.actionwheel.ActionWheelCustomization;
 import net.blancworks.figura.lua.api.camera.CameraCustomization;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSound;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
@@ -114,10 +113,13 @@ public class CustomScript extends FiguraAsset {
     public boolean crossHairEnabled = true;
 
     public boolean unlockCursor = false;
+    public static double mouseScroll = 0d;
 
     // If the player should render the entity their riding
     public boolean renderMount = true;
     public boolean renderMountShadow = true;
+
+    public boolean renderPlayerHead = true;
 
     public boolean hasPlayer = false;
 
@@ -237,13 +239,20 @@ public class CustomScript extends FiguraAsset {
                     scriptError = true;
                     String error = "Script overran resource limits";
 
-                    if (data == AvatarDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
+                    boolean logOthers = (boolean) Config.LOG_OTHERS_SCRIPT.value;
+                    if (data != null && (data == AvatarDataManager.localPlayer || logOthers)) {
+                        //prefix
                         MutableText message = LOG_PREFIX.shallowCopy();
-                        if (data != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(data.name.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
+
+                        //name
+                        if (logOthers) message.append(data.name.copy().formatted(Formatting.DARK_RED, Formatting.BOLD)).append(" ");
+
+                        //error
                         message.append(new LiteralText(">> ").styled(LUA_COLOR)).append(error).formatted(Formatting.RED);
 
                         sendChatMessage(message);
                     }
+
                     throw new RuntimeException(error);
                 }
             };
@@ -334,14 +343,14 @@ public class CustomScript extends FiguraAsset {
         });
     }
 
-    public void runActionWheelFunction(LuaFunction function) {
+    public void runActionWheelFunction(LuaFunction function, LuaValue arg) {
         if (!isDone || scriptError || !hasPlayer || avatarData.lastEntity == null)
             return;
 
         queueTask(() -> {
             setInstructionLimitPermission(TrustContainer.Trust.TICK_INST, tickInstructionCount);
             try {
-                function.call();
+                function.call(arg == null ? LuaValue.NIL : arg);
             } catch (Exception error) {
                 handleError(error);
             }
@@ -436,17 +445,18 @@ public class CustomScript extends FiguraAsset {
         //Re-map print to log.
         scriptGlobals.set("print", scriptGlobals.get("log"));
 
-        scriptGlobals.set("logTableContent", new OneArgFunction() {
+        scriptGlobals.set("logTable", new TwoArgFunction() {
             @Override
-            public LuaValue call(LuaValue arg) {
+            public LuaValue call(LuaValue arg1, LuaValue arg2) {
                 try {
-                    LuaTable table = arg.checktable();
+                    LuaTable table = arg1.checktable();
+                    boolean deep = arg2.isnil() || arg2.checkboolean();
 
                     if (avatarData == AvatarDataManager.localPlayer || (boolean) Config.LOG_OTHERS_SCRIPT.value) {
                         MutableText message = LOG_PREFIX.shallowCopy();
                         if ((boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
                         message.append(new LiteralText(">> ").styled(LUA_COLOR));
-                        message.append(tableToText(table, LUA_COLOR, FiguraMod.ACCENT_COLOR, 1, ""));
+                        message.append(tableToText(table, deep, LUA_COLOR, FiguraMod.ACCENT_COLOR, 1, ""));
 
                         int config = (int) Config.SCRIPT_LOG_LOCATION.value;
                         if (config != 2) FiguraMod.LOGGER.info(message.getString());
@@ -460,6 +470,8 @@ public class CustomScript extends FiguraAsset {
                 return NIL;
             }
         });
+
+        scriptGlobals.set("logTableContent", scriptGlobals.get("logTable"));
 
         //store a value to be read from others scripts
         scriptGlobals.set("storeValue", new TwoArgFunction() {
@@ -697,10 +709,7 @@ public class CustomScript extends FiguraAsset {
             }
 
             //format then append queue
-            queue = new StringBuilder(queue.toString().replaceAll("[\\t\\n\\r]+", " "));
-            queue = new StringBuilder(queue.toString().replaceAll("\\s+", " "));
-
-            ret.append(queue);
+            ret.append(queue.toString().replaceAll("\\s+", " "));
             queue = new StringBuilder();
 
             //add string contents
@@ -759,24 +768,38 @@ public class CustomScript extends FiguraAsset {
     //--Debugging--
 
     public void logLuaError(LuaError error) {
-        //Never even log errors for other players, only the local player.
-        if (avatarData != AvatarDataManager.localPlayer && !(boolean) Config.LOG_OTHERS_SCRIPT.value)
+        boolean logOthers = (boolean) Config.LOG_OTHERS_SCRIPT.value;
+
+        //log only local player if not everyone
+        if (avatarData == null || (avatarData != AvatarDataManager.localPlayer && !logOthers))
             return;
 
+        //error string
         String msg = error.getMessage();
         msg = msg.replace("\t", "   ");
         String[] messageParts = msg.split("\n");
 
+        //prefix
         MutableText message = LOG_PREFIX.shallowCopy();
-        if (avatarData != null && (boolean) Config.LOG_OTHERS_SCRIPT.value) message.append(avatarData.name.copy()).append(" ");
+
+        //name
+        if (logOthers) message.append(avatarData.name.copy()).append(" ");
+
+        //header
         message.append(new LiteralText(">> ").styled(LUA_COLOR));
         sendChatMessage(message);
 
+        //non-local warning
+        if (avatarData == AvatarDataManager.localPlayer && !avatarData.isLocalAvatar)
+            sendChatMessage(new LiteralText("non-local avatar script!\n").formatted(Formatting.RED, Formatting.UNDERLINE));
+
+        //error
         for (String part : messageParts) {
             if (!part.trim().equals("[Java]: in ?"))
                 sendChatMessage(new LiteralText(part).formatted(Formatting.RED));
         }
 
+        //script path
         String location = "?";
         try {
             //split the line at the first :
@@ -804,12 +827,13 @@ public class CustomScript extends FiguraAsset {
             }
         } catch (Exception ignored) {}
 
-        sendChatMessage(new LiteralText("script:\n   " + location).formatted(Formatting.RED));
+        sendChatMessage(new LiteralText("script:").formatted(Formatting.RED));
+        sendChatMessage(new LiteralText("   " + location).formatted(Formatting.RED));
 
         error.printStackTrace();
     }
 
-    public static MutableText tableToText(LuaTable table, UnaryOperator<Style> keyColor, UnaryOperator<Style> valColor, int depth, String depthString) {
+    public static MutableText tableToText(LuaTable table, boolean deep, UnaryOperator<Style> keyColor, UnaryOperator<Style> valColor, int depth, String depthString) {
         String spacing = "  ";
         depthString = spacing.substring(2) + depthString;
         MutableText back = new LiteralText("{\n").formatted(Formatting.ITALIC);
@@ -821,8 +845,8 @@ public class CustomScript extends FiguraAsset {
             valString.append(new LiteralText(depthString + spacing + "\"").setStyle(Style.EMPTY.withItalic(false)));
             valString.append(new LiteralText(key.toString()).styled(keyColor)).append("\" : ");
 
-            if (value.istable()) {
-                valString.append(tableToText(value.checktable(), keyColor, valColor, depth + 1, spacing + depthString));
+            if (value.istable() && deep) {
+                valString.append(tableToText(value.checktable(), true, keyColor, valColor, depth + 1, spacing + depthString));
             } else {
                 valString.append(new LiteralText(value.toString()).styled(valColor)).append(",\n");
             }
@@ -841,7 +865,7 @@ public class CustomScript extends FiguraAsset {
         if (p.args instanceof LuaVector vec)
             arg = (MutableText) vec.toJsonText(PING_COLOR, FiguraMod.ACCENT_COLOR);
         else if (p.args instanceof LuaTable tbl)
-            arg = tableToText(tbl, PING_COLOR, FiguraMod.ACCENT_COLOR, 1, "");
+            arg = tableToText(tbl, true, PING_COLOR, FiguraMod.ACCENT_COLOR, 1, "");
         else
             arg = new LiteralText(p.args.toString()).styled(FiguraMod.ACCENT_COLOR);
 

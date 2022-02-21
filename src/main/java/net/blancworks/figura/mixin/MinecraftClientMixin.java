@@ -7,9 +7,10 @@ import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.gui.ActionWheel;
 import net.blancworks.figura.gui.PlayerPopup;
 import net.blancworks.figura.gui.NewActionWheel;
+import net.blancworks.figura.lua.api.RenderLayerAPI;
 import net.blancworks.figura.lua.api.keybind.FiguraKeybind;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
+import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.models.animations.Animation;
 import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
 import net.blancworks.figura.trust.TrustContainer;
@@ -59,11 +60,15 @@ public class MinecraftClientMixin {
                 if (data == null || data.model == null || !data.model.isDone)
                     continue;
 
-                if (data.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-                    for (Animation anim : data.model.animations.values()) {
-                        if (anim.playState != Animation.PlayState.STOPPED)
-                            anim.render();
-                    }
+                CustomModel model = data.model;
+                model.animRendered = 0;
+                model.animMaxRender = data.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS);
+                if (model.animMaxRender <= 0)
+                    continue;
+
+                for (Animation anim : model.animations.values()) {
+                    if (anim.playState != Animation.PlayState.STOPPED)
+                        model.animRendered = anim.render(model.animRendered, model.animMaxRender);
                 }
             }
         }
@@ -91,10 +96,8 @@ public class MinecraftClientMixin {
                 if (data == null || data.model == null || !data.model.isDone)
                     continue;
 
-                if (data.getTrustContainer().getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 1) {
-                    for (Animation anim : data.model.animations.values())
-                        anim.clearAnimData();
-                }
+                for (Animation anim : data.model.animations.values())
+                    anim.clearAnimData();
             }
         }
     }
@@ -104,7 +107,7 @@ public class MinecraftClientMixin {
         return defaultMask | GL30.GL_DEPTH_BUFFER_BIT | GL30.GL_COLOR_BUFFER_BIT | GL30.GL_STENCIL_BUFFER_BIT;
     }
 
-    @Inject(at = @At("INVOKE"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
+    @Inject(at = @At("HEAD"), method = "disconnect(Lnet/minecraft/client/gui/screen/Screen;)V")
     public void disconnect(Screen screen, CallbackInfo ci) {
         try {
             FiguraSoundManager.getChannel().stopAllSounds();
@@ -153,7 +156,7 @@ public class MinecraftClientMixin {
             PlayerPopup.execute();
         }
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < PlayerPopup.BUTTONS.size(); ++i) {
             if (this.options.keysHotbar[i].isPressed()) {
                 PlayerPopup.hotbarKeyPressed(i);
             }

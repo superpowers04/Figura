@@ -1,7 +1,6 @@
 package net.blancworks.figura.lua.api.model;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -79,14 +78,14 @@ public class RenderTaskAPI {
         return taskTable;
     }
 
-    public static class RenderTaskTable extends ReadOnlyLuaTable {
+    public static class RenderTaskTable extends LuaTable {
         public final RenderTask task;
 
         public RenderTaskTable(RenderTask task) {
             this.task = task;
         }
 
-        public ReadOnlyLuaTable getTable(CustomScript script) {
+        public LuaTable getTable(CustomScript script) {
             LuaTable tbl;
 
             if (task instanceof TextRenderTask text)
@@ -98,11 +97,33 @@ public class RenderTaskAPI {
             else
                 tbl = new LuaTable();
 
+            tbl.set("setEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    task.enabled = arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            tbl.set("getEnabled", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return LuaValue.valueOf(task.enabled);
+                }
+            });
+
             tbl.set("setEmissive", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     task.emissive = arg.checkboolean();
                     return NIL;
+                }
+            });
+
+            tbl.set("getEmissive", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return LuaValue.valueOf(task.emissive != null && task.emissive);
                 }
             });
 
@@ -151,7 +172,7 @@ public class RenderTaskAPI {
                 }
             });
 
-            return new ReadOnlyLuaTable(tbl);
+            return tbl;
         }
 
         private LuaTable getTextTable(TextRenderTask text) {

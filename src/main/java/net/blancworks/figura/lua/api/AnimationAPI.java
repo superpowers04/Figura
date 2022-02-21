@@ -17,257 +17,303 @@ public class AnimationAPI {
         return new Identifier("default", "animation");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        LuaTable tbl = new LuaTable();
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
+            CustomModel model = script.avatarData.model;
+            if (model != null)
+                model.animations.forEach((name, anim) -> set(name, getTableForAnimation(anim)));
 
-        CustomModel model = script.avatarData.model;
-        if (model != null)
-            model.animations.forEach((name, anim) -> tbl.set(name, getTable(anim)));
+            set("listAnimations", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    CustomModel model = script.avatarData.model;
+                    if (model == null) return NIL;
 
-        tbl.set("listAnimations", new ZeroArgFunction() {
-            @Override
-            public LuaValue call() {
-                CustomModel model = script.avatarData.model;
-                if (model == null) return NIL;
+                    int i = 1;
+                    LuaTable tbl = new LuaTable();
+                    for (Animation animation : model.animations.values()) {
+                        tbl.set(i, LuaValue.valueOf(animation.name));
+                        i++;
+                    }
 
-                int i = 1;
-                LuaTable tbl = new LuaTable();
-                for (Animation animation : model.animations.values()) {
-                    tbl.set(i, LuaValue.valueOf(animation.name));
-                    i++;
+                    return tbl;
                 }
+            });
 
-                return tbl;
-            }
-        });
+            set("stopAll", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    CustomModel model = script.avatarData.model;
+                    if (model == null) return NIL;
 
-        tbl.set("stopAll", new ZeroArgFunction() {
-            @Override
-            public LuaValue call() {
-                CustomModel model = script.avatarData.model;
-                if (model == null) return NIL;
+                    model.animations.values().forEach(Animation::stop);
+                    return NIL;
+                }
+            });
 
-                model.animations.values().forEach(Animation::stop);
-                return NIL;
-            }
-        });
+            set("ceaseAll", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    CustomModel model = script.avatarData.model;
+                    if (model == null) return NIL;
 
-        tbl.set("ceaseAll", new ZeroArgFunction() {
-            @Override
-            public LuaValue call() {
-                CustomModel model = script.avatarData.model;
-                if (model == null) return NIL;
-
-                model.animations.values().forEach(Animation::cease);
-                return NIL;
-            }
-        });
-
-        return new ReadOnlyLuaTable(tbl);
+                    model.animations.values().forEach(Animation::cease);
+                    return NIL;
+                }
+            });
+        }};
     }
 
-    public static ReadOnlyLuaTable getTable(Animation anim) {
-        return new AnimationTable(anim).getTable();
-    }
+    public static LuaTable getTableForAnimation(Animation animation) {
+        return new LuaTable() {{
+            set("getName", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.name);
+                }
+            });
 
-    private static class AnimationTable extends ReadOnlyLuaTable {
-        private final Animation animation;
-
-        private AnimationTable(Animation animation) {
-            this.animation = animation;
-        }
-
-        public ReadOnlyLuaTable getTable() {
-            return new ReadOnlyLuaTable(new LuaTable() {{
-                set("play", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
+            set("start", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    if (!animation.isPlaying())
                         animation.play();
-                        return NIL;
+                    return NIL;
+                }
+            });
+
+            set("play", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    animation.play();
+                    return NIL;
+                }
+            });
+
+            set("pause", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    animation.pause();
+                    return NIL;
+                }
+            });
+
+            set("stop", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    animation.stop();
+                    return NIL;
+                }
+            });
+
+            set("cease", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    animation.cease();
+                    return NIL;
+                }
+            });
+
+            set("isPlaying", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.isPlaying());
+                }
+            });
+
+            set("setPlayState", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    try {
+                        animation.playState = PlayState.valueOf(arg.checkjstring());
+                    } catch (Exception ignored) {
+                        throw new LuaError("Invalid playstate type");
                     }
-                });
 
-                set("pause", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        animation.pause();
-                        return NIL;
+                    return NIL;
+                }
+            });
+
+            set("getPlayState", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.playState.name());
+                }
+            });
+
+            set("setLength", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.length = arg.checknumber().tofloat();
+                    return NIL;
+                }
+            });
+
+            set("getLength", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.length);
+                }
+            });
+
+            set("setSpeed", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    float speed = arg.checknumber().tofloat();
+                    animation.speed = Math.abs(speed);
+                    animation.inverted = speed < 0f;
+                    return NIL;
+                }
+            });
+
+            set("getSpeed", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.inverted ? -animation.speed : animation.speed);
+                }
+            });
+
+            set("setLoopMode", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LoopMode mode;
+                    try {
+                        mode = LoopMode.valueOf(arg.checkjstring());
+                    } catch (Exception ignored) {
+                        mode = LoopMode.ONCE;
                     }
-                });
 
-                set("stop", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        animation.stop();
-                        return NIL;
-                    }
-                });
+                    animation.loopMode = mode;
+                    return NIL;
+                }
+            });
 
-                set("cease", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        animation.cease();
-                        return NIL;
-                    }
-                });
+            set("getLoopMode", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.loopMode.name());
+                }
+            });
 
-                set("isPlaying", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.isPlaying());
-                    }
-                });
+            set("setStartOffset", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.startOffset = arg.checknumber().tofloat();
+                    return NIL;
+                }
+            });
 
-                set("setPlayState", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        try {
-                            animation.playState = PlayState.valueOf(arg.checkjstring());
-                        } catch (Exception ignored) {
-                            throw new LuaError("Invalid playstate type");
-                        }
+            set("getStartOffset", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.startOffset);
+                }
+            });
 
-                        return NIL;
-                    }
-                });
+            set("setBlendWeight", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.blendWeight = arg.checknumber().tofloat();
+                    return NIL;
+                }
+            });
 
-                set("getPlayState", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.playState.name());
-                    }
-                });
+            set("getBlendWeight", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.blendWeight);
+                }
+            });
 
-                set("setLength", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        animation.length = arg.checknumber().tofloat();
-                        return NIL;
-                    }
-                });
+            set("setStartDelay", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.startDelay = arg.checknumber().tofloat();
+                    return NIL;
+                }
+            });
 
-                set("getLength", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.length);
-                    }
-                });
+            set("getStartDelay", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.startDelay);
+                }
+            });
 
-                set("setSpeed", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        float speed = arg.checknumber().tofloat();
-                        animation.speed = Math.abs(speed);
-                        animation.inverted = speed < 0f;
-                        return NIL;
-                    }
-                });
+            set("setLoopDelay", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.loopDelay = arg.checknumber().tofloat();
+                    return NIL;
+                }
+            });
 
-                set("getSpeed", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.speed);
-                    }
-                });
+            set("getLoopDelay", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.loopDelay);
+                }
+            });
 
-                set("setLoopMode", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        LoopMode mode;
-                        try {
-                            mode = LoopMode.valueOf(arg.checkjstring());
-                        } catch (Exception ignored) {
-                            mode = LoopMode.ONCE;
-                        }
+            set("setBlendTime", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.blendTime = Math.max(arg.checknumber().tofloat(), 0f);
+                    return NIL;
+                }
+            });
 
-                        animation.loopMode = mode;
-                        return NIL;
-                    }
-                });
+            set("getBlendTime", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.blendTime);
+                }
+            });
 
-                set("getLoopMode", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.loopMode.name());
-                    }
-                });
+            set("setOverride", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.override = arg.checkboolean();
+                    return NIL;
+                }
+            });
 
-                set("setStartOffset", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        animation.startOffset = arg.checknumber().tofloat();
-                        return NIL;
-                    }
-                });
+            set("getOverride", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.override);
+                }
+            });
 
-                set("getStartOffset", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.startOffset);
-                    }
-                });
+            set("setReplace", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.replace = arg.checkboolean();
+                    return NIL;
+                }
+            });
 
-                set("setBlendWeight", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        animation.blendWeight = arg.checknumber().tofloat();
-                        return NIL;
-                    }
-                });
+            set("getReplace", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.replace);
+                }
+            });
 
-                set("getBlendWeight", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.blendWeight);
-                    }
-                });
+            set("setPriority", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    animation.priority = arg.checkint();
+                    return NIL;
+                }
+            });
 
-                set("setStartDelay", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        animation.startDelay = arg.checknumber().tofloat();
-                        return NIL;
-                    }
-                });
-
-                set("getStartDelay", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.startDelay);
-                    }
-                });
-
-                set("setLoopDelay", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        animation.loopDelay = arg.checknumber().tofloat();
-                        return NIL;
-                    }
-                });
-
-                set("getLoopDelay", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.loopDelay);
-                    }
-                });
-
-                set("setBlendTime", new OneArgFunction() {
-                    @Override
-                    public LuaValue call(LuaValue arg) {
-                        animation.blendTime = arg.checknumber().tofloat();
-                        return NIL;
-                    }
-                });
-
-                set("getBlendTime", new ZeroArgFunction() {
-                    @Override
-                    public LuaValue call() {
-                        return LuaValue.valueOf(animation.blendTime);
-                    }
-                });
-
-            }});
-        }
+            set("getPriority", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.priority);
+                }
+            });
+        }};
     }
 }

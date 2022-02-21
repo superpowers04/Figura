@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
-import net.blancworks.figura.lua.api.actionWheel.ActionWheelCustomization;
+import net.blancworks.figura.lua.api.actionwheel.ActionWheelCustomization;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.util.math.MatrixStack;
@@ -86,7 +86,7 @@ public class NewActionWheel extends DrawableHelper {
             ActionWheelCustomization slot = currentData.script.newActionWheelSlots.get(selectedSlot);
 
             if (slot != null && slot.function != null) {
-                currentData.script.runActionWheelFunction(slot.function);
+                currentData.script.runActionWheelFunction(slot.function, slot.arg);
             }
         }
 

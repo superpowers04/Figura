@@ -9,10 +9,7 @@ import net.blancworks.figura.models.animations.Animation;
 import net.blancworks.figura.trust.TrustContainer;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.render.Camera;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
@@ -39,6 +36,8 @@ public class CustomModel extends FiguraAsset {
     public Vec2f defaultTextureSize;
 
     public int leftToRender = 0;
+    public int animRendered = 0;
+    public int animMaxRender = 0;
 
     //used during rendering
     public boolean applyHiddenTransforms = true;
@@ -130,19 +129,23 @@ public class CustomModel extends FiguraAsset {
         this.leftToRender = getMaxRenderAmount();
 
         synchronized (this.allParts) {
-            //applyHiddenTransforms = !(boolean) Config.FIX_FIRST_PERSON_HANDS.value;
+            matrices.push();
+
+            if ((boolean) Config.FIX_HANDS.value) {
+                arm.rotate(matrices);
+                applyHiddenTransforms = false;
+            }
+
             for (CustomModelPart part : this.allParts) {
                 if (part.isSpecial() || !part.visible)
                     continue;
 
-                if (arm == model.rightArm)
-                    renderOnly = CustomModelPart.ParentType.RightArm;
-                else if (arm == model.leftArm)
-                    renderOnly = CustomModelPart.ParentType.LeftArm;
-
+                renderOnly = arm == model.leftArm ? CustomModelPart.ParentType.LeftArm : CustomModelPart.ParentType.RightArm;
                 this.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
             }
-            //applyHiddenTransforms = true;
+
+            applyHiddenTransforms = true;
+            matrices.pop();
         }
     }
 
@@ -234,7 +237,7 @@ public class CustomModel extends FiguraAsset {
 
         synchronized (specialParts) {
             for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.Hud)) {
-                leftToRender = part.render(owner, matrices, new MatrixStack(), owner.getVCP(), 0xF000F0, OverlayTexture.DEFAULT_UV, 1f);
+                leftToRender = part.render(owner, matrices, new MatrixStack(), owner.getVCP(), LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 1f);
 
                 if (leftToRender <= 0)
                     break;

@@ -4,6 +4,7 @@ import net.blancworks.figura.models.CustomModelPartGroup;
 import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.util.Util;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3f;
 
 import java.util.HashMap;
@@ -23,7 +24,11 @@ public class Animation {
     public float startDelay;
     public float loopDelay;
 
+    public boolean override;
+
     public float blendTime = 1f / 20f; //1 tick
+    public boolean replace = false;
+    public int priority = 0;
 
     //keyframes
     public HashMap<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> keyFrames = new HashMap<>();
@@ -40,7 +45,7 @@ public class Animation {
     private float newTime = 0f;
     private float lastTime = 0f;
 
-    public Animation(String name, float length, LoopMode loopMode, float startOffset, float blendWeight, float startDelay, float loopDelay) {
+    public Animation(String name, float length, LoopMode loopMode, float startOffset, float blendWeight, float startDelay, float loopDelay, boolean override) {
         this.name = name;
         this.length = length;
         this.loopMode = loopMode;
@@ -49,6 +54,7 @@ public class Animation {
         this.blendWeight = blendWeight;
         this.startDelay = startDelay;
         this.loopDelay = loopDelay;
+        this.override = override;
     }
 
     public enum LoopMode {
@@ -67,11 +73,10 @@ public class Animation {
     }
 
     //render cuntions
-    public void render() {
+    public int render(int renderCount, int renderLimit) {
         //start/end blend
         if (this.playState == PlayState.STARTING || this.playState == PlayState.STOPPING || (this.playState == PlayState.PAUSED && (this.lastState == PlayState.STARTING || this.lastState == PlayState.STOPPING))) {
-            renderBlend(this.playState == PlayState.STOPPING || (this.playState == PlayState.PAUSED && this.lastState == PlayState.STOPPING));
-            return;
+            return renderBlend(this.playState == PlayState.STOPPING || (this.playState == PlayState.PAUSED && this.lastState == PlayState.STOPPING), renderCount, renderLimit);
         }
 
         //if running, store current time
@@ -101,20 +106,56 @@ public class Animation {
 
         //keyframe interpolation
         lastTime = inverted ? length - kfTime : kfTime;
-        keyFrames.forEach((group, data) -> {
+        for (Map.Entry<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> entry : keyFrames.entrySet()) {
+            CustomModelPartGroup group = entry.getKey();
+            List<TreeMap<Float, KeyFrame>> data = entry.getValue();
+
+            //priority check
+            if (this.priority < group.lastPriority)
+                continue;
+
+            boolean replace = this.priority > group.lastPriority;
+
             //get interpolated data
             Vec3f pos = processKeyFrame(data.get(0), lastTime);
             Vec3f rot = processKeyFrame(data.get(1), lastTime);
             Vec3f scale = processKeyFrame(data.get(2), lastTime);
 
             //apply data, if not null
-            if (pos != null) group.animPos.add(pos);
-            if (rot != null) group.animRot.add(rot);
-            if (scale != null) group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
-        });
+            if (pos != null) {
+                if (override) {
+                    if (replace) group.animPosOverride = pos;
+                    else group.animPosOverride.add(pos);
+                } else {
+                    if (replace) group.animPos = pos;
+                    else group.animPos.add(pos);
+                }
+                renderCount++;
+            }
+            if (rot != null) {
+                if (replace) group.animRot = rot;
+                else group.animRot.add(rot);
+                renderCount++;
+            }
+            if (scale != null) {
+                if (replace) group.animScale = scale;
+                else group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
+                renderCount++;
+            }
+
+            //group vars
+            group.wasAnimated = true;
+            group.replaced = group.replaced || this.replace;
+            group.lastPriority = this.priority;
+
+            if (renderCount > renderLimit)
+                break;
+        }
+
+        return renderCount;
     }
 
-    private void renderBlend(boolean ending) {
+    private int renderBlend(boolean ending, int renderCount, int renderLimit) {
         if (this.playState != PlayState.PAUSED)
             newTime = Util.getMeasuringTimeMs();
 
@@ -124,7 +165,7 @@ public class Animation {
         //delay
         if (!ending) {
             kfTime -= startDelay;
-            if (kfTime < 0f) return;
+            if (kfTime < 0f) return renderCount;
         }
 
         //end
@@ -135,15 +176,23 @@ public class Animation {
 
         //process keyframes
         if (!ending) lastTime = kfTime;
-        float finalTime = kfTime;
-        keyFrames.forEach((group, data) -> {
+        for (Map.Entry<CustomModelPartGroup, List<TreeMap<Float, KeyFrame>>> entry : keyFrames.entrySet()) {
+            CustomModelPartGroup group = entry.getKey();
+            List<TreeMap<Float, KeyFrame>> data = entry.getValue();
+
+            //priority check
+            if (this.priority < group.lastPriority)
+                continue;
+
+            boolean replace = this.priority > group.lastPriority;
+
             //get interpolated data
             Vec3f pos = ending && !wasStarting ? processKeyFrame(data.get(0), lastTime) : getKeyFrameData(data.get(0), startOffset, inverted);
             Vec3f rot = ending && !wasStarting ? processKeyFrame(data.get(1), lastTime) : getKeyFrameData(data.get(1), startOffset, inverted);
             Vec3f scale = ending && !wasStarting ? processKeyFrame(data.get(2), lastTime) : getKeyFrameData(data.get(2), startOffset, inverted);
 
             //apply data, if not null
-            float delta = finalTime / blendTime;
+            float delta = MathHelper.clamp(kfTime / blendTime, 0f, 1f);
             if (pos != null) {
                 if (ending) {
                     if (wasStarting)
@@ -152,7 +201,15 @@ public class Animation {
                 } else {
                     pos = MathUtils.lerpVec3f(Vec3f.ZERO, pos, delta);
                 }
-                group.animPos.add(pos);
+
+                if (override) {
+                    if (replace) group.animPosOverride = pos;
+                    else group.animPosOverride.add(pos);
+                } else {
+                    if (replace) group.animPos = pos;
+                    else group.animPos.add(pos);
+                }
+                renderCount++;
             }
             if (rot != null) {
                 if (ending) {
@@ -162,7 +219,10 @@ public class Animation {
                 } else {
                     rot = MathUtils.lerpVec3f(Vec3f.ZERO, rot, delta);
                 }
-                group.animRot.add(rot);
+
+                if (replace) group.animRot = rot;
+                else group.animRot.add(rot);
+                renderCount++;
             }
             if (scale != null) {
                 if (ending) {
@@ -172,9 +232,22 @@ public class Animation {
                 } else {
                     scale = MathUtils.lerpVec3f(MathUtils.Vec3f_ONE, scale, delta);
                 }
-                group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
+
+                if (replace) group.animScale = scale;
+                else group.animScale.multiplyComponentwise(scale.getX(), scale.getY(), scale.getZ());
+                renderCount++;
             }
-        });
+
+            //group vars
+            group.wasAnimated = true;
+            group.replaced = group.replaced || this.replace;
+            group.lastPriority = this.priority;
+
+            if (renderCount > renderLimit)
+                break;
+        }
+
+        return renderCount;
     }
 
     //state functions
@@ -200,7 +273,7 @@ public class Animation {
     }
 
     public void stop() {
-        if (this.playState != PlayState.STOPPED) {
+        if (this.playState != PlayState.STOPPED && this.playState != PlayState.STOPPING) {
             this.time = Util.getMeasuringTimeMs();
             this.wasStarting = this.playState == PlayState.STARTING;
             this.playState = PlayState.STOPPING;
@@ -226,9 +299,15 @@ public class Animation {
     //keyframe functions
     public void clearAnimData() {
         for (CustomModelPartGroup group : keyFrames.keySet()) {
-            group.animRot = Vec3f.ZERO.copy();
-            group.animPos = Vec3f.ZERO.copy();
-            group.animScale = MathUtils.Vec3f_ONE.copy();
+            if (group.wasAnimated) {
+                group.animRot = Vec3f.ZERO.copy();
+                group.animPos = Vec3f.ZERO.copy();
+                group.animPosOverride = Vec3f.ZERO.copy();
+                group.animScale = MathUtils.Vec3f_ONE.copy();
+                group.wasAnimated = false;
+                group.replaced = false;
+                group.lastPriority = 0;
+            }
         }
     }
 
@@ -256,7 +335,7 @@ public class Animation {
             //get delta
             float delta;
             if (next.time == curr.time) delta = 1f;
-            else delta = (time - curr.time) / (next.time - curr.time);
+            else delta = MathHelper.clamp((time - curr.time) / (next.time - curr.time), 0f, 1f);
 
             //return interpolated keyframe
             switch (curr.interpolation) {
@@ -301,7 +380,7 @@ public class Animation {
         KeyFrame next = Objects.requireNonNullElse(ceil, floor).getValue();
 
         //weight
-        Vec3f ret = inverted ? next.data : curr.data;
+        Vec3f ret = inverted ? next.data.copy() : curr.data.copy();
         ret.scale(blendWeight);
 
         return ret;
@@ -318,6 +397,8 @@ public class Animation {
         float startDelay = animTag.contains("sdel") ? animTag.getFloat("sdel") : 0f;
         float loopDelay = animTag.contains("ldel") ? animTag.getFloat("ldel") : 0f;
 
-        return new Animation(name, length, loopMode, startOffset, blendWeight, startDelay, loopDelay);
+        boolean override = animTag.contains("ovr") && animTag.getBoolean("ovr");
+
+        return new Animation(name, length, loopMode, startOffset, blendWeight, startDelay, loopDelay, override);
     }
 }

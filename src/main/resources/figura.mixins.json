@@ -12,6 +12,7 @@
     "ChatHudListenerMixin",
     "ChatHudAccessorMixin",
     "ChatScreenAccessorMixin",
+    "ChatScreenMixin",
     "ClientLoginNetworkHandlerMixin",
     "ClientPlayerEntityMixin",
     "Deadmau5FeatureRendererMixin",

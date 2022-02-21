@@ -1,8 +1,7 @@
-package net.blancworks.figura.lua.api.chat;
+package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.mixin.ChatHudAccessorMixin;
 import net.blancworks.figura.mixin.ChatScreenAccessorMixin;
 import net.minecraft.client.MinecraftClient;
@@ -25,8 +24,8 @@ public class ChatAPI {
         return new Identifier("default", "chat");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             final boolean isHost = script.avatarData == AvatarDataManager.localPlayer;
 
             set("sendMessage", new OneArgFunction() {
@@ -88,6 +87,6 @@ public class ChatAPI {
                 }
             });
 
-        }});
+        }};
     }
 }

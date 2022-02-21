@@ -1,9 +1,6 @@
 package net.blancworks.figura.parsers;
 
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import net.blancworks.figura.FiguraMod;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
@@ -112,6 +109,7 @@ public class FiguraAvatarSerializer {
                     stuff++;
                     JsonObject model = new JsonObject();
                     NbtList list = nbt.getCompound("model").getList("parts", NbtElement.COMPOUND_TYPE);
+
                     //header
                     JsonObject meta = new JsonObject();
                     meta.addProperty("format_version", "4.0");
@@ -124,6 +122,7 @@ public class FiguraAvatarSerializer {
                     JsonArray box = new JsonArray();
                     box.add(1); box.add(1); box.add(0);
                     model.add("visible_box", box);
+
                     //texture
                     if (hasTexture) {
                         JsonArray textures = new JsonArray();
@@ -145,21 +144,59 @@ public class FiguraAvatarSerializer {
                         textures.add(texture);
                         model.add("textures", textures);
                     }
+
                     //texture size
                     JsonObject resolution = new JsonObject();
                     NbtList uv = nbt.getCompound("model").getList("uv", NbtElement.FLOAT_TYPE);
                     resolution.addProperty("width", uv.getFloat(0));
                     resolution.addProperty("height", uv.getFloat(1));
                     model.add("resolution", resolution);
+
+                    //animations
+                    JsonArray animations = new JsonArray();
+                    NbtElement animNbt = nbt.getCompound("model").get("anim");
+                    try {
+                        if (animNbt != null) {
+                            stuff++;
+                            for (NbtElement element : ((NbtList) animNbt)) {
+                                NbtCompound anim = (NbtCompound) element;
+                                JsonObject animObj = new JsonObject();
+
+                                //from nbt
+                                animObj.addProperty("name", anim.getString("nm"));
+                                animObj.addProperty("loop", anim.getString("loop"));
+                                animObj.addProperty("length", anim.getFloat("len"));
+                                animObj.addProperty("anim_time_update", anim.contains("time") ? anim.getFloat("time") + "" : "");
+                                animObj.addProperty("blend_weight", anim.contains("bld") ? anim.getFloat("bld") + "" : "");
+                                animObj.addProperty("start_delay", anim.contains("sdel") ? anim.getFloat("sdel") + "" : "");
+                                animObj.addProperty("loop_delay", anim.contains("ldel") ? anim.getFloat("ldel") + "" : "");
+
+                                //required
+                                animObj.addProperty("uuid", UUID.randomUUID().toString());
+                                animObj.addProperty("override", anim.contains("ovr") && anim.getBoolean("ovr"));
+                                animObj.addProperty("snapping", 500f);
+                                animObj.addProperty("selected", false);
+                                animObj.add("animators", new JsonObject());
+
+                                animations.add(animObj);
+                            }
+                            success++;
+                        }
+                    } catch (Exception e) {
+                        FiguraMod.LOGGER.error(e);
+                    }
+
                     //the model
                     boolean isPlayer = false;
                     JsonArray outliner = new JsonArray();
                     JsonArray elements = new JsonArray();
                     for (NbtElement tagElement : list) {
-                        isPlayer = parseModelPart((NbtCompound) tagElement, elements, outliner, Vec3f.ZERO.copy()) || isPlayer;
+                        isPlayer = parseModelPart((NbtCompound) tagElement, elements, outliner, animations, Vec3f.ZERO.copy()) || isPlayer;
                     }
                     model.add("elements", elements);
                     model.add("outliner", outliner);
+                    if (animNbt != null) model.add("animations", animations);
+
                     //write model
                     String jsonString = new GsonBuilder().serializeNulls().create().toJson(model);
                     Files.writeString(dest.resolve((isPlayer ? "player_model" : "model") + ".bbmodel"), jsonString);
@@ -186,7 +223,7 @@ public class FiguraAvatarSerializer {
         put("RightLeg", new Vec3f(2, 12, 0));
     }};
 
-    public static boolean parseModelPart(NbtCompound tag, JsonArray elements, JsonArray outliner, Vec3f offset) {
+    public static boolean parseModelPart(NbtCompound tag, JsonArray elements, JsonArray outliner, JsonArray animations, Vec3f offset) {
         boolean player = false;
         JsonObject part = new JsonObject();
 
@@ -196,6 +233,7 @@ public class FiguraAvatarSerializer {
         part.addProperty("locked", false);
         part.addProperty("autouv", 0);
         part.addProperty("color", (int) (Math.random() * 7) + 1);
+        part.addProperty("visibility", !tag.contains("vb") || tag.getBoolean("vb"));
 
         //pivot
         if (tag.contains("piv")) {
@@ -249,7 +287,6 @@ public class FiguraAvatarSerializer {
                 NbtCompound props = tag.getCompound("props");
 
                 //mesh properties
-                part.addProperty("visibility", true);
                 part.addProperty("type", "mesh");
 
                 //vertices
@@ -320,8 +357,64 @@ public class FiguraAvatarSerializer {
                     }
                 }
 
+                //animations
+                NbtList anims = tag.getList("anims", NbtElement.COMPOUND_TYPE);
+                for (NbtElement nbtElement : anims) {
+                    NbtCompound anim = (NbtCompound) nbtElement;
+                    String animName = anim.getString("id");
+
+                    //find animation
+                    JsonObject animation = null;
+                    for (JsonElement element : animations) {
+                        JsonObject animObj = element.getAsJsonObject();
+
+                        if (animObj.get("name").getAsString().equals(animName)) {
+                            animation = animObj;
+                            break;
+                        }
+                    }
+
+                    //part data
+                    if (animation != null) {
+                        JsonObject animators = animation.get("animators").getAsJsonObject();
+                        JsonObject stuff = new JsonObject();
+
+                        stuff.addProperty("name", name);
+                        stuff.addProperty("type", "bone");
+
+                        //keyframes
+                        JsonArray keyframes = new JsonArray();
+                        NbtList kfList = anim.getList("keyf", NbtElement.COMPOUND_TYPE);
+                        for (NbtElement element : kfList) {
+                            NbtCompound keyframeNbt = (NbtCompound) element;
+                            JsonObject keyframe = new JsonObject();
+
+                            keyframe.addProperty("channel", keyframeNbt.getString("type"));
+                            keyframe.addProperty("uuid", UUID.randomUUID().toString());
+                            keyframe.addProperty("time", keyframeNbt.getFloat("time"));
+                            keyframe.addProperty("interpolation", keyframeNbt.getString("int"));
+
+                            JsonArray data = new JsonArray();
+                            JsonObject dataObj = new JsonObject();
+                            NbtList dataList = keyframeNbt.getList("data", NbtElement.FLOAT_TYPE);
+
+                            dataObj.addProperty("x", dataList.getFloat(0));
+                            dataObj.addProperty("y", dataList.getFloat(1));
+                            dataObj.addProperty("z", dataList.getFloat(2));
+
+                            data.add(dataObj);
+                            keyframe.add("data_points", data);
+
+                            keyframes.add(keyframe);
+                        }
+
+                        //add stuff
+                        stuff.add("keyframes", keyframes);
+                        animators.add(uuid, stuff);
+                    }
+                }
+
                 //group properties
-                part.addProperty("visibility", true);
                 part.addProperty("export", true);
                 part.addProperty("isOpen", true);
 
@@ -330,7 +423,7 @@ public class FiguraAvatarSerializer {
                     NbtList childList = tag.getList("chld", NbtElement.COMPOUND_TYPE);
 
                     for (NbtElement nbtElement : childList) {
-                        player = parseModelPart((NbtCompound) nbtElement, elements, children, newOffset) || player;
+                        player = parseModelPart((NbtCompound) nbtElement, elements, children, animations, newOffset) || player;
                     }
                 }
 

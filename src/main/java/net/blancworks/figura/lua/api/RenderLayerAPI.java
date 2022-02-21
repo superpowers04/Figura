@@ -1,9 +1,8 @@
-package net.blancworks.figura.lua.api.renderlayers;
+package net.blancworks.figura.lua.api;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.models.FiguraTexture;
 import net.blancworks.figura.models.shaders.FiguraRenderLayer;
 import net.blancworks.figura.models.shaders.FiguraShader;
@@ -38,8 +37,8 @@ public class RenderLayerAPI {
         return new Identifier("default", "renderlayers");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set("registerShader", new VarArgFunction() {
                 @Override
                 public Varargs invoke(Varargs args) {
@@ -561,7 +560,7 @@ public class RenderLayerAPI {
             set("GL_DECR", GL30.GL_DECR);
             set("GL_DECR_WRAP", GL30.GL_DECR_WRAP);
             set("GL_INVERT", GL30.GL_INVERT);
-        }});
+        }};
     }
 
     public static void restoreDefaults() {

@@ -1,4 +1,4 @@
-package net.blancworks.figura.lua.api.data;
+package net.blancworks.figura.lua.api;
 
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -7,7 +7,6 @@ import com.google.gson.JsonParser;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.*;
@@ -33,10 +32,10 @@ public class DataAPI {
         return FiguraMod.getModContentDirectory().resolve("stored_vars");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
+    public static LuaTable getForScript(CustomScript script) {
         final boolean isHost = script.avatarData == AvatarDataManager.localPlayer;
 
-        return new ReadOnlyLuaTable(new LuaTable() {{
+        return new LuaTable() {{
             //script name
             set("setName", new OneArgFunction() {
                 @Override
@@ -135,7 +134,7 @@ public class DataAPI {
                     return NIL;
                 }
             });
-        }});
+        }};
     }
 
     private static JsonObject getOrCreateJsonFromFile(CustomScript script) {

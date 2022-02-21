@@ -17,8 +17,6 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 import java.util.function.Supplier;
 
 public class LivingEntityAPI {
-    
-    
     public static class LivingEntityAPITable<T extends LivingEntity> extends EntityAPI.EntityLuaAPITable<T> {
 
         public LivingEntityAPITable(Supplier<T> targetEntity) {
@@ -26,10 +24,10 @@ public class LivingEntityAPI {
         }
 
         @Override
-        public LuaTable getTable() {
-            LuaTable superTable = super.getTable();
+        public void setTable() {
+            super.setTable();
 
-            superTable.set("getBodyYaw", new OneArgFunction() {
+            set("getBodyYaw", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     float bodyYaw = targetEntity.get().bodyYaw;
@@ -40,43 +38,43 @@ public class LivingEntityAPI {
                     return LuaNumber.valueOf(bodyYaw);
                 }
             });
-            
-            superTable.set("getHealth", new ZeroArgFunction() {
+
+            set("getHealth", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().getHealth());
                 }
             });
 
-            superTable.set("getMaxHealth", new ZeroArgFunction() {
+            set("getMaxHealth", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().getMaxHealth());
                 }
             });
 
-            superTable.set("getHealthPercentage", new ZeroArgFunction() {
+            set("getHealthPercentage", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().getHealth() / targetEntity.get().getMaxHealth());
                 }
             });
 
-            superTable.set("getArmor", new ZeroArgFunction() {
+            set("getArmor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().getArmor());
                 }
             });
 
-            superTable.set("getDeathTime", new ZeroArgFunction() {
+            set("getDeathTime", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().deathTime);
                 }
             });
 
-            superTable.set("getStatusEffectTypes", new ZeroArgFunction() {
+            set("getStatusEffectTypes", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     LuaTable effects = new LuaTable();
@@ -91,11 +89,11 @@ public class LivingEntityAPI {
                 }
             });
 
-            superTable.set("getStatusEffect", new OneArgFunction() {
+            set("getStatusEffect", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     Identifier effectId = Identifier.tryParse(arg.checkjstring());
-                    if(effectId == null)
+                    if (effectId == null)
                         return NIL;
 
                     StatusEffect statusEffect = Registry.STATUS_EFFECT.get(effectId);
@@ -112,35 +110,35 @@ public class LivingEntityAPI {
                 }
             });
 
-            superTable.set("getStuckArrowCount", new ZeroArgFunction() {
+            set("getStuckArrowCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().getStuckArrowCount());
                 }
             });
 
-            superTable.set("getStingerCount", new ZeroArgFunction() {
+            set("getStingerCount", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaNumber.valueOf(targetEntity.get().getStingerCount());
                 }
             });
 
-            superTable.set("isLeftHanded", new ZeroArgFunction() {
+            set("isLeftHanded", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaBoolean.valueOf(targetEntity.get().getMainArm() == Arm.LEFT);
                 }
             });
 
-            superTable.set("isUsingItem", new ZeroArgFunction() {
+            set("isUsingItem", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaBoolean.valueOf(targetEntity.get().isUsingItem());
                 }
             });
 
-            superTable.set("getActiveHand", new ZeroArgFunction() {
+            set("getActiveHand", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     Hand hand = targetEntity.get().getActiveHand();
@@ -148,7 +146,7 @@ public class LivingEntityAPI {
                 }
             });
 
-            superTable.set("getActiveItem", new ZeroArgFunction() {
+            set("getActiveItem", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     ItemStack targetStack = targetEntity.get().getActiveItem();
@@ -159,14 +157,12 @@ public class LivingEntityAPI {
                 }
             });
 
-            superTable.set("isClimbing", new ZeroArgFunction() {
+            set("isClimbing", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(targetEntity.get().isClimbing());
                 }
             });
-
-            return superTable;
         }
     }
 }

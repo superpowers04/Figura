@@ -1,8 +1,6 @@
-package net.blancworks.figura.lua.api.actionWheel;
+package net.blancworks.figura.lua.api.actionwheel;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.item.ItemStackAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.models.FiguraTexture;
@@ -11,7 +9,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.LuaFunction;
-import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -21,6 +18,7 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class ActionWheelCustomization {
     public LuaFunction function;
+    public LuaValue arg;
 
     public ItemStack item;
     public ItemStack hoverItem;
@@ -47,84 +45,65 @@ public class ActionWheelCustomization {
         Resource
     }
 
-    public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        return new ActionWheelTable(accessor, script);
-    }
-
-    private static class ActionWheelTable extends ScriptLocalAPITable {
-        String accessor;
-
-        public ActionWheelTable(String accessor, CustomScript script) {
-            super(script);
-            this.accessor = accessor;
-            super.setTable(getTable());
-        }
-
-        public LuaTable getTable() {
-            LuaTable ret = new LuaTable();
-            ret.set("getFunction", new ZeroArgFunction() {
+    public static LuaTable getTableForPart(String accessor, CustomScript targetScript) {
+        return new LuaTable() {{
+            set("getFunction", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return targetScript.getOrMakeActionWheelCustomization(accessor).function;
+                    LuaFunction func = targetScript.getOrMakeActionWheelCustomization(accessor).function;
+                    return func == null ? NIL : func;
                 }
             });
 
-            ret.set("setFunction", new OneArgFunction() {
+            set("setFunction", new TwoArgFunction() {
                 @Override
-                public LuaValue call(LuaValue arg1) {
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     targetScript.getOrMakeActionWheelCustomization(accessor).function = arg1.isnil() ? null : arg1.checkfunction();
+                    targetScript.getOrMakeActionWheelCustomization(accessor).arg = arg2;
                     return NIL;
                 }
             });
 
-            ret.set("getItem", new ZeroArgFunction() {
+            set("getItem", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return ItemStackAPI.getTable(targetScript.getOrMakeActionWheelCustomization(accessor).item);
+                    ItemStack item = targetScript.getOrMakeActionWheelCustomization(accessor).item;
+                    return item == null ? NIL : ItemStackAPI.getTable(item);
                 }
             });
 
-            ret.set("setItem", new OneArgFunction() {
+            set("setItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    if (arg1.isnil()) {
-                        targetScript.getOrMakeActionWheelCustomization(accessor).item = null;
-                        return NIL;
-                    }
-
-                    targetScript.getOrMakeActionWheelCustomization(accessor).item = ItemStackAPI.checkOrCreateItemStack(arg1);
+                    targetScript.getOrMakeActionWheelCustomization(accessor).item = arg1.isnil() ? null : ItemStackAPI.checkOrCreateItemStack(arg1);
                     return NIL;
                 }
             });
 
-            ret.set("getHoverItem", new ZeroArgFunction() {
+            set("getHoverItem", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return ItemStackAPI.getTable(targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem);
+                    ItemStack item = targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem;
+                    return item == null ? NIL : ItemStackAPI.getTable(item);
                 }
             });
 
-            ret.set("setHoverItem", new OneArgFunction() {
+            set("setHoverItem", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    if (arg.isnil()) {
-                        targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = null;
-                        return NIL;
-                    }
-
-                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = ItemStackAPI.checkOrCreateItemStack(arg);
+                    targetScript.getOrMakeActionWheelCustomization(accessor).hoverItem = arg.isnil() ? null : ItemStackAPI.checkOrCreateItemStack(arg);
                     return NIL;
                 }
             });
 
-            ret.set("getColor", new ZeroArgFunction() {
+            set("getColor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaVector.of(targetScript.getOrMakeActionWheelCustomization(accessor).color);
                 }
             });
 
-            ret.set("setColor", new OneArgFunction() {
+            set("setColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     targetScript.getOrMakeActionWheelCustomization(accessor).color = arg.isnil() ? null : LuaVector.checkOrNew(arg).asV3f();
@@ -132,14 +111,14 @@ public class ActionWheelCustomization {
                 }
             });
 
-            ret.set("getHoverColor", new ZeroArgFunction() {
+            set("getHoverColor", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaVector.of(targetScript.getOrMakeActionWheelCustomization(accessor).hoverColor);
                 }
             });
 
-            ret.set("setHoverColor", new OneArgFunction() {
+            set("setHoverColor", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     targetScript.getOrMakeActionWheelCustomization(accessor).hoverColor = arg.isnil() ? null : LuaVector.checkOrNew(arg).asV3f();
@@ -147,14 +126,15 @@ public class ActionWheelCustomization {
                 }
             });
 
-            ret.set("getTitle", new ZeroArgFunction() {
+            set("getTitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(targetScript.getOrMakeActionWheelCustomization(accessor).title);
+                    String title = targetScript.getOrMakeActionWheelCustomization(accessor).title;
+                    return title == null ? NIL : LuaValue.valueOf(title);
                 }
             });
 
-            ret.set("setTitle", new OneArgFunction() {
+            set("setTitle", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     targetScript.getOrMakeActionWheelCustomization(accessor).title = arg1.isnil() ? null : arg1.checkjstring();
@@ -162,14 +142,15 @@ public class ActionWheelCustomization {
                 }
             });
 
-            ret.set("getTexture", new ZeroArgFunction() {
+            set("getTexture", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(targetScript.getOrMakeActionWheelCustomization(accessor).texture.toString());
+                    String texture = targetScript.getOrMakeActionWheelCustomization(accessor).texture.toString();
+                    return texture == null ? NIL : LuaValue.valueOf(texture);
                 }
             });
 
-            ret.set("setTexture", new TwoArgFunction() {
+            set("setTexture", new TwoArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2) {
                     ActionWheelCustomization cust = targetScript.getOrMakeActionWheelCustomization(accessor);
@@ -186,14 +167,14 @@ public class ActionWheelCustomization {
                 }
             });
 
-            ret.set("getTextureScale", new ZeroArgFunction() {
+            set("getTextureScale", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaVector.of(targetScript.getOrMakeActionWheelCustomization(accessor).textureScale);
                 }
             });
 
-            ret.set("setTextureScale", new OneArgFunction() {
+            set("setTextureScale", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     targetScript.getOrMakeActionWheelCustomization(accessor).textureScale = LuaVector.checkOrNew(arg1).asV2f();
@@ -201,7 +182,7 @@ public class ActionWheelCustomization {
                 }
             });
 
-            ret.set("getUV", new ZeroArgFunction() {
+            set("getUV", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     ActionWheelCustomization cust = targetScript.getOrMakeActionWheelCustomization(accessor);
@@ -223,7 +204,7 @@ public class ActionWheelCustomization {
                 }
             });
 
-            ret.set("setUV", new ThreeArgFunction() {
+            set("setUV", new ThreeArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
                     ActionWheelCustomization cust = targetScript.getOrMakeActionWheelCustomization(accessor);
@@ -243,15 +224,13 @@ public class ActionWheelCustomization {
                 }
             });
 
-            ret.set("clear", new ZeroArgFunction() {
+            set("clear", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     targetScript.actionWheelCustomizations.put(accessor, new ActionWheelCustomization());
                     return NIL;
                 }
             });
-
-            return ret;
-        }
+        }};
     }
 }

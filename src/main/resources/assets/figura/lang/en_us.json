@@ -19,7 +19,7 @@
   "figura.trust.allowoffscreenrendering": "Offscreen Rendering",
   "figura.trust.allowcustomrenderlayers": "Custom Render Layers",
   "figura.trust.allowcustomsounds": "Custom Sounds",
-  "figura.trust.bbanimations": "Blockbench Animations",
+  "figura.trust.bbanimations": "Max Animations Complexity",
 
 
   "figura.gui.trustmenu.title": "Figura Trust Menu",
@@ -69,10 +69,21 @@
   "figura.gui.button.sounds.tooltip": "Preview Custom Sounds",
   "figura.gui.button.openfolder.tooltip": "Hold LEFT SHIFT and click to open the selected avatar folder",
 
-  "figura.gui.button.status.tooltip": "none | not found",
-  "figura.gui.button.statustwo.tooltip": "100kb+ | error | disconnected",
-  "figura.gui.button.statusthree.tooltip": "75kb+ | connecting",
-  "figura.gui.button.statusfour.tooltip": "ok | connected",
+  "figura.gui.button.status.model.0": "none",
+  "figura.gui.button.status.model.1": "100kb+",
+  "figura.gui.button.status.model.2": "75kb+",
+  "figura.gui.button.status.model.3": "ok",
+
+  "figura.gui.button.status.texture.0": "none",
+  "figura.gui.button.status.texture.3": "ok",
+
+  "figura.gui.button.status.script.0": "none",
+  "figura.gui.button.status.script.1": "error",
+  "figura.gui.button.status.script.3": "ok",
+
+  "figura.gui.button.status.backend.1": "disconnected",
+  "figura.gui.button.status.backend.2": "connecting",
+  "figura.gui.button.status.backend.3": "connected",
 
   "figura.gui.status.model": "Model",
   "figura.gui.status.texture": "Texture",
@@ -138,6 +149,9 @@
   "figura.config.custom_player_heads": "Custom Player Heads",
   "figura.config.custom_player_heads.tooltip": "Toggles avatar rendering on player heads and in tablist",
 
+  "figura.config.fix_hands": "Lock First Person Hands",
+  "figura.config.fix_hands.tooltip": "Toggle the transformations of first person hands",
+
   "figura.config.action_wheel_button": "Action Wheel key",
   "figura.config.action_wheel_button.tooltip": "Action Wheel Keybind",
 
@@ -201,6 +215,10 @@
   "figura.playerpopup.reload": "Reload Avatar",
   "figura.playerpopup.increasetrust": "Increase Trust",
   "figura.playerpopup.decreasetrust": "Decrease Trust",
+  "figura.playerpopup.trustmenu": "Open Trust Menu",
+
+  "figura.playerpopup.trustissue": "Avatar has features that requires more trust!",
+  "figura.playerpopup.scriptissue": "Avatar has an script error!",
 
 
   "figura.models.unselect": "-unselect-",

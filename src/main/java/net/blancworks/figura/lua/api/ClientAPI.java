@@ -1,11 +1,9 @@
-package net.blancworks.figura.lua.api.client;
+package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.access.InGameHudAccess;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.blancworks.figura.lua.api.renderlayers.RenderLayerAPI;
 import net.blancworks.figura.utils.TextUtils;
 import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;
@@ -15,7 +13,6 @@ import net.minecraft.client.Mouse;
 import net.minecraft.client.util.Window;
 import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaError;
-import org.luaj.vm2.LuaString;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -29,11 +26,11 @@ public class ClientAPI {
         return new Identifier("default", "client");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
+    public static LuaTable getForScript(CustomScript script) {
         MinecraftClient client = MinecraftClient.getInstance();
         final boolean isHost = script.avatarData == AvatarDataManager.localPlayer;
 
-        return new ReadOnlyLuaTable(new LuaTable() {{
+        return new LuaTable() {{
             set("getOpenScreen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -281,7 +278,7 @@ public class ClientAPI {
             set("getTitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getTitle().asString());
+                    return LuaValue.valueOf(((InGameHudAccess) client.inGameHud).getTitle().asString());
                 }
             });
 
@@ -296,14 +293,14 @@ public class ClientAPI {
             set("getSubtitle", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getSubtitle().asString());
+                    return LuaValue.valueOf(((InGameHudAccess) client.inGameHud).getSubtitle().asString());
                 }
             });
 
             set("getActionbar", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaString.valueOf(((InGameHudAccess) client.inGameHud).getOverlayMessage().asString());
+                    return LuaValue.valueOf(((InGameHudAccess) client.inGameHud).getOverlayMessage().asString());
                 }
             });
 
@@ -345,6 +342,15 @@ public class ClientAPI {
                     }
                 }
             });
-        }});
+
+            set("getMouseScroll", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    LuaValue ret = LuaValue.valueOf(CustomScript.mouseScroll);
+                    CustomScript.mouseScroll = 0d;
+                    return ret;
+                }
+            });
+        }};
     }
 }

@@ -4,7 +4,10 @@
       "type": "bitmap",
       "file": "figura:font/badges.png",
       "ascent": 8,
-      "chars": ["△▲!★✯☆✭\uD83E\uDDC0"]
+      "chars": [
+        "△▲!\uD83E\uDDC0",
+        "★✯☆✭"
+      ]
     },
     {
       "type": "bitmap",
@@ -16,7 +19,12 @@
       "type": "bitmap",
       "file": "figura:font/loading.png",
       "ascent": 8,
-      "chars": ["0123456789abcdef"]
+      "chars": [
+        "0123",
+        "4567",
+        "89ab",
+        "cdef"
+      ]
     },
     {
       "type": "bitmap",

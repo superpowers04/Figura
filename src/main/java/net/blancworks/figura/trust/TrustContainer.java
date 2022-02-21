@@ -22,18 +22,18 @@ public class TrustContainer {
     private final Map<Trust, Integer> trustSettings;
 
     public enum Trust {
-        INIT_INST("maxinitinstructions", 0, 1024 * 17, 256),
-        TICK_INST("maxtickinstructions", 0, 1024 * 11, 256),
-        RENDER_INST("maxrenderinstructions", 0, 1024 * 11, 256),
-        COMPLEXITY("maxcomplexity", 0, 24 * 12 * 16, 24),
-        PARTICLES("maxparticles", 0, 65, 1),
-        SOUNDS("maxsfx", 0, 65, 1),
+        INIT_INST("maxinitinstructions", 0, 32768, 256),
+        TICK_INST("maxtickinstructions", 0, 16384, 256),
+        RENDER_INST("maxrenderinstructions", 0, 16384, 256),
+        COMPLEXITY("maxcomplexity", 0, 12288, 192),
+        PARTICLES("maxparticles", 0, 64, 1),
+        SOUNDS("maxsfx", 0, 64, 1),
+        BB_ANIMATIONS("bbanimations", 0, 256, 16),
         VANILLA_MODEL_EDIT("allowvanillaedit"),
         NAMEPLATE_EDIT("allownameplateedit"),
         OFFSCREEN_RENDERING("allowoffscreenrendering"),
         CUSTOM_RENDER_LAYER("allowcustomrenderlayers"),
-        CUSTOM_SOUNDS("allowcustomsounds"),
-        BB_ANIMATIONS("bbanimations");
+        CUSTOM_SOUNDS("allowcustomsounds");
 
         public final String id;
         public final boolean isBool;

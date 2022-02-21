@@ -41,7 +41,7 @@ public class NBTAPI {
         for (String key : t.getKeys()) {
             table.set(key.toLowerCase(), fromTag(t.get(key)));
         }
-        return new ReadOnlyLuaTable(table);
+        return table;
     }
 
     public static LuaValue fromIntTag(NbtElement tag){
@@ -64,7 +64,6 @@ public class NBTAPI {
         return LuaString.valueOf(tag.asString());
     }
 
-
     public static LuaValue fromIntArrayTag(NbtElement tag){
         LuaTable table = new LuaTable();
         NbtIntArray t = (NbtIntArray) tag;
@@ -73,7 +72,7 @@ public class NBTAPI {
             table.set(i, fromTag(t.get(i)));
         }
 
-        return new ReadOnlyLuaTable(table);
+        return table;
     }
     public static LuaValue fromByteArrayTag(NbtElement tag){
         LuaTable table = new LuaTable();
@@ -83,7 +82,7 @@ public class NBTAPI {
             table.set(i, fromTag(t.get(i)));
         }
 
-        return new ReadOnlyLuaTable(table);
+        return table;
     }
     public static LuaValue fromLongArrayTag(NbtElement tag){
         LuaTable table = new LuaTable();
@@ -93,7 +92,7 @@ public class NBTAPI {
             table.set(i, fromTag(t.get(i)));
         }
 
-        return new ReadOnlyLuaTable(table);
+        return table;
     }
     public static LuaValue fromListTag(NbtElement tag){
         LuaTable table = new LuaTable();
@@ -102,6 +101,6 @@ public class NBTAPI {
         for (int i = 0; i < t.size(); i++) {
             table.set(i, fromTag(t.get(i)));
         }
-        return new ReadOnlyLuaTable(table);
+        return table;
     }
 }

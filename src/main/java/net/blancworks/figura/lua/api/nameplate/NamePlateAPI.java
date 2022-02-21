@@ -1,13 +1,12 @@
 package net.blancworks.figura.lua.api.nameplate;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.access.FiguraTextAccess;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
+import net.blancworks.figura.models.CustomModel;
 import net.blancworks.figura.trust.TrustContainer;
 import net.blancworks.figura.utils.TextUtils;
 import net.minecraft.text.*;
@@ -31,37 +30,24 @@ public class NamePlateAPI {
         return new Identifier("default", "nameplate");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ScriptLocalAPITable(script, new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set(ENTITY, getTableForPart(ENTITY, script));
             set(CHAT, getTableForPart(CHAT, script));
             set(TABLIST, getTableForPart(TABLIST, script));
-        }});
+        }};
     }
 
-    public static ReadOnlyLuaTable getTableForPart(String accessor, CustomScript script) {
-        return new NamePlateTable(accessor, script);
-    }
-
-    private static class NamePlateTable extends ScriptLocalAPITable {
-        String accessor;
-
-        public NamePlateTable(String accessor, CustomScript script) {
-            super(script);
-            this.accessor = accessor;
-            super.setTable(getTable());
-        }
-
-        public LuaTable getTable() {
-            LuaTable ret = new LuaTable();
-            ret.set("getPos", new ZeroArgFunction() {
+    public static LuaTable getTableForPart(String accessor, CustomScript targetScript) {
+        return new LuaTable() {{
+            set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaVector.of(targetScript.getOrMakeNameplateCustomization(accessor).position);
                 }
             });
 
-            ret.set("setPos", new OneArgFunction() {
+            set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     targetScript.getOrMakeNameplateCustomization(accessor).position = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
@@ -69,14 +55,15 @@ public class NamePlateAPI {
                 }
             });
 
-            ret.set("getEnabled", new ZeroArgFunction() {
+            set("getEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(targetScript.getOrMakeNameplateCustomization(accessor).enabled);
+                    Boolean enabled = targetScript.getOrMakeNameplateCustomization(accessor).enabled;
+                    return enabled == null ? NIL : LuaValue.valueOf(enabled);
                 }
             });
 
-            ret.set("setEnabled", new OneArgFunction() {
+            set("setEnabled", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     targetScript.getOrMakeNameplateCustomization(accessor).enabled = arg.isnil() ? null : arg.checkboolean();
@@ -84,14 +71,14 @@ public class NamePlateAPI {
                 }
             });
 
-            ret.set("getScale", new ZeroArgFunction() {
+            set("getScale", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaVector.of(targetScript.getOrMakeNameplateCustomization(accessor).scale);
                 }
             });
 
-            ret.set("setScale", new OneArgFunction() {
+            set("setScale", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
                     targetScript.getOrMakeNameplateCustomization(accessor).scale = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
@@ -99,7 +86,7 @@ public class NamePlateAPI {
                 }
             });
 
-            ret.set("setText", new OneArgFunction() {
+            set("setText", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     String string = null;
@@ -123,15 +110,14 @@ public class NamePlateAPI {
                 }
             });
 
-            ret.set("getText", new ZeroArgFunction() {
+            set("getText", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaValue.valueOf(targetScript.getOrMakeNameplateCustomization(accessor).text);
+                    String text = targetScript.getOrMakeNameplateCustomization(accessor).text;
+                    return text == null ? NIL : LuaValue.valueOf(text);
                 }
             });
-
-            return ret;
-        }
+        }};
     }
 
     public static boolean applyFormattingRecursive(LiteralText text, String playerName, NamePlateCustomization nameplateData, AvatarData currentData) {
@@ -273,6 +259,22 @@ public class NamePlateAPI {
         String badges = " ";
 
         if (currentData.hasAvatar()) {
+            //trust
+            TrustContainer tc = currentData.getTrustContainer();
+            CustomModel model = currentData.model;
+            if ((currentData.getComplexity() > tc.getTrust(TrustContainer.Trust.COMPLEXITY)) ||
+                    (model != null && (model.animRendered > model.animMaxRender || (!model.animations.isEmpty() && model.animMaxRender == 0)))) {
+                currentData.trustIssues = true;
+            } else if (currentData.script != null) {
+                CustomScript script = currentData.script;
+                currentData.trustIssues = (script.customVCP != null && script.customVCP.hasLayers() && tc.getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 0) ||
+                        (!script.nameplateCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 0) ||
+                        (!script.allCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0) ||
+                        (!script.customSounds.isEmpty() && tc.getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0);
+            } else {
+                currentData.trustIssues = false;
+            }
+
             //the mark
             if (!currentData.isAvatarLoaded()) {
                 if ((boolean) Config.BADGE_AS_ICONS.value)
@@ -282,24 +284,12 @@ public class NamePlateAPI {
             }
             else if (currentData.script != null && currentData.script.scriptError)
                 badges += "▲";
+            else if (currentData.trustIssues)
+                badges += "!";
             else if (FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
             else
                 badges += "△";
-
-            //trust
-            TrustContainer tc = currentData.getTrustContainer();
-            if ((currentData.getComplexity() > tc.getTrust(TrustContainer.Trust.COMPLEXITY)) || (currentData.model != null && !currentData.model.animations.isEmpty() && tc.getTrust(TrustContainer.Trust.BB_ANIMATIONS) == 0)) {
-                badges += "!";
-            } else if (currentData.script != null) {
-                CustomScript script = currentData.script;
-                if ((script.customVCP != null && script.customVCP.hasLayers() && tc.getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 0) ||
-                        (!script.nameplateCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.NAMEPLATE_EDIT) == 0) ||
-                        (!script.allCustomizations.isEmpty() && tc.getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0) ||
-                        (!script.customSounds.isEmpty() && tc.getTrust(TrustContainer.Trust.CUSTOM_SOUNDS) == 0)) {
-                    badges += "!";
-                }
-            }
         }
 
         //special badges

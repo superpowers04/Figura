@@ -15,8 +15,8 @@ public class MetaAPI {
         return new Identifier("default", "meta");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ScriptLocalAPITable(script, new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set("getInitLimit", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -66,6 +66,13 @@ public class MetaAPI {
                 }
             });
 
+            set("getAnimationLimit", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.BB_ANIMATIONS));
+                }
+            });
+
             set("getDoesRenderOffscreen", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
@@ -91,13 +98,6 @@ public class MetaAPI {
                 @Override
                 public LuaValue call() {
                     return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.CUSTOM_SOUNDS) == 1);
-                }
-            });
-
-            set("getCanUseBBAnimations", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaValue.valueOf(script.avatarData.getTrustContainer().getTrust(Trust.BB_ANIMATIONS) == 1);
                 }
             });
 
@@ -144,6 +144,12 @@ public class MetaAPI {
                 }
             });
 
+            set("getCurrentAnimationCount", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.avatarData.model == null ? 0 : script.avatarData.model.animRendered);
+                }
+            });
 
             set("getFiguraVersion", new ZeroArgFunction() {
                 @Override
@@ -193,6 +199,6 @@ public class MetaAPI {
                     return LuaValue.valueOf(NewFiguraNetworkManager.connectionStatus + 1);
                 }
             });
-        }});
+        }};
     }
 }

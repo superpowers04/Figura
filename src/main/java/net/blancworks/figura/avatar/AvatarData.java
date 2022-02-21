@@ -64,6 +64,7 @@ public class AvatarData {
     public boolean isInvalidated = false;
 
     private Identifier trustIdentifier;
+    public boolean trustIssues = false;
 
     public Text name;
 

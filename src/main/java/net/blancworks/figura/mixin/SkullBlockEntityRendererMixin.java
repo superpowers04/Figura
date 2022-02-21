@@ -27,7 +27,7 @@ public abstract class SkullBlockEntityRendererMixin {
 
     @Inject(method = "renderSkull", at = @At(value = "HEAD"), cancellable = true)
     private static void renderSkull(Direction direction, float yaw, float animationProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, SkullBlockEntityModel model, RenderLayer renderLayer, CallbackInfo ci) {
-        if (!(boolean) Config.CUSTOM_PLAYER_HEADS.value || data == null || data.model == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
+        if (!(boolean) Config.CUSTOM_PLAYER_HEADS.value || data == null || (data.script != null && !data.script.renderPlayerHead) || data.model == null || data.getTrustContainer().getTrust(TrustContainer.Trust.VANILLA_MODEL_EDIT) == 0)
             return;
 
         matrices.push();
@@ -52,6 +52,6 @@ public abstract class SkullBlockEntityRendererMixin {
         data = null;
 
         if (profile != null && profile.getId() != null)
-            data = AvatarDataManager.getDataForPlayer(profile.getId());
+            data = AvatarDataManager.getLocalDataForPlayer(profile.getId());
     }
 }

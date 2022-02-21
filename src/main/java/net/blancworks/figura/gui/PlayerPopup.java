@@ -5,6 +5,7 @@ import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager;
+import net.blancworks.figura.gui.widgets.PlayerListWidget;
 import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
@@ -39,12 +40,18 @@ public class PlayerPopup extends DrawableHelper {
 
     public static AvatarData data;
 
-    private static final List<Text> buttons = List.of(
+    public static final List<Text> BUTTONS = List.of(
             new TranslatableText("figura.playerpopup.cancel"),
             new TranslatableText("figura.playerpopup.reload"),
             new TranslatableText("figura.playerpopup.increasetrust"),
-            new TranslatableText("figura.playerpopup.decreasetrust")
+            new TranslatableText("figura.playerpopup.decreasetrust"),
+            new TranslatableText("figura.playerpopup.trustmenu")
     );
+
+    private static final Text TRUST_TEXT = new LiteralText("").append(new LiteralText("! ").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT))).append(new TranslatableText("figura.playerpopup.trustissue"));
+    private static final Text SCRIPT_TEXT = new LiteralText("").append(new LiteralText("▲ ").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT))).append(new TranslatableText("figura.playerpopup.scriptissue"));
+
+    private static final FiguraTrustScreen TRUST_SCREEN = new FiguraTrustScreen(null);
 
     public static void renderMini(MatrixStack matrices) {
         if (data == null || enabled)
@@ -52,17 +59,20 @@ public class PlayerPopup extends DrawableHelper {
 
         matrices.push();
         RenderSystem.setShaderTexture(0, POPUP_TEXTURE_MINI);
-        matrices.translate(-51f, -2f, 0f);
+        matrices.translate(-62f, -2f, 0f);
 
-        drawTexture(matrices, 0, 0, 0f, 0f, 49, 13, 49, 48);
+        //background
+        drawTexture(matrices, 0, 0, 0f, 0f, 60, 13, 60, 48);
 
         int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
         RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
 
-        drawTexture(matrices, 0, 0, 0f, 13f, 49, 13, 49, 48);
+        //foreground
+        drawTexture(matrices, 0, 0, 0f, 13f, 60, 13, 60, 48);
 
-        for (int i = 0; i < 4; i++) {
-            drawTexture(matrices, 1 + i * 11, 1, 11f * i, index == i ? 37f : 26f, 11, 11, 49, 48);
+        //buttons
+        for (int i = 0; i < BUTTONS.size(); i++) {
+            drawTexture(matrices, 1 + i * 11, 1, 11f * i, index == i ? 37f : 26f, 11, 11, 60, 48);
         }
 
         matrices.pop();
@@ -99,23 +109,38 @@ public class PlayerPopup extends DrawableHelper {
         matrices.translate((vec.getX() + 1f) / 2f * w, (vec.getY() + 1f) / 2f * h, -100f);
         matrices.scale(s / 2f, s / 2f, 1f);
 
+        //trust/script warning
+        float offset = -4.5f;
+        boolean scriptError = data.script != null && data.script.scriptError;
+        if (scriptError || data.trustIssues) {
+            Text toRender = scriptError ? SCRIPT_TEXT : TRUST_TEXT;
+            int color = scriptError ? Formatting.RED.getColorValue() : Formatting.YELLOW.getColorValue();
+
+            matrices.push();
+            matrices.scale(0.5f, 0.5f, 0.5f);
+            TextUtils.renderOutlineText(textRenderer, toRender, -textRenderer.getWidth(toRender) / 2f, -70, color, 0x202020, matrices);
+            matrices.pop();
+        } else {
+            offset = 0f;
+        }
+
         //title
-        Text title = buttons.get(index);
-        TextUtils.renderOutlineText(textRenderer, title, -textRenderer.getWidth(title) / 2f, -40, 0xFFFFFF, 0x202020, matrices);
+        Text title = BUTTONS.get(index);
+        TextUtils.renderOutlineText(textRenderer, title, -textRenderer.getWidth(title) / 2f, -40 + offset, 0xFFFFFF, 0x202020, matrices);
 
         int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
 
         //background
         RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
-        drawTexture(matrices, -36, -30, 72, 30, 0f, 0f, 72, 30, 72, 96);
+        drawTexture(matrices, -45, -30, 90, 30, 0f, 0f, 90, 30, 90, 96);
 
         RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
-        drawTexture(matrices, -36, -30, 72, 30, 0f, 30f, 72, 30, 72, 96);
+        drawTexture(matrices, -45, -30, 90, 30, 0f, 30f, 90, 30, 90, 96);
 
         //icons
         matrices.translate(0f, 0f, -2f);
-        for (int i = 0; i < 4; i++) {
-            drawTexture(matrices, -36 + (18 * i), -23, 18, 18, 18f * i, i == index ? 78f : 60f, 18, 18, 72, 96);
+        for (int i = 0; i < BUTTONS.size(); i++) {
+            drawTexture(matrices, -45 + (18 * i), -23, 18, 18, 18f * i, i == index ? 78f : 60f, 18, 18, 90, 96);
         }
 
         //playername
@@ -127,10 +152,10 @@ public class PlayerPopup extends DrawableHelper {
 
         matrices.scale(0.5f, 0.5f, 0.5f);
         matrices.translate(0f, 0f, -1f);
-        textRenderer.draw(matrices, name, -66, -55, 0xFFFFFF);
-        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 66, -55, 0xFFFFFF);
+        textRenderer.draw(matrices, name, -84, -55, 0xFFFFFF);
+        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 84, -55, 0xFFFFFF);
 
-        //return
+        //finish rendering
         matrices.pop();
         RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
         data.hasPopup = true;
@@ -140,14 +165,14 @@ public class PlayerPopup extends DrawableHelper {
     public static boolean mouseScrolled(double d) {
         boolean shift = InputUtil.isKeyPressed(MinecraftClient.getInstance().getWindow().getHandle(), GLFW.GLFW_KEY_LEFT_SHIFT);
 
-        if (enabled || (miniEnabled && shift)) index = (int) (index - d + 4) % 4;
+        if (enabled || (miniEnabled && shift)) index = (int) (index - d + BUTTONS.size()) % BUTTONS.size();
         else if (miniEnabled) miniSelected = (int) (miniSelected - d + miniSize) % miniSize;
 
         return enabled || miniEnabled;
     }
 
     public static void hotbarKeyPressed(int i) {
-        if (enabled || miniEnabled) index = i % 4;
+        if (enabled || miniEnabled) index = i % BUTTONS.size();
     }
 
     public static void execute() {
@@ -174,12 +199,19 @@ public class PlayerPopup extends DrawableHelper {
                     if (PlayerTrustManager.decreaseTrust(tc))
                         FiguraMod.sendToast(playerName, new TranslatableText("figura.toast.avatar.trust.title").append(new TranslatableText("figura.trust." + tc.getParent().getPath())));
                 }
+                case 4 -> {
+                    MinecraftClient.getInstance().setScreen(TRUST_SCREEN);
+                    TRUST_SCREEN.searchBox.setText(data.name.getString());
+
+                    PlayerListWidget.PlayerListWidgetEntry entry = TRUST_SCREEN.playerList.getEntry(data.entityId);
+                    if (entry != null)
+                        TRUST_SCREEN.playerList.select(entry);
+                }
             }
         }
 
         enabled = false;
         miniEnabled = false;
-        //miniSelected = 0;
 
         index = 0;
         data = null;

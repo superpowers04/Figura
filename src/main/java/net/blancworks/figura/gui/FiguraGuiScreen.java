@@ -38,8 +38,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -81,7 +79,6 @@ public class FiguraGuiScreen extends Screen {
             new TranslatableText("figura.gui.button.noconnectiontwo.tooltip").setStyle(TEXT_COLORS.get(1))
     );
 
-    public static final Text STATUS_DIVIDER_TEXT = new LiteralText(" | ").setStyle(TEXT_COLORS.get(0));
     public static final TranslatableText MODEL_STATUS_TEXT = new TranslatableText("figura.gui.status.model");
     public static final TranslatableText TEXTURE_STATUS_TEXT = new TranslatableText("figura.gui.status.texture");
     public static final TranslatableText SCRIPT_STATUS_TEXT = new TranslatableText("figura.gui.status.script");
@@ -93,19 +90,6 @@ public class FiguraGuiScreen extends Screen {
             new LiteralText("/").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)),
             new LiteralText("+").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT))
     );
-
-    public static final List<Text> STATUS_TOOLTIP = new ArrayList<>(Arrays.asList(
-            new LiteralText("").append(MODEL_STATUS_TEXT).append(STATUS_DIVIDER_TEXT)
-                    .append(TEXTURE_STATUS_TEXT).append(STATUS_DIVIDER_TEXT)
-                    .append(SCRIPT_STATUS_TEXT).append(STATUS_DIVIDER_TEXT)
-                    .append(BACKEND_STATUS_TEXT),
-
-            new LiteralText(""),
-            new LiteralText("").append(STATUS_INDICATORS.get(0)).append(" ").append(new TranslatableText("figura.gui.button.status.tooltip").setStyle(TEXT_COLORS.get(0))),
-            new LiteralText("").append(STATUS_INDICATORS.get(1)).append(" ").append(new TranslatableText("figura.gui.button.statustwo.tooltip").setStyle(TEXT_COLORS.get(1))),
-            new LiteralText("").append(STATUS_INDICATORS.get(2)).append(" ").append(new TranslatableText("figura.gui.button.statusthree.tooltip").setStyle(TEXT_COLORS.get(2))),
-            new LiteralText("").append(STATUS_INDICATORS.get(3)).append(" ").append(new TranslatableText("figura.gui.button.statusfour.tooltip").setStyle(TEXT_COLORS.get(3)))
-    ));
 
     public static final Text RELOAD_TOOLTIP = new TranslatableText("figura.gui.button.reloadavatar.tooltip");
     public static final Text KEYBIND_TOOLTIP = new TranslatableText("figura.gui.button.keybinds.tooltip");
@@ -130,8 +114,8 @@ public class FiguraGuiScreen extends Screen {
     public MutableText fileSizeText;
     public MutableText modelComplexityText;
 
-    private int textureStatus = 0;
     private int modelSizeStatus = 0;
+    private int textureStatus = 0;
     private int scriptStatus = 0;
     private int connectionStatus = 0;
 
@@ -420,10 +404,10 @@ public class FiguraGuiScreen extends Screen {
             Text panic = new LiteralText("").append(new TranslatableText("figura.gui.panic.warning").formatted(Formatting.YELLOW)).append(new LiteralText(" =").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)));
             drawCenteredText(matrices, this.textRenderer, panic, this.width / 2, this.height - 12, 0xFFFFFF);
         }
-        else if (FiguraMod.latestVersionStatus >= 0) {
-            Text version = new LiteralText("Figura " + FiguraMod.MOD_VERSION).setStyle(Style.EMPTY.withItalic(true)).formatted(Formatting.DARK_GRAY);
+        else if (FiguraMod.latestVersionStatus == 0) {
+            Text version = new LiteralText("Figura " + FiguraMod.MOD_VERSION).formatted(Formatting.DARK_GRAY, Formatting.ITALIC);
             drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
-        } else {
+        } else if (FiguraMod.latestVersionStatus < 0) {
             Text version = new LiteralText("").append(new LiteralText("Figura " + FiguraMod.MOD_VERSION).formatted(Formatting.YELLOW, Formatting.ITALIC)).append(new LiteralText(" =").setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)));
             drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
 
@@ -433,6 +417,23 @@ public class FiguraGuiScreen extends Screen {
                 List<Text> tooltipText = List.of(
                         new LiteralText("").append(new TranslatableText("figura.gui.newver.tooltip")).append(" ").append(new LiteralText(FiguraMod.latestVersion).formatted(Formatting.YELLOW, Formatting.UNDERLINE)),
                         new TranslatableText("figura.gui.newver.tooltip2")
+                );
+                matrices.push();
+                matrices.translate(0, 0, 599);
+                renderTooltip(matrices, tooltipText, mouseX, mouseY);
+                matrices.pop();
+            }
+        } else {
+            String load = Integer.toHexString(Math.abs(FiguraMod.ticksElapsed) % 16);
+            Text version = new LiteralText("Figura " + FiguraMod.MOD_VERSION).formatted(Formatting.DARK_PURPLE, Formatting.ITALIC);
+            drawCenteredText(matrices, this.textRenderer, version, this.width / 2, this.height - 12, 0xFFFFFF);
+
+            //status tooltip
+            int textWidth = this.textRenderer.getWidth(version);
+            if (mouseX >= this.width / 2 - textWidth / 2 && mouseX < this.width / 2 + textWidth / 2 && mouseY >= this.height - 12 && mouseY < this.height - 1) {
+                List<Text> tooltipText = List.of(
+                        new LiteralText("Are you a time traveller?").formatted(Formatting.LIGHT_PURPLE),
+                        new LiteralText("Latest version is: ").formatted(Formatting.LIGHT_PURPLE).append(new LiteralText(FiguraMod.latestVersion).formatted(Formatting.AQUA, Formatting.UNDERLINE))
                 );
                 matrices.push();
                 matrices.translate(0, 0, 599);
@@ -480,11 +481,45 @@ public class FiguraGuiScreen extends Screen {
         }
 
         //status tooltip
-        if (mouseX >= this.width - 75 && mouseX < this.width - 6 && mouseY >= 88 && mouseY < 99) {
-            matrices.push();
-            matrices.translate(0, 0, 599);
-            renderTooltip(matrices, STATUS_TOOLTIP, mouseX, mouseY);
-            matrices.pop();
+        if (mouseY >= 88 && mouseY < 99) {
+            List<Text> tooltip = null;
+
+            //model
+            if (mouseX >= this.width - 77 && mouseX < this.width - 61) {
+                tooltip = List.of(
+                        MODEL_STATUS_TEXT,
+                        new LiteralText("").append(STATUS_INDICATORS.get(modelSizeStatus)).append(" ").append(new TranslatableText("figura.gui.button.status.model." + modelSizeStatus).setStyle(TEXT_COLORS.get(modelSizeStatus)))
+                );
+            }
+            //texture
+            else if (mouseX >= this.width - 58 && mouseX < this.width - 42) {
+                tooltip = List.of(
+                        TEXTURE_STATUS_TEXT,
+                        new LiteralText("").append(STATUS_INDICATORS.get(textureStatus)).append(" ").append(new TranslatableText("figura.gui.button.status.texture." + textureStatus).setStyle(TEXT_COLORS.get(textureStatus)))
+                );
+            }
+            //script
+            else if (mouseX >= this.width - 39 && mouseX < this.width - 23) {
+                tooltip = List.of(
+                        SCRIPT_STATUS_TEXT,
+                        new LiteralText("").append(STATUS_INDICATORS.get(scriptStatus)).append(" ").append(new TranslatableText("figura.gui.button.status.script." + scriptStatus).setStyle(TEXT_COLORS.get(scriptStatus)))
+                );
+            }
+            //backend
+            else if (mouseX >= this.width - 20 && mouseX < this.width - 4) {
+                tooltip = List.of(
+                        BACKEND_STATUS_TEXT,
+                        new LiteralText("").append(STATUS_INDICATORS.get(connectionStatus)).append(" ").append(new TranslatableText("figura.gui.button.status.backend." + connectionStatus).setStyle(TEXT_COLORS.get(connectionStatus)))
+                );
+            }
+
+            //render
+            if (tooltip != null) {
+                matrices.push();
+                matrices.translate(0, 0, 599);
+                renderTooltip(matrices, tooltip, mouseX, mouseY);
+                matrices.pop();
+            }
         }
 
         keybindsButton.active = AvatarDataManager.localPlayer != null && AvatarDataManager.localPlayer.script != null;
@@ -587,14 +622,6 @@ public class FiguraGuiScreen extends Screen {
         }
 
         connectionStatus = NewFiguraNetworkManager.connectionStatus;
-
-        STATUS_TOOLTIP.set(0,
-                new LiteralText("").append(
-                MODEL_STATUS_TEXT.setStyle(TEXT_COLORS.get(modelSizeStatus))).append(STATUS_DIVIDER_TEXT)
-                        .append(TEXTURE_STATUS_TEXT.setStyle(TEXT_COLORS.get(textureStatus))).append(STATUS_DIVIDER_TEXT)
-                        .append(SCRIPT_STATUS_TEXT.setStyle(TEXT_COLORS.get(scriptStatus))).append(STATUS_DIVIDER_TEXT)
-                        .append(BACKEND_STATUS_TEXT.setStyle(TEXT_COLORS.get(connectionStatus)))
-        );
     }
 
     public MutableText getFileSizeText() {
@@ -603,7 +630,7 @@ public class FiguraGuiScreen extends Screen {
         //format file size
         DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
         df.setRoundingMode(RoundingMode.HALF_UP);
-        float size = Float.parseFloat(df.format(fileSize / 1024.0f));
+        float size = Float.parseFloat(df.format(fileSize / 1000.0f));
 
         MutableText fsText = new TranslatableText("figura.gui.status.filesize").append(new LiteralText(" " + size).styled(FiguraMod.ACCENT_COLOR));
 

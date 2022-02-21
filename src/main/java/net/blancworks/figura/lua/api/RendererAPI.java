@@ -1,8 +1,7 @@
-package net.blancworks.figura.lua.api.renderer;
+package net.blancworks.figura.lua.api;
 
 import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.lua.api.block.BlockStateAPI;
 import net.blancworks.figura.lua.api.entity.EntityAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
@@ -42,8 +41,10 @@ public class RendererAPI {
         return new Identifier("default", "renderer");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ReadOnlyLuaTable(new LuaTable(){{
+    public static LuaTable getForScript(CustomScript script) {
+        final boolean isHost = script.avatarData == AvatarDataManager.localPlayer;
+
+        return new LuaTable() {{
             set("setShadowSize", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -55,27 +56,24 @@ public class RendererAPI {
             set("getShadowSize", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return script.customShadowSize == null ? NIL : LuaNumber.valueOf(script.customShadowSize);
+                    Float size = script.customShadowSize;
+                    return  size == null ? NIL : LuaValue.valueOf(size);
                 }
             });
 
             set("isFirstPerson", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    if (AvatarDataManager.localPlayer != script.avatarData)
-                        return LuaBoolean.FALSE;
-
-                    return MinecraftClient.getInstance().options.getPerspective().isFirstPerson() ? LuaBoolean.TRUE : LuaBoolean.FALSE;
+                    if (!isHost) return FALSE;
+                    return LuaValue.valueOf(MinecraftClient.getInstance().options.getPerspective().isFirstPerson());
                 }
             });
 
             set("isCameraBackwards", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    if (AvatarDataManager.localPlayer != script.avatarData)
-                        return LuaBoolean.FALSE;
-
-                    return MinecraftClient.getInstance().options.getPerspective().isFrontView() ? LuaBoolean.TRUE : LuaBoolean.FALSE;
+                    if (!isHost) return FALSE;
+                    return LuaValue.valueOf(MinecraftClient.getInstance().options.getPerspective().isFrontView());
                 }
             });
 
@@ -106,7 +104,8 @@ public class RendererAPI {
             set("getRenderFire", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return script.shouldRenderFire == null ? NIL : LuaBoolean.valueOf(script.shouldRenderFire);
+                    Boolean fire = script.shouldRenderFire;
+                    return fire == null ? NIL : LuaValue.valueOf(fire);
                 }
             });
 
@@ -115,7 +114,7 @@ public class RendererAPI {
                 public LuaValue call(LuaValue arg) {
                     String arg1 = TextUtils.noBadges4U(arg.checkjstring()).replaceAll("[\n\r]", " ");
                     Text text = TextUtils.tryParseJson(arg1);
-                    return LuaNumber.valueOf(MinecraftClient.getInstance().textRenderer.getWidth(text));
+                    return LuaValue.valueOf(MinecraftClient.getInstance().textRenderer.getWidth(text));
                 }
             });
 
@@ -130,7 +129,7 @@ public class RendererAPI {
             set("isMountEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaBoolean.valueOf(script.renderMount);
+                    return LuaValue.valueOf(script.renderMount);
                 }
             });
 
@@ -145,7 +144,7 @@ public class RendererAPI {
             set("isMountShadowEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaBoolean.valueOf(script.renderMountShadow);
+                    return LuaValue.valueOf(script.renderMountShadow);
                 }
             });
 
@@ -153,10 +152,25 @@ public class RendererAPI {
                 @Override
                 public LuaValue call(LuaValue arg) {
                     PlayerEntity player = MinecraftClient.getInstance().player;
-                    if (player != null && AvatarDataManager.localPlayer == script.avatarData)
+                    if (player != null && isHost)
                         player.swingHand(arg.isnil() || !arg.checkboolean() ? Hand.MAIN_HAND : Hand.OFF_HAND);
 
                     return NIL;
+                }
+            });
+
+            set("setRenderPlayerHead", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    script.renderPlayerHead = arg.checkboolean();
+                    return NIL;
+                }
+            });
+
+            set("getRenderPlayerHead", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(script.renderPlayerHead);
                 }
             });
 
@@ -220,8 +234,7 @@ public class RendererAPI {
                     return ret;
                 }
             });
-
-        }});
+        }};
     }
 
     private static final LuaFunction returnTrue = new ZeroArgFunction() {

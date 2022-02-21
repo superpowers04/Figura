@@ -9,10 +9,13 @@ import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.Vec3f;
 
 public abstract class RenderTask {
-    public boolean emissive;
+    public Boolean emissive;
     public Vec3f pos;
     public Vec3f rot;
     public Vec3f scale;
+
+    public boolean enabled = true;
+
     private static FiguraRenderLayer storedOverride;
 
     protected RenderTask(boolean emissive, Vec3f pos, Vec3f rot, Vec3f scale) {
@@ -22,7 +25,7 @@ public abstract class RenderTask {
         this.scale = scale == null ? MathUtils.Vec3f_ONE : scale;
     }
 
-    public abstract int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light);
+    public abstract int render(AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay);
 
     public void transform(MatrixStack matrices) {
         matrices.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));

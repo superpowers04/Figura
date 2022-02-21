@@ -1,8 +1,6 @@
 package net.blancworks.figura.lua.api.model;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.mixin.PlayerEntityModelAccessorMixin;
 import net.minecraft.client.model.ModelPart;
@@ -13,7 +11,6 @@ import net.minecraft.util.Identifier;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.util.function.Function;
@@ -48,8 +45,8 @@ public class VanillaModelAPI {
 
     public static Function<CustomScript, PlayerEntityModel<?>> getCurrModel = (script) -> (PlayerEntityModel<?>) script.avatarData.vanillaModel;
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ScriptLocalAPITable(script, new LuaTable() {{
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
             set(VANILLA_HEAD, getTableForPart(() -> getCurrModel.apply(script).head, VANILLA_HEAD, script));
             set(VANILLA_TORSO, getTableForPart(() -> getCurrModel.apply(script).body, VANILLA_TORSO, script));
 
@@ -71,147 +68,65 @@ public class VanillaModelAPI {
             set(VANILLA_CAPE, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.apply(script)).getCloak(), VANILLA_CAPE, script));
             set(VANILLA_LEFT_EAR, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.apply(script)).getEar(), VANILLA_LEFT_EAR, script));
             set(VANILLA_RIGHT_EAR, getTableForPart(() -> ((PlayerEntityModelAccessorMixin) getCurrModel.apply(script)).getEar(), VANILLA_RIGHT_EAR, script));
-        }});
+        }};
     }
 
-    public static ReadOnlyLuaTable getTableForPart(Supplier<ModelPart> part, String accessor, CustomScript script) {
-        return new ModelPartTable(part, accessor, script);
+    public static LuaTable getTableForPart(Supplier<ModelPart> part, String accessor, CustomScript script) {
+        return new ModelPartTable(part, accessor, script).getTable();
     }
 
-    public static class ModelPartTable extends ScriptLocalAPITable {
-        public Supplier<ModelPart> targetPart;
-
+    public static class ModelPartTable {
         public float pivotX, pivotY, pivotZ;
         public float pitch, yaw, roll;
         public boolean visible;
 
-        public String accessor;
+        public final Supplier<ModelPart> targetPart;
+        public final String accessor;
+        public final CustomScript script;
 
         public ModelPartTable(Supplier<ModelPart> part, String accessor, CustomScript script) {
-            super(script);
-            targetPart = part;
+            this.targetPart = part;
             this.accessor = accessor;
-            super.setTable(getTable(script));
-
+            this.script = script;
             script.vanillaModelPartTables.add(this);
         }
 
-        public LuaTable getTable(CustomScript script) {
-            LuaTable ret = new LuaTable();
+        public LuaTable getTable() {
+            LuaTable tbl = VanillaModelPartCustomization.getTableForPart(accessor, script);
 
-            ret.set("getPos", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaVector.of(targetScript.getOrMakePartCustomization(accessor).pos);
-                }
-            });
-
-            ret.set("setPos", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1) {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-                    customization.pos = LuaVector.checkOrNew(arg1).asV3f();
-
-                    return NIL;
-                }
-            });
-
-            ret.set("getRot", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaVector.of(targetScript.getOrMakePartCustomization(accessor).rot);
-                }
-            });
-
-            ret.set("setRot", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1) {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-                    customization.rot = LuaVector.checkOrNew(arg1).asV3f();
-
-                    return NIL;
-                }
-            });
-
-            ret.set("getScale", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    return LuaVector.of(targetScript.getOrMakePartCustomization(accessor).scale);
-                }
-            });
-
-            ret.set("setScale", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1) {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-                    customization.scale = LuaVector.checkOrNew(arg1).asV3f();
-                    return NIL;
-                }
-            });
-
-            ret.set("getEnabled", new ZeroArgFunction() {
-                @Override
-                public LuaValue call() {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-
-                    if (customization != null && customization.visible != null)
-                        return LuaBoolean.valueOf(customization.visible);
-
-                    return NIL;
-                }
-            });
-
-            ret.set("setEnabled", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg) {
-                    VanillaModelPartCustomization customization = targetScript.getOrMakePartCustomization(accessor);
-
-                    if (arg.isnil()) {
-                        customization.visible = null;
-                        return NIL;
-                    }
-
-                    customization.visible = arg.checkboolean();
-
-                    return NIL;
-                }
-            });
-
-
-            ret.set("getOriginPos", new ZeroArgFunction() {
+            tbl.set("getOriginPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return new LuaVector(pivotX, pivotY, pivotZ);
                 }
             });
 
-            ret.set("getOriginRot", new ZeroArgFunction() {
+            tbl.set("getOriginRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return new LuaVector(pitch, yaw, roll);
                 }
             });
 
-            ret.set("getOriginEnabled", new ZeroArgFunction() {
+            tbl.set("getOriginEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     return LuaBoolean.valueOf(visible);
                 }
             });
 
-            ret.set("isOptionEnabled", new ZeroArgFunction() {
+            tbl.set("isOptionEnabled", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
                     try {
                         return LuaBoolean.valueOf(((PlayerEntity) script.avatarData.lastEntity).isPartVisible(PlayerModelPart.valueOf(accessor)));
-                    }
-                    catch (Exception ignored) {
+                    } catch (Exception ignored) {
                         return NIL;
                     }
                 }
             });
 
-            return ret;
+            return tbl;
         }
 
         public void updateFromPart() {
