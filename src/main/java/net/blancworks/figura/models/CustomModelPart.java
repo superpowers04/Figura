@@ -50,7 +50,7 @@ public class CustomModelPart {
     public boolean visible = true;
 
     public ParentType parentType = ParentType.Model;
-    public byte mimicMode = 0;
+    public boolean isMimicMode = false;
 
     public ShaderType shaderType = ShaderType.None;
 
@@ -243,12 +243,10 @@ public class CustomModelPart {
 
         //render!
         if (canRender) {
-            if (ShaderType.EndPortal.contains(shaders))
+            if (ShaderType.EndPortal.isShader(shaders))
                 leftToRender = renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEndGateway()), light, overlay, u, v, color, alpha);
-            if (ShaderType.Glint.contains(shaders))
+            if (ShaderType.Glint.isShader(shaders))
                 leftToRender = renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getDirectEntityGlint()), light, overlay, u, v, color, alpha);
-            if (ShaderType.Flint.contains(shaders))
-                leftToRender = renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getGlint()), light, overlay, u, v, color, alpha);
         }
 
         if (this instanceof CustomModelPartGroup group) {
@@ -457,13 +455,9 @@ public class CustomModelPart {
 
             if (part != null) {
                 //mimic rotations
-                if (mimicMode == 1) {
+                if (this.isMimicMode) {
                     this.rot = new Vec3f(part.pitch, part.yaw, part.roll);
                     this.rot.scale(MathHelper.DEGREES_PER_RADIAN);
-                }
-                //mimic pos
-                else if (mimicMode == 2) {
-                    this.pos = new Vec3f(part.pivotX, part.pivotY, part.pivotZ);
                 }
                 //vanilla rotations
                 else {
@@ -530,7 +524,7 @@ public class CustomModelPart {
         stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
         stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
 
-        if (mimicMode == 1) vanillaRotate(stack, this.rot);
+        if (this.isMimicMode) vanillaRotate(stack, this.rot);
         else rotate(stack, this.rot);
 
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
@@ -657,17 +651,16 @@ public class CustomModelPart {
     }
 
     public enum ShaderType {
-        None((byte) 0),
-        EndPortal((byte) 1),
-        Glint((byte) 2),
-        Flint((byte) 4);
+        None(0),
+        EndPortal(1),
+        Glint(2);
 
-        public final byte id;
-        ShaderType(byte id) {
+        public final int id;
+        ShaderType(int id) {
             this.id = id;
         }
 
-        public boolean contains(int shader) {
+        public boolean isShader(int shader) {
             return (id & shader) == id;
         }
     }
