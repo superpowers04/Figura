@@ -279,14 +279,14 @@ public class CustomModelAPI {
         ret.set("getMimicMode", new ZeroArgFunction() {
             @Override
             public LuaValue call() {
-                return LuaValue.valueOf(targetPart.mimicMode);
+                return LuaBoolean.valueOf(targetPart.isMimicMode);
             }
         });
 
         ret.set("setMimicMode", new OneArgFunction() {
             @Override
             public LuaValue call(LuaValue arg1) {
-                targetPart.mimicMode = arg1.checkinteger().tobyte();
+                targetPart.isMimicMode = arg1.checkboolean();
                 return NIL;
             }
         });

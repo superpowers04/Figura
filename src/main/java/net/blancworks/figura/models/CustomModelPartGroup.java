@@ -40,7 +40,7 @@ public class CustomModelPartGroup extends CustomModelPart {
 
         //rotation
         Vec3f rotation = this.rot.copy();
-        if (mimicMode == 1) {
+        if (this.isMimicMode) {
             rotation.add(this.animRot.getX(), this.animRot.getY(), this.animRot.getZ());
             vanillaRotate(stack, rotation);
         } else {
@@ -118,7 +118,7 @@ public class CustomModelPartGroup extends CustomModelPart {
         }
 
         if (partNbt.contains("mmc")) {
-            this.mimicMode = partNbt.getByte("mmc");
+            this.isMimicMode = partNbt.getByte("mmc") == 1;
         }
 
         if (partNbt.contains("anims")) {
