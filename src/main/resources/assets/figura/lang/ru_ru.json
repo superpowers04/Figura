@@ -1,0 +1,226 @@
+{
+  "figura": "Figura",
+
+
+  "figura.trust.blocked": "Заблокированные",
+  "figura.trust.untrusted": "Ненадёжные",
+  "figura.trust.trusted": "Надёжные",
+  "figura.trust.friend": "Друзья",
+  "figura.trust.local": "Локальные",
+
+  "figura.trust.maxinitinstructions": "Лимит инструкций инициализации",
+  "figura.trust.maxtickinstructions": "Лимит цикличных инструкций",
+  "figura.trust.maxrenderinstructions": "Лимит инструкций рендеринга",
+  "figura.trust.maxcomplexity": "Лимит комплектности",
+  "figura.trust.maxparticles": "Лимит частиц в секунду",
+  "figura.trust.maxsfx": "Лимит звуков в секунду",
+  "figura.trust.allowvanillaedit": "Изменения в ванильном персонаже",
+  "figura.trust.allownameplateedit": "Значок в чате/списке игроков",
+  "figura.trust.allowoffscreenrendering": "Отображение за границами экрана",
+  "figura.trust.allowcustomrenderlayers": "Пользовательские слои рендеринга",
+  "figura.trust.allowcustomsounds": "Пользовательские звуки",
+  "figura.trust.bbanimations": "Лимит комплектности анимации",
+
+
+  "figura.gui.trustmenu.title": "Настройки доверия Figura",
+  "figura.gui.config.title": "Настройки Figura",
+  "figura.gui.menu.title": "Меню Figura",
+  "figura.gui.keybinds.title": "Настройки клавиш скриптов Figura",
+  "figura.gui.sounds.title": "Просмор пользовательских звуков Figura",
+
+  "figura.gui.dropconfirm": "Хотите добавить следующие модели в Figura?",
+  "figura.gui.panic.warning": "Ограниченное использование Figura – видимость персонажа отключена! *паника*",
+
+  "figura.gui.newver.tooltip": "Обнаружена новая версия Figura:",
+  "figura.gui.newver.tooltip2": "Проверьте наш сервер Discord для загрузки обновлений.",
+
+  "figura.gui.button.cache": "Кэшировать персонажа",
+  "figura.gui.button.cache.done": "Персонаж сохранён.",
+
+  "figura.gui.button.save": "Сохранить персонажа",
+  "figura.gui.button.save.done": "Персонаж сохранён.",
+  "figura.gui.button.save.error": "ууупс...",
+  "figura.gui.button.save.error.message": "Не удалось сохранить персонажа",
+
+  "figura.gui.button.trustmenu": "Меню доверия",
+  "figura.gui.button.configmenu": "Настройки",
+  "figura.gui.button.back": "Назад",
+  "figura.gui.button.deleteavatar": "Сбросить персонажа",
+  "figura.gui.button.clearall": "Сбросить всех персонажей",
+  "figura.gui.button.help": "Помощь",
+  "figura.gui.button.openfolder": "Открыть папку моделей",
+  "figura.gui.button.openavatarfolder": "Открыть папку персонажа",
+  "figura.gui.button.resetallperm": "Сбросить ВСЕ настройки",
+  "figura.gui.button.resetperm": "Сбросить настройки",
+  "figura.gui.button.reloadavatar": "Перезагрузить персонажа",
+  "figura.gui.button.search": "Поиск...",
+
+  "figura.gui.button.upload.tooltip": "Нажмите, чтобы загрузить и отобразить вашего персонажа в сети",
+  "figura.gui.button.uploadlocal.tooltip": "Персонаж уже загружен!",
+  "figura.gui.button.uploadlocaltwo.tooltip": "Вы должны выбрать локального персонажа перед отправкой.",
+  "figura.gui.button.noconnection.tooltip": "Не удалось загрузить/удалить персонажа.",
+  "figura.gui.button.noconnectiontwo.tooltip": "Нет соединения с сервером.",
+  "figura.gui.button.reloadavatar.tooltip": "Нажмите, чтобы сбросить персонажа локально и восстановить сетевую версию.",
+  "figura.gui.button.deleteavatar.tooltip": "Нажмите, удерживая левый Shift, чтобы сбросить персонажа на сервере.",
+  "figura.gui.button.deleteavatartwo.tooltip": "Это действие также сбросит вашего персошажа у всех остальных.",
+  "figura.gui.button.resetperm.tooltip": "Нажмите, удерживая левый Shift, чтобы сбросить выбранные настройки.",
+  "figura.gui.button.clearcache.tooltip": "Нажмите, удерживая Shift, чтобы очистить все загруженные данные персонажа.",
+  "figura.gui.button.keybinds.tooltip": "Клавиши текущих скриптов",
+  "figura.gui.button.sounds.tooltip": "Просмотр пользовательских звуков",
+  "figura.gui.button.openfolder.tooltip": "Нажмите, удерживая левый Shift, чтобы открыть папку выбранного персонажа",
+
+  "figura.gui.button.status.model.0": "нет",
+  "figura.gui.button.status.model.1": "100КБ+",
+  "figura.gui.button.status.model.2": "75КБ+",
+  "figura.gui.button.status.model.3": "да",
+
+  "figura.gui.button.status.texture.0": "нет",
+  "figura.gui.button.status.texture.3": "да",
+
+  "figura.gui.button.status.script.0": "нет",
+  "figura.gui.button.status.script.1": "ошибка",
+  "figura.gui.button.status.script.3": "успех",
+
+  "figura.gui.button.status.backend.1": "отключено",
+  "figura.gui.button.status.backend.2": "подключение",
+  "figura.gui.button.status.backend.3": "подключено",
+
+  "figura.gui.status.model": "Модель",
+  "figura.gui.status.texture": "Текстура",
+  "figura.gui.status.script": "Скрипт",
+  "figura.gui.status.backend": "Сервер",
+
+  "figura.gui.status.complexity": "Комплектность:",
+  "figura.gui.status.filesize": "Размер файла (КБ):",
+  "figura.gui.status.name": "Имя:",
+
+
+  "figura.config.nametag": "Никнейм",
+  "figura.config.misc": "Прочее",
+  "figura.config.actionwheel": "Колесо действий",
+  "figura.config.dev": "Настройки разработчика",
+
+  "figura.config.log_location.1": "Консоль/Чат",
+  "figura.config.log_location.2": "Консоль",
+  "figura.config.log_location.3": "Чат",
+  "figura.config.log_location.4": "Нет",
+  
+  "figura.config.preview_nameplate": "Просматривать никнейм",
+  "figura.config.preview_nameplate.tooltip": "Показывает ваш никнейм в окне просмотра модели",
+
+  "figura.config.nameplate_modifications": "Пользовательские никнеймы",
+  "figura.config.nameplate_modifications.tooltip": "Позволяет никам игроков быть персонализированными",
+
+  "figura.config.chat_modifications": "Пользовательский чат",
+  "figura.config.chat_modifications.tooltip": "Позволяет никам игроков быть персонализированными в чате",
+
+  "figura.config.playerlist_modifications": "Пользовательский список",
+  "figura.config.playerlist_modifications.tooltip": "Позволяет никам игроков быть персонализированными в списке игроков",
+
+  "figura.config.badges": "Показывать значки",
+  "figura.config.badges.tooltip": "Добавляет значки △ рядом с никами игроков с персонажем Figura",
+
+  "figura.config.badge_as_icons": "Значок в виде картинки",
+  "figura.config.badge_as_icons.tooltip": "Отображает значок △ в виде картинки %d в никнейме",
+
+  "figura.config.figura_button_location": "Расположение кнопки Figura",
+  "figura.config.figura_button_location.tooltip": "Место, в котором должна располагаться кнопка Figura",
+  "figura.config.figura_button_location.1": "Сверху слева",
+  "figura.config.figura_button_location.2": "Сверху справа",
+  "figura.config.figura_button_location.3": "Снизу слева",
+  "figura.config.figura_button_location.4": "Снизу справа",
+  "figura.config.figura_button_location.5": "Значок",
+
+  "figura.config.script_log_location": "Отладка скриптов",
+  "figura.config.script_log_location.tooltip": "Место вывода отладочных записей скриптов",
+
+  "figura.config.player_popup_button": "Всплывающее окно игроков",
+  "figura.config.player_popup_button.tooltip": "Клавиша всплывающего окна игроков",
+
+  "figura.config.accent_color": "Цвет оттенка интерфейса",
+  "figura.config.accent_color.tooltip": "Изменение цвета оттенка, используемого интерфейсом",
+
+  "figura.config.release_channel": "Канал обновления версий",
+  "figura.config.release_channel.tooltip": "Канал обновлений для запроса новых версий",
+  "figura.config.release_channel.1": "Пре-релизы",
+  "figura.config.release_channel.2": "Релизы",
+  "figura.config.release_channel.3": "Без обновлений",
+
+  "figura.config.custom_player_heads": "Пользовательские головы",
+  "figura.config.custom_player_heads.tooltip": "Отображение персонажей на головах игроков и в списках",
+
+  "figura.config.fix_hands": "Блокировка рук от первого лица",
+  "figura.config.fix_hands.tooltip": "Переключение трансформации рук в виде от первого лица",
+
+  "figura.config.action_wheel_button": "Колесо действий",
+  "figura.config.action_wheel_button.tooltip": "Клавиша для открытия колеса действий",
+
+  "figura.config.action_wheel_title_pos": "Назания в колесе действий",
+  "figura.config.action_wheel_title_pos.tooltip": "Место, к которому привязваются названия действий",
+  "figura.config.action_wheel_title_pos.1": "Курсор",
+  "figura.config.action_wheel_title_pos.2": "Сверху",
+  "figura.config.action_wheel_title_pos.3": "Снизу",
+  "figura.config.action_wheel_title_pos.4": "По центру",
+
+  "figura.config.action_wheel_execute_on_close": "Выполнять по закрытию",
+  "figura.config.action_wheel_execute_on_close.tooltip": "Выбранное действие может быть выполнено после закрытия окна, а не только по щелчку мыши.",
+
+  "figura.config.new_action_wheel": "Новое колесо действий",
+  "figura.config.new_action_wheel.tooltip": "Новая реализация окна выбора действия",
+
+  "figura.config.use_local_server": "Локальный сервер",
+  "figura.config.use_local_server.tooltip": "Заменить использование общего сервера для моделей на локальный",
+
+  "figura.config.format_script_on_upload": "Оптимизация скриптов",
+  "figura.config.format_script_on_upload.tooltip": "Оптимизировать формат скриптов при выгрузке персонажа",
+
+  "figura.config.log_others_script": "Отладка скриптов игроков",
+  "figura.config.log_others_script.tooltip": "Вывод отладочных записей скриптов от других игроков",
+
+  "figura.config.render_debug_parts_pivot": "Отображение каркаса частей",
+  "figura.config.render_debug_parts_pivot.tooltip": "Отображение каркаса %d и %d когда включено отображение хитбоксов",
+  "figura.config.render_debug_parts_pivot.tooltip.cubes": "кубы",
+  "figura.config.render_debug_parts_pivot.tooltip.groups": "группы",
+
+  "figura.config.render_own_nameplate": "Показывать никнейм",
+  "figura.config.render_own_nameplate.tooltip": "Включает отображение собственного ника в игре",
+
+  "figura.config.model_folder_path": "Папка моделей",
+  "figura.config.model_folder_path.tooltip": "Путь для настроек, файлов моделей и кэша. Если пусто, активен путь к Minecraft по умолчанию.",
+
+  "figura.config.panic_button": "Переключение персонажа",
+  "figura.config.panic_button.tooltip": "Клавиша переключения видимости персонажа для всех. Будьте осторожны!",
+
+  "figura.config.pings_log_location": "Отладка уведомлений",
+  "figura.config.pings_log_location.tooltip": "Место вывода отладочных записей уведомлений",
+
+
+  "figura.toast.upload.success.title": "Персонаж загружен!",
+  "figura.toast.upload.error.title": "Не удалось загрузить персонажей!",
+
+  "figura.toast.upload.error.many": "У вас слишком много персонажей!",
+  "figura.toast.upload.error.empty": "Персонаж пустой!",
+  "figura.toast.upload.error.space": "Недостаточно места на сервере!",
+
+  "figura.toast.avatar.reload.title": "Персонаж перезагружен!",
+  "figura.toast.avatar.trust.title": "Теперь в группе: ",
+
+
+  "figura.actionwheel.warning": "Действий не обнаружено",
+  "figura.actionwheel.warninginfo": "Содержимое колеса действий задаётся скриптом вашего персонажа",
+  "figura.actionwheel.nofunction": "Неназначенная функция",
+
+
+  "figura.playerpopup.cancel": "Закрыть",
+  "figura.playerpopup.reload": "Перезагрузить",
+  "figura.playerpopup.increasetrust": "Повысить доверие",
+  "figura.playerpopup.decreasetrust": "Понизить доверие",
+  "figura.playerpopup.trustmenu": "Открыть меню доверия",
+
+  "figura.playerpopup.trustissue": "Персонаж обладает функциями, требующими большего доверия.",
+  "figura.playerpopup.scriptissue": "Персонаж содержит ошибки со стороны скриптов.",
+
+
+  "figura.models.unselect": "-нет-",
+  "figura.models.loading": "Загрузка..."
+}
