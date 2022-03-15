@@ -50,7 +50,7 @@ public class GameMenuScreenMixin extends Screen {
             //icon
             case 4 -> {
                 x = this.width / 2 + 4 + 100 + 2;
-                y = this.height / 4 + 96 + -16;
+                y = this.height / 4 + 96 - 16;
             }
         }
 

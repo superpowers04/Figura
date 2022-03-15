@@ -12,7 +12,6 @@ import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaBoolean;
 import org.luaj.vm2.LuaString;
@@ -23,22 +22,9 @@ import org.luaj.vm2.lib.ThreeArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class SoundAPI {
-
-    public static HashMap<String, SoundEvent> soundEvents = new HashMap<>() {{
-        for (Identifier id : Registry.SOUND_EVENT.getIds()) {
-            SoundEvent type = Registry.SOUND_EVENT.get(id);
-
-            put(id.getPath(), type);
-            put(id.toString(), type);
-        }
-    }};
 
     public static Identifier getID() {
         return new Identifier("default", "sound");
@@ -155,20 +141,17 @@ public class SoundAPI {
     }
 
     public static void playSound(CustomScript script, LuaValue arg1, LuaValue arg2, LuaValue arg3) {
+        World w = MinecraftClient.getInstance().world;
+        if (MinecraftClient.getInstance().isPaused() || w == null)
+            return;
+
         if (script.soundSpawnCount < 1)
             return;
         script.soundSpawnCount--;
 
-        SoundEvent targetEvent = soundEvents.get(arg1.checkjstring());
-        if (targetEvent == null)
-            return;
-
+        SoundEvent targetEvent = new SoundEvent(new Identifier(arg1.checkjstring()));
         LuaVector pos = LuaVector.checkOrNew(arg2);
         LuaVector pitchVol = LuaVector.checkOrNew(arg3);
-
-        World w = MinecraftClient.getInstance().world;
-        if (MinecraftClient.getInstance().isPaused() || w == null)
-            return;
 
         w.playSound(
                 pos.x(), pos.y(), pos.z(),

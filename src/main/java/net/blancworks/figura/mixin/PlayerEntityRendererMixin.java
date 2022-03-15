@@ -55,7 +55,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         return (data != null && data.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1) || super.shouldRender(entity, frustum, x, y, z);
     }
 
-    @Inject(at = @At("HEAD"), method = "render")
+    @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     public void onRender(AbstractClientPlayerEntity entity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
         AvatarData.setRenderingData(data, vertexConsumerProvider, this.getModel(), MinecraftClient.getInstance().getTickDelta());
@@ -86,7 +86,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "render")
+    @Inject(at = @At("RETURN"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     public void postRender(AbstractClientPlayerEntity entity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
 
@@ -140,7 +140,7 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
         figura$clearAllPartCustomizations();
     }
 
-    @Inject(method = "renderLabelIfPresent", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "renderLabelIfPresent(Lnet/minecraft/client/network/AbstractClientPlayerEntity;Lnet/minecraft/text/Text;Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V", at = @At("HEAD"), cancellable = true)
     private void renderFiguraLabelIfPresent(AbstractClientPlayerEntity entity, Text text, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, CallbackInfo ci) {
         //get uuid and name
         String playerName = entity.getEntityName();

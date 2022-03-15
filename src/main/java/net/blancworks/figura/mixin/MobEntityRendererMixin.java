@@ -30,7 +30,7 @@ public abstract class MobEntityRendererMixin<T extends MobEntity, M extends Enti
 
     @Unique private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
 
-    @Inject(at = @At("HEAD"), method = "render")
+    @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/entity/mob/MobEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     public void onRender(T entity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         MobEntityRenderer<T, M> mob = (MobEntityRenderer<T, M>) (Object) this;
 
@@ -62,7 +62,7 @@ public abstract class MobEntityRendererMixin<T extends MobEntity, M extends Enti
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "render")
+    @Inject(at = @At("RETURN"), method = "render(Lnet/minecraft/entity/mob/MobEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     public void postRender(T entity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {
         AvatarData data = AvatarDataManager.getDataForEntity(entity);
 

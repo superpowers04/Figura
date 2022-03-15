@@ -4,19 +4,24 @@ import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.NBTAPI;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.command.argument.ItemStackArgumentType;
 import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.StringNbtReader;
-import net.minecraft.tag.ItemTags;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import org.luaj.vm2.*;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
+
+import java.util.Optional;
 
 public class ItemStackAPI {
 
@@ -88,8 +93,15 @@ public class ItemStackAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable table = new LuaTable();
-                    ItemTags.getTagGroup().getTagsFor(stack.getItem()).forEach(identifier -> table.insert(0, LuaValue.valueOf(String.valueOf(identifier))));
-                    return new LuaTable(table);
+
+                    Registry<Item> itemRegistry = MinecraftClient.getInstance().world.getRegistryManager().get(Registry.ITEM_KEY);
+                    Optional<RegistryKey<Item>> key = itemRegistry.getKey(stack.getItem());
+
+                    for (TagKey<Item> itemTagKey : itemRegistry.entryOf(key.get()).streamTags().toList()) {
+                        table.insert(0, LuaValue.valueOf(itemTagKey.id().toString()));
+                    }
+
+                    return table;
                 }
             });
 
