@@ -314,6 +314,12 @@ public class AnimationAPI {
                     return LuaValue.valueOf(animation.priority);
                 }
             });
+            set("getTime", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return LuaValue.valueOf(animation.time);
+                }
+            });
         }};
     }
 }
