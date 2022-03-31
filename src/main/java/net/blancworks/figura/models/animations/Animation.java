@@ -41,7 +41,7 @@ public class Animation {
     private PlayState lastState = PlayState.STOPPED;
     private boolean wasStarting = false;
 
-    private float time = 0f;
+    public float time = 0f;
     private float newTime = 0f;
     private float lastTime = 0f;
 
