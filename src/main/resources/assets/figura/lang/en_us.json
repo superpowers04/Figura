@@ -152,6 +152,9 @@
   "figura.config.fix_hands": "Lock First Person Hands",
   "figura.config.fix_hands.tooltip": "Toggle the transformations of first person hands",
 
+  "figura.config.easter_eggs": "Enable Easter Eggs",
+  "figura.config.easter_eggs.tooltip": "Toggles fun and unexpected aspects of Figura",
+
   "figura.config.action_wheel_button": "Action Wheel key",
   "figura.config.action_wheel_button.tooltip": "Action Wheel Keybind",
 

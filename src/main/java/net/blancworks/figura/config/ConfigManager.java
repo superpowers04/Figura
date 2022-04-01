@@ -75,6 +75,7 @@ public final class ConfigManager {
         },
         CUSTOM_PLAYER_HEADS(true),
         FIX_HANDS(true),
+        EASTER_EGGS(true),
 
         ActionWheel,
 
