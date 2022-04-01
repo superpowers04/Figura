@@ -1,6 +1,7 @@
 package net.blancworks.figura.mixin;
 
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.minecraft.client.resource.SplashTextResourceSupplier;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,7 +19,7 @@ public class SplashTextResourceSupplierMixin {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
-        if (FiguraMod.IS_CHEESE) {
+        if ((boolean) Config.EASTER_EGGS.value && FiguraMod.IS_CHEESE) {
             cir.setReturnValue("LARGECHEESE!");
         } else { //b-days!!
             int month = calendar.get(Calendar.MONTH) + 1;

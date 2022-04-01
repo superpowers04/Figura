@@ -2,6 +2,7 @@ package net.blancworks.figura.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.blancworks.figura.FiguraMod;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.toast.Toast;
 import net.minecraft.client.toast.ToastManager;
@@ -22,7 +23,7 @@ public class FiguraToast implements Toast {
     private static final Identifier TEXTURE = new Identifier("figura", "textures/gui/toast.png");
 
     public FiguraToast(Text title, Text message) {
-        this.cheese = FiguraMod.IS_CHEESE || Math.random() < 0.0001;
+        this.cheese = (boolean) Config.EASTER_EGGS.value && (FiguraMod.IS_CHEESE || Math.random() < 0.0001);
         this.title = title.shallowCopy().fillStyle(Style.EMPTY.withColor(cheese ? 0xF8C53A : 0x55FFFF));
         this.message = message;
     }

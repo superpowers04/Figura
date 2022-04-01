@@ -286,7 +286,7 @@ public class NamePlateAPI {
                 badges += "▲";
             else if (currentData.trustIssues)
                 badges += "!";
-            else if (FiguraMod.IS_CHEESE)
+            else if ((boolean) Config.EASTER_EGGS.value && FiguraMod.IS_CHEESE)
                 badges += "\uD83E\uDDC0";
             else
                 badges += "△";
