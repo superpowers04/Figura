@@ -16,10 +16,13 @@ public class SplashTextResourceSupplierMixin {
 
     @Inject(at = @At("HEAD"), method = "get", cancellable = true)
     public void init(CallbackInfoReturnable<String> cir) {
+        if (!(boolean) Config.EASTER_EGGS.value)
+            return;
+
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
 
-        if ((boolean) Config.EASTER_EGGS.value && FiguraMod.IS_CHEESE) {
+        if (FiguraMod.IS_CHEESE) {
             cir.setReturnValue("LARGECHEESE!");
         } else { //b-days!!
             int month = calendar.get(Calendar.MONTH) + 1;
