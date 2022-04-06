@@ -18,7 +18,7 @@ public class Animation {
     public final String name;
     public float length;
     public LoopMode loopMode;
-
+    public float curStartOffset;
     public float startOffset;
     public float blendWeight;
     public float startDelay;
@@ -42,6 +42,7 @@ public class Animation {
     private boolean wasStarting = false;
 
     public float time = 0f;
+    
     private float newTime = 0f;
     private float lastTime = 0f;
 
@@ -87,7 +88,7 @@ public class Animation {
         float kfTime = ((newTime - time) / 1000f) * speed;
 
         //offset
-        kfTime += startOffset;
+        kfTime += curStartOffset;
 
         //process loop
         if (kfTime >= this.length) {
@@ -256,6 +257,7 @@ public class Animation {
             cease();
 
         long offset = Util.getMeasuringTimeMs();
+        curStartOffset = startOffset;
         if (this.playState == PlayState.PAUSED) {
             offset -= newTime - time;
             this.playState = this.lastState;
