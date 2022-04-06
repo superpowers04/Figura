@@ -64,17 +64,29 @@
     "figura.gui.button.deleteavatar.tooltip": "Prem LSHIFT i fes clic per esborrar l'Avatar del Backend",
     "figura.gui.button.deleteavatartwo.tooltip": "aquesta acció farà que el teu Avatar deixi de ser visible per a tothom",
     "figura.gui.button.resetperm.tooltip": "Prem LSHIFT i fes clic per restablir els permisos per aquest usuari",
-    "figura.gui.button.cantreset.tooltip": "Els presets no es poden restablir",
-    "figura.gui.button.resetallperm.tooltip": "Prem LSHIFT i fes clic per restablir TOTS els permisos",
+
+    
     "figura.gui.button.clearcache.tooltip": "Prem LSHIFT i fes clic per esborrar la memòria cau de Figura",
     "figura.gui.button.keybinds.tooltip": "Combinacions de tecles d'Script",
+    "figura.gui.button.sounds.tooltip": "Vista prèvia",
     "figura.gui.button.openfolder.tooltip": "Prem LSHIFT i fes clic per obrir la carpeta de l'Avatar seleccionat",
   
-    "figura.gui.button.status.tooltip": "No hi ha | No trobat",
-    "figura.gui.button.statustwo.tooltip": "100kb+ | Error | Desconnectat",
-    "figura.gui.button.statusthree.tooltip": "75kb+ | Connectant...",
-    "figura.gui.button.statusfour.tooltip": "Ok | Connectat",
-  
+    "figura.gui.button.status.model.0": "No hi ha",
+    "figura.gui.button.status.model.1": "100kb+",
+    "figura.gui.button.status.model.2": "75kb+",
+    "figura.gui.button.status.model.3": "Correcte",
+
+    "figura.gui.button.status.texture.0": "No hi ha",
+    "figura.gui.button.status.texture.3": "Correcte",
+
+    "figura.gui.button.status.script.0": "No hi ha",
+    "figura.gui.button.status.script.1": "Error",
+    "figura.gui.button.status.script.3": "Correcte",
+
+    "figura.gui.button.status.backend.1": "disconnected",
+    "figura.gui.button.status.backend.2": "Connectant",
+    "figura.gui.button.status.backend.3": "Connectat",
+
     "figura.gui.status.model": "Model",
     "figura.gui.status.texture": "Textura",
     "figura.gui.status.script": "Script",
@@ -89,6 +101,11 @@
     "figura.config.misc": "Altres",
     "figura.config.actionwheel": "Menú d'Accions",
     "figura.config.dev": "Configuració per Desenvolupadors",
+
+    "figura.config.log_location.1": "Consola i Xat",
+    "figura.config.log_location.2": "Consola",
+    "figura.config.log_location.3": "Xat",
+    "figura.config.log_location.4": "No mostrar",
   
     "figura.config.preview_nameplate": "Mostrar Name-tag propi",
     "figura.config.preview_nameplate.tooltip": "Mostrar el teu propi Name-Tag en la pantalla de previsualització d'avatars",
@@ -118,9 +135,6 @@
   
     "figura.config.script_log_location": "Registre d'Script",
     "figura.config.script_log_location.tooltip": "On es mostraràn els missatges de depuració dels Scripts",
-    "figura.config.script_log_location.1": "Consola/Xat",
-    "figura.config.script_log_location.2": "Consola",
-    "figura.config.script_log_location.3": "Xat",
   
     "figura.config.player_popup_button": "Tecla del menú de jugador",
     "figura.config.player_popup_button.tooltip": "Combinació de tecles per obrir el menú de jugador",
@@ -133,7 +147,16 @@
     "figura.config.release_channel.1": "Sí, Pre-Releases",
     "figura.config.release_channel.2": "Sí, Full-Releases",
     "figura.config.release_channel.3": "No",
+
+    "figura.config.custom_player_heads": "Icones de jugador personalitzades",
+    "figura.config.custom_player_heads.tooltip": "Mostrar l'avatar a la llista de jugadors i caps",
+
+    "figura.config.fix_hands": "Permetre transformacions a les mans de primera persona",
+    "figura.config.fix_hands.tooltip": "Permetre transformacions a les mans de primera persona",
   
+    "figura.config.easter_eggs": "Activar ous de Pasqua",
+    "figura.config.easter_eggs.tooltip": "Activar funcions divertides/sorpreses de Figura",
+
     "figura.config.action_wheel_button": "Combinació de tecles del Menú d'Accions",
     "figura.config.action_wheel_button.tooltip": "Combinació de tecles del Menú d'Accions",
   
@@ -143,6 +166,9 @@
     "figura.config.action_wheel_title_pos.2": "Vora superior",
     "figura.config.action_wheel_title_pos.3": "Vora inferior",
     "figura.config.action_wheel_title_pos.4": "Centre",
+    
+    "figura.config.action_wheel_execute_on_close": "Executar al tancar",
+    "figura.config.action_wheel_execute_on_close.tooltip": "Executar l'acció seleccionada al tancar el Menú d'Accions, si no, requerir un clic per activar l'acció",
     
     "figura.config.new_action_wheel": "Utilitzar la nova versió del menú d'accions",
     "figura.config.new_action_wheel.tooltip": "Canviar la implementació del menú d'accions per una més nova",
@@ -193,7 +219,11 @@
     "figura.playerpopup.reload": "Recarregar Avatar",
     "figura.playerpopup.increasetrust": "Incrementar Confiança",
     "figura.playerpopup.decreasetrust": "Disminuir Confiança",
+    "figura.playerpopup.trustmenu": "Obrir menú de confiança",
+
   
+    "figura.playerpopup.trustissue": "L'Avatar utilitza funcions que requereixen un nivell de confiança més alt",
+    "figura.playerpopup.scriptissue": "L'Script de l'Avatar conté errors",
   
     "figura.models.unselect": "-Anul·lar Selecció-",
     "figura.models.loading": "Carregant..."
