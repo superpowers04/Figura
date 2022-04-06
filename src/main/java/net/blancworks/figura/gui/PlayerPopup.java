@@ -57,22 +57,24 @@ public class PlayerPopup extends DrawableHelper {
         if (data == null || enabled)
             return;
 
+        int length = BUTTONS.size() * 11 + 5;
+
         matrices.push();
         RenderSystem.setShaderTexture(0, POPUP_TEXTURE_MINI);
-        matrices.translate(-62f, -2f, 0f);
+        matrices.translate(-length - 2f, -2f, 0f);
 
         //background
-        drawTexture(matrices, 0, 0, 0f, 0f, 60, 13, 60, 48);
+        drawTexture(matrices, 0, 0, 0f, 0f, length, 13, length, 48);
 
         int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
         RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
 
         //foreground
-        drawTexture(matrices, 0, 0, 0f, 13f, 60, 13, 60, 48);
+        drawTexture(matrices, 0, 0, 0f, 13f, length, 13, length, 48);
 
         //buttons
         for (int i = 0; i < BUTTONS.size(); i++) {
-            drawTexture(matrices, 1 + i * 11, 1, 11f * i, index == i ? 37f : 26f, 11, 11, 60, 48);
+            drawTexture(matrices, 1 + i * 11, 1, 11f * i, index == i ? 37f : 26f, 11, 11, length, 48);
         }
 
         matrices.pop();
@@ -129,18 +131,19 @@ public class PlayerPopup extends DrawableHelper {
         TextUtils.renderOutlineText(textRenderer, title, -textRenderer.getWidth(title) / 2f, -40 + offset, 0xFFFFFF, 0x202020, matrices);
 
         int color = ConfigManager.ACCENT_COLOR.apply(Style.EMPTY).getColor().getRgb();
+        int length = BUTTONS.size() * 18;
 
         //background
         RenderSystem.setShaderTexture(0, POPUP_TEXTURE);
-        drawTexture(matrices, -45, -30, 90, 30, 0f, 0f, 90, 30, 90, 96);
+        drawTexture(matrices, length / -2, -30, length, 30, 0f, 0f, length, 30, length, 96);
 
         RenderSystem.setShaderColor(((color >> 16) & 0xFF) / 255f, ((color >>  8) & 0xFF) / 255f, (color & 0xFF) / 255f, 1f);
-        drawTexture(matrices, -45, -30, 90, 30, 0f, 30f, 90, 30, 90, 96);
+        drawTexture(matrices, length / -2, -30, length, 30, 0f, 30f, length, 30, length, 96);
 
         //icons
         matrices.translate(0f, 0f, -2f);
         for (int i = 0; i < BUTTONS.size(); i++) {
-            drawTexture(matrices, -45 + (18 * i), -23, 18, 18, 18f * i, i == index ? 78f : 60f, 18, 18, 90, 96);
+            drawTexture(matrices, length / -2 + (18 * i), -23, 18, 18, 18f * i, i == index ? 78f : 60f, 18, 18, length, 96);
         }
 
         //playername
@@ -152,8 +155,8 @@ public class PlayerPopup extends DrawableHelper {
 
         matrices.scale(0.5f, 0.5f, 0.5f);
         matrices.translate(0f, 0f, -1f);
-        textRenderer.draw(matrices, name, -84, -55, 0xFFFFFF);
-        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + 84, -55, 0xFFFFFF);
+        textRenderer.draw(matrices, name, -length + 6, -55, 0xFFFFFF);
+        textRenderer.draw(matrices, trust, -textRenderer.getWidth(trust) + length - 6, -55, 0xFFFFFF);
 
         //finish rendering
         matrices.pop();

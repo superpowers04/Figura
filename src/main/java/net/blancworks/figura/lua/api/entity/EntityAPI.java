@@ -145,7 +145,7 @@ public class EntityAPI {
                 public LuaValue call(LuaValue arg) {
                     int index = arg.checkint() - 1;
                     ItemStack stack = retrieveItemByIndex(targetEntity.get().getItemsEquipped(), index);
-                    return ItemStackAPI.getTable(stack);
+                    return stack != null ? ItemStackAPI.getTable(stack) : NIL;
                 }
             });
 

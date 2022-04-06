@@ -21,7 +21,7 @@ public abstract class LivingEntityRendererMixin<T extends LivingEntity, M extend
         super(ctx);
     }
 
-    @Inject(method = "hasLabel", at = @At("HEAD"), cancellable = true)
+    @Inject(method = "hasLabel(Lnet/minecraft/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
     public void hasLabel(T livingEntity, CallbackInfoReturnable<Boolean> cir) {
         if (FiguraGuiScreen.showOwnNametag) {
             cir.setReturnValue(true);

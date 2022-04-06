@@ -36,7 +36,7 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
     @Shadow @Final private ElytraEntityModel<T> elytra;
     private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
 
-    @Inject(at = @At("HEAD"), method = "render")
+    @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V")
     public void onRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
         AvatarData data = livingEntity instanceof PlayerEntity ? AvatarDataManager.getDataForPlayer(livingEntity.getUuid()) : AvatarDataManager.getDataForEntity(livingEntity);
 
@@ -46,7 +46,7 @@ public class ElytraFeatureRendererMixin<T extends LivingEntity, M extends Entity
         }
     }
 
-    @Inject(at = @At("RETURN"), method = "render")
+    @Inject(at = @At("RETURN"), method = "render(Lnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;ILnet/minecraft/entity/LivingEntity;FFFFFF)V")
     public void postRender(MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, T livingEntity, float f, float g, float h, float j, float k, float l, CallbackInfo ci) {
         figura$clearAllPartCustomizations();
     }

@@ -4,6 +4,7 @@ import com.google.common.io.LittleEndianDataInputStream;
 import net.blancworks.figura.FiguraMod;
 import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.avatar.AvatarDataManager;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.network.messages.MessageHandler;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
@@ -45,7 +46,7 @@ public class UserAvatarProvideResponseHandler extends MessageHandler {
 
             String hashString = new String(hashBytes, StandardCharsets.UTF_8);
 
-            pData.loadFromNbt(FiguraMod.IS_CHEESE ? FiguraMod.cheese : tag);
+            pData.loadFromNbt((boolean) Config.EASTER_EGGS.value && FiguraMod.IS_CHEESE ? FiguraMod.cheese : tag);
             pData.isLocalAvatar = false;
             pData.lastHash = hashString;
             //pData.saveToCache();

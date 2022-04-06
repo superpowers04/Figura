@@ -6,6 +6,7 @@ import net.blancworks.figura.lua.CustomScript;
 import net.blancworks.figura.lua.api.NBTAPI;
 import net.blancworks.figura.lua.api.math.LuaVector;
 import net.blancworks.figura.mixin.AbstractBlockAccessorMixin;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Material;
 import net.minecraft.block.entity.BlockEntity;
@@ -15,11 +16,13 @@ import net.minecraft.command.argument.BlockStateArgumentType;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtHelper;
 import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.tag.BlockTags;
+import net.minecraft.tag.TagKey;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3f;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.util.registry.RegistryKey;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
 import org.luaj.vm2.LuaError;
@@ -31,6 +34,7 @@ import org.luaj.vm2.lib.ZeroArgFunction;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Optional;
 
 public class BlockStateAPI {
 
@@ -83,9 +87,15 @@ public class BlockStateAPI {
                 @Override
                 public LuaValue call() {
                     LuaTable table = new LuaTable();
-                    BlockTags.getTagGroup().getTagsFor(state.getBlock()).forEach(identifier -> table.insert(0, LuaValue.valueOf(String.valueOf(identifier))));
 
-                    return new LuaTable(table);
+                    Registry<Block> blockRegistry = world.getRegistryManager().get(Registry.BLOCK_KEY);
+                    Optional<RegistryKey<Block>> key = blockRegistry.getKey(state.getBlock());
+
+                    for (TagKey<Block> blockTagKey : blockRegistry.entryOf(key.get()).streamTags().toList()) {
+                        table.insert(0, LuaValue.valueOf(blockTagKey.id().toString()));
+                    }
+
+                    return table;
                 }
             });
 

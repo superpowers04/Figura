@@ -71,7 +71,7 @@ public class NewFiguraGuiScreen extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void close() {
         MinecraftClient.getInstance().setScreen(parentScreen);
     }
 

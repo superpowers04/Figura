@@ -339,7 +339,7 @@ public class FiguraTrustScreen extends Screen {
     }
 
     @Override
-    public void onClose() {
+    public void close() {
         PlayerTrustManager.saveToDisk();
         this.client.setScreen(parentScreen);
     }

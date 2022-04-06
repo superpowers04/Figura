@@ -14,7 +14,6 @@ import net.blancworks.figura.lua.api.sound.FiguraSoundManager;
 import net.blancworks.figura.network.IFiguraNetwork;
 import net.blancworks.figura.network.NewFiguraNetworkManager;
 import net.blancworks.figura.trust.PlayerTrustManager;
-import net.blancworks.figura.utils.SSLFixer;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
@@ -113,12 +112,6 @@ public class FiguraMod implements ClientModInitializer {
         FiguraLuaManager.initialize();
         PlayerTrustManager.init();
         LocalAvatarManager.init();
-
-        try {
-            SSLFixer.main();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         //set keybinds based on config
         ACTION_WHEEL_BUTTON.setBoundKey(InputUtil.Type.KEYSYM.createFromCode((int) Config.ACTION_WHEEL_BUTTON.value));
