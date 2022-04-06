@@ -152,6 +152,9 @@
   "figura.config.fix_hands": "Блокировка рук от первого лица",
   "figura.config.fix_hands.tooltip": "Переключение трансформации рук в виде от первого лица",
 
+  "figura.config.easter_eggs": "Пасхалки",
+  "figura.config.easter_eggs.tooltip": "Переключение забавных и неожиданных особенностей Figura",
+
   "figura.config.action_wheel_button": "Колесо действий",
   "figura.config.action_wheel_button.tooltip": "Клавиша для открытия колеса действий",
 
