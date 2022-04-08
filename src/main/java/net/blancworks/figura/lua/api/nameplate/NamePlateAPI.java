@@ -294,7 +294,7 @@ public class NamePlateAPI {
 
         //special badges
         if (FiguraMod.VIP.contains(currentData.entityId))
-            badges += "✭";
+            badges += "★";
 
         //return null if no badges
         if (badges.equals(" ")) return null;

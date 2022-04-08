@@ -1,9 +1,9 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.avatar.AvatarData;
-import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.access.ModelPartAccess;
 import net.blancworks.figura.access.PlayerEntityRendererAccess;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
@@ -15,7 +15,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.model.ModelPart;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.Frustum;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.entity.LivingEntityRenderer;
@@ -48,12 +47,6 @@ public abstract class PlayerEntityRendererMixin extends LivingEntityRenderer<Abs
     }
 
     @Unique private final ArrayList<ModelPart> figura$customizedParts = new ArrayList<>();
-
-    @Override
-    public boolean shouldRender(AbstractClientPlayerEntity entity, Frustum frustum, double x, double y, double z) {
-        AvatarData data = AvatarDataManager.getDataForPlayer(entity.getUuid());
-        return (data != null && data.getTrustContainer().getTrust(TrustContainer.Trust.OFFSCREEN_RENDERING) == 1) || super.shouldRender(entity, frustum, x, y, z);
-    }
 
     @Inject(at = @At("HEAD"), method = "render(Lnet/minecraft/client/network/AbstractClientPlayerEntity;FFLnet/minecraft/client/util/math/MatrixStack;Lnet/minecraft/client/render/VertexConsumerProvider;I)V")
     public void onRender(AbstractClientPlayerEntity entity, float f, float g, MatrixStack matrixStack, VertexConsumerProvider vertexConsumerProvider, int i, CallbackInfo ci) {

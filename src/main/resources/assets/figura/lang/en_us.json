@@ -197,6 +197,9 @@
   "figura.config.pings_log_location": "Pings Logging",
   "figura.config.pings_log_location.tooltip": "Change the logging of received pings",
 
+  "figura.config.backend_path": "Backend IP",
+  "figura.config.backend_path.tooltip": "IP used for connecting to Figura servers (DO NOT INCLUDE \"https://\")",
+
 
   "figura.toast.upload.success.title": "Avatar Uploaded!",
   "figura.toast.upload.error.title": "Avatar Upload Failed!",
