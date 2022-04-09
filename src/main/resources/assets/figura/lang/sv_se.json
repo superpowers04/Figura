@@ -1,0 +1,232 @@
+{
+  "figura": "Figura",
+
+
+  "figura.trust.blocked": "Blockerad",
+  "figura.trust.untrusted": "Opålitlig",
+  "figura.trust.trusted": "Pålitlig",
+  "figura.trust.friend": "Vän",
+  "figura.trust.local": "Lokal",
+
+  "figura.trust.maxinitinstructions": "Max Init-instruktioner",
+  "figura.trust.maxtickinstructions": "Max Tick-instruktioner",
+  "figura.trust.maxrenderinstructions": "Max Render-instruktioner",
+  "figura.trust.maxcomplexity": "Max Komplexitet",
+  "figura.trust.maxparticles": "Max Antal Partiklar Per Sekund",
+  "figura.trust.maxsfx": "Max Antal Ljud Per Sekund",
+  "figura.trust.allowvanillaedit": "Bas-Avatar Ändringar",
+  "figura.trust.allownameplateedit": "NamnBricka/ChattNamns Ändringar",
+  "figura.trust.allowoffscreenrendering": "Rendering Utanför Skärmen",
+  "figura.trust.allowcustomrenderlayers": "Custom Render Lager",
+  "figura.trust.allowcustomsounds": "Custom Ljud",
+  "figura.trust.bbanimations": "Max Animations Komplexitet",
+
+
+  "figura.gui.trustmenu.title": "Figura Tillits-meny",
+  "figura.gui.config.title": "Figura Konfigurations-meny",
+  "figura.gui.menu.title": "Figura-meny",
+  "figura.gui.keybinds.title": "Figura Skript Tangentbindnings-meny",
+  "figura.gui.sounds.title": "Figura Custom Ljudförhandsgransknings-meny",
+
+  "figura.gui.dropconfirm": "Vill du lägga till följande modeller till Figura?",
+  "figura.gui.panic.warning": "Begränsad andvändning av Figura! // Avatar-rendering är Av! *panik*",
+
+  "figura.gui.newver.tooltip": "Ny Figuraversion upptäckt",
+  "figura.gui.newver.tooltip2": "Kolla i discord-servern för nya uppdateringar!",
+
+  "figura.gui.button.cache": "Cache:a Avatar",
+  "figura.gui.button.cache.done": "Avatar Cache:ad!",
+
+  "figura.gui.button.save": "Spara Avatar",
+  "figura.gui.button.save.done": "Avatar Sparad!",
+  "figura.gui.button.save.error": "hoppsan!",
+  "figura.gui.button.save.error.message": "Kunde ej spara Avatar",
+
+  "figura.gui.button.trustmenu": "Tillits-meny",
+  "figura.gui.button.configmenu": "Inställningar",
+  "figura.gui.button.back": "Tillbaka",
+  "figura.gui.button.deleteavatar": "Rensa Avatar",
+  "figura.gui.button.clearall": "Rensa ALLA Avatarer",
+  "figura.gui.button.help": "Hjälp",
+  "figura.gui.button.openfolder": "Öppna Models-mappen",
+  "figura.gui.button.openavatarfolder": "Öppna Avatar-mappen",
+  "figura.gui.button.resetallperm": "Återställ ALLA Tillåtningsinställningar",
+  "figura.gui.button.resetperm": "Återställ Tillåtelse",
+  "figura.gui.button.reloadavatar": "Ladda om avatar",
+  "figura.gui.button.search": "Sök...",
+
+  "figura.gui.button.upload.tooltip": "Klicka för att ladda upp och visa din avatar i flerspelarläge",
+  "figura.gui.button.uploadlocal.tooltip": "Avatar är redan uppladdad!",
+  "figura.gui.button.uploadlocaltwo.tooltip": "Du måste välja en Lokal Avatar innan uppladdning!",
+  "figura.gui.button.noconnection.tooltip": "Kan ej ladda up/radera avatar!",
+  "figura.gui.button.noconnectiontwo.tooltip": "Ej uppkopplad mot administrationsdelen!",
+  "figura.gui.button.reloadavatar.tooltip": "Klicka för att rensa din avatar lokalt och ladda ner den igen",
+  "figura.gui.button.deleteavatar.tooltip": "Håll VÄNSTRA SKIFT-tangenten och klicka för att RENSA DIN AVATAR ONLINE",
+  "figura.gui.button.deleteavatartwo.tooltip": "Att göra detta rensar din avatar för alla andra, också",
+  "figura.gui.button.resetperm.tooltip": "Håll VÄNSTRA SKIFT-tangenten och klicka för att återställa valda tillåtelser",
+  "figura.gui.button.clearcache.tooltip": "Håll VÄNSTRA SKIFT-tangenten och klicka för att rensa all laddad avatardata",
+  "figura.gui.button.keybinds.tooltip": "Nuvarande Skript Tangentbindningar",
+  "figura.gui.button.sounds.tooltip": "Förhandsgranska Custom Ljud",
+  "figura.gui.button.openfolder.tooltip": "Håll VÄNSTRA SKIFT-tangenten och klicka för att öppna den valda avatar-mappen",
+
+  "figura.gui.button.status.model.0": "ingen",
+  "figura.gui.button.status.model.1": "100kb+",
+  "figura.gui.button.status.model.2": "75kb+",
+  "figura.gui.button.status.model.3": "ok",
+
+  "figura.gui.button.status.texture.0": "ingen",
+  "figura.gui.button.status.texture.3": "ok",
+
+  "figura.gui.button.status.script.0": "ingen",
+  "figura.gui.button.status.script.1": "error",
+  "figura.gui.button.status.script.3": "ok",
+
+  "figura.gui.button.status.backend.1": "avkopplad",
+  "figura.gui.button.status.backend.2": "kopplar",
+  "figura.gui.button.status.backend.3": "uppkopplad",
+
+  "figura.gui.status.model": "Modell",
+  "figura.gui.status.texture": "Textur",
+  "figura.gui.status.script": "Skript",
+  "figura.gui.status.backend": "Administrationsdel",
+
+  "figura.gui.status.complexity": "Komplexitet:",
+  "figura.gui.status.filesize": "Storlek (kb):",
+  "figura.gui.status.name": "Namn:",
+
+
+  "figura.config.nametag": "NamnBricka",
+  "figura.config.misc": "Misc",
+  "figura.config.actionwheel": "Action-Hjul",
+  "figura.config.dev": "Utvecklarinställningar",
+
+  "figura.config.log_location.1": "Konsoll/Chatt",
+  "figura.config.log_location.2": "Konsoll",
+  "figura.config.log_location.3": "Chatt",
+  "figura.config.log_location.4": "Ingen",
+
+  "figura.config.preview_nameplate": "Förhandsvisa NamnBricka",
+  "figura.config.preview_nameplate.tooltip": "Visar din NamnBricka på modellförhandsvisningskärmen",
+
+  "figura.config.nameplate_modifications": "Spelar NamnBricka-modifieringar",
+  "figura.config.nameplate_modifications.tooltip": "Tillåter namnen av spelare att modifieras",
+
+  "figura.config.chat_modifications": "Chatt-modifieringar",
+  "figura.config.chat_modifications.tooltip": "Tillåter namnen av spelare i chatten att modifierias",
+
+  "figura.config.playerlist_modifications": "Spelarlista-modifieringar",
+  "figura.config.playerlist_modifications.tooltip": "Tillåter namnen av spelare i tabb-listan att modifieras",
+
+  "figura.config.badges": "Visa Märken",
+  "figura.config.badges.tooltip": "Visar märken bredvid namnen på personer med avatarer",
+
+  "figura.config.badge_as_icons": "NamnBricka Märke som Ikon",
+  "figura.config.badge_as_icons.tooltip": "Visar Märket △ som en ikon %d på NamnBrickan",
+
+  "figura.config.figura_button_location": "Figura Knappens Plats",
+  "figura.config.figura_button_location.tooltip": "Platsen där Figura-inställningsknappen bör finnas",
+  "figura.config.figura_button_location.1": "Övre Vänstra",
+  "figura.config.figura_button_location.2": "Övre Högra",
+  "figura.config.figura_button_location.3": "Nedre Vänstra",
+  "figura.config.figura_button_location.4": "Nedre Högra",
+  "figura.config.figura_button_location.5": "Ikon",
+
+  "figura.config.script_log_location": "Skriptlogg",
+  "figura.config.script_log_location.tooltip": "Debug-skriptloggens utmatningsplats",
+
+  "figura.config.player_popup_button": "Spelar-Popup tangent",
+  "figura.config.player_popup_button.tooltip": "Spelar-Popup Tangentbindning",
+
+  "figura.config.accent_color": "Användargränssnittets Accentfärg",
+  "figura.config.accent_color.tooltip": "Ändrar på Accentfärgen som används av användargränssnittet",
+
+  "figura.config.release_channel": "Versions Updatteringskanal",
+  "figura.config.release_channel.tooltip": "Byt målversion för uppdateringskanal",
+  "figura.config.release_channel.1": "Förhandsutgåva",
+  "figura.config.release_channel.2": "Full-Version",
+  "figura.config.release_channel.3": "Inga Uppdateringar",
+
+  "figura.config.custom_player_heads": "Custom Spelarhuvuden",
+  "figura.config.custom_player_heads.tooltip": "Växlar visningen av avatar på spelarhuvuden och i tabb-listan",
+
+  "figura.config.fix_hands": "Lås Förstapersons Händer",
+  "figura.config.fix_hands.tooltip": "Låser transformationer på händer i förstaperson",
+
+  "figura.config.easter_eggs": "Aktivera Påskägg",
+  "figura.config.easter_eggs.tooltip": "Växlar på roliga och oförväntade aspekter av Figura",
+
+  "figura.config.action_wheel_button": "Action-Hjul tangent",
+  "figura.config.action_wheel_button.tooltip": "Action-Hjul Tangentbindning",
+
+  "figura.config.action_wheel_title_pos": "Action-Hjulets Titel position",
+  "figura.config.action_wheel_title_pos.tooltip": "Positionen av Titeln på Action-Hjulet",
+  "figura.config.action_wheel_title_pos.1": "Mus",
+  "figura.config.action_wheel_title_pos.2": "Toppen",
+  "figura.config.action_wheel_title_pos.3": "Botten",
+  "figura.config.action_wheel_title_pos.4": "Mitten",
+
+  "figura.config.action_wheel_execute_on_close": "Exekvera på Stängning",
+  "figura.config.action_wheel_execute_on_close.tooltip": "Exekverar valda handlingen då Action-Hjulet stängs, annars körs handlingen endast på mus-klick",
+
+  "figura.config.new_action_wheel": "Använd Nya Action-Hjulet",
+  "figura.config.new_action_wheel.tooltip": "Byter Action-Hjulet till en nyare implementation",
+
+  "figura.config.use_local_server": "Använd Lokal Server",
+  "figura.config.use_local_server.tooltip": "Växlar mellan att använda en lokal server och den huvudserver som är online för online-modeller",
+
+  "figura.config.format_script_on_upload": "Formatera Skript",
+  "figura.config.format_script_on_upload.tooltip": "Formaterar skriptet när du laddar up din avatar",
+
+  "figura.config.log_others_script": "Logga Andra Spelares Skripter",
+  "figura.config.log_others_script.tooltip": "Visar skript-debuggningsloggar från andra spelare",
+
+  "figura.config.render_debug_parts_pivot": "Visa Delars Pivot",
+  "figura.config.render_debug_parts_pivot.tooltip": "Visar Pivoten från %d och %d när hitbox debugvisningsläget är på",
+  "figura.config.render_debug_parts_pivot.tooltip.cubes": "kuber",
+  "figura.config.render_debug_parts_pivot.tooltip.groups": "grupper",
+
+  "figura.config.render_own_nameplate": "Visa Egen NamnBricka",
+  "figura.config.render_own_nameplate.tooltip": "Visar din egna NamnBricka i spelet",
+
+  "figura.config.model_folder_path": "Figura-Katalog",
+  "figura.config.model_folder_path.tooltip": "Sökvägen dit alla figura filer (tillit/avatarer/cache) bör gå. Låt stå blankt för att använda din Minecraft-mapp",
+
+  "figura.config.panic_button": "Växla Avatar-Rendering",
+  "figura.config.panic_button.tooltip": "Den här tangentbindningen växlar synligheten av din avatar för alla! OBS!",
+
+  "figura.config.pings_log_location": "Ping-Loggning",
+  "figura.config.pings_log_location.tooltip": "Förändra loggning av mottagna ping",
+
+  "figura.config.backend_path": "Administrationsdels IP-adress",
+  "figura.config.backend_path.tooltip": "IP-adressen som används för uppkoppling mot Figuars servrar (INKLUDERA EJ \"https://\")",
+
+
+  "figura.toast.upload.success.title": "Avatar Uppladdad!",
+  "figura.toast.upload.error.title": "Upladdning av Avatar Misslyckades!",
+
+  "figura.toast.upload.error.many": "Du har för många avatarer!!",
+  "figura.toast.upload.error.empty": "Avataren är tom!!",
+  "figura.toast.upload.error.space": "Ej tillräckligt med utrymme på servern!!",
+
+  "figura.toast.avatar.reload.title": "Avatar Omladdad!",
+  "figura.toast.avatar.trust.title": "är nu: ",
+
+
+  "figura.actionwheel.warning": "Inget skript fanns",
+  "figura.actionwheel.warninginfo": "Aktions-Hjulets innehåll är inställda av din avatars skript",
+  "figura.actionwheel.nofunction": "obunden funktion!",
+
+
+  "figura.playerpopup.cancel": "Avbryt",
+  "figura.playerpopup.reload": "Ladda om Avatar",
+  "figura.playerpopup.increasetrust": "Öka Tillit",
+  "figura.playerpopup.decreasetrust": "Minska Tillit",
+  "figura.playerpopup.trustmenu": "Öppna Tillits-meny",
+
+  "figura.playerpopup.trustissue": "Avatar har funktioner som kräver mer tillit!",
+  "figura.playerpopup.scriptissue": "Avatar har ett skript-fel!",
+
+
+  "figura.models.unselect": "-oselektera-",
+  "figura.models.loading": "Laddar..."
+}
