@@ -6,10 +6,11 @@ import java.io.IOException;
 
 public class DebugMessageSender extends MessageSender {
     
-    public DebugMessageSender() {
-        super((byte) 0);
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:debug";
     }
-    
+
     @Override
     protected void write(LittleEndianDataOutputStream stream) throws IOException {
         super.write(stream);

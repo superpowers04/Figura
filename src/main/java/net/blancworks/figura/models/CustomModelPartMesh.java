@@ -1,134 +1,126 @@
 package net.blancworks.figura.models;
 
-import de.javagl.obj.FloatTuple;
-import de.javagl.obj.Obj;
-import de.javagl.obj.ObjFace;
-import de.javagl.obj.ObjReader;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.FloatTag;
-import net.minecraft.nbt.IntTag;
-import net.minecraft.nbt.ListTag;
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import it.unimi.dsi.fastutil.floats.FloatList;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3f;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.nio.file.Path;
-
+import java.util.ArrayList;
+import java.util.List;
 
 public class CustomModelPartMesh extends CustomModelPart {
-    public boolean isReady = false;
-    
-    public static CustomModelPartMesh loadFromObj(Path path) {
-        CustomModelPartMesh newPart = new CustomModelPartMesh();
+    public NbtCompound meshProperties;
 
-        MinecraftClient.getInstance().execute(() -> {
-            try {
-                newPart.parseObj(path);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
+    @Override
+    public void rebuild(Vec2f newTexSize) {
+        if (newTexSize == null)
+            newTexSize = new Vec2f(meshProperties.getFloat("tw"), meshProperties.getFloat("th"));
 
-        return newPart;
-    }
+        super.rebuild(newTexSize);
 
-    public void parseObj(Path path) throws Exception {
-        this.isReady = false;
-        vertexData.clear();
+        FloatList vertexData = new FloatArrayList();
+        int vertexCount = 0;
 
-        InputStream fileStream = new FileInputStream(path.toString());
-        Obj objectFile = ObjReader.read(fileStream);
-        fileStream.close();
+        NbtCompound verticesNbt = meshProperties.getCompound("vertices");
+        NbtList facesNbt = meshProperties.getList("faces", NbtElement.LIST_TYPE);
 
-        int triCount = objectFile.getNumFaces();
+        if (facesNbt == null || verticesNbt == null || facesNbt.size() == 0 || verticesNbt.getSize() == 0)
+            return;
 
-        for (int i = 0; i < triCount; i++) {
-            ObjFace face = objectFile.getFace(i);
-            int vertCount = face.getNumVertices();
+        for (NbtElement faceElement : facesNbt) {
+            NbtList faceData = (NbtList) faceElement;
+            int size = faceData.size();
 
-            if (vertCount == 4) {
-                for (int j = vertCount - 1; j >= 0; j--) {
-                    FloatTuple vertex = objectFile.getVertex(face.getVertexIndex(j));
-                    vertexData.add(vertex.getX());
-                    vertexData.add(-vertex.getY());
-                    vertexData.add(vertex.getZ());
-
-                    FloatTuple uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
-                    vertexData.add(uv.getX());
-                    vertexData.add(1 - uv.getY());
-
-                    FloatTuple normal = objectFile.getNormal(face.getNormalIndex(j));
-                    vertexData.add(normal.getX());
-                    vertexData.add(-normal.getY());
-                    vertexData.add(normal.getZ());
-
-                    vertexCount++;
+            if (size > 3) {
+                List<Vec3f> vectors = new ArrayList<>();
+                for (int i = 0; i < size; i++) {
+                    vectors.add(vec3fFromNbt(verticesNbt.getList(faceData.getCompound(i).getString("id"), NbtElement.FLOAT_TYPE)));
                 }
-            } else if (vertCount == 3) {
-                for (int j = vertCount - 1; j >= 0; j--) {
-                    FloatTuple vertex = objectFile.getVertex(face.getVertexIndex(j));
-                    vertexData.add(vertex.getX());
-                    vertexData.add(-vertex.getY());
-                    vertexData.add(vertex.getZ());
 
-                    FloatTuple uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
-                    vertexData.add(uv.getX());
-                    vertexData.add(1 - uv.getY());
-
-                    FloatTuple normal = objectFile.getNormal(face.getNormalIndex(j));
-                    vertexData.add(normal.getX());
-                    vertexData.add(-normal.getY());
-                    vertexData.add(normal.getZ());
-
-                    if (j == vertCount - 1) {
-                        vertex = objectFile.getVertex(face.getVertexIndex(j));
-                        vertexData.add(vertex.getX());
-                        vertexData.add(-vertex.getY());
-                        vertexData.add(vertex.getZ());
-
-                        uv = objectFile.getTexCoord(face.getTexCoordIndex(j));
-                        vertexData.add(uv.getX());
-                        vertexData.add(1 - uv.getY());
-
-                        normal = objectFile.getNormal(face.getNormalIndex(j));
-                        vertexData.add(normal.getX());
-                        vertexData.add(-normal.getY());
-                        vertexData.add(normal.getZ());
-                    }
-                    
-                    vertexCount++;
+                if (testOppositeSides(vectors.get(1), vectors.get(2), vectors.get(0) ,vectors.get(3))) {
+                    NbtElement temp = faceData.get(2);
+                    faceData.remove(2);
+                    faceData.add(0, temp);
+                }
+                else if (testOppositeSides(vectors.get(0), vectors.get(1), vectors.get(2) ,vectors.get(3))) {
+                    NbtElement temp = faceData.get(1);
+                    faceData.set(1, faceData.get(2));
+                    faceData.set(2, temp);
                 }
             }
 
+            for (int i = 0; i < 4; i++) {
+                NbtCompound vertexNbt = faceData.getCompound(i % size);
+                String vertexName = vertexNbt.getString("id");
+
+                Vec2f uv = v2fFromNbtList(vertexNbt.getList("uv", NbtElement.FLOAT_TYPE));
+                Vec3f vertex = vec3fFromNbt(verticesNbt.getList(vertexName, NbtElement.FLOAT_TYPE));
+
+                Vec3f previous = vec3fFromNbt(verticesNbt.getList(faceData.getCompound((i - 1 + size) % size).getString("id"), NbtElement.FLOAT_TYPE));
+                Vec3f next = vec3fFromNbt(verticesNbt.getList(faceData.getCompound((i + 1) % size).getString("id"), NbtElement.FLOAT_TYPE));
+
+                Vec3f normal = previous.copy();
+                normal.subtract(vertex);
+                Vec3f normalTwo = next.copy();
+                normalTwo.subtract(vertex);
+
+                normal.cross(normalTwo);
+                normal.normalize();
+
+                vertex.subtract(this.pivot);
+                addVertex(vertex, uv.x / texSize.x, uv.y / texSize.y, normal, vertexData);
+            }
+
+            vertexCount += 4;
         }
 
-        this.isReady = true;
+        this.vertexData = vertexData;
+        this.vertexCount = vertexCount;
     }
 
     @Override
-    public void writeNbt(CompoundTag partNbt) {
-        super.writeNbt(partNbt);
-        ListTag geometryData = new ListTag();
-
-        for (int i = 0; i < this.vertexData.size(); i++) {
-            geometryData.add(FloatTag.of(this.vertexData.getFloat(i)));
-        }
-        partNbt.put("vc", IntTag.of(this.vertexCount));
-        partNbt.put("geo", geometryData);
+    public void rotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
     }
 
     @Override
-    public void readNbt(CompoundTag partNbt) {
+    public void vanillaRotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+    }
+
+    @Override
+    public void readNbt(NbtCompound partNbt) {
         super.readNbt(partNbt);
-        ListTag geometryData = (ListTag) partNbt.get("geo");
-
-        for (int i = 0; i < geometryData.size(); i++) {
-            this.vertexData.add(geometryData.getFloat(i));
-        }
-        this.vertexCount = partNbt.getInt("vc");
+        this.meshProperties = partNbt.getCompound("props");
     }
 
-    public String getPartType() {
-        return "msh";
+    @Override
+    public PartType getPartType() {
+        return PartType.MESH;
+    }
+
+    private static boolean testOppositeSides(Vec3f linePoint1, Vec3f linePoint2, Vec3f point1, Vec3f point2) {
+        linePoint1 = linePoint1.copy();
+        linePoint2 = linePoint2.copy();
+        point1 = point1.copy();
+        point2 = point2.copy();
+
+        linePoint2.subtract(linePoint1);
+        point1.subtract(linePoint1);
+        point2.subtract(linePoint1);
+
+        Vec3f crossProduct1 = linePoint2.copy();
+        crossProduct1.cross(point1);
+        linePoint2.cross(point2);
+
+        return crossProduct1.dot(linePoint2) < 0;
     }
 }

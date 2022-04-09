@@ -2,13 +2,13 @@ package net.blancworks.figura.network;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import net.blancworks.figura.Config;
+import net.blancworks.figura.config.ConfigManager.Config;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
@@ -16,11 +16,10 @@ import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
 import net.minecraft.text.Text;
 import net.minecraft.util.Util;
-import org.apache.logging.log4j.Level;
 
 import java.io.*;
 import java.net.HttpURLConnection;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.util.Base64;
@@ -29,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 
+@Deprecated
 /**
  * Used to manage the network operations for Figura.
  * Used for sending/receiving data, managing custom packets/networking, that sort.
@@ -114,19 +114,18 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                         InputStream dataAsStream = new ByteArrayInputStream(dataAsBytes);
                         DataInputStream receivedDataToStream = new DataInputStream(dataAsStream);
                         receivedDataToStream.reset();
-                        CompoundTag nbt = NbtIo.readCompressed(receivedDataToStream);
+                        NbtCompound nbt = NbtIo.readCompressed(receivedDataToStream);
 
                         MessageDigest md = MessageDigest.getInstance("SHA-256");
                         byte[] hashBytes = md.digest(dataAsBytes);
 
                         String hashString = Base64.getEncoder().encodeToString(hashBytes);
                         
-                        PlayerData data =  PlayerDataManager.getDataForPlayer(id);
+                        AvatarData data =  AvatarDataManager.getDataForPlayer(id);
                         
                         data.loadFromNbt(nbt);
                         data.lastHash = getAvatarHashSync(id);
-                        data.lastHashCheckTime = new Date(new Date().getTime() - (1000 * 1000));
-                        data.saveToCache(id);
+                        data.saveToCache();
                     }
                 }
             } catch (Exception e){
@@ -141,7 +140,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     public CompletableFuture<UUID> postAvatar() {
         return CompletableFuture.supplyAsync(()->{
             postModel();
-            return PlayerDataManager.localPlayer.playerId; 
+            return AvatarDataManager.localPlayer.entityId;
         });
     }
 
@@ -163,7 +162,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
             String newHash = getAvatarHashSync(playerID);
             
             if(!newHash.equals(previousHash)){
-                PlayerData data = PlayerDataManager.getDataForPlayer(playerID);
+                AvatarData data = AvatarDataManager.getDataForPlayer(playerID);
                 data.isInvalidated = true;
             }
         });
@@ -197,8 +196,8 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     private void asyncAuthUser() {
         try {
             String address = getMinecraftAuthServerAddress();
-            InetAddress inetAddress = InetAddress.getByName(address);
-            ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
+            InetSocketAddress inetAddress = new InetSocketAddress(address, 25565);
+            ClientConnection connection = ClientConnection.connect(inetAddress, true);
             connection.setPacketListener(new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> FiguraMod.LOGGER.info(text.toString())));
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
@@ -310,9 +309,9 @@ public class FiguraNetworkManager implements IFiguraNetwork {
 
                 try {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", getServerURL(), uuidString, figuraSessionKey));
-                    PlayerData data = PlayerDataManager.localPlayer;
+                    AvatarData data = AvatarDataManager.localPlayer;
 
-                    CompoundTag infoNbt = new CompoundTag();
+                    NbtCompound infoNbt = new NbtCompound();
                     data.writeNbt(infoNbt);
 
 
@@ -359,9 +358,9 @@ public class FiguraNetworkManager implements IFiguraNetwork {
 
                 try {
                     URL url = new URL(String.format("%s/api/avatar/%s?key=%d", getServerURL(), uuidString, figuraSessionKey));
-                    PlayerData data = PlayerDataManager.localPlayer;
+                    AvatarData data = AvatarDataManager.localPlayer;
 
-                    CompoundTag infoNbt = new CompoundTag();
+                    NbtCompound infoNbt = new NbtCompound();
                     data.writeNbt(infoNbt);
 
 
@@ -372,7 +371,7 @@ public class FiguraNetworkManager implements IFiguraNetwork {
                     httpURLConnection.connect();
                     httpURLConnection.disconnect();
 
-                    PlayerDataManager.clearLocalPlayer();
+                    AvatarDataManager.clearLocalPlayer();
 
                     FiguraMod.LOGGER.info(httpURLConnection.getResponseMessage());
                 } catch (Exception e) {
@@ -412,11 +411,11 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     //Player data stuff
     //Right now just gets avatar, but will eventually get other stuff like report data.
 
-    public CompletableFuture<PlayerData> getPlayerData(UUID uuid) {
+    public CompletableFuture<AvatarData> getPlayerData(UUID uuid) {
         return null;
     }
 
-    private PlayerData getData(UUID id) {
+    private AvatarData getData(UUID id) {
 
         return null;
     }
@@ -429,14 +428,14 @@ public class FiguraNetworkManager implements IFiguraNetwork {
     //figura.blancworks.org for proper online use.
     //TODO - Add support for a server list later for people who want to have their own avatar servers
     private String getServerAddress() {
-        if ((boolean) Config.entries.get("useLocalServer").value) {
+        if ((boolean) Config.USE_LOCAL_SERVER.value) {
             return "localhost:5001";
         }
         return "figura.blancworks.org";
     }
 
     private String getMinecraftAuthServerAddress() {
-        if ((boolean) Config.entries.get("useLocalServer").value) {
+        if ((boolean) Config.USE_LOCAL_SERVER.value) {
             return "localhost";
         }
         return "mc.blancworks.org";

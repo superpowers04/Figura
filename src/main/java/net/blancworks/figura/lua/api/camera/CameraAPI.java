@@ -1,82 +1,75 @@
 package net.blancworks.figura.lua.api.camera;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import net.blancworks.figura.CameraData;
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.LuaUtils;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
-import net.blancworks.figura.lua.api.ScriptLocalAPITable;
 import net.blancworks.figura.lua.api.math.LuaVector;
-import net.minecraft.client.util.math.Vector3f;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3f;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 public class CameraAPI {
+    public static final String FIRST_PERSON = "FIRST_PERSON";
+    public static final String THIRD_PERSON = "THIRD_PERSON";
+
     public static Identifier getID() {
         return new Identifier("default", "camera");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
-        return new ScriptLocalAPITable(script, new CameraTable(script));
+    public static LuaTable getForScript(CustomScript script) {
+        return new LuaTable() {{
+            set(FIRST_PERSON, getTableForPart(FIRST_PERSON, script));
+            set(THIRD_PERSON, getTableForPart(THIRD_PERSON, script));
+        }};
     }
-    private static class CameraTable extends ScriptLocalAPITable {
-        CameraData data;
-        public CameraTable(CustomScript script) {
-            super(script);
-            this.data = script.camera;
-            super.setTable(getTable());
-        }
 
-        public LuaTable getTable() {
-            LuaTable ret = new LuaTable();
-
-            ret.set("getPos", new ZeroArgFunction() {
+    public static LuaTable getTableForPart(String accessor, CustomScript targetScript) {
+        return new LuaTable() {{
+            set("getPos", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(data.position);
+                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).position);
                 }
             });
-            ret.set("setPos", new OneArgFunction() {
+
+            set("setPos", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    data.position = LuaVector.checkOrNew(arg1).asV3f();
+                    targetScript.getOrMakeCameraCustomization(accessor).position = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
 
-            ret.set("getfpPos", new ZeroArgFunction() {
+            set("getRot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(data.fpPosition);
+                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).rotation);
                 }
             });
-            ret.set("setfpPos", new OneArgFunction() {
+
+            set("setRot", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
-                    data.fpPosition = LuaVector.checkOrNew(arg1).asV3f();
+                    targetScript.getOrMakeCameraCustomization(accessor).rotation = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
                     return NIL;
                 }
             });
 
-            ret.set("getRot", new ZeroArgFunction() {
+            set("getPivot", new ZeroArgFunction() {
                 @Override
                 public LuaValue call() {
-                    return LuaVector.of(data.rotation);
-                }
-            });
-            ret.set("setRot", new OneArgFunction() {
-                @Override
-                public LuaValue call(LuaValue arg1) {
-                    data.rotation = LuaVector.checkOrNew(arg1).asV2f();
-                    return NIL;
+                    return LuaVector.of(targetScript.getOrMakeCameraCustomization(accessor).pivot);
                 }
             });
 
-            return ret;
-        }
+            set("setPivot", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1) {
+                    targetScript.getOrMakeCameraCustomization(accessor).pivot = arg1.isnil() ? null : LuaVector.checkOrNew(arg1).asV3f();
+                    return NIL;
+                }
+            });
+        }};
     }
 }

@@ -1,185 +1,297 @@
 package net.blancworks.figura.models;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
 import net.blancworks.figura.assets.FiguraAsset;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.config.ConfigManager.Config;
+import net.blancworks.figura.lua.api.model.VanillaModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
-import net.blancworks.figura.trust.PlayerTrustManager;
+import net.blancworks.figura.models.animations.Animation;
 import net.blancworks.figura.trust.TrustContainer;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.*;
+import net.minecraft.client.render.entity.model.EntityModel;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec2f;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class CustomModel extends FiguraAsset {
-    public PlayerData owner;
-    public ArrayList<CustomModelPart> allParts = new ArrayList<>();
+    public final AvatarData owner;
+    public final NbtCompound modelNbt;
 
-    //Customized pivots for stuff like elytra, held items, that sort.
-    public HashMap<Identifier, CustomModelPart> customParents = new HashMap<>();
+    public final ArrayList<CustomModelPart> allParts = new ArrayList<>();
+    public final Map<CustomModelPart.ParentType, ArrayList<CustomModelPart>> specialParts = new ConcurrentHashMap<>();
+    public final Map<String, Animation> animations = new HashMap<>();
 
-    //TODO - probably improve this?
-    public ArrayList<CustomModelPart> leftElytraParts = new ArrayList<>();
-    public ArrayList<CustomModelPart> rightElytraParts = new ArrayList<>();
-    public ArrayList<CustomModelPart> worldParts = new ArrayList<>();
-
-    public float texWidth = 64, texHeight = 64;
-
-    //The size of the avatar in bytes, either from when it was downloaded, or otherwise.
-    public long totalSize = 0;
+    public Vec2f defaultTextureSize;
 
     public int leftToRender = 0;
-    public int lastComplexity = 0;
+    public int animRendered = 0;
+    public int animMaxRender = 0;
+
+    //used during rendering
+    public boolean applyHiddenTransforms = true;
+    public CustomModelPart.ParentType renderOnly = null;
 
     //This contains all the modifications to origins for stuff like elytra and held items.
     //This is separate from script customizations, as these are groups from blockbench that are the new,
     //override origins against vanilla.
     public HashMap<Identifier, VanillaModelPartCustomization> originModifications = new HashMap<>();
 
-    public int getRenderComplexity() {
-        lastComplexity = 0;
+    public CustomModel(NbtCompound nbt, AvatarData data) {
+        readNbt(nbt);
+        this.modelNbt = nbt;
+        this.owner = data;
+        this.isDone = true;
+    }
 
-        try {
-            for (CustomModelPart part : allParts) {
-                lastComplexity += part.getComplexity();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return Integer.MAX_VALUE - 100;
+    public ArrayList<CustomModelPart> getSpecialParts(CustomModelPart.ParentType type) {
+        synchronized (specialParts) {
+            ArrayList<CustomModelPart> list = specialParts.get(type);
+            return list == null ? new ArrayList<>() : list;
         }
+    }
 
-        return lastComplexity;
+    public void removeSpecialPart(CustomModelPart part) {
+        synchronized (specialParts) {
+            getSpecialParts(part.parentType).remove(part);
+        }
+    }
+
+    public void addSpecialPart(CustomModelPart part) {
+        synchronized (specialParts) {
+            ArrayList<CustomModelPart> list = getSpecialParts(part.parentType);
+            list.add(part);
+            specialParts.put(part.parentType, list);
+        }
     }
 
     public int getMaxRenderAmount() {
-        Identifier playerId = new Identifier("players", this.owner.playerId.toString());
-        TrustContainer tc = PlayerTrustManager.getContainer(playerId);
-        return tc.getIntSetting(PlayerTrustManager.MAX_COMPLEXITY_ID);
+        if (this.owner == null)
+            return 0;
+
+        TrustContainer tc = owner.getTrustContainer();
+        return tc != null ? tc.getTrust(TrustContainer.Trust.COMPLEXITY) : 0;
     }
 
+    public void render(EntityModel<?> entity_model, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        if (owner == null) return;
 
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
-        render(player_model, matrices, new MatrixStack(), vcp, light, overlay, red, green, blue, alpha);
-    }
+        if (owner.script != null)
+            owner.script.render(owner.deltaTime);
 
-    public void render(PlayerEntityModel<?> player_model, MatrixStack matrices, MatrixStack transformStack,  VertexConsumerProvider vcp, int light, int overlay, float red, float green, float blue, float alpha) {
         leftToRender = getMaxRenderAmount();
-        int maxRender = leftToRender;
 
-        if (owner.script != null) {
-            owner.script.render(FiguraMod.deltaTime);
+        synchronized (this.allParts) {
+            for (CustomModelPart part : this.allParts) {
+                if (part.isSpecial() || !part.visible)
+                    continue;
+
+                matrices.push();
+
+                try {
+                    if (entity_model instanceof PlayerEntityModel player_model)
+                        player_model.setVisible(false);
+
+                    //render only heads in spectator
+                    if (owner.lastEntity != null && owner.lastEntity.isSpectator())
+                        renderOnly = CustomModelPart.ParentType.Head;
+
+                    //hitboxes :p
+                    CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+
+                    leftToRender = part.render(owner, matrices, transformStack, vcp, light, overlay, alpha);
+
+                    CustomModelPart.canRenderHitBox = false;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                matrices.pop();
+            }
         }
+    }
 
-        for (CustomModelPart part : allParts) {
+    public void renderArm(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, ModelPart arm, PlayerEntityModel<?> model, float alpha) {
+        if (owner.script != null)
+            owner.script.render(owner.deltaTime);
 
-            if (part.isParentSpecial() || !part.shouldRender || !part.visible)
-                continue;
+        this.leftToRender = getMaxRenderAmount();
 
+        synchronized (this.allParts) {
             matrices.push();
 
-            try {
-                player_model.setVisible(false);
-
-                //By default, use blockbench rotation.
-                part.rotationType = CustomModelPart.RotationType.BlockBench;
-
-                //render only heads in spectator
-                if (owner.lastEntity != null && owner.lastEntity.isSpectator()) {
-                    leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.Head, owner, matrices, transformStack, vcp, light, overlay, alpha);
-                }
-                else {
-                    leftToRender = part.renderUsingAllTextures(owner, matrices, transformStack, vcp, light, overlay, alpha);
-                }
-
-                lastComplexity = MathHelper.clamp(maxRender - leftToRender, 0, maxRender);
-            } catch (Exception e) {
-                e.printStackTrace();
+            if ((boolean) Config.FIX_HANDS.value) {
+                arm.rotate(matrices);
+                applyHiddenTransforms = false;
             }
 
+            for (CustomModelPart part : this.allParts) {
+                if (part.isSpecial() || !part.visible)
+                    continue;
+
+                renderOnly = arm == model.leftArm ? CustomModelPart.ParentType.LeftArm : CustomModelPart.ParentType.RightArm;
+                this.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
+            }
+
+            applyHiddenTransforms = true;
             matrices.pop();
         }
     }
 
-    public void renderArm(PlayerData playerData, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, AbstractClientPlayerEntity player, ModelPart arm, ModelPart sleeve, PlayerEntityModel model, float alpha) {
-        VertexConsumer vc = vertexConsumers.getBuffer(RenderLayer.getEntityTranslucent(playerData.texture.id));
+    public boolean renderSkull(MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light) {
+        this.leftToRender = getMaxRenderAmount();
 
-        if (owner.script != null) {
-            owner.script.render(FiguraMod.deltaTime);
+        ArrayList<CustomModelPart> skullParts = this.getSpecialParts(CustomModelPart.ParentType.Skull);
+        if (!skullParts.isEmpty()) {
+            CustomModelPart.canRenderTasks = false;
+            for (CustomModelPart modelPart : skullParts) {
+                this.leftToRender = modelPart.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
+
+                if (this.leftToRender <= 0)
+                    break;
+            }
+
+            CustomModelPart.canRenderTasks = true;
+            return true;
         }
+        else {
+            synchronized (this.allParts) {
+                applyHiddenTransforms = false;
+                CustomModelPart.canRenderTasks = false;
+                for (CustomModelPart modelPart : this.allParts) {
+                    renderOnly = CustomModelPart.ParentType.Head;
+                    this.leftToRender = modelPart.render(owner, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, 1f);
 
-        int prevCount = playerData.model.leftToRender;
-        playerData.model.leftToRender = Integer.MAX_VALUE - 100;
+                    if (this.leftToRender <= 0)
+                        break;
+                }
+                applyHiddenTransforms = true;
+                CustomModelPart.canRenderTasks = true;
+            }
 
-        for (CustomModelPart part : playerData.model.allParts) {
-            if (arm == model.rightArm)
-                playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.RightArm, playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
-            else if (arm == model.leftArm)
-                playerData.model.leftToRender = part.renderUsingAllTexturesFiltered(CustomModelPart.ParentType.LeftArm, playerData, matrices, new MatrixStack(), vertexConsumers, light, OverlayTexture.DEFAULT_UV, alpha);
-        }
-
-        playerData.model.leftToRender = prevCount;
-    }
-
-    public void writeNbt(CompoundTag nbt) {
-        ListTag partList = new ListTag();
-
-        for (CustomModelPart part : allParts) {
-            CompoundTag partNbt = new CompoundTag();
-            CustomModelPart.writeToNbt(partNbt, part);
-            partList.add(partNbt);
-        }
-
-        nbt.put("parts", partList);
-    }
-
-    public void readNbt(CompoundTag tag) {
-        ListTag partList = (ListTag) tag.get("parts");
-
-        for (int i = 0; i < partList.size(); i++) {
-            CompoundTag partTag = (CompoundTag) partList.get(i);
-            int type = partTag.getInt("type");
-
-            CustomModelPart part = CustomModelPart.fromNbt(partTag);
-
-            if (part != null) {
-                part.rebuild();
-
-                allParts.add(part);
+            if (owner.script != null) {
+                VanillaModelPartCustomization customization = owner.script.allCustomizations.get(VanillaModelAPI.VANILLA_HEAD);
+                return customization != null && customization.visible != null && !customization.visible;
             }
         }
 
-        sortAllParts();
+        return false;
+    }
+
+    public void renderWorldParts(double cameraX, double cameraY, double cameraZ, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, float alpha) {
+        CustomModelPart.canRenderHitBox = (boolean) Config.RENDER_DEBUG_PARTS_PIVOT.value && MinecraftClient.getInstance().getEntityRenderDispatcher().shouldRenderHitboxes();
+
+        matrices.translate(-cameraX, -cameraY, -cameraZ);
+        matrices.scale(-1f, -1f, 1f);
+
+        synchronized (specialParts) {
+            for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.WORLD)) {
+                this.leftToRender = part.render(owner, matrices, new MatrixStack(), vertexConsumers, light, overlay, alpha);
+
+                if (leftToRender <= 0)
+                    break;
+            }
+        }
+
+        CustomModelPart.canRenderHitBox = false;
+    }
+
+    public void renderFirstPersonWorldParts(MatrixStack matrices, Camera camera, float tickDelta) {
+        if (owner.lastEntity == null || owner.vertexConsumerProvider == null) return;
+
+        matrices.push();
+
+        try {
+            Vec3d cameraPos = camera.getPos();
+            this.renderWorldParts(cameraPos.x, cameraPos.y, cameraPos.z, matrices, owner.getVCP(), MinecraftClient.getInstance().getEntityRenderDispatcher().getLight(owner.lastEntity, tickDelta), OverlayTexture.DEFAULT_UV, 1f);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        matrices.pop();
+    }
+
+    public void renderHudParts(MatrixStack matrices) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        float scale = 40f;
+        float w = client.getWindow().getScaledWidth() / 2f;
+        float h = client.getWindow().getScaledHeight() / 2f;
+
+        matrices.push();
+        matrices.translate(w, h, 0f);
+        matrices.scale(scale, scale, -scale);
+        DiffuseLighting.disableGuiDepthLighting();
+
+        this.leftToRender = getMaxRenderAmount();
+
+        synchronized (specialParts) {
+            for (CustomModelPart part : this.getSpecialParts(CustomModelPart.ParentType.Hud)) {
+                leftToRender = part.render(owner, matrices, new MatrixStack(), owner.getVCP(), LightmapTextureManager.MAX_LIGHT_COORDINATE, OverlayTexture.DEFAULT_UV, 1f);
+
+                if (leftToRender <= 0)
+                    break;
+            }
+        }
+
+        DiffuseLighting.enableGuiDepthLighting();
+        matrices.pop();
+    }
+
+    public void readNbt(NbtCompound tag) {
+        //animations needed to be parsed FIRST
+        NbtList animList = tag.getList("anim", NbtElement.COMPOUND_TYPE);
+        if (animList != null) {
+            for (NbtElement nbtElement : animList) {
+                NbtCompound animTag = (NbtCompound) nbtElement;
+                Animation anim = Animation.fromNbt(animTag);
+
+                this.animations.put(anim.name, anim);
+            }
+        }
+
+        //texture size
+        NbtList uv = tag.getList("uv", NbtElement.FLOAT_TYPE);
+        if (uv.size() > 0) this.defaultTextureSize = new Vec2f(uv.getFloat(0), uv.getFloat(1));
+
+        //parts :3
+        NbtList partList = tag.getList("parts", NbtElement.COMPOUND_TYPE);
+        if (partList != null) {
+            for (NbtElement nbtElement : partList) {
+                NbtCompound partTag = (NbtCompound) nbtElement;
+                CustomModelPart part = CustomModelPart.fromNbt(partTag, this);
+
+                if (part != null) {
+                    part.rebuild(this.defaultTextureSize);
+                    allParts.add(part);
+                }
+            }
+        }
+
+        synchronized (this.allParts) {
+            specialParts.clear();
+            this.allParts.forEach(this::sortPart);
+        }
     }
 
     //Sorts parts into their respective places.
-    public void sortAllParts(){
-        for (CustomModelPart part : allParts) {
-            sortPart(part);
-        }
-    }
+    public void sortPart(CustomModelPart part) {
+        if (part.isSpecial())
+            addSpecialPart(part);
 
-    public void sortPart(CustomModelPart part){
-        if (part.parentType == CustomModelPart.ParentType.LeftElytra) {
-            leftElytraParts.add(part);
-        } else if (part.parentType == CustomModelPart.ParentType.RightElytra) {
-            rightElytraParts.add(part);
-        } else if (part.parentType == CustomModelPart.ParentType.WORLD) {
-            worldParts.add(part);
-        }
-
-        for (CustomModelPart child : part.children) {
-            sortPart(child);
+        if (part instanceof CustomModelPartGroup group) {
+            for (CustomModelPart child : group.children)
+                sortPart(child);
         }
     }
 }

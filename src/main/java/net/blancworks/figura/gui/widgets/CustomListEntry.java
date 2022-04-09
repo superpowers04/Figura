@@ -24,14 +24,13 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
     public void render(MatrixStack matrices, int index, int y, int x, int rowWidth, int rowHeight, int mouseX, int mouseY, boolean isSelected, float delta) {
         x += getXOffset();
         rowWidth -= getXOffset();
-        int iconSize = 32;
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
         Text name = getDisplayText();
         StringVisitable trimmedName = name;
         int maxNameWidth = rowWidth - 3;
         TextRenderer font = this.client.textRenderer;
         if (font.getWidth(name) > maxNameWidth) {
-            StringVisitable ellipsis = StringVisitable.plain("...");
+            StringVisitable ellipsis = StringVisitable.styled("...", name.getStyle());
             trimmedName = StringVisitable.concat(font.trimToWidth(name, maxNameWidth - font.getWidth(ellipsis)), ellipsis);
         }
         font.draw(matrices, Language.getInstance().reorder(trimmedName), x + 3, y + (rowHeight / 2) - (font.fontHeight/2), 0xFFFFFF);
@@ -58,5 +57,10 @@ public class CustomListEntry extends AlwaysSelectedEntryListWidget.Entry<CustomL
         return entryValue;
     }
 
-    public void tick(double mouseX, double mouseY){}
+    public void tick(double mouseX, double mouseY) {}
+
+    @Override
+    public Text getNarration() {
+        return new LiteralText(String.valueOf(entryValue));
+    }
 }

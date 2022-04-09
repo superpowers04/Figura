@@ -1,8 +1,8 @@
 package net.blancworks.figura.network.messages.user;
 
 import com.google.common.io.LittleEndianDataInputStream;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.network.messages.MessageHandler;
 
 import java.util.UUID;
@@ -17,10 +17,15 @@ public class UserAvatarHashProvideResponseHandler extends MessageHandler {
         String hash = readString(stream);
         
         //Handle?
-        PlayerData pDat = PlayerDataManager.getDataForPlayer(id);
+        AvatarData pDat = AvatarDataManager.getDataForPlayer(id);
         
         if(!pDat.lastHash.equals(hash)){
             pDat.isInvalidated = true;   
         }
+    }
+
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:user_avatar_hash_provide";
     }
 }

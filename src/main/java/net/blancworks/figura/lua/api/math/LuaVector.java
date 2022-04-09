@@ -2,30 +2,25 @@ package net.blancworks.figura.lua.api.math;
 
 import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.luaj.vm2.*;
-import org.luaj.vm2.ast.Str;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 public class LuaVector extends LuaValue implements Iterable<Float> {
     public static final int TYPE = LuaValue.TVALUE;
-    public static final LuaVector ORIGIN = new LuaVector();
 
     private final float[] values;
-    private Double cachedLength = null;
 
-    private Map<String, LuaValue> luaValues = new ImmutableMap.Builder<String, LuaValue>()
+    private final Map<String, LuaValue> luaValues = new ImmutableMap.Builder<String, LuaValue>()
             .put("distanceTo", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg1) {
@@ -62,6 +57,25 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
                     return LuaValue.valueOf(_angleTo(arg));
                 }
             })
+            .put("toRad", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return _toRad();
+                }
+            })
+            .put("toDeg", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return _toDeg();
+                }
+            })
+            .put("asTable", new ZeroArgFunction() {
+                @Override
+                public LuaValue call() {
+                    return asTable();
+                }
+            })
+
             .build();
 
     public LuaVector(float... values) {
@@ -76,7 +90,7 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ(), vec.getW());
     }
 
-    public static LuaValue of(Vector3f vec) {
+    public static LuaValue of(Vec3f vec) {
         if (vec == null) return NIL;
         return new LuaVector(vec.getX(), vec.getY(), vec.getZ());
     }
@@ -97,32 +111,36 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public static LuaValue of(LuaTable t) {
-        int n = Math.min(6, t.length());
         FloatArrayList fal = new FloatArrayList();
-        for (int i = 0; i < n; i++) {
-            LuaValue l = t.get(i + 1);
 
-            if (l.isnumber()) {
-                l.checknumber();
+        Varargs entry = t.next(LuaValue.NIL);
+        for (int i = 0; i < 6; i++) {
+            if (entry.arg1().isnil())
+                break;
+
+            LuaValue l = entry.arg(2);
+
+            if (l.isnil())
+                fal.add(0f);
+            else if (l.isnumber())
                 fal.add(l.tofloat());
-            } else if (l.istable()) {
-                LuaTable tbl = l.checktable();
-                LuaVector v = (LuaVector) of(tbl);
-
-                for (int j = 0; j < tbl.length(); j++) {
-                    fal.add(v.values[j]);
-                }
-            } else if (l instanceof LuaVector) {
-                LuaVector vect = (LuaVector) l;
-                for (int j = 0; j < vect._size(); j++) {
-                    float f = vect.values[j];
-                    fal.add(f);
-                }
+            else if (l.istable() || l instanceof LuaVector) {
+                LuaVector v = LuaVector.checkOrNew(l);
+                fal.addElements(fal.size(), v.values);
             }
+            else {
+                LuaValue numb = l.tonumber();
+                if (numb.isnil()) fal.add(0f);
+                else fal.add(numb.tofloat());
+            }
+
+            entry = t.next(entry.arg1());
         }
 
-        //Ensure size.
-        fal.size(6);
+        //ensure size
+        if (fal.size() > 6)
+            fal.size(6);
+
         return new LuaVector(fal.toFloatArray());
     }
 
@@ -146,8 +164,8 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new Vector4f(x(), y(), z(), w());
     }
 
-    public Vector3f asV3f() {
-        return new Vector3f(x(), y(), z());
+    public Vec3f asV3f() {
+        return new Vec3f(x(), y(), z());
     }
 
     public Vec3d asV3d() {
@@ -168,6 +186,18 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     public Vec2f asV2f() {
         return new Vec2f(x(), y());
+    }
+
+    public BlockPos asBlockPos() {
+        return new BlockPos(x(), y(), z());
+    }
+
+    public LuaTable asTable() {
+        LuaTable tbl = new LuaTable();
+        for (int i = 1; i < 7; i++) {
+            tbl.insert(i, LuaValue.valueOf(this._get(i)));
+        }
+        return tbl;
     }
 
     @Override
@@ -228,6 +258,23 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         Float f = _get(key);
         if (f == null) return _functions(key);
         return LuaNumber.valueOf(f);
+    }
+
+    @Override
+    public void set(LuaValue key, LuaValue value) {
+        float f = value.checknumber().tofloat();
+
+        if (key.isnumber()) {
+            int index = key.checkint();
+
+            if (index > 6 || index < 1)
+                throw new LuaError("Index out of bounds");
+
+            if (index <= _size())
+                values[index - 1] = f;
+        }
+        else
+            values[_getIndex(key.tojstring()) - 1] = f;
     }
 
     @Override
@@ -359,24 +406,27 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         }
         return Math.sqrt(s); // Square root of the sum of all values
     }
-    
+
     public double _dot(LuaValue vector) {
-        LuaVector other = check(vector);
-        return values[0] * other.values[0] +
-                        values[1] * other.values[1] +
-                        values[2] * other.values[2] +
-                        values[3] * other.values[3] +
-                        values[4] * other.values[4] +
-                        values[5] * other.values[5];
+        LuaVector vec = check(vector);
+        int n = Math.max(_size(), vec._size());
+        double s = 0d;
+        for (int i = 1; i <= n; i++) {
+            s += _get(i) * vec._get(i);
+        }
+        return s;
     }
-    
+
     public LuaVector _cross(LuaValue vector){
-        LuaVector other = check(vector);
-        return new LuaVector(
-                values[1] * other.values[2] - values[2] * other.values[1],     //y * o.z - z * o.y
-                values[2] * other.values[0] - values[0] * other.values[2],            //z * o.x - x * o.z
-                values[0] * other.values[1] - values[1] * other.values[0]             //x * o.y - y * o.x
-        );
+        LuaVector vec = check(vector);
+        int n = Math.max(_size(), vec._size());
+        float[] vals = new float[n];
+        for (int i = 0; i < n; i++) {
+            int j = ((i + 1) % n) + 1;
+            int k = ((i + 2) % n) + 1;
+            vals[i] = _get(j) * vec._get(k) - _get(k) * vec._get(j);
+        }
+        return new LuaVector(vals);
     }
 
     public double _angleTo(LuaValue vector){
@@ -421,12 +471,32 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
         return new LuaVector(vals);
     }
 
+    public LuaVector _toRad() {
+        int n = _size();
+        float[] vals = new float[n];
+        for (int i = 1; i <= n; i++) {
+            float v = this._get(i);
+            vals[i - 1] = (float) Math.toRadians(v);
+        }
+        return new LuaVector(vals);
+    }
+
+    public LuaVector _toDeg() {
+        int n = _size();
+        float[] vals = new float[n];
+        for (int i = 1; i <= n; i++) {
+            float v = this._get(i);
+            vals[i - 1] = (float) Math.toDegrees(v);
+        }
+        return new LuaVector(vals);
+    }
+
     public int _size() {
         return values.length;
     }
 
-    public Float _get(int index) {
-        if (index > 6 || index < 1) {
+    public Float _get(Integer index) {
+        if (index == null || index > 6 || index < 1) {
             return null;
         }
         if (index <= _size()) {
@@ -436,32 +506,19 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
     }
 
     public Float _get(String name) {
-        switch (name) {
-            case "x":
-            case "r":
-            case "u":
-            case "pitch":
-                return x();
-            case "y":
-            case "g":
-            case "v":
-            case "yaw":
-            case "volume":
-                return y();
-            case "z":
-            case "b":
-            case "roll":
-                return z();
-            case "w":
-            case "a":
-                return w();
-            case "t":
-                return t();
-            case "h":
-                return h();
-            default:
-                return null;
-        }
+        return _get(_getIndex(name));
+    }
+
+    public Integer _getIndex(String name) {
+        return switch (name) {
+            case "x", "r", "u", "pitch" -> 1;
+            case "y", "g", "v", "yaw", "volume" -> 2;
+            case "z", "b", "roll" -> 3;
+            case "w", "a" -> 4;
+            case "t" -> 5;
+            case "h" -> 6;
+            default -> null;
+        };
     }
 
     @NotNull
@@ -494,6 +551,17 @@ public class LuaVector extends LuaValue implements Iterable<Float> {
 
     @Override
     public String toString() {
-        return String.format("vector: x=%f, y=%f, z=%f, w=%f, t=%f, h=%f", x(), y(), z(), w(), t(), h());
+        return String.format("vec: {x=%f, y=%f, z=%f, w=%f, t=%f, h=%f}", x(), y(), z(), w(), t(), h());
+    }
+
+    public Text toJsonText(UnaryOperator<Style> keyColor, UnaryOperator<Style> valColor) {
+        return new LiteralText("").append("vec: {")
+                .append(new LiteralText("\n  x").styled(keyColor)).append(" = ").append(new LiteralText(String.valueOf(x())).styled(valColor))
+                .append(new LiteralText(",\n  y").styled(keyColor)).append(" = ").append(new LiteralText(String.valueOf(y())).styled(valColor))
+                .append(new LiteralText(",\n  z").styled(keyColor)).append(" = ").append(new LiteralText(String.valueOf(z())).styled(valColor))
+                .append(new LiteralText(",\n  w").styled(keyColor)).append(" = ").append(new LiteralText(String.valueOf(w())).styled(valColor))
+                .append(new LiteralText(",\n  t").styled(keyColor)).append(" = ").append(new LiteralText(String.valueOf(t())).styled(valColor))
+                .append(new LiteralText(",\n  h").styled(keyColor)).append(" = ").append(new LiteralText(String.valueOf(h())).styled(valColor))
+                .append("\n}");
     }
 }

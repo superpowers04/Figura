@@ -1,36 +1,30 @@
 package net.blancworks.figura.mixin;
 
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
+import net.blancworks.figura.avatar.AvatarData;
 import net.blancworks.figura.access.ElytraEntityModelAccess;
 import net.blancworks.figura.access.MatrixStackAccess;
 import net.blancworks.figura.lua.api.model.ElytraModelAPI;
 import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
 import net.blancworks.figura.models.CustomModelPart;
-import net.blancworks.figura.models.FiguraTexture;
 import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.render.VertexConsumer;
 import net.minecraft.client.render.entity.model.AnimalModel;
 import net.minecraft.client.render.entity.model.ElytraEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-
-import java.util.function.Function;
 
 @Mixin(ElytraEntityModel.class)
 public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<T> implements ElytraEntityModelAccess {
 
     @Shadow
     @Final
-    private ModelPart field_3365;
+    private ModelPart leftWing;
     @Shadow
     @Final
-    private ModelPart field_3364;
+    private ModelPart rightWing;
 
     @Override
     @Shadow
@@ -52,39 +46,38 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
 
     @Override
     public void render(MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float red, float green, float blue, float alpha) {
-        PlayerData data = FiguraMod.currentData;
-
+        AvatarData data = AvatarData.currentRenderingData;
         
         try {
             if (data != null && data.model != null) {
+                VanillaModelPartCustomization originModification;
 
                 //Left wing
-                {
-                    VanillaModelPartCustomization originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_LEFT_WING_ID);
+                originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_LEFT_WING_ID);
 
-                    if (originModification != null && originModification.stackReference != null) {
-                        if (originModification.visible == null || originModification.visible == true) {
-                            MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
-                            msa.pushEntry(originModification.stackReference);
-                            getLeftWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
-                        }
-
-                        getLeftWing().visible = false;
+                if (originModification != null && originModification.stackReference != null) {
+                    if (originModification.visible != null && originModification.visible) {
+                        originModification.visible = null;
+                        MatrixStackAccess msa = (MatrixStackAccess) new MatrixStack();
+                        msa.pushEntry(originModification.stackReference);
+                        getLeftWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
                     }
+
+                    getLeftWing().visible = false;
                 }
 
-                {
-                    VanillaModelPartCustomization originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_RIGHT_WING_ID);
+                //Right wing
+                originModification = data.model.originModifications.get(ElytraModelAPI.VANILLA_RIGHT_WING_ID);
 
-                    if (originModification != null && originModification.stackReference != null) {
-                        if (originModification.visible == null || originModification.visible == true) {
-                            MatrixStackAccess msa = (MatrixStackAccess) (Object) new MatrixStack();
-                            msa.pushEntry(originModification.stackReference);
-                            getRightWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
-                        }
-
-                        getRightWing().visible = false;
+                if (originModification != null && originModification.stackReference != null) {
+                    if (originModification.visible != null && originModification.visible) {
+                        originModification.visible = null;
+                        MatrixStackAccess msa = (MatrixStackAccess) new MatrixStack();
+                        msa.pushEntry(originModification.stackReference);
+                        getRightWing().render((MatrixStack) msa, vertices, light, overlay, red, green, blue, alpha);
                     }
+
+                    getRightWing().visible = false;
                 }
             }
 
@@ -100,15 +93,7 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
             getRightWing().visible = true;
 
             if (data != null && data.model != null) {
-                figura$renderExtraElytraPartsWithTexture(data, RenderLayer.getEntityTranslucent(data.texture.id), matrices, light, overlay, alpha);
-
-                for (FiguraTexture extraTexture : data.extraTextures) {
-                    Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
-
-                    if (renderLayerGetter != null) {
-                        figura$renderExtraElytraPartsWithTexture(data, renderLayerGetter.apply(extraTexture.id), matrices, light, overlay, alpha);
-                    }
-                }
+                figura$renderExtraElytraPartsWithTexture(data, matrices, light, overlay, alpha);
             }
         } catch (Exception e){
             //e.printStackTrace();
@@ -116,38 +101,46 @@ public class ElytraEntityModelMixin<T extends LivingEntity> extends AnimalModel<
     }
 
     public ModelPart getLeftWing() {
-        return field_3365;
+        return leftWing;
     }
 
     public ModelPart getRightWing() {
-        return field_3364;
+        return rightWing;
     }
 
-    public void figura$renderExtraElytraPartsWithTexture(PlayerData data, RenderLayer layer, MatrixStack matrices, int light, int overlay, float alpha) {
-        VertexConsumer actualConsumer = FiguraMod.vertexConsumerProvider.getBuffer(layer);
-
+    public void figura$renderExtraElytraPartsWithTexture(AvatarData data, MatrixStack matrices, int light, int overlay, float alpha) {
         //Render left parts.
         matrices.push();
-        getLeftWing().rotate(matrices);
 
-        for (CustomModelPart modelPart : data.model.leftElytraParts) {
-            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, new MatrixStack(), actualConsumer, light, overlay, alpha);
+        ModelPart leftWing = getLeftWing();
+        leftWing.rotate(matrices);
+        matrices.translate(-leftWing.pivotX / 16f, 0f, 0f);
 
-            if (data.model.leftToRender == 0)
-                break;
+        synchronized (data.model.specialParts) {
+            for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.LeftElytra)) {
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), data.vertexConsumerProvider, light, overlay, alpha);
+
+                if (data.model.leftToRender == 0)
+                    break;
+            }
         }
 
         matrices.pop();
 
         //Render right parts.
         matrices.push();
-        getRightWing().rotate(matrices);
 
-        for (CustomModelPart modelPart : data.model.rightElytraParts) {
-            data.model.leftToRender = modelPart.render(data.model.leftToRender, matrices, new MatrixStack(), actualConsumer, light, overlay, alpha);
+        ModelPart rightWing = getRightWing();
+        rightWing.rotate(matrices);
+        matrices.translate(-rightWing.pivotX / 16f, 0f, 0f);
 
-            if (data.model.leftToRender == 0)
-                break;
+        synchronized (data.model.specialParts) {
+            for (CustomModelPart modelPart : data.model.getSpecialParts(CustomModelPart.ParentType.RightElytra)) {
+                data.model.leftToRender = modelPart.render(data, matrices, new MatrixStack(), data.vertexConsumerProvider, light, overlay, alpha);
+
+                if (data.model.leftToRender == 0)
+                    break;
+            }
         }
 
         matrices.pop();

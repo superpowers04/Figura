@@ -1,23 +1,26 @@
 package net.blancworks.figura.gui.widgets;
 
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.LocalPlayerData;
+import net.blancworks.figura.avatar.LocalAvatarManager;
+import net.blancworks.figura.avatar.LocalAvatarManager.LocalAvatar;
+import net.blancworks.figura.avatar.LocalAvatarManager.LocalAvatarFolder;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.FiguraGuiScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.network.PlayerListEntry;
 import net.minecraft.text.LiteralText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import org.apache.commons.io.FilenameUtils;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.util.zip.ZipFile;
+import java.util.Map;
 
-public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, ModelFileListWidget.ModelFileListWidgetEntry> {
+public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, CustomListEntry> {
 
-    public ModelFileListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget list, Screen parent, CustomListWidgetState state) {
+    public ModelFileListWidget(MinecraftClient client, int width, int height, int y1, int y2, int entryHeight, TextFieldWidget searchBox, CustomListWidget<?, ?> list, Screen parent, CustomListWidgetState<?> state) {
         super(client, width, height, y1, y2, entryHeight, searchBox, list, parent, state);
     }
 
@@ -25,63 +28,105 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
     protected void doFiltering(String searchTerm) {
         super.doFiltering(searchTerm);
 
-        File contentDirectory = LocalPlayerData.getContentDirectory().toFile();
-
-        try {
-            Files.createDirectories(contentDirectory.toPath());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        File[] files = contentDirectory.listFiles();
-
-        for (File file : files) {
-            //get file name
-            String fileName = FilenameUtils.removeExtension(file.getName());
-
-            //skip files
-            if (!fileName.contains(searchTerm))
-                continue;
-
-            //if directory
-            if (file.isDirectory() && (Files.exists(file.toPath().resolve("model.bbmodel")) ||Files.exists(file.toPath().resolve("player_model.bbmodel"))) && Files.exists(file.toPath().resolve("texture.png")))
-                addEntry(new ModelFileListWidgetEntry(file.getName(), this));
-            //zip support
-            else if (file.getName().endsWith(".zip")) {
-                try {
-                    ZipFile zipFile = new ZipFile(file.getPath());
-
-                    boolean hasModel = zipFile.getEntry("model.bbmodel") != null || zipFile.getEntry("player_model.bbmodel") != null;
-                    boolean hasTexture = zipFile.getEntry("texture.png") != null;
-
-                    //add entry
-                    if (hasModel && hasTexture)
-                        addEntry(new ModelFileListWidgetEntry(file.getName(), this));
-
-                } catch (Exception e) {
-                    FiguraMod.LOGGER.warn("Failed to load model " + file.getName());
-                    e.printStackTrace();
+        //add empty entry
+        if (searchTerm.equals("")) {
+            addEntry(new ModelFileListWidgetEntry("", this, LocalAvatarManager.init ? "figura.models.unselect" : "figura.models.loading", null, 0) {
+                @Override
+                public Text getDisplayText() {
+                    return new TranslatableText(this.getName()).formatted(Formatting.ITALIC, Formatting.DARK_GRAY);
                 }
-            }
-            //old system compatibility
-            else if (file.getName().endsWith(".bbmodel") && Files.exists(contentDirectory.toPath().resolve(fileName + ".png")))
-                addEntry(new ModelFileListWidgetEntry(fileName + "*", this));
+            });
         }
+
+        //add avatars
+        addAvatarsToList(LocalAvatarManager.AVATARS, searchTerm.toLowerCase(), 0);
     }
 
     @Override
-    public void select(ModelFileListWidgetEntry entry) {
+    public void select(CustomListEntry entry) {
+        if (entry instanceof ModelFileListWidgetFolderEntry folder) {
+            //change expanded value
+            folder.expanded = !folder.expanded;
+
+            if (folder.avatar instanceof LocalAvatarFolder avatar)
+                avatar.expanded = folder.expanded;
+
+            //update folder list
+            if (folder.expanded)
+                LocalAvatarManager.FOLDER_DATA.remove(folder.getIdentifier());
+            else
+                LocalAvatarManager.FOLDER_DATA.put(folder.getIdentifier(), false);
+
+            //reload and cancel selection
+            this.reloadFilters();
+            return;
+        } else if (entry instanceof ModelFileListWidgetEntry file) {
+            if (AvatarDataManager.localPlayer == null || !AvatarDataManager.localPlayer.isAvatarLoaded())
+                return;
+
+            FiguraGuiScreen parent = (FiguraGuiScreen) getParent();
+
+            if (file.avatar instanceof LocalAvatarManager.ResourceAvatar res) {
+                parent.loadLocalAvatar(res.nbt);
+            } else {
+                parent.loadLocalAvatar(file.getIdentifier());
+            }
+        }
+
         super.select(entry);
-
-        FiguraGuiScreen parent = (FiguraGuiScreen) getParent();
-
-        parent.clickButton(entry.getEntryObject().toString());
     }
 
-    public class ModelFileListWidgetEntry extends CustomListEntry {
+    private void addAvatarsToList(Map<String, LocalAvatar> list, String search, int offset) {
+        if (list == null || list.isEmpty()) return;
 
-        public ModelFileListWidgetEntry(String obj, CustomListWidget list) {
+        //add to list
+        list.forEach((key, value) -> {
+            if (value instanceof LocalAvatarFolder folder && hasMatchingChild(folder.children, search)) {
+                //add folder to list
+                ModelFileListWidgetFolderEntry widgetEntry = new ModelFileListWidgetFolderEntry(key, this, folder.name, value, offset, folder.expanded);
+                this.addEntry(widgetEntry);
+
+                //add child to list
+                if (folder.expanded)
+                    addAvatarsToList(folder.children, search, offset + 1);
+            } else if (value.name.toLowerCase().contains(search)) {
+                //add file to list if it matches the search
+                this.addEntry(new ModelFileListWidgetEntry(key, this, value.name, value, offset));
+            }
+        });
+    }
+
+    private static boolean hasMatchingChild(Map<String, LocalAvatar> child, String search) {
+        for (LocalAvatar entry : child.values()) {
+            if (entry instanceof LocalAvatarFolder folder && hasMatchingChild(folder.children, search))
+                return true;
+            else if (entry.name.toLowerCase().contains(search))
+                return true;
+        }
+
+        return false;
+    }
+
+    public void updateAvatarList() {
+        //reload avatars
+        LocalAvatarManager.loadFromDisk();
+        reloadFilters();
+    }
+
+    public static class ModelFileListWidgetEntry extends CustomListEntry {
+        private final String name;
+        public int offset;
+        public LocalAvatar avatar;
+
+        public ModelFileListWidgetEntry(String obj, ModelFileListWidget list, String name, LocalAvatar avatar, int offset) {
             super(obj, list);
+            this.name = name;
+            this.offset = offset;
+            this.avatar = avatar;
+        }
+
+        public String getName() {
+            return this.name;
         }
 
         @Override
@@ -91,7 +136,24 @@ public class ModelFileListWidget extends CustomListWidget<PlayerListEntry, Model
 
         @Override
         public Text getDisplayText() {
-            return new LiteralText(getEntryObject().toString());
+            return new LiteralText("  ".repeat(offset) + getName());
+        }
+    }
+
+    public static class ModelFileListWidgetFolderEntry extends ModelFileListWidgetEntry {
+        public boolean expanded;
+
+        public ModelFileListWidgetFolderEntry(String obj, ModelFileListWidget list, String name, LocalAvatar avatar, int offset, boolean expanded) {
+            super(obj, list, name, avatar, offset);
+            this.expanded = expanded;
+        }
+
+        @Override
+        public Text getDisplayText() {
+            return new LiteralText("  ".repeat(offset)).append(new LiteralText(this.expanded ? "V " : "> ")
+                    .setStyle(Style.EMPTY.withFont(FiguraMod.FIGURA_FONT)))
+                    .formatted(this.expanded ? Formatting.GRAY : Formatting.DARK_GRAY)
+                    .append(new LiteralText(getName()));
         }
     }
 }

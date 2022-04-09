@@ -2,41 +2,52 @@ package net.blancworks.figura.network;
 
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketFactory;
-import net.blancworks.figura.Config;
-import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.*;
+import net.blancworks.figura.avatar.AvatarDataManager;
+import net.blancworks.figura.avatar.LocalAvatarData;
+import net.blancworks.figura.config.ConfigManager.Config;
+import net.blancworks.figura.lua.CustomScript;
+import net.blancworks.figura.network.messages.MessageRegistry;
 import net.blancworks.figura.network.messages.avatar.AvatarUploadMessageSender;
+import net.blancworks.figura.network.messages.pings.PingMessageSender;
+import net.blancworks.figura.network.messages.pubsub.SubscribeToUsersMessageSender;
 import net.blancworks.figura.network.messages.user.UserDeleteCurrentAvatarMessageSender;
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarHashMessageSender;
 import net.blancworks.figura.network.messages.user.UserGetCurrentAvatarMessageSender;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientLoginNetworkHandler;
-import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtIo;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkState;
 import net.minecraft.network.packet.c2s.handshake.HandshakeC2SPacket;
 import net.minecraft.network.packet.c2s.login.LoginHelloC2SPacket;
 import net.minecraft.text.Text;
-import org.apache.logging.log4j.Level;
 
 import javax.net.ssl.SSLContext;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Queue;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 
 public class NewFiguraNetworkManager implements IFiguraNetwork {
 
-    public static CompletableFuture networkTasks;
+    public static CompletableFuture<?> networkTasks;
 
     //The protocol version for this version of the mod.
     public static final int PROTOCOL_VERSION = 0;
+
+    private static boolean lastNetworkState = false;
+
+    public static byte connectionStatus = 0;
 
     //----- WEBSOCKETS -----
 
@@ -44,6 +55,7 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     public static WebSocketFactory socketFactory;
     //The last socket we were using
     public static WebSocket currWebSocket;
+    public static MessageRegistry msgRegistry;
 
     public static Object authWaitObject = new Object();
     public static ClientConnection authConnection;
@@ -62,11 +74,14 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
     public static final int TOKEN_REAUTH_WAIT_TIME = 200;
 
     //Timeout before a connection with a socket is considered dead.
-    public static final int TIMEOUT_SECONDS = 10;
+    public static final int TIMEOUT_SECONDS = 1;
 
     private static boolean hasInited = false;
 
-    private static CompletableFuture doTask(Runnable toRun) {
+    private static final ArrayList<UUID> allSubscriptions = new ArrayList<>();
+    private static final ArrayList<UUID> newSubscriptions = new ArrayList<>();
+
+    private static CompletableFuture<?> doTask(Runnable toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = CompletableFuture.runAsync(toRun);
         } else {
@@ -76,7 +91,17 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         return networkTasks;
     }
 
-    private static <T> CompletableFuture doTaskSupply(Supplier<T> toRun) {
+    private static CompletableFuture<?> doTask(Supplier<CompletableFuture<?>> toRun) {
+        if (networkTasks == null || networkTasks.isDone()) {
+            networkTasks = toRun.get();
+        } else {
+            networkTasks.thenCompose(x -> toRun.get());
+        }
+
+        return networkTasks;
+    }
+
+    private static <T> CompletableFuture<?> doTaskSupply(Supplier<T> toRun) {
         if (networkTasks == null || networkTasks.isDone()) {
             networkTasks = CompletableFuture.supplyAsync(toRun);
         } else {
@@ -86,105 +111,136 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         return networkTasks;
     }
 
+    public static void subscribe(UUID playerID) {
+        if (!allSubscriptions.contains(playerID) && !newSubscriptions.contains(playerID))
+            newSubscriptions.add(playerID);
+    }
+
     @Override
     public void tickNetwork() {
-
-        if(authConnection != null) {
-            authConnection.handleDisconnection();
+        if ((boolean) Config.USE_LOCAL_SERVER.value != lastNetworkState && currWebSocket != null) {
+            currWebSocket.disconnect();
+            lastNetworkState = (boolean) Config.USE_LOCAL_SERVER.value;
         }
-        
+
+        if (jwtToken == null)
+            connectionStatus = 1;
+
+        if (authConnection != null && !authConnection.isOpen())
+            authConnection.handleDisconnection();
+
+        if (currWebSocket != null && currWebSocket.isOpen() && !msgRegistry.isEmpty()) {
+            connectionStatus = 3;
+
+            if (newSubscriptions.size() > 0) {
+                allSubscriptions.addAll(newSubscriptions);
+
+                UUID[] ids = new UUID[newSubscriptions.size()];
+                newSubscriptions.toArray(ids);
+                newSubscriptions.clear();
+
+                doTask(() -> new SubscribeToUsersMessageSender(ids).sendMessage(currWebSocket));
+            }
+        } else if (allSubscriptions.size() > 0) {
+            newSubscriptions.addAll(allSubscriptions);
+            allSubscriptions.clear();
+        }
+
         //If the old token we had is old enough, re-auth us.
         Date currTime = new Date();
 
-        if (tokenReauthCooldown > 0) {
+        if (tokenReauthCooldown > 0)
             tokenReauthCooldown--;
-        } else {
-            if (tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME) {
-                tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
+        else if (tokenReceivedTime != null && currTime.getTime() - tokenReceivedTime.getTime() > TOKEN_LIFETIME) {
+            tokenReauthCooldown = TOKEN_REAUTH_WAIT_TIME; //Wait
 
-                //Auth user ASAP
-                doTask(() -> {
-                    authUser(true);
-                });
-            }
+            //Auth user ASAP
+            doTask(() -> {
+                try {
+                    authUser(true).get();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
 
     @Override
-    public CompletableFuture getAvatarData(UUID id) {
+    public CompletableFuture<?> getAvatarData(UUID id) {
+        doTask(this::ensureConnection);
         return doTask(() -> {
             try {
-                ensureConnection();
-
-                new UserGetCurrentAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
+                if (currWebSocket != null && currWebSocket.isOpen())
+                    new UserGetCurrentAvatarMessageSender(id).sendMessage(NewFiguraNetworkManager.currWebSocket);
             } catch (Exception e) {
                 e.printStackTrace();
-                return;
             }
         });
     }
 
     @Override
-    public CompletableFuture postAvatar() {
+    public CompletableFuture<?> postAvatar() {
+        doTask(this::ensureConnection);
         return doTask(() -> {
-            try {
-                ensureConnection();
-            } catch (Exception e) {
-                e.printStackTrace();
-                return;
-            }
-
             //Get NBT tag for local player avatar
-            PlayerData data = PlayerDataManager.localPlayer;
-            CompoundTag infoNbt = new CompoundTag();
-            data.writeNbt(infoNbt);
+            if (currWebSocket != null && currWebSocket.isOpen()) {
+                LocalAvatarData data = AvatarDataManager.localPlayer;
 
-            try {
-                //Set up streams.
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                DataOutputStream nbtDataStream = new DataOutputStream(baos);
+                //mark as not local
+                data.isLocalAvatar = false;
 
-                NbtIo.writeCompressed(infoNbt, nbtDataStream);
+                //get nbt
+                NbtCompound nbt = new NbtCompound();
+                data.writeNbt(nbt);
 
-                byte[] result = baos.toByteArray();
+                try {
+                    //Set up streams.
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    DataOutputStream nbtDataStream = new DataOutputStream(baos);
 
-                new AvatarUploadMessageSender(result).sendMessage(currWebSocket);
+                    NbtIo.writeCompressed(nbt, nbtDataStream);
 
-                nbtDataStream.close();
-                baos.close();
-            } catch (Exception e) {
-                e.printStackTrace();
+                    byte[] result = baos.toByteArray();
+
+                    new AvatarUploadMessageSender(result).sendMessage(currWebSocket);
+
+                    nbtDataStream.close();
+                    baos.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         });
     }
 
     @Override
-    public CompletableFuture setCurrentUserAvatar(UUID avatarID) {
+    public CompletableFuture<?> setCurrentUserAvatar(UUID avatarID) {
         return null;
     }
 
     @Override
-    public CompletableFuture deleteAvatar() {
+    public CompletableFuture<?> deleteAvatar() {
+        doTask(this::ensureConnection);
         return doTask(() -> {
             try {
-                ensureConnection();
+                if (currWebSocket != null && currWebSocket.isOpen()) {
+                    new UserDeleteCurrentAvatarMessageSender().sendMessage(currWebSocket);
 
-                new UserDeleteCurrentAvatarMessageSender().sendMessage(currWebSocket);
-
-                PlayerDataManager.clearLocalPlayer();
+                    AvatarDataManager.clearLocalPlayer();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
-                return;
             }
         });
     }
 
     @Override
-    public CompletableFuture checkAvatarHash(UUID playerID, String lastHash) {
+    public CompletableFuture<?> checkAvatarHash(UUID playerID, String lastHash) {
+        doTask(this::ensureConnection);
         return doTask(() -> {
             try {
-                ensureConnection();
-                new UserGetCurrentAvatarHashMessageSender(playerID).sendMessage(currWebSocket);
+                if (currWebSocket != null && currWebSocket.isOpen())
+                    new UserGetCurrentAvatarHashMessageSender(playerID).sendMessage(currWebSocket);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -210,74 +266,109 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         }
     }
 
+    public void sendPing(Queue<CustomScript.LuaPing> pings) {
+        PingMessageSender pms = new PingMessageSender(pings);
+        doTask(() -> {
+            try {
+                if (msgRegistry.isEmpty())
+                    return;
+                if (currWebSocket != null && currWebSocket.isOpen())
+                    pms.sendMessage(currWebSocket);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     //Minecraft authentication server URL
     public String authServerURL() {
-        if ((boolean) Config.entries.get("useLocalServer").value)
+        if ((boolean) Config.USE_LOCAL_SERVER.value)
             return "localhost";
-        return "figuranew.blancworks.org";
+        return (String) Config.BACKEND_PATH.value;
     }
 
     //Main server for distributing files URL
     public String mainServerURL() {
-        if ((boolean) Config.entries.get("useLocalServer").value)
+        if ((boolean) Config.USE_LOCAL_SERVER.value)
             return "http://localhost:6050";
-        return "https://figuranew.blancworks.org";
+        return "https://" + Config.BACKEND_PATH.value;
     }
 
     private static boolean localLastCheck = false;
 
     //Ensures there is a connection open with the server, if there was not before.
-    public void ensureConnection() throws Exception {
+    public CompletableFuture<Void> ensureConnection() {
 
-        if (localLastCheck != (boolean) Config.entries.get("useLocalServer").value || socketFactory == null) {
-            localLastCheck = (boolean) Config.entries.get("useLocalServer").value;
+        if (localLastCheck != (boolean) Config.USE_LOCAL_SERVER.value || socketFactory == null) {
+            localLastCheck = (boolean) Config.USE_LOCAL_SERVER.value;
 
             socketFactory = new WebSocketFactory();
 
             //Don't verify hostname for local servers.
             if (localLastCheck) {
-                SSLContext ctx = NaiveSSLContext.getInstance("TLS");
+                SSLContext ctx;
+                try {
+                    ctx = NaiveSSLContext.getInstance("TLS");
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException(e);
+                }
 
                 socketFactory.setSSLContext(ctx);
                 socketFactory.setVerifyHostname(false);
             }
 
-            socketFactory.setServerName("figuranew.blancworks.org");
+            socketFactory.setServerName((String) Config.BACKEND_PATH.value);
         }
 
-        if (currWebSocket == null || currWebSocket.isOpen() == false) {
-            currWebSocket = openNewConnection();
+        if (currWebSocket == null || !currWebSocket.isOpen()) {
+            try {
+                lastNetworkState = (boolean) Config.USE_LOCAL_SERVER.value;
+                return openNewConnection();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
+        return CompletableFuture.completedFuture(null);
     }
 
     //Opens a connection
-    public WebSocket openNewConnection() throws Exception {
-
+    public CompletableFuture<Void> openNewConnection() {
         //Ensure user is authed, we need the JWT to verify this user.
-        authUser();
+        return authUser(false).thenComposeAsync(unused -> {
+            try {
+                closeSocketConnection();
+                String connectionString = String.format("%s/connect/", mainServerURL());
 
-        closeSocketConnection();
-        String connectionString = String.format("%s/connect/", mainServerURL());
+                FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
+                connectionStatus = 2;
 
-        FiguraMod.LOGGER.info("Connecting to websocket server " + connectionString);
+                WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
+                newSocket.setPingInterval(15 * 1000);
+                currWebSocket = newSocket;
+                msgRegistry = new MessageRegistry();
+                FiguraNetworkMessageHandler messageHandler = new FiguraNetworkMessageHandler(this);
+                newSocket.addListener(messageHandler);
 
-        WebSocket newSocket = socketFactory.createSocket(connectionString, TIMEOUT_SECONDS * 1000);
-        newSocket.addListener(new FiguraNetworkMessageHandler(this));
+                newSocket.connect();
 
-        newSocket.connect();
+                newSocket.sendText(jwtToken);
 
-        newSocket.sendText(jwtToken);
+                messageHandler.sendClientRegistry(newSocket);
 
-        newSocket.sendText(String.format("{\"protocol\":%d}", PROTOCOL_VERSION));
-
-        return newSocket;
+                return messageHandler.initializedFuture;
+            } catch (Exception e) {
+                connectionStatus = 1;
+                e.printStackTrace();
+                return CompletableFuture.completedFuture(null);
+            }
+        });
     }
 
     private void closeSocketConnection() {
         if (currWebSocket == null)
             return;
 
-        if (currWebSocket.isOpen() == false) {
+        if (!currWebSocket.isOpen()) {
             currWebSocket = null;
             return;
         }
@@ -286,35 +377,32 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
         currWebSocket = null;
     }
 
-    public void authUser() {
-        authUser(false);
-    }
-
-    public void authUser(boolean force) {
-
+    public CompletableFuture<Void> authUser(boolean force) {
         if (!force && jwtToken != null)
-            return;
+            return CompletableFuture.completedFuture(null);
 
-        if(authConnection != null) {
+        if (authConnection != null && !authConnection.isOpen()) {
             authConnection.handleDisconnection();
-            
-            if(authConnection != null)
-                return;
+
+            if (authConnection != null)
+                return CompletableFuture.completedFuture(null);
         }
-        
+
         try {
+            FiguraMod.LOGGER.info("Authenticating with Figura server");
+            connectionStatus = 2;
+
             String address = authServerURL();
-            InetAddress inetAddress = InetAddress.getByName(address);
-            
+            InetSocketAddress inetAddress = new InetSocketAddress(address, 25565);
+
             //Create new connection
-            ClientConnection connection = ClientConnection.connect(inetAddress, 25565, true);
-            
+            ClientConnection connection = ClientConnection.connect(inetAddress, true);
+
+            CompletableFuture<Void> disconnectedFuture = new CompletableFuture<>();
+
             //Set listener/handler
             connection.setPacketListener(
-                    new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> {
-                        FiguraMod.LOGGER.info(text.getString());
-                    }) {
-                        
+                    new ClientLoginNetworkHandler(connection, MinecraftClient.getInstance(), null, (text) -> FiguraMod.LOGGER.info(text.getString())) {
                         //Handle disconnect message
                         @Override
                         public void onDisconnected(Text reason) {
@@ -322,33 +410,31 @@ public class NewFiguraNetworkManager implements IFiguraNetwork {
                                 Text dcReason = connection.getDisconnectReason();
 
                                 if (dcReason != null) {
-                                    Text tc = dcReason;
-                                    parseKickAuthMessage(tc);
+                                    parseKickAuthMessage(dcReason);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
-                            
+
                             //Once connection is closed, yeet this connection so we can make new ones.
                             authConnection = null;
-                            
-                            synchronized (authWaitObject) {
-                                authWaitObject.notifyAll();
-                            }
+
+                            disconnectedFuture.complete(null);
                         }
                     });
-            
+
             //Send packets.
             connection.send(new HandshakeC2SPacket(address, 25565, NetworkState.LOGIN));
             connection.send(new LoginHelloC2SPacket(MinecraftClient.getInstance().getSession().getProfile()));
-            
-            synchronized (authWaitObject) {
-                //Wait for authentication to be done.
-                authConnection = connection;
-                authWaitObject.wait();
-            }
+
+            authConnection = connection;
+
+            return disconnectedFuture;
+
         } catch (Exception e) {
+            connectionStatus = 1;
             e.printStackTrace();
+            return CompletableFuture.completedFuture(null);
         }
     }
 }

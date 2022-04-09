@@ -2,39 +2,36 @@
   "providers": [
     {
       "type": "bitmap",
-      "file": "figura:font/mark.png",
+      "file": "figura:font/badges.png",
       "ascent": 8,
-      "chars": ["△"]
+      "chars": [
+        "△▲!⚧\uD83C\uDF08",
+        "❤☆✯★\uD83E\uDDC0"
+      ]
     },
     {
       "type": "bitmap",
-      "file": "figura:font/mark_red.png",
+      "file": "figura:font/arrows.png",
       "ascent": 8,
-      "chars": ["▲"]
+      "chars": [">V<^"]
     },
     {
       "type": "bitmap",
-      "file": "figura:font/star_pink.png",
+      "file": "figura:font/loading.png",
       "ascent": 8,
-      "chars": ["★"]
+      "chars": [
+        "0123",
+        "4567",
+        "89ab",
+        "cdef"
+      ]
     },
     {
       "type": "bitmap",
-      "file": "figura:font/star_burned.png",
+      "file": "figura:font/status.png",
       "ascent": 8,
-      "chars": ["✯"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/star.png",
-      "ascent": 8,
-      "chars": ["☆"]
-    },
-    {
-      "type": "bitmap",
-      "file": "figura:font/starite.png",
-      "ascent": 8,
-      "chars": ["✭"]
+      "height": 10,
+      "chars": ["-*/+="]
     }
   ]
 }

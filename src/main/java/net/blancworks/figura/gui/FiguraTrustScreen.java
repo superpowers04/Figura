@@ -1,26 +1,27 @@
 package net.blancworks.figura.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.PlayerDataManager;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.avatar.AvatarDataManager;
 import net.blancworks.figura.gui.widgets.CustomListWidgetState;
+import net.blancworks.figura.gui.widgets.CustomTextFieldWidget;
 import net.blancworks.figura.gui.widgets.PermissionListWidget;
 import net.blancworks.figura.gui.widgets.PlayerListWidget;
+import net.blancworks.figura.lua.api.nameplate.NamePlateAPI;
+import net.blancworks.figura.lua.api.nameplate.NamePlateCustomization;
 import net.blancworks.figura.trust.PlayerTrustManager;
 import net.blancworks.figura.trust.TrustContainer;
-import net.blancworks.figura.trust.settings.PermissionSetting;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.screen.ConfirmChatLinkScreen;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.widget.ButtonWidget;
-import net.minecraft.client.gui.widget.TextFieldWidget;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.render.BufferBuilder;
-import net.minecraft.client.render.Tessellator;
-import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.text.*;
+import net.minecraft.text.LiteralText;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.text.TranslatableText;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import net.minecraft.util.math.MathHelper;
@@ -31,14 +32,14 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.UUID;
 
 public class FiguraTrustScreen extends Screen {
 
     public Screen parentScreen;
 
-    private TextFieldWidget searchBox;
+    public CustomTextFieldWidget searchBox;
+    private CustomTextFieldWidget uuidBox;
 
     private int paneY;
     private int paneWidth;
@@ -47,11 +48,12 @@ public class FiguraTrustScreen extends Screen {
 
     public PlayerListWidget playerList;
     public PermissionListWidget permissionList;
-    public CustomListWidgetState playerListState = new CustomListWidgetState();
-    public CustomListWidgetState permissionListState = new CustomListWidgetState();
+    public CustomListWidgetState<Object> playerListState = new CustomListWidgetState<>();
+    public CustomListWidgetState<Object> permissionListState = new CustomListWidgetState<>();
 
     public ButtonWidget resetPermissionButton;
     public ButtonWidget resetAllPermissionsButton;
+    public ButtonWidget setAvatarButton;
 
     public ButtonWidget clearCacheButton;
 
@@ -63,7 +65,7 @@ public class FiguraTrustScreen extends Screen {
     public boolean altPressed = false;
 
     protected FiguraTrustScreen(Screen parentScreen) {
-        super(new TranslatableText("gui.figura.trustmenutitle"));
+        super(new TranslatableText("figura.gui.trustmenu.title"));
         this.parentScreen = parentScreen;
     }
 
@@ -81,7 +83,7 @@ public class FiguraTrustScreen extends Screen {
 
         int searchBoxWidth = paneWidth - 5;
         searchBoxX = 7;
-        this.searchBox = new TextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("gui.figura.search"));
+        this.searchBox = new CustomTextFieldWidget(this.textRenderer, searchBoxX, 22, searchBoxWidth, 20, this.searchBox, new TranslatableText("figura.gui.button.search").formatted(Formatting.ITALIC));
         this.searchBox.setChangedListener((string_1) -> this.playerList.filter(string_1, false));
         this.playerList = new PlayerListWidget(this.client, paneWidth, this.height, paneY + 19, this.height - 36, 20, this.searchBox, this.playerList, this, playerListState);
         this.playerList.setLeftPos(5);
@@ -97,49 +99,43 @@ public class FiguraTrustScreen extends Screen {
         );
         permissionList.setLeftPos(rightPaneX);
 
-        this.addChild(this.playerList);
-        this.addChild(this.permissionList);
+        this.addSelectableChild(this.playerList);
+        this.addSelectableChild(this.permissionList);
+        this.addSelectableChild(this.searchBox);
         this.setInitialFocus(this.searchBox);
 
-        this.addButton(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.back"), (buttonWidgetx) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - width - 5, this.height - 20 - 5, width, 20, new TranslatableText("figura.gui.button.back"), (buttonWidgetx) -> {
 
             PlayerTrustManager.saveToDisk();
 
-            this.client.openScreen(parentScreen);
+            this.client.setScreen(parentScreen);
         }));
 
-        this.addButton(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("gui.figura.button.help"), (buttonWidgetx) -> this.client.openScreen(new ConfirmChatLinkScreen((bl) -> {
+        this.addDrawableChild(new ButtonWidget(this.width - width - 10 - width, this.height - 20 - 5, width, 20, new TranslatableText("figura.gui.button.help"), (buttonWidgetx) -> this.client.setScreen(new ConfirmChatLinkScreen((bl) -> {
             //Open the trust menu from the Figura Wiki
             if (bl)
-                Util.getOperatingSystem().open("https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu");
-            this.client.openScreen(this);
-        }, "https://github.com/TheOneTrueZandra/Figura/wiki/Trust-Menu", true))));
+                Util.getOperatingSystem().open("https://github.com/Blancworks/Figura/wiki/Trust-Menu");
+            this.client.setScreen(this);
+        }, "https://github.com/Blancworks/Figura/wiki/Trust-Menu", true))));
 
-        this.addButton(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("gui.figura.button.clearall"), (buttonWidgetx) -> {
-            PlayerDataManager.clearCache();
-        }));
+        this.addDrawableChild(clearCacheButton = new ButtonWidget(5, this.height - 20 - 5, 140, 20, new TranslatableText("figura.gui.button.clearall"), (buttonWidgetx) -> AvatarDataManager.clearCache()));
 
-        this.addButton(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("gui.figura.button.reloadavatar"), (btx) -> {
-
-            if (playerListState.selected instanceof PlayerListEntry) {
-                PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
-
-                if (entry != null) {
-                    PlayerDataManager.clearPlayer(entry.getProfile().getId());
-                }
+        this.addDrawableChild(new ButtonWidget(this.width - 140 - 5, 15, 140, 20, new TranslatableText("figura.gui.button.reloadavatar"), (btx) -> {
+            if (playerListState.selected instanceof PlayerListEntry entry) {
+                AvatarDataManager.clearPlayer(entry.getProfile().getId());
             }
         }));
 
-        resetPermissionButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetperm"), (btx) -> {
+        resetPermissionButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("figura.gui.button.resetperm"), (btx) -> {
             try {
                 TrustContainer tc = permissionList.getCurrentContainer();
 
                 //if a perm is selected, reset only this perm
                 if (playerListState != null && permissionListState.selected != null)
-                    tc.reset(((PermissionSetting) permissionListState.selected).id);
+                    tc.resetTrust((TrustContainer.Trust) permissionListState.selected);
                 //else reset all the entry perms
                 else
-                    tc.resetAll();
+                    tc.resetAllTrust();
 
                 permissionList.rebuild();
             }
@@ -148,14 +144,13 @@ public class FiguraTrustScreen extends Screen {
             }
         });
 
-        resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("gui.figura.button.resetallperm").setStyle(Style.EMPTY.withColor(TextColor.parse("red"))), (btx) -> {
+        resetAllPermissionsButton = new ButtonWidget(this.width - 140 - 5, 40, 140, 20, new TranslatableText("figura.gui.button.resetallperm").formatted(Formatting.RED), (btx) -> {
             try {
                 //for all entries, reset all perms
                 playerList.children().forEach(customListEntry -> {
                     playerListState.selected = customListEntry.getEntryObject();
                     TrustContainer tc = permissionList.getCurrentContainer();
-
-                    tc.resetAll();
+                    tc.resetAllTrust();
                 });
             } catch (Exception e) {
                 e.printStackTrace();
@@ -163,8 +158,44 @@ public class FiguraTrustScreen extends Screen {
         });
         resetAllPermissionsButton.visible = false;
 
-        this.addButton(resetPermissionButton);
-        this.addButton(resetAllPermissionsButton);
+        this.addDrawableChild(resetPermissionButton);
+        this.addDrawableChild(resetAllPermissionsButton);
+
+        this.uuidBox = new CustomTextFieldWidget(this.textRenderer, this.width - 290, 15, 138, 18, this.uuidBox, new LiteralText("Name/UUID").formatted(Formatting.ITALIC));
+        this.uuidBox.setMaxLength(36);
+
+        setAvatarButton = new ButtonWidget(this.width - 290, 40, 140, 20, new TranslatableText("set avatar"), (btx) -> {
+            try {
+                com.mojang.authlib.GameProfile gameProfile;
+                try {
+                    gameProfile = new com.mojang.authlib.GameProfile(UUID.fromString(uuidBox.getText()), "");
+                } catch (Exception ignored) {
+                    gameProfile = new com.mojang.authlib.GameProfile(null, uuidBox.getText());
+                }
+
+                net.minecraft.block.entity.SkullBlockEntity.loadProperties(gameProfile, profile -> {
+                    AvatarData newData = AvatarDataManager.getDataForPlayer(profile.getId());
+
+                    if (newData != null && newData.hasAvatar() && playerListState.selected instanceof PlayerListEntry entry) {
+                        net.minecraft.nbt.NbtCompound nbt = new net.minecraft.nbt.NbtCompound();
+                        newData.writeNbt(nbt);
+
+                        AvatarData data = AvatarDataManager.getDataForPlayer(entry.getProfile().getId());
+                        if (data != null) {
+                            data.loadFromNbt(nbt);
+                            data.isLocalAvatar = true;
+
+                            net.blancworks.figura.FiguraMod.sendToast("done", "");
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        //this.addSelectableChild(uuidBox);
+        //this.addDrawableChild(setAvatarButton);
 
         playerList.reloadFilters();
         permissionList.rebuild();
@@ -172,58 +203,69 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public void render(MatrixStack matrices, int mouseX, int mouseY, float delta) {
-        renderBackground(matrices);
+        this.renderBackgroundTexture(0);
 
         this.playerList.render(matrices, mouseX, mouseY, delta);
         this.permissionList.render(matrices, mouseX, mouseY, delta);
         this.searchBox.render(matrices, mouseX, mouseY, delta);
+        //this.uuidBox.render(matrices, mouseX, mouseY, delta);
 
-        if (playerListState.selected instanceof PlayerListEntry) {
-            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
+        if (playerListState.selected instanceof PlayerListEntry entry) {
+            UUID id = entry.getProfile().getId();
+            String name = entry.getProfile().getName();
 
-            Text nameText = new LiteralText(entry.getProfile().getName()).setStyle(Style.EMPTY.withColor(TextColor.parse("white")));
-            Text uuidText = new LiteralText(entry.getProfile().getId().toString()).setStyle(Style.EMPTY.withColor(TextColor.parse("dark_gray")));
+            LiteralText nameText = new LiteralText(name);
+            Text uuidText = new LiteralText(id.toString()).formatted(Formatting.DARK_GRAY);
 
-            drawTextWithShadow(matrices, textRenderer, nameText, paneWidth + 13, 22, TextColor.parse("white").getRgb());
+            AvatarData data = AvatarDataManager.getDataForPlayer(id);
+
+            if (data != null && !name.equals("")) {
+                NamePlateCustomization nameplateData = data.script == null ? null : data.script.nameplateCustomizations.get(NamePlateAPI.TABLIST);
+
+                try {
+                    NamePlateAPI.applyFormattingRecursive(nameText, name, nameplateData, data);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            drawTextWithShadow(matrices, textRenderer, nameText, paneWidth + 13, 22, 0xFFFFFF);
             matrices.push();
             matrices.scale(0.75f, 0.75f, 0.75f);
-            drawTextWithShadow(matrices, textRenderer, uuidText, MathHelper.floor((paneWidth + 13) / 0.75f), MathHelper.floor((32) / 0.75f), TextColor.parse("white").getRgb());
+            drawTextWithShadow(matrices, textRenderer, uuidText, MathHelper.floor((paneWidth + 13) / 0.75f), MathHelper.floor((32) / 0.75f), 0xFFFFFF);
             matrices.pop();
 
-            if (PlayerDataManager.hasPlayerData(entry.getProfile().getId())) {
-                PlayerData data = PlayerDataManager.getDataForPlayer(entry.getProfile().getId());
+            if (data != null && data.hasAvatar()) {
+                int currX = paneWidth + 13;
+
+                // #complexity#
+
+                int complexity = data.getComplexity();
+                MutableText complexityText = new TranslatableText("figura.gui.status.complexity").formatted(Formatting.GRAY).append(" " + complexity);
+
                 TrustContainer trustData = data.getTrustContainer();
+                if (trustData != null && complexity > trustData.getTrust(TrustContainer.Trust.COMPLEXITY))
+                    complexityText.formatted(Formatting.RED);
 
-                if (data.model != null) {
-                    int currX = paneWidth + 13;
-                    //Complexity
-                    {
-                        int complexity = data.model.getRenderComplexity();
-                        MutableText complexityText = new TranslatableText("gui.figura.complexity", complexity).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
+                drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, 0xFFFFFF);
+                currX += textRenderer.getWidth(complexityText) + 10;
 
-                        if (trustData != null) {
-                            if (complexity >= trustData.getFloatSetting(PlayerTrustManager.MAX_COMPLEXITY_ID)) {
-                                complexityText.setStyle(Style.EMPTY.withColor(TextColor.parse("red")));
-                            }
-                        }
+                // #avatar size#
 
-                        drawTextWithShadow(matrices, textRenderer, complexityText, currX, 54, TextColor.parse("white").getRgb());
-                        currX += textRenderer.getWidth(complexityText) + 10;
-                    }
+                long size = data.getFileSize();
 
-                    {
-                        long size = data.model.totalSize;
+                //format file size
+                DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
+                df.setRoundingMode(RoundingMode.HALF_UP);
+                float fileSize = Float.parseFloat(df.format(size / 1000.0f));
 
-                        //format file size
-                        DecimalFormat df = new DecimalFormat("#0.00", new DecimalFormatSymbols(Locale.US));
-                        df.setRoundingMode(RoundingMode.HALF_UP);
-                        float fileSize = Float.parseFloat(df.format(size / 1000.0f));
+                MutableText sizeText = new TranslatableText("figura.gui.status.filesize").formatted(Formatting.GRAY).append(" " + fileSize);
+                if (size >= AvatarData.FILESIZE_LARGE_THRESHOLD)
+                    sizeText.formatted(Formatting.RED);
+                else if (size >= AvatarData.FILESIZE_WARNING_THRESHOLD)
+                    sizeText.formatted(Formatting.YELLOW);
 
-                        MutableText sizeText = new TranslatableText("gui.figura.filesize", fileSize).setStyle(Style.EMPTY.withColor(TextColor.parse("gray")));
-
-                        drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, TextColor.parse("white").getRgb());
-                    }
-                }
+                drawTextWithShadow(matrices, textRenderer, sizeText, currX, 54, 0xFFFFFF);
             }
         }
 
@@ -231,42 +273,30 @@ public class FiguraTrustScreen extends Screen {
 
         if (!resetPermissionButton.active) {
             resetPermissionButton.active = true;
-
             if (resetPermissionButton.isMouseOver(mouseX, mouseY)) {
-                if (playerListState.selected instanceof PlayerListEntry) {
-                    renderTooltip(matrices, new TranslatableText("gui.figura.button.tooltip.resetperm"), mouseX, mouseY);
-                } else if (playerListState.selected instanceof Identifier) {
-                    TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
-
-                    if (tc.isHidden) {
-                        renderTooltip(matrices, new TranslatableText("gui.figura.button.tooltip.cantreset"), mouseX, mouseY);
-                    } else {
-                        renderTooltip(matrices, new TranslatableText("gui.figura.button.tooltip.resetallperm"), mouseX, mouseY);
-                    }
-                }
+                renderTooltip(matrices, new TranslatableText("figura.gui.button.resetperm.tooltip"), mouseX, mouseY);
             }
-
             resetPermissionButton.active = false;
         }
 
         if (!clearCacheButton.active) {
             clearCacheButton.active = true;
             if (clearCacheButton.isMouseOver(mouseX, mouseY)) {
-                renderTooltip(matrices, new TranslatableText("gui.figura.button.tooltip.clearcache"), mouseX, mouseY);
+                renderTooltip(matrices, new TranslatableText("figura.gui.button.clearcache.tooltip"), mouseX, mouseY);
             }
             clearCacheButton.active = false;
         }
 
-
-        if (draggedId != null) {
-            PlayerListEntry entry = MinecraftClient.getInstance().getNetworkHandler().getPlayerListEntry(draggedId);
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (draggedId != null && client.getNetworkHandler() != null) {
+            PlayerListEntry entry = client.getNetworkHandler().getPlayerListEntry(draggedId);
 
             if (entry == null) {
                 draggedId = null;
                 return;
             }
 
-            TextRenderer tr = MinecraftClient.getInstance().textRenderer;
+            TextRenderer tr = client.textRenderer;
             Text displayText = Text.of(entry.getProfile().getName());
 
             drawTextWithShadow(matrices,
@@ -274,27 +304,9 @@ public class FiguraTrustScreen extends Screen {
                     displayText,
                     (int) (mouseX - tr.getWidth(displayText) / 2.0f),
                     (int) (mouseY - tr.fontHeight / 2.0f),
-                    TextColor.parse("white").getRgb());
+                    0xFFFFFF);
         }
 
-    }
-
-    @Override
-    public void renderBackground(MatrixStack matrices) {
-        overlayBackground(0, 0, this.width, this.height, 64, 64, 64, 255, 255);
-    }
-
-    static void overlayBackground(int x1, int y1, int x2, int y2, int red, int green, int blue, int startAlpha, int endAlpha) {
-        Tessellator tessellator = Tessellator.getInstance();
-        BufferBuilder buffer = tessellator.getBuffer();
-        Objects.requireNonNull(MinecraftClient.getInstance()).getTextureManager().bindTexture(OPTIONS_BACKGROUND_TEXTURE);
-        RenderSystem.color4f(1.0F, 1.0F, 1.0F, 1.0F);
-        buffer.begin(7, VertexFormats.POSITION_TEXTURE_COLOR);
-        buffer.vertex(x1, y2, 0.0D).texture(x1 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
-        buffer.vertex(x2, y2, 0.0D).texture(x2 / 32.0F, y2 / 32.0F).color(red, green, blue, endAlpha).next();
-        buffer.vertex(x2, y1, 0.0D).texture(x2 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
-        buffer.vertex(x1, y1, 0.0D).texture(x1 / 32.0F, y1 / 32.0F).color(red, green, blue, startAlpha).next();
-        tessellator.draw();
     }
 
     @Override
@@ -306,7 +318,7 @@ public class FiguraTrustScreen extends Screen {
         if (getFocused() == permissionList) {
             return permissionList.keyPressed(keyCode, scanCode, modifiers);
         }
-        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchBox.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(keyCode, scanCode, modifiers) || this.searchBox.keyPressed(keyCode, scanCode, modifiers) || this.uuidBox.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
@@ -323,13 +335,13 @@ public class FiguraTrustScreen extends Screen {
         if (getFocused() == permissionList) {
             return permissionList.charTyped(char_1, int_1);
         }
-        return this.searchBox.charTyped(char_1, int_1);
+        return this.searchBox.charTyped(char_1, int_1) || this.uuidBox.charTyped(char_1, int_1);
     }
 
     @Override
-    public void onClose() {
+    public void close() {
         PlayerTrustManager.saveToDisk();
-        this.client.openScreen(parentScreen);
+        this.client.setScreen(parentScreen);
     }
 
     int tickCount = 0;
@@ -339,18 +351,14 @@ public class FiguraTrustScreen extends Screen {
 
         tickCount++;
 
-        if (getFocused() == permissionList) {
-            searchBox.setTextFieldFocused(false);
-        } else {
-            searchBox.setTextFieldFocused(true);
-        }
+        searchBox.setTextFieldFocused(getFocused() == searchBox);
+        uuidBox.setTextFieldFocused(getFocused() == uuidBox);
 
         if (playerListState.selected instanceof PlayerListEntry) {
             resetPermissionButton.active = shiftPressed;
         } else if (playerListState.selected instanceof Identifier) {
             TrustContainer tc = PlayerTrustManager.getContainer((Identifier) playerListState.selected);
-
-            if (!tc.isHidden)
+            if (tc != null)
                 resetPermissionButton.active = shiftPressed;
         } else {
             resetPermissionButton.active = false;
@@ -368,6 +376,7 @@ public class FiguraTrustScreen extends Screen {
         clearCacheButton.active = shiftPressed;
 
         this.searchBox.tick();
+        //this.uuidBox.tick();
 
         if (tickCount > 20) {
             tickCount = 0;
@@ -415,10 +424,7 @@ public class FiguraTrustScreen extends Screen {
         if (playerList.isMouseOver(mouseX, mouseY) && playerList.mouseDragged(mouseX, mouseY, button, deltaX, deltaY))
             return true;
 
-        if (playerList.isMouseOver(mouseX, mouseY) && playerListState.selected instanceof PlayerListEntry) {
-            PlayerListEntry entry = (PlayerListEntry) playerListState.selected;
-
-
+        if (playerList.isMouseOver(mouseX, mouseY) && playerListState.selected instanceof PlayerListEntry entry) {
             if (draggedId == null) {
                 if (Math.abs(mouseX - pressStartX) + Math.abs(mouseY - pressStartY) > 2) {
                     draggedId = entry.getProfile().getId();
@@ -431,7 +437,6 @@ public class FiguraTrustScreen extends Screen {
                     playerList.reloadFilters();
                 }
             }
-
             return true;
         }
 
@@ -443,7 +448,6 @@ public class FiguraTrustScreen extends Screen {
 
     @Override
     public boolean mouseReleased(double mouseX, double mouseY, int button) {
-
         if (draggedId != null) {
             if (playerList.isMouseOver(mouseX, mouseY)) {
                 PlayerListWidget.PlayerListWidgetEntry listEntry = (PlayerListWidget.PlayerListWidgetEntry) playerList.getEntryAtPos(mouseX, mouseY);
@@ -451,24 +455,25 @@ public class FiguraTrustScreen extends Screen {
                 if (listEntry != null) {
                     Object obj = listEntry.getEntryObject();
 
-                    if (obj instanceof Identifier) {
-                        Identifier playerID = new Identifier("players", draggedId.toString());
+                    if (obj instanceof Identifier id) {
+                        Identifier playerID = new Identifier("player", draggedId.toString());
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
 
-                        tc.setParent((Identifier) obj);
+                        if (tc != null && (!id.getPath().equals("local") || draggedId.compareTo(MinecraftClient.getInstance().player.getUuid()) == 0))
+                            tc.setParent(id);
                     } else if (obj instanceof PlayerListEntry) {
-                        Identifier playerID = new Identifier("players", draggedId.toString());
+                        Identifier playerID = new Identifier("player", draggedId.toString());
                         TrustContainer tc = PlayerTrustManager.getContainer(playerID);
-                        Identifier droppedID = new Identifier("players", ((PlayerListEntry) obj).getProfile().getId().toString());
+
+                        Identifier droppedID = new Identifier("player", ((PlayerListEntry) obj).getProfile().getId().toString());
                         TrustContainer droppedTC = PlayerTrustManager.getContainer(droppedID);
 
-                        tc.setParent(droppedTC.getParentIdentifier());
+                        if (tc != null && droppedTC != null && !droppedTC.getParent().getPath().equals("local")) tc.setParent(droppedTC.getParent());
                     }
                 }
             }
         }
         draggedId = null;
-
 
         playerList.reloadFilters();
         permissionList.rebuild();

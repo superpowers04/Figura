@@ -4,60 +4,67 @@ import com.google.common.collect.ImmutableMap;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.PlayerData;
-import net.blancworks.figura.lua.api.model.ElytraModelAPI;
-import net.blancworks.figura.lua.api.model.ItemModelAPI;
-import net.blancworks.figura.lua.api.model.VanillaModelPartCustomization;
+import net.blancworks.figura.avatar.AvatarData;
+import net.blancworks.figura.lua.api.model.*;
+import net.blancworks.figura.models.shaders.FiguraRenderLayer;
+import net.blancworks.figura.models.shaders.FiguraVertexConsumerProvider;
+import net.blancworks.figura.trust.TrustContainer;
+import net.blancworks.figura.utils.MathUtils;
 import net.fabricmc.fabric.api.util.NbtType;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.*;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
+import net.minecraft.client.texture.MissingSprite;
 import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.client.util.math.Vector3f;
-import net.minecraft.client.util.math.Vector4f;
-import net.minecraft.nbt.*;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtElement;
+import net.minecraft.nbt.NbtList;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Matrix3f;
-import net.minecraft.util.math.Matrix4f;
+import net.minecraft.util.math.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class CustomModelPart {
     public String name = "NULL";
+    public CustomModel model;
 
     //Transform data
-    public Vector3f pivot = new Vector3f();
-    public Vector3f pos = new Vector3f();
-    public Vector3f rot = new Vector3f();
-    public Vector3f scale = new Vector3f(1, 1, 1);
-    public Vector3f color = new Vector3f(1, 1, 1);
+    public Vec3f pivot = Vec3f.ZERO.copy();
+    public Vec3f pos = Vec3f.ZERO.copy();
+    public Vec3f rot = Vec3f.ZERO.copy();
+    public Vec3f scale = MathUtils.Vec3f_ONE.copy();
+    public Vec3f color = MathUtils.Vec3f_ONE.copy();
 
-    //Offsets
-    public float uOffset = 0;
-    public float vOffset = 0;
+    //uv stuff
+    public Map<UV, uvData> UVCustomizations = new HashMap<>();
+    public Vec2f texSize = new Vec2f(64f, 64f);
+    public Vec2f uvOffset = new Vec2f(0f, 0f);
 
+    //model properties
     public boolean visible = true;
 
-    public ParentType parentType = ParentType.None;
+    public ParentType parentType = ParentType.Model;
     public boolean isMimicMode = false;
-
-    public RotationType rotationType = RotationType.BlockBench;
-
-    public ArrayList<CustomModelPart> children = new ArrayList<>();
 
     public ShaderType shaderType = ShaderType.None;
 
-    public boolean shouldRender = true;
+    public FiguraRenderLayer customLayer = null;
 
-    public RenderType renderType = RenderType.None;
+    public TextureType textureType = TextureType.Custom;
+    public Identifier textureVanilla = FiguraTexture.DEFAULT_ID;
 
-    public float alpha = 1.0f;
+    public boolean extraTex = true;
+    public boolean cull = false;
+
+    public float alpha = 1f;
+    public Vec2f light = null;
+    public Vec2f overlay = null;
 
     //All the vertex data is stored here! :D
     public FloatList vertexData = new FloatArrayList();
@@ -69,217 +76,285 @@ public class CustomModelPart {
     public Matrix4f lastModelMatrixInverse = new Matrix4f();
     public Matrix3f lastNormalMatrixInverse = new Matrix3f();
 
+    //Extra special rendering for this part
+    public final HashMap<String, RenderTaskAPI.RenderTaskTable> renderTasks = new LinkedHashMap<>();
+
+    public static boolean canRenderHitBox = false;
+    public static boolean canRenderTasks = true;
+
+    private static final Vector4f FULL_VERT = new Vector4f();
+    private static final Vec3f NORMAL_VERT = new Vec3f();
+
     //Renders a model part (and all sub-parts) using the textures provided by a PlayerData instance.
-    public int renderUsingAllTextures(PlayerData data,  MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        if(data.texture.isDone) {
+    public int render(AvatarData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
+        //no model to render
+        if (data.model == null || data.vanillaModel == null || vcp == null || !data.isAvatarLoaded() || data.model.leftToRender <= 0)
+            return 0;
 
-            //apply part alpha value
-            alpha = this.alpha * alpha;
+        //lets render boys!!
+        boolean applyHiddenTransforms = data.model.applyHiddenTransforms;
+        ParentType renderOnly = data.model.renderOnly;
+        int ret = data.model.leftToRender;
+        data.model.renderOnly = null;
 
-            //Store this value for extra textures
-            int prevLeftToRender = data.model.leftToRender;
+        //main texture
+        Function<Identifier, RenderLayer> layerFunction = RenderLayer::getEntityTranslucent;
+        ret = renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, MathUtils.Vec3f_ONE, alpha, false, getTexture(data), layerFunction, false, applyHiddenTransforms, renderOnly);
 
-            //Render with main texture.
-            VertexConsumer mainTextureConsumer = vcp.getBuffer(RenderLayer.getEntityTranslucent(data.texture.id));
-            int ret = render(prevLeftToRender, matrices, transformStack, mainTextureConsumer, light, overlay, alpha);
+        //extra textures
+        for (FiguraTexture figuraTexture : data.extraTextures) {
+            Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(figuraTexture.type);
 
-            //Render extra textures (emission, that sort)
-            for (FiguraTexture extraTexture : data.extraTextures) {
-                Function<Identifier, RenderLayer> renderLayerGetter = FiguraTexture.EXTRA_TEXTURE_TO_RENDER_LAYER.get(extraTexture.type);
-
-                if (renderLayerGetter != null) {
-                    VertexConsumer extraTextureVertexConsumer = vcp.getBuffer(renderLayerGetter.apply(extraTexture.id));
-
-                    render(prevLeftToRender, matrices, transformStack, extraTextureVertexConsumer, light, overlay, alpha);
-                }
+            if (renderLayerGetter != null) {
+                renderTextures(data, ret, matrices, transformStack, vcp, null, light, overlay, 0, 0, MathUtils.Vec3f_ONE, alpha, false, figuraTexture.id, renderLayerGetter, true, applyHiddenTransforms, renderOnly);
             }
-
-            //render shader groups
-
-            //end portal
-            excludeFilterParts(this, ShaderType.EndPortal);
-
-            final Random RANDOM = new Random(31100L);
-
-            //render first layer
-            float r = (RANDOM.nextFloat() * 0.5F + 0.1F) * 0.15F;
-            float g = (RANDOM.nextFloat() * 0.5F + 0.4F) * 0.15F;
-            float b = (RANDOM.nextFloat() * 0.5F + 0.5F) * 0.15F;
-
-            VertexConsumer portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(0));
-            render(prevLeftToRender, matrices, transformStack, portalExtraConsumer, light, overlay, 0, 0, new Vector3f(r, g, b), alpha);
-
-            //render other layers
-            for (int i = 2; i < 17; ++i) {
-                float color = 2.0F / (float) (18 - i);
-                r = (RANDOM.nextFloat() * 0.5F + 0.1F) * color;
-                g = (RANDOM.nextFloat() * 0.5F + 0.4F) * color;
-                b = (RANDOM.nextFloat() * 0.5F + 0.5F) * color;
-
-                portalExtraConsumer = vcp.getBuffer(RenderLayer.getEndPortal(i));
-                render(prevLeftToRender, matrices, transformStack, portalExtraConsumer, light, overlay, 0, 0, new Vector3f(r, g, b), alpha);
-            }
-
-            //glint
-            filterParts(this, ShaderType.Glint);
-
-            VertexConsumer glintConsumer = vcp.getBuffer(RenderLayer.getDirectEntityGlint());
-            render(prevLeftToRender, matrices, transformStack, glintConsumer, light, overlay, alpha);
-
-            //reset rendering status
-            setRenderStatus(this, true);
-
-            return ret;
         }
-        return 0;
-    }
+        draw(vcp);
 
-    public int renderUsingAllTexturesFiltered(Object filter, PlayerData data, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, int light, int overlay, float alpha) {
-        filterParts(this, filter);
-        return renderUsingAllTextures(data, matrices, transformStack, vcp, light, overlay, alpha);
-    }
+        //shaders
+        ret = renderShaders(data, ret, matrices, vcp, light, overlay, 0, 0, MathUtils.Vec3f_ONE, alpha, false, (byte) 0, applyHiddenTransforms, renderOnly);
+        draw(vcp);
 
-    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float alpha) {
-        return render(leftToRender, matrices, transformStack, vertices, light, overlay, 0, 0, new Vector3f(1, 1, 1), alpha);
+        //extra stuff and hitboxes
+        ret = renderExtraParts(data, ret, matrices, vcp, light, overlay, false, applyHiddenTransforms, renderOnly);
+        draw(vcp);
+
+        return ret;
     }
 
     //Renders this custom model part and all its children.
-    //Returns the cuboids left to render after this one, and only renders until left_to_render is zero.
-    public int render(int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumer vertices, int light, int overlay, float u, float v, Vector3f prevColor, float alpha) {
-        //Don't render invisible parts.
-        if (!this.visible || !this.shouldRender) {
+    //Returns the cuboids left to render after this one, and only renders until leftToRender is zero.
+    public int renderTextures(AvatarData data, int leftToRender, MatrixStack matrices, MatrixStack transformStack, VertexConsumerProvider vcp, RenderLayer layer, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, Identifier texture, Function<Identifier, RenderLayer> layerFunction, boolean isExtraTex, boolean applyHiddenTransforms, ParentType renderOnly) {
+        //do not render invisible parts
+        if (!this.visible || (isExtraTex && !this.extraTex))
             return leftToRender;
-        }
 
         matrices.push();
         transformStack.push();
 
-        try {
-            if (this.isMimicMode) {
-                PlayerEntityModel model = FiguraMod.currentData.vanillaModel;
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(data, matrices, transformStack);
 
-                switch (this.parentType) {
-                    case Head:
-                        this.rot = new Vector3f(model.head.pitch, model.head.yaw, model.head.roll);
-                        break;
-                    case Torso:
-                        this.rot = new Vector3f(model.torso.pitch, model.torso.yaw, model.torso.roll);
-                        break;
-                    case LeftArm:
-                        this.rot = new Vector3f(model.leftArm.pitch, model.leftArm.yaw, model.leftArm.roll);
-                        break;
-                    case LeftLeg:
-                        this.rot = new Vector3f(model.leftLeg.pitch, model.leftLeg.yaw, model.leftLeg.roll);
-                        break;
-                    case RightArm:
-                        this.rot = new Vector3f(model.rightArm.pitch, model.rightArm.yaw, model.rightArm.roll);
-                        break;
-                    case RightLeg:
-                        this.rot = new Vector3f(model.rightLeg.pitch, model.rightLeg.yaw, model.rightLeg.roll);
-                        break;
-                }
+            applyTransforms(matrices);
+            applyTransforms(transformStack);
 
-                float multiply = 57.2958f;
-                this.rot.multiplyComponentwise(multiply, multiply, multiply);
-            } else if (parentType != CustomModelPart.ParentType.Model) {
-                PlayerEntityModel playerModel = FiguraMod.currentData.vanillaModel;
-
-                switch (parentType) {
-                    case Head:
-                        playerModel.head.rotate(matrices);
-                        playerModel.head.rotate(transformStack);
-                        break;
-                    case Torso:
-                        playerModel.torso.rotate(matrices);
-                        playerModel.torso.rotate(transformStack);
-                        break;
-                    case LeftArm:
-                        playerModel.leftArm.rotate(matrices);
-                        playerModel.leftArm.rotate(transformStack);
-                        break;
-                    case LeftLeg:
-                        playerModel.leftLeg.rotate(matrices);
-                        playerModel.leftLeg.rotate(transformStack);
-                        break;
-                    case RightArm:
-                        playerModel.rightArm.rotate(matrices);
-                        playerModel.rightArm.rotate(transformStack);
-                        break;
-                    case RightLeg:
-                        playerModel.rightLeg.rotate(matrices);
-                        playerModel.rightLeg.rotate(transformStack);
-                        break;
-                    case LeftItemOrigin:
-                        FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, new VanillaModelPartCustomization() {{
-                            matrices.push();
-                            applyTransformsAsItem(matrices);
-                            applyTransformsAsItem(transformStack);
-                            stackReference = matrices.peek();
-                            part = CustomModelPart.this;
-                            matrices.pop();
-                        }});
-                        break;
-                    case RightItemOrigin:
-                        FiguraMod.currentData.model.originModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, new VanillaModelPartCustomization() {{
-                            matrices.push();
-                            applyTransformsAsItem(matrices);
-                            applyTransformsAsItem(transformStack);
-                            stackReference = matrices.peek();
-                            part = CustomModelPart.this;
-                            matrices.pop();
-                        }});
-                        break;
-                    case LeftElytraOrigin:
-                        FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, new VanillaModelPartCustomization() {{
-                            matrices.push();
-                            applyTransformsAsElytra(matrices);
-                            applyTransformsAsElytra(transformStack);
-                            stackReference = matrices.peek();
-                            part = CustomModelPart.this;
-                            matrices.pop();
-                        }});
-                        break;
-                    case RightElytraOrigin:
-                        FiguraMod.currentData.model.originModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, new VanillaModelPartCustomization() {{
-                            matrices.push();
-                            applyTransformsAsElytra(matrices);
-                            applyTransformsAsElytra(transformStack);
-                            stackReference = matrices.peek();
-                            part = CustomModelPart.this;
-                            matrices.pop();
-                        }});
-                        break;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+            updateModelMatrices(transformStack);
+        } else if (canRender) {
+            applyTransforms(matrices);
+            applyTransforms(transformStack);
         }
 
-        applyTransforms(matrices);
-        applyTransforms(transformStack);
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
 
-        lastModelMatrix = transformStack.peek().getModel().copy();
-        lastNormalMatrix = transformStack.peek().getNormal().copy();
-        
-        lastModelMatrixInverse = lastModelMatrix.copy();
-        lastModelMatrixInverse.invert();
-        lastNormalMatrixInverse = lastNormalMatrix.copy();
-        lastNormalMatrixInverse.invert();
+        //uv -> color -> alpha -> cull
+        u += this.uvOffset.x;
+        v += this.uvOffset.y;
 
-        Matrix4f modelMatrix = matrices.peek().getModel();
-        Matrix3f normalMatrix = matrices.peek().getNormal();
+        Vec3f color = this.color.copy();
+        color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
 
-        u += this.uOffset;
-        v += this.vOffset;
+        alpha = this.alpha * alpha;
 
-        Vector3f tempColor = color.copy();
-        tempColor.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
+        if (this.light != null)
+            light = LightmapTextureManager.pack((int) this.light.x, (int) this.light.y);
+        if (this.overlay != null)
+            overlay = OverlayTexture.packUv((int) this.overlay.x, (int) this.overlay.y);
 
-        for (int i = 0; i < this.vertexCount; i++) {
-            int startIndex = i * 8;
+        if (!isExtraTex && this.cull)
+            layerFunction = RenderLayer::getEntityTranslucentCull;
+
+        //texture
+        if (this.textureType != TextureType.Custom)
+            texture = getTexture(data);
+
+        //render!
+        if (canRender) {
+            //get vertex consumer
+            VertexConsumer consumer;
+
+            if (customLayer != null && data.getTrustContainer().getTrust(TrustContainer.Trust.CUSTOM_RENDER_LAYER) == 1) {
+                consumer = vcp.getBuffer(customLayer);
+                layer = customLayer;
+            } else if (layer instanceof FiguraRenderLayer) {
+                consumer = vcp.getBuffer(layer);
+            } else {
+                consumer = vcp.getBuffer(layerFunction.apply(texture));
+            }
+
+            //render
+            leftToRender = renderCube(leftToRender, matrices, consumer, light, overlay, u, v, color, alpha);
+        }
+
+        if (this instanceof CustomModelPartGroup group) {
+            for (CustomModelPart child : group.children) {
+                if (leftToRender <= 0)
+                    break;
+
+                //Don't render special parts.
+                if (child.isSpecial())
+                    continue;
+
+                //render part
+                leftToRender = child.renderTextures(data, leftToRender, matrices, transformStack, vcp, layer, light, overlay, u, v, color, alpha, canRender, texture, layerFunction, isExtraTex, applyHiddenTransforms, renderOnly);
+            }
+        }
+
+        matrices.pop();
+        transformStack.pop();
+
+        return leftToRender;
+    }
+
+    public int renderShaders(AvatarData data, int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, float u, float v, Vec3f prevColor, float alpha, boolean canRender, byte shadersToRender, boolean applyHiddenTransforms, ParentType renderOnly) {
+        //do not render invisible parts
+        if (!this.visible)
+            return leftToRender;
+
+        matrices.push();
+
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(data, matrices, new MatrixStack());
+            applyTransforms(matrices);
+        } else if (canRender) {
+            applyTransforms(matrices);
+        }
+
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
+
+        //uv -> color -> alpha -> shaders
+        u += this.uvOffset.x;
+        v += this.uvOffset.y;
+
+        Vec3f color = this.color.copy();
+        color.multiplyComponentwise(prevColor.getX(), prevColor.getY(), prevColor.getZ());
+
+        alpha = this.alpha * alpha;
+
+        if (this.light != null)
+            light = LightmapTextureManager.pack((int) this.light.x, (int) this.light.y);
+        if (this.overlay != null)
+            overlay = OverlayTexture.packUv((int) this.overlay.x, (int) this.overlay.y);
+
+        byte shaders = shadersToRender;
+        if (this.shaderType != ShaderType.None)
+            shaders = (byte) (shaders | this.shaderType.id);
+
+        //render!
+        if (canRender) {
+            if (ShaderType.EndPortal.isShader(shaders))
+                leftToRender = renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getEndGateway()), light, overlay, u, v, color, alpha);
+            if (ShaderType.Glint.isShader(shaders))
+                leftToRender = renderCube(leftToRender, matrices, vcp.getBuffer(RenderLayer.getDirectEntityGlint()), light, overlay, u, v, color, alpha);
+        }
+
+        if (this instanceof CustomModelPartGroup group) {
+            for (CustomModelPart child : group.children) {
+                if (leftToRender <= 0)
+                    break;
+
+                //Don't render special parts.
+                if (child.isSpecial())
+                    continue;
+
+                //render part
+                leftToRender = child.renderShaders(data, leftToRender, matrices, vcp, light, overlay, u, v, color, alpha, canRender, shaders, applyHiddenTransforms, renderOnly);
+            }
+        }
+
+        matrices.pop();
+
+        return leftToRender;
+    }
+
+    public int renderExtraParts(AvatarData data, int leftToRender, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay, boolean canRender, boolean applyHiddenTransforms, ParentType renderOnly) {
+        //do not render invisible parts
+        if (!this.visible)
+            return leftToRender;
+
+        matrices.push();
+
+        if (applyHiddenTransforms) {
+            applyVanillaTransforms(data, matrices, new MatrixStack());
+            applyTransforms(matrices);
+        } else if (canRender) {
+            applyTransforms(matrices);
+        }
+
+        if (renderOnly == null || this.parentType == renderOnly)
+            canRender = true;
+
+        if (this.light != null)
+            light = LightmapTextureManager.pack((int) this.light.x, (int) this.light.y);
+        if (this.overlay != null)
+            overlay = OverlayTexture.packUv((int) this.overlay.x, (int) this.overlay.y);
+
+        //render!
+        if (canRender) {
+            //render tasks
+            if (canRenderTasks) leftToRender = renderExtras(leftToRender, data, matrices, vcp, light, overlay);
+
+            //render hit box
+            if (canRenderHitBox) renderHitBox(matrices, vcp.getBuffer(RenderLayer.LINES));
+        }
+
+        if (this instanceof CustomModelPartGroup group) {
+            for (CustomModelPart child : group.children) {
+                if (leftToRender <= 0)
+                    break;
+
+                //Don't render special parts.
+                if (child.isSpecial())
+                    continue;
+
+                //render part
+                leftToRender = child.renderExtraParts(data, leftToRender, matrices, vcp, light, overlay, canRender, applyHiddenTransforms, renderOnly);
+            }
+        }
+
+        matrices.pop();
+
+        return leftToRender;
+    }
+
+    public void draw(VertexConsumerProvider vcp) {
+        if (vcp instanceof FiguraVertexConsumerProvider customVCP) customVCP.draw();
+        else if (vcp instanceof VertexConsumerProvider.Immediate immediate) immediate.draw();
+        else if (vcp instanceof OutlineVertexConsumerProvider outline) outline.draw();
+    }
+
+    public Identifier getTexture(AvatarData data) {
+        Identifier textureId = null;
+
+        if (textureType == TextureType.Resource) {
+            textureId = MinecraftClient.getInstance().getResourceManager().containsResource(textureVanilla) ? textureVanilla : MissingSprite.getMissingSpriteId();
+        } else if (textureType == TextureType.Elytra) {
+            if (data.playerListEntry != null)
+                textureId = data.playerListEntry.getElytraTexture();
+
+            if (textureId == null)
+                textureId = FiguraTexture.ELYTRA_ID;
+        } else if (data.playerListEntry != null && textureType != TextureType.Custom) {
+            textureId = this.textureType == TextureType.Cape ? data.playerListEntry.getCapeTexture() : data.playerListEntry.getSkinTexture();
+        } else if (data.texture != null) {
+            textureId = data.texture.id;
+        } else if (data.lastEntity != null) {
+            textureId = MinecraftClient.getInstance().getEntityRenderDispatcher().getRenderer(data.lastEntity).getTexture(data.lastEntity);
+        }
+
+        return textureId == null ? FiguraTexture.DEFAULT_ID : textureId;
+    }
+
+    public int renderCube(int leftToRender, MatrixStack matrices, VertexConsumer vertices, int light, int overlay, float u, float v, Vec3f color, float alpha) {
+        Matrix4f modelMatrix = matrices.peek().getPositionMatrix();
+        Matrix3f normalMatrix = matrices.peek().getNormalMatrix();
+
+        for (int i = 1; i <= this.vertexCount; i++) {
+            int startIndex = (i - 1) * 8;
 
             //Get vertex.
-            Vector4f fullVert = new Vector4f(
+            FULL_VERT.set(
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex++),
@@ -289,22 +364,22 @@ public class CustomModelPart {
             float vertU = this.vertexData.getFloat(startIndex++);
             float vertV = this.vertexData.getFloat(startIndex++);
 
-            Vector3f normal = new Vector3f(
+            NORMAL_VERT.set(
                     this.vertexData.getFloat(startIndex++),
                     this.vertexData.getFloat(startIndex++),
-                    this.vertexData.getFloat(startIndex++)
+                    this.vertexData.getFloat(startIndex)
             );
 
-            fullVert.transform(modelMatrix);
-            normal.transform(normalMatrix);
+            FULL_VERT.transform(modelMatrix);
+            NORMAL_VERT.transform(normalMatrix);
 
             //Push vertex.
             vertices.vertex(
-                    fullVert.getX(), fullVert.getY(), fullVert.getZ(),
-                    tempColor.getX(), tempColor.getY(), tempColor.getZ(), alpha,
+                    FULL_VERT.getX(), FULL_VERT.getY(), FULL_VERT.getZ(),
+                    color.getX(), color.getY(), color.getZ(), alpha,
                     vertU + u, vertV + v,
                     overlay, light,
-                    normal.getX(), normal.getY(), normal.getZ()
+                    NORMAL_VERT.getX(), NORMAL_VERT.getY(), NORMAL_VERT.getZ()
             );
 
             //Every 4 verts (1 face)
@@ -316,319 +391,230 @@ public class CustomModelPart {
             }
         }
 
-        for (CustomModelPart child : this.children) {
-            if (leftToRender == 0)
-                break;
-
-            //Don't render special parts.
-            if (child.isParentSpecial())
-                continue;
-
-            //set child alpha
-            float childAlpha = alpha + child.alpha - 1;
-
-            //render part
-            leftToRender = child.render(leftToRender, matrices, transformStack, vertices, light, overlay, u, v, tempColor, childAlpha);
-        }
-
-        transformStack.pop();
-        matrices.pop();
         return leftToRender;
     }
 
+    public int renderExtras(int leftToRender, AvatarData data, MatrixStack matrices, VertexConsumerProvider vcp, int light, int overlay) {
+        //render extra parts
+        synchronized (this.renderTasks) {
+            for (RenderTaskAPI.RenderTaskTable tbl : this.renderTasks.values()) {
+                if (tbl.task.enabled) {
+                    leftToRender -= tbl.task.render(data, matrices, vcp, light, overlay);
+                    if (leftToRender <= 0) break;
+                }
+            }
+        }
+
+        return leftToRender;
+    }
+
+    public void renderHitBox(MatrixStack matrices, VertexConsumer vertices) {
+        Vec3f color;
+        float boxSize;
+        if (this.getPartType() == PartType.CUBE) {
+            color = FiguraMod.FRAN_PINK;
+            boxSize = 1 / 48f;
+        }
+        else {
+            color = FiguraMod.ACE_BLUE;
+            boxSize = 1 / 24f;
+        }
+
+        //render the box
+        WorldRenderer.drawBox(matrices, vertices, -boxSize, -boxSize, -boxSize, boxSize, boxSize, boxSize, color.getX(), color.getY(), color.getZ(), 1f);
+    }
+
+    //clear all extra render tasks
+    public void clearExtraRendering() {
+        this.renderTasks.clear();
+    }
+
     public int getComplexity() {
-        //don't render filtered parts
-        if (!this.visible || !this.shouldRender || this.isParentSpecial()) {
-            return 0;
-        }
-
-        int complexity = this.vertexCount;
-
-        //iterate over children
-        for (CustomModelPart child : this.children) {
-            complexity += child.getComplexity();
-        }
-
-        return complexity;
+        //don't render invisible parts
+        return this.visible ? this.vertexCount : 0;
     }
 
-    public void setRenderStatus(CustomModelPart part, boolean status) {
-        //set for parent
-        part.shouldRender = status;
+    public void updateModelMatrices(MatrixStack stack) {
+        lastModelMatrix = stack.peek().getPositionMatrix().copy();
+        lastNormalMatrix = stack.peek().getNormalMatrix().copy();
 
-        //iterate over the children
-        for (CustomModelPart child : part.children) {
-            setRenderStatus(child, status);
-        }
+        lastModelMatrixInverse = lastModelMatrix.copy();
+        lastModelMatrixInverse.invert();
+        lastNormalMatrixInverse = lastNormalMatrix.copy();
+        lastNormalMatrixInverse.invert();
     }
 
-    public void filterParts(CustomModelPart part, Object filter) {
-        //error temp variable
-        boolean unmatched = false;
+    public void applyVanillaTransforms(AvatarData data, MatrixStack matrices, MatrixStack transformStack) {
+        if (parentType == ParentType.Model)
+            return;
 
-        //check for filter type, then flag to render if the property matches the filter
-        if (filter instanceof ParentType) {
-            if (part.parentType == filter)
-                setRenderStatus(part, true);
-            else
-                unmatched = true;
-        }
-        else if (filter instanceof ShaderType) {
-            if (part.shaderType == filter)
-                setRenderStatus(part, true);
-            else
-                unmatched = true;
-        }
-        else if (filter instanceof RenderType) {
-            if (part.renderType == filter)
-                setRenderStatus(part, true);
-            else
-                unmatched = true;
-        }
-        else {
-            //filter not found, then no elements should render
-            unmatched = true;
-        }
+        try {
+            ModelPart part = null;
+            if (data.vanillaModel instanceof PlayerEntityModel model)
+                part = getModelPart(model, this.parentType);
 
-        if (unmatched) {
-            //flag it to dont render
-            part.shouldRender = false;
-
-            //if is a group, enable the group rendering and iterate through its children
-            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof CustomModelPartMesh)) {
-                part.shouldRender = true;
-                for (CustomModelPart child : part.children) {
-                    filterParts(child, filter);
+            if (part != null) {
+                //mimic rotations
+                if (this.isMimicMode) {
+                    this.rot = new Vec3f(part.pitch, part.yaw, part.roll);
+                    this.rot.scale(MathHelper.DEGREES_PER_RADIAN);
+                }
+                //vanilla rotations
+                else {
+                    part.rotate(matrices);
+                    part.rotate(transformStack);
                 }
             }
+            //camera
+            else if (this.parentType == ParentType.Camera) {
+                Quaternion rot = MinecraftClient.getInstance().getEntityRenderDispatcher().getRotation().copy();
+                Vec3f euler = MathUtils.quaternionToEulerXYZ(rot);
+                rotate(matrices, euler);
+                rotate(transformStack, euler);
+            }
+            //custom parts
+            else {
+                HashMap<Identifier, VanillaModelPartCustomization> oriModifications = data.model.originModifications;
+                VanillaModelPartCustomization cust = new VanillaModelPartCustomization() {{
+                    matrices.push();
+                    if (parentType == ParentType.LeftItemOrigin || parentType == ParentType.RightItemOrigin) {
+                        applyTransformsAsItem(matrices);
+                        applyTransformsAsItem(transformStack);
+                    } else {
+                        applyOriginTransforms(matrices);
+                        applyOriginTransforms(transformStack);
+                    }
+                    stackReference = matrices.peek();
+                    part = CustomModelPart.this;
+                    visible = true;
+                    matrices.pop();
+                }};
+
+                switch (this.parentType) {
+                    case LeftItemOrigin -> oriModifications.put(ItemModelAPI.VANILLA_LEFT_HAND_ID, cust);
+                    case RightItemOrigin -> oriModifications.put(ItemModelAPI.VANILLA_RIGHT_HAND_ID, cust);
+                    case LeftElytraOrigin -> oriModifications.put(ElytraModelAPI.VANILLA_LEFT_WING_ID, cust);
+                    case RightElytraOrigin -> oriModifications.put(ElytraModelAPI.VANILLA_RIGHT_WING_ID, cust);
+                    case LeftParrotOrigin -> oriModifications.put(ParrotModelAPI.VANILLA_LEFT_PARROT_ID, cust);
+                    case RightParrotOrigin -> oriModifications.put(ParrotModelAPI.VANILLA_RIGHT_PARROT_ID, cust);
+                    case LeftSpyglass -> oriModifications.put(SpyglassModelAPI.VANILLA_LEFT_SPYGLASS_ID, cust);
+                    case RightSpyglass -> oriModifications.put(SpyglassModelAPI.VANILLA_RIGHT_SPYGLASS_ID, cust);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public void excludeFilterParts(CustomModelPart part, Object filter) {
-        //error temp variable
-        boolean unmatched = false;
-
-        //check for filter type, then flag to render if the property matches the filter
-        if (filter instanceof ParentType) {
-            if (part.parentType != filter)
-                unmatched = true;
+    public static ModelPart getModelPart(PlayerEntityModel<?> model, ParentType parent) {
+        ModelPart part;
+        switch (parent) {
+            case Head -> part = model.head;
+            case Torso -> part = model.body;
+            case LeftArm -> part = model.leftArm;
+            case LeftLeg -> part = model.leftLeg;
+            case RightArm -> part = model.rightArm;
+            case RightLeg -> part = model.rightLeg;
+            default -> part = null;
         }
-        else if (filter instanceof ShaderType) {
-            if (part.shaderType != filter)
-                unmatched = true;
-        }
-        else if (filter instanceof RenderType) {
-            if (part.renderType != filter)
-                unmatched = true;
-        }
-        else {
-            //filter not found, then no elements should render
-            unmatched = true;
-        }
-
-        if (unmatched) {
-            //flag it to dont render
-            part.shouldRender = false;
-
-            //if is a group, enable the group rendering and iterate through its children
-            if (!(part instanceof CustomModelPartCuboid) && !(part instanceof CustomModelPartMesh)) {
-                part.shouldRender = true;
-                for (CustomModelPart child : part.children) {
-                    excludeFilterParts(child, filter);
-                }
-            }
-        }
+        return part;
     }
 
     public void applyTransforms(MatrixStack stack) {
-        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+        stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
+        stack.translate(-this.pivot.getX() / 16f, -this.pivot.getY() / 16f, -this.pivot.getZ() / 16f);
 
-        stack.translate(-this.pivot.getX() / 16.0f, -this.pivot.getY() / 16.0f, -this.pivot.getZ() / 16.0f);
+        if (this.isMimicMode) vanillaRotate(stack, this.rot);
+        else rotate(stack, this.rot);
 
-        if (this.isMimicMode || this.rotationType == RotationType.Vanilla) {
-            stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-            stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(this.rot.getY()));
-            stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(this.rot.getX()));
-        } else if (this.rotationType == RotationType.BlockBench) {
-            stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-            stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-            stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
-        }
         stack.scale(this.scale.getX(), this.scale.getY(), this.scale.getZ());
-
-        stack.translate(this.pivot.getX() / 16.0f, this.pivot.getY() / 16.0f, this.pivot.getZ() / 16.0f);
+        stack.translate(this.pivot.getX() / 16f, this.pivot.getY() / 16f, this.pivot.getZ() / 16f);
     }
 
     //TODO move these to the mixins, probably.
     public void applyTransformsAsItem(MatrixStack stack) {
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-90.0F));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(180.0F));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-90f));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(180f));
         //stack.translate(0, 0.125D, -0.625D);
-        stack.translate(pivot.getX() / 16.0f, pivot.getZ() / 16.0f, pivot.getY() / 16.0f);
-        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
-        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+        stack.translate(pivot.getX() / 16f, pivot.getZ() / 16f, pivot.getY() / 16f);
+        rotate(stack, this.rot);
+        stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
     }
 
-    //TODO move these to the mixins, probably.
-    public void applyTransformsAsElytra(MatrixStack stack) {
-        stack.translate(pivot.getX() / 16.0f, pivot.getY() / 16.0f, -pivot.getZ() / 16.0f);
-        stack.multiply(Vector3f.POSITIVE_Z.getDegreesQuaternion(this.rot.getZ()));
-        stack.multiply(Vector3f.POSITIVE_Y.getDegreesQuaternion(-this.rot.getY()));
-        stack.multiply(Vector3f.POSITIVE_X.getDegreesQuaternion(-this.rot.getX()));
-        stack.translate(this.pos.getX() / 16.0f, this.pos.getY() / 16.0f, this.pos.getZ() / 16.0f);
+    public void applyOriginTransforms(MatrixStack stack) {
+        stack.translate(-pivot.getX() / 16f, -pivot.getY() / 16f, -pivot.getZ() / 16f);
+        rotate(stack, this.rot);
+        stack.translate(this.pos.getX() / 16f, this.pos.getY() / 16f, this.pos.getZ() / 16f);
     }
 
     //Re-builds the mesh data for a custom model part.
-    public void rebuild() {
+    public void rebuild(Vec2f newTexSize) {
+        this.texSize = newTexSize;
     }
 
-    public void addVertex(Vector3f vert, float u, float v, Vector3f normal) {
-        this.vertexData.add(vert.getX() / 16.0f);
-        this.vertexData.add(vert.getY() / 16.0f);
-        this.vertexData.add(vert.getZ() / 16.0f);
-        this.vertexData.add(u);
-        this.vertexData.add(v);
-        this.vertexData.add(-normal.getX());
-        this.vertexData.add(-normal.getY());
-        this.vertexData.add(-normal.getZ());
-        this.vertexCount++;
+    public void rotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(-rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(-rot.getX()));
     }
 
-    public void readNbt(CompoundTag partNbt) {
-        //Name
-        this.name = partNbt.get("nm").asString();
+    public void vanillaRotate(MatrixStack stack, Vec3f rot) {
+        stack.multiply(Vec3f.POSITIVE_Z.getDegreesQuaternion(rot.getZ()));
+        stack.multiply(Vec3f.POSITIVE_Y.getDegreesQuaternion(rot.getY()));
+        stack.multiply(Vec3f.POSITIVE_X.getDegreesQuaternion(rot.getX()));
+    }
+
+    public void addVertex(Vec3f vert, float u, float v, Vec3f normal, FloatList vertexData) {
+        vertexData.add(vert.getX() / 16f);
+        vertexData.add(vert.getY() / 16f);
+        vertexData.add(vert.getZ() / 16f);
+        vertexData.add(u);
+        vertexData.add(v);
+        vertexData.add(-normal.getX());
+        vertexData.add(-normal.getY());
+        vertexData.add(-normal.getZ());
+    }
+
+    public void readNbt(NbtCompound partNbt) {
+        if (partNbt.contains("nm"))
+            this.name = partNbt.getString("nm");
+        else
+            this.name = "NULL";
+
+        if (partNbt.contains("vb"))
+            this.visible = partNbt.getBoolean("vb");
 
         if (partNbt.contains("pos")) {
-            ListTag list = (ListTag) partNbt.get("pos");
+            NbtList list = (NbtList) partNbt.get("pos");
             this.pos = vec3fFromNbt(list);
         }
         if (partNbt.contains("rot")) {
-            ListTag list = (ListTag) partNbt.get("rot");
+            NbtList list = (NbtList) partNbt.get("rot");
             this.rot = vec3fFromNbt(list);
         }
         if (partNbt.contains("scl")) {
-            ListTag list = (ListTag) partNbt.get("scl");
+            NbtList list = (NbtList) partNbt.get("scl");
             this.scale = vec3fFromNbt(list);
         }
         if (partNbt.contains("piv")) {
-            ListTag list = (ListTag) partNbt.get("piv");
+            NbtList list = (NbtList) partNbt.get("piv");
             this.pivot = vec3fFromNbt(list);
-        }
-
-        if (partNbt.contains("ptype")) {
-            try {
-                this.parentType = ParentType.valueOf(partNbt.get("ptype").asString());
-            } catch (Exception ignored) {}
-        }
-        if (partNbt.contains("mmc")) {
-            this.isMimicMode = ((ByteTag) partNbt.get("mmc")).getByte() == 1;
-        }
-
-        if (partNbt.contains("vsb")) {
-            this.visible = partNbt.getBoolean("vsb");
-        }
-
-        if (partNbt.contains("uv")) {
-            ListTag uvOffsetNbt = (ListTag) partNbt.get("uv");
-            this.uOffset = uvOffsetNbt.getFloat(0);
-            this.vOffset = uvOffsetNbt.getFloat(1);
-        }
-
-        if (partNbt.contains("alp")) {
-            this.alpha = partNbt.getFloat("alp");
         }
 
         if (partNbt.contains("stype")) {
             try {
-                this.shaderType = ShaderType.valueOf(partNbt.get("stype").asString());
-            } catch (Exception ignored) {}
-        }
-
-        if (partNbt.contains("chld")) {
-            ListTag childrenNbt = (ListTag) partNbt.get("chld");
-            if (childrenNbt == null || childrenNbt.getElementType() != NbtType.COMPOUND)
-                return;
-
-            for (Tag child : childrenNbt) {
-                CompoundTag childNbt = (CompoundTag) child;
-                CustomModelPart part = fromNbt(childNbt);
-                part.rebuild();
-                this.children.add(part);
+                this.shaderType = ShaderType.valueOf(partNbt.getString("stype"));
+            } catch (Exception ignored) {
+                this.shaderType = ShaderType.None;
             }
         }
     }
 
-    public void writeNbt(CompoundTag partNbt) {
-        partNbt.put("nm", StringTag.of(name));
-
-        if (!this.pos.equals(new Vector3f(0, 0, 0))) {
-            partNbt.put("pos", vec3fToNbt(this.pos));
-        }
-        if (!this.rot.equals(new Vector3f(0, 0, 0))) {
-            partNbt.put("rot", vec3fToNbt(this.rot));
-        }
-        if (!this.scale.equals(new Vector3f(1, 1, 1))) {
-            partNbt.put("scl", vec3fToNbt(this.scale));
-        }
-        if (!this.pivot.equals(new Vector3f(0, 0, 0))) {
-            partNbt.put("piv", vec3fToNbt(this.pivot));
-        }
-
-        if (Math.abs(this.uOffset) > 0.0001f && Math.abs(this.vOffset) > 0.0001f) {
-            ListTag uvOffsetNbt = new ListTag() {{
-                add(FloatTag.of(uOffset));
-                add(FloatTag.of(vOffset));
-            }};
-            partNbt.put("uv", uvOffsetNbt);
-        }
-
-        if (this.parentType != ParentType.None) {
-            partNbt.put("ptype", StringTag.of(this.parentType.toString()));
-        }
-        partNbt.put("mmc", ByteTag.of(this.isMimicMode));
-
-        if (!this.visible) {
-            partNbt.put("vsb", ByteTag.of(false));
-        }
-
-        if (this.alpha != 1.0f) {
-            partNbt.put("alp", FloatTag.of(this.alpha));
-        }
-
-        if (this.shaderType != ShaderType.None) {
-            partNbt.put("stype", StringTag.of(this.shaderType.toString()));
-        }
-
-        //Parse children.
-        if (this.children.size() > 0) {
-            ListTag childrenList = new ListTag();
-
-            for (CustomModelPart child : this.children) {
-                CompoundTag childNbt = new CompoundTag();
-                writeToNbt(childNbt, child);
-                childrenList.add(childNbt);
-            }
-
-            partNbt.put("chld", childrenList);
-        }
-    }
-
-    public String getPartType() {
-        //Default part type is N/A
-        return "na";
-    }
-
-    public boolean isParentSpecial() {
-        return parentType == ParentType.WORLD || parentType == ParentType.LeftElytra || parentType == ParentType.RightElytra;
-    }
-
-    public void applyTrueOffset(Vector3f offset) {
+    public PartType getPartType() {
+        return null;
     }
 
     public enum ParentType {
-        None,
         Model,
         Head,
         LeftArm,
@@ -636,41 +622,99 @@ public class CustomModelPart {
         LeftLeg,
         RightLeg,
         Torso,
-        WORLD,
+        WORLD(true),
         LeftItemOrigin, //Origin position of the held item in the left hand
         RightItemOrigin, //Origin position of the held item
         LeftElytraOrigin, //Left origin position of the elytra
         RightElytraOrigin, //Right origin position of the elytra
-        LeftElytra, //Left origin position of the elytra
-        RightElytra, //Right origin position of the elytra
-        NameTag, //Parented to the nametag.
+        LeftParrotOrigin, //Left origin position of the shoulder parrot
+        RightParrotOrigin, //Right origin position of the shoulder parrot
+        LeftElytra(true), //Left position of the elytra model
+        RightElytra(true), //Right position of the elytra model
+        LeftSpyglass, //Left position of the spyglass model
+        RightSpyglass, //Right position of the spyglass model
+        Camera, //paparazzi
+        Skull(true), //A replacement for the "Head" type, but only rendered in the tab list and player head item/blocks
+        Hud(true); //hud rendering
+
+        private final boolean special;
+        ParentType(boolean special) {
+            this.special = special;
+        }
+        ParentType() {
+            this.special = false;
+        }
     }
 
-    public enum RotationType {
-        BlockBench,
-        Vanilla
+    public boolean isSpecial() {
+        return this.parentType.special;
     }
 
     public enum ShaderType {
-        None,
-        EndPortal,
-        Glint
+        None(0),
+        EndPortal(1),
+        Glint(2);
+
+        public final int id;
+        ShaderType(int id) {
+            this.id = id;
+        }
+
+        public boolean isShader(int shader) {
+            return (id & shader) == id;
+        }
     }
 
-    public enum RenderType {
-        None,
-        Cutout,
-        CutoutNoCull,
-        Translucent,
-        TranslucentNoCull,
-        NoTransparent
+    public enum TextureType {
+        Custom,
+        Skin,
+        Cape,
+        Elytra,
+        Resource
+    }
+
+    public enum UV {
+        ALL,
+        NORTH,
+        SOUTH,
+        WEST,
+        EAST,
+        UP,
+        DOWN
+    }
+
+    public enum PartType {
+        GROUP("na"),
+        CUBE("cub"),
+        MESH("msh");
+
+        public final String val;
+        PartType(String value) {
+            this.val = value;
+        }
+    }
+
+    public static class uvData {
+        public Vec2f uvOffset, uvSize;
+
+        public void setUVOffset(Vec2f uvOffset) {
+            this.uvOffset = uvOffset;
+        }
+
+        public void setUVSize(Vec2f uvSize) {
+            this.uvSize = uvSize;
+        }
+    }
+
+    public void applyUVMods(Vec2f v) {
+        rebuild(v);
     }
 
     //---------MODEL PART TYPES---------
 
     public static final Map<String, Supplier<CustomModelPart>> MODEL_PART_TYPES =
             new ImmutableMap.Builder<String, Supplier<CustomModelPart>>()
-                    .put("na", CustomModelPart::new)
+                    .put("na", CustomModelPartGroup::new)
                     .put("cub", CustomModelPartCuboid::new)
                     .put("msh", CustomModelPartMesh::new)
                     .build();
@@ -678,10 +722,9 @@ public class CustomModelPart {
     /**
      * Gets a CustomModelPart from NBT, automatically reading the type from that NBT.
      */
-    public static CustomModelPart fromNbt(CompoundTag nbt) {
-        if (!nbt.contains("pt"))
-            return null;
-        String partType = nbt.get("pt").asString();
+    public static CustomModelPart fromNbt(NbtCompound nbt, CustomModel model) {
+        NbtElement pt = nbt.get("pt");
+        String partType = pt == null ? "na" : pt.asString();
 
         if (!MODEL_PART_TYPES.containsKey(partType))
             return null;
@@ -689,36 +732,22 @@ public class CustomModelPart {
         Supplier<CustomModelPart> sup = MODEL_PART_TYPES.get(partType);
         CustomModelPart part = sup.get();
 
+        part.model = model;
         part.readNbt(nbt);
         return part;
     }
 
-    /**
-     * Writes a model part to an NBT compound.
-     *
-     * @param nbt  the NBT compound
-     * @param part the model part
-     */
-    public static void writeToNbt(CompoundTag nbt, CustomModelPart part) {
-        String partType = part.getPartType();
-        if (!MODEL_PART_TYPES.containsKey(partType))
-            return;
-
-        nbt.put("pt", StringTag.of(partType));
-        part.writeNbt(nbt);
+    public static Vec3f vec3fFromNbt(@Nullable NbtList nbt) {
+        if (nbt == null || nbt.getHeldType() != NbtType.FLOAT)
+            return new Vec3f(0f, 0f, 0f);
+        return new Vec3f(nbt.getFloat(0), nbt.getFloat(1), nbt.getFloat(2));
     }
 
-    private static Vector3f vec3fFromNbt(@Nullable ListTag nbt) {
-        if (nbt == null || nbt.getElementType() != NbtType.FLOAT)
-            return new Vector3f(0.f, 0.f, 0.f);
-        return new Vector3f(nbt.getFloat(0), nbt.getFloat(1), nbt.getFloat(2));
+    public static Vector4f v4fFromNbtList(NbtList list) {
+        return new Vector4f(list.getFloat(0), list.getFloat(1), list.getFloat(2), list.getFloat(3));
     }
 
-    private static ListTag vec3fToNbt(Vector3f vec) {
-        ListTag nbt = new ListTag();
-        nbt.add(FloatTag.of(vec.getX()));
-        nbt.add(FloatTag.of(vec.getY()));
-        nbt.add(FloatTag.of(vec.getZ()));
-        return nbt;
+    public static Vec2f v2fFromNbtList(NbtList list) {
+        return new Vec2f(list.getFloat(0), list.getFloat(1));
     }
 }

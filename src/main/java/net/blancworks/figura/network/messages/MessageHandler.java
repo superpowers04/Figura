@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
-public class MessageHandler {
+public abstract class MessageHandler {
     public void handleMessage(LittleEndianDataInputStream stream) throws Exception{
         
     }
+
+    public abstract String getProtocolName();
 
     public String readString(LittleEndianDataInputStream stream) throws IOException {
         int length = stream.readInt();

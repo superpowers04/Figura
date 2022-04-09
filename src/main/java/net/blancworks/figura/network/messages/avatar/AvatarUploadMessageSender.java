@@ -1,7 +1,6 @@
 package net.blancworks.figura.network.messages.avatar;
 
 import com.google.common.io.LittleEndianDataOutputStream;
-import net.blancworks.figura.network.messages.MessageIDs;
 import net.blancworks.figura.network.messages.MessageSender;
 
 import java.io.IOException;
@@ -12,13 +11,16 @@ public class AvatarUploadMessageSender extends MessageSender {
     private byte[] avatarPayload;
     
     public AvatarUploadMessageSender(byte[] payload, boolean deletePrevious) {
-        super(MessageIDs.AVATAR_UPLOAD_MESSAGE_ID);
         this.avatarPayload = payload;
     }
 
     public AvatarUploadMessageSender(byte[] payload) {
-        super(MessageIDs.AVATAR_UPLOAD_MESSAGE_ID);
         this.avatarPayload = payload;
+    }
+
+    @Override
+    public String getProtocolName() {
+        return "figura_v1:avatar_upload";
     }
 
     @Override

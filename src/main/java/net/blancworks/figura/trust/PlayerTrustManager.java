@@ -1,289 +1,148 @@
 package net.blancworks.figura.trust;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.blancworks.figura.FiguraMod;
-import net.blancworks.figura.trust.settings.PermissionBooleanSetting;
-import net.blancworks.figura.trust.settings.PermissionFloatSetting;
-import net.blancworks.figura.trust.settings.PermissionSetting;
-import net.fabricmc.fabric.api.util.NbtType;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.NbtIo;
-import net.minecraft.nbt.Tag;
-import net.minecraft.text.LiteralText;
-import net.minecraft.text.Text;
-import net.minecraft.text.TranslatableText;
+import net.minecraft.nbt.*;
 import net.minecraft.util.Identifier;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class PlayerTrustManager {
-    public static final Identifier MAX_INIT_ID = new Identifier("setting", "maxinitinstructions");
-    public static final Identifier MAX_TICK_ID = new Identifier("setting", "maxtickinstructions");
-    public static final Identifier MAX_RENDER_ID = new Identifier("setting", "maxrenderinstructions");
-    public static final Identifier MAX_COMPLEXITY_ID = new Identifier("setting", "maxcomplexity");
-    public static final Identifier ALLOW_VANILLA_MOD_ID = new Identifier("setting", "allowvanillaedit");
-    public static final Identifier ALLOW_NAMEPLATE_MOD_ID = new Identifier("setting", "allownameplateedit");
-    public static final Identifier ALLOW_OFFSCREEN_RENDERING = new Identifier("setting", "allowoffscreenrendering");
-    public static final Identifier MAX_PARTICLES_ID = new Identifier("setting", "maxparticles");
-    public static final Identifier MAX_SOUND_EFFECTS_ID = new Identifier("setting", "maxsfx");
 
-    
-    public static Map<Identifier, TrustContainer> allContainers = new Object2ObjectOpenHashMap<>();
-    public static List<Identifier> allGroups = new ArrayList<>();
-    public static List<Identifier> defaultGroups = new ArrayList<>();
-    public static Map<Identifier, PermissionSetting> permissionSettings = new Object2ObjectOpenHashMap<>();
-    public static List<Identifier> permissionDisplayOrder = new ArrayList<>();
+    public static Map<Identifier, TrustContainer> defaultGroups = new HashMap<>();
+    public static Map<Identifier, TrustContainer> groups = new LinkedHashMap<>();
+    public static Map<Identifier, TrustContainer> players = new HashMap<>();
 
-    //Loads all the default groups from the json config file.
     public static void init() {
-        registerPermissions();
+        //load from presets file first then load from disk
         loadDefaultGroups();
-
         loadFromDisk();
     }
 
-    public static void registerPermissions() {
-        registerPermissionSetting(new PermissionFloatSetting(MAX_INIT_ID) {{
-            min = 0;
-            max = 1024 * 17;
-            value = 1024 * 16;
-            integer = true;
-            stepSize = 256;
-            isSlider = true;
-            allowInfinity = true;
-        }});
-
-        registerPermissionSetting(new PermissionFloatSetting(MAX_TICK_ID) {{
-            min = 0;
-            max = 1024 * 11;
-            value = 1024 * 5;
-            integer = true;
-            stepSize = 256;
-            isSlider = true;
-            allowInfinity = true;
-        }});
-
-        registerPermissionSetting(new PermissionFloatSetting(MAX_RENDER_ID) {{
-            min = 0;
-            max = 1024 * 11;
-            value = 1024 * 2;
-            integer = true;
-            stepSize = 256;
-            isSlider = true;
-            allowInfinity = true;
-        }});
-
-        registerPermissionSetting(new PermissionFloatSetting(MAX_COMPLEXITY_ID) {{
-            min = 0;
-            max = 24 * 12 * 4 * 4;
-            value = 24 * 12 * 4;
-            integer = true;
-            stepSize = 24;
-            isSlider = true;
-            allowInfinity = true;
-        }});
-
-        registerPermissionSetting(new PermissionFloatSetting(MAX_PARTICLES_ID) {{
-            min = 0;
-            max = 65;
-            value = 5;
-            integer = true;
-            stepSize = 1;
-            isSlider = true;
-            allowInfinity = true;
-        }});
-
-        registerPermissionSetting(new PermissionFloatSetting(MAX_SOUND_EFFECTS_ID) {{
-            min = 0;
-            max = 65;
-            value = 0;
-            integer = true;
-            stepSize = 1;
-            isSlider = true;
-            allowInfinity = true;
-        }});
-
-        registerPermissionSetting(new PermissionBooleanSetting(ALLOW_VANILLA_MOD_ID) {{
-            value = true;
-        }});
-
-        registerPermissionSetting(new PermissionBooleanSetting(ALLOW_NAMEPLATE_MOD_ID) {{
-            value = true;
-        }});
-
-        registerPermissionSetting(new PermissionBooleanSetting(ALLOW_OFFSCREEN_RENDERING) {{
-            value = true;
-        }});
-    }
-
     public static void loadDefaultGroups() {
-        Path p = FabricLoader.getInstance().getModContainer("figura").get().getRootPath().resolve("presets.json");
-
-        //if (Files.exists(p)) {
         try {
-            InputStream s = Files.newInputStream(p);
-            InputStreamReader fileReader = new InputStreamReader(s);
-            JsonParser parser = new JsonParser();
-            JsonObject rootObject = (JsonObject) parser.parse(fileReader);
+            Path presets = FabricLoader.getInstance().getModContainer("figura").get().getRootPath().resolve("assets/figura/trust/presets.json");
+            InputStreamReader fileReader = new InputStreamReader(Files.newInputStream(presets));
+            JsonObject rootObject = (JsonObject) new JsonParser().parse(fileReader);
 
-            TrustContainer trueBase = new TrustContainer(new Identifier("group", "base"), new LiteralText("base"));
-            JsonObject baseObj = rootObject.get("base").getAsJsonObject();
-            allContainers.put(trueBase.getIdentifier(), trueBase);
+            rootObject.entrySet().forEach(entry -> {
+                String name = entry.getKey();
 
-            trueBase.isHidden = true;
-            trueBase.isLocked = true;
-            trueBase.displayChildren = false;
+                NbtCompound nbt = new NbtCompound();
+                entry.getValue().getAsJsonObject().entrySet().forEach(trust -> nbt.put(trust.getKey(), NbtInt.of(trust.getValue().getAsInt())));
 
-            fillOutGroup(trueBase, baseObj);
+                Identifier parentID = new Identifier("default_group", name);
+                TrustContainer parent = new TrustContainer(name, null, nbt);
+                TrustContainer container = new TrustContainer(name, parentID, new NbtCompound());
 
-            for (Map.Entry<String, JsonElement> entry : rootObject.entrySet()) {
-                if (entry.getKey().equals("base"))
-                    continue;
+                if (name.equals("local")) {
+                    parent.locked = true;
+                    container.locked = true;
+                }
 
-                String key = entry.getKey();
-                JsonObject value = entry.getValue().getAsJsonObject();
+                defaultGroups.put(parentID, parent);
+                groups.put(new Identifier("group", name), container);
+            });
 
-                //This is the base container, use as the parent of any given default group to allow them to be properly reset
-                TrustContainer baseGroupContainer = new TrustContainer(new Identifier("group", "base" + key), new LiteralText("base" + key));
-
-                fillOutGroup(baseGroupContainer, value);
-
-
-                baseGroupContainer.setParent(trueBase.getIdentifier());
-
-                allContainers.put(baseGroupContainer.getIdentifier(), baseGroupContainer);
-
-                TrustContainer realContainer = new TrustContainer(new Identifier("group", key), new TranslatableText(key));
-                realContainer.setParent(baseGroupContainer.getIdentifier());
-                addGroup(realContainer);
-                realContainer.isLocked = true;
-                realContainer.isHidden = baseGroupContainer.isHidden;
-
-                baseGroupContainer.isHidden = true;
-                baseGroupContainer.isLocked = true;
-                baseGroupContainer.displayChildren = false;
-            }
+            FiguraMod.LOGGER.debug("Loaded presets from assets");
         } catch (Exception e) {
+            FiguraMod.LOGGER.error("Could not load presets from assets");
             e.printStackTrace();
         }
-        //}
-
-        FiguraMod.LOGGER.debug("Loaded presets from assets");
-    }
-
-    public static void addGroup(TrustContainer container) {
-        allGroups.add(container.getIdentifier());
-        defaultGroups.add(container.getIdentifier());
-        allContainers.put(container.getIdentifier(), container);
-    }
-
-    public static void fillOutGroup(TrustContainer tc, JsonObject object) {
-        for (Map.Entry<String, JsonElement> entry : object.entrySet()) {
-            try {
-                if (entry.getKey().equals("parent")) {
-                    tc.setParent(new Identifier("group", entry.getValue().getAsString()));
-                    continue;
-                }
-
-                if (entry.getKey().equals("hidden")) {
-                    tc.isHidden = true;
-                    continue;
-                }
-
-                Identifier settingID = new Identifier("setting", entry.getKey().toLowerCase(Locale.ENGLISH));
-                if (permissionSettings.containsKey(settingID)) {
-                    PermissionSetting newSetting = permissionSettings.get(settingID).getCopy();
-                    newSetting.fromJson(entry.getValue());
-                    tc.permissionSet.put(newSetting.id, newSetting);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static void registerPermissionSetting(PermissionSetting baseSetting) {
-        permissionSettings.put(baseSetting.id, baseSetting);
-        permissionDisplayOrder.add(baseSetting.id);
     }
 
     public static TrustContainer getContainer(Identifier id) {
-        if (!allContainers.containsKey(id)) {
-            TrustContainer newContainer = new TrustContainer(id, Text.of(id.getPath()));
+        if (defaultGroups.containsKey(id))
+            return defaultGroups.get(id);
 
-            if (id.equals(new Identifier("players", MinecraftClient.getInstance().player.getUuid().toString()))) {
-                newContainer.setParent(new Identifier("group", "local"));
-                newContainer.isHidden = true;
-            } else {
-                newContainer.setParent(new Identifier("group", "untrusted"));
-            }
-            allContainers.put(id, newContainer);
-            return newContainer;
-        }
+        if (groups.containsKey(id))
+            return groups.get(id);
 
-        if (allContainers.containsKey(id))
-            return allContainers.get(id);
-        return null;
+        if (players.containsKey(id))
+            return players.get(id);
+
+        boolean isLocal = id.getPath().equals(getClientPlayerID());
+        Identifier parentID = new Identifier("group", isLocal ? "local" : "untrusted");
+        TrustContainer trust =  new TrustContainer(id.getPath(), parentID, new HashMap<>());
+
+        if (isLocal) trust.locked = true;
+
+        players.put(id, trust);
+        return trust;
     }
 
-    public static void readNbt(CompoundTag nbt) {
-        ListTag list = (ListTag) nbt.get("containers");
-        if (list == null || list.getElementType() != NbtType.COMPOUND)
-            return;
+    public static void writeNbt(NbtCompound nbt) {
+        NbtList groupList = new NbtList();
+        NbtList playerList = new NbtList();
 
-        for (Tag element : list) {
-            CompoundTag nbtCompound = (CompoundTag) element;
+        groups.forEach((key, value) -> {
+            NbtCompound container = new NbtCompound();
+            value.writeNbt(container);
+            groupList.add(container);
+        });
 
-            String idString = nbtCompound.getString("id");
-            Identifier id = Identifier.tryParse(idString);
-
-            if (allContainers.containsKey(id)) {
-                TrustContainer targetContainer = allContainers.get(id);
-
-                targetContainer.fromNbt(nbtCompound);
+        players.forEach((key, value) -> {
+            if (!key.getPath().equals(getClientPlayerID()) && !value.getParent().getPath().equals("local") && (!value.isTrustEmpty() || !value.getParent().getPath().equals("untrusted"))) {
+                NbtCompound container = new NbtCompound();
+                value.writeNbt(container);
+                playerList.add(container);
             }
-        }
+        });
+
+        nbt.put("groups", groupList);
+        nbt.put("players", playerList);
     }
 
-    public static void writeNbt(CompoundTag nbt) {
-        ListTag containerList = new ListTag();
+    public static void readNbt(NbtCompound nbt) {
+        NbtList groupList = nbt.getList("groups", NbtElement.COMPOUND_TYPE);
+        NbtList playerList = nbt.getList("players", NbtElement.COMPOUND_TYPE);
 
-        for (Map.Entry<Identifier, TrustContainer> entry : allContainers.entrySet()) {
-            if (entry.getKey().equals(new Identifier("players", MinecraftClient.getInstance().player.getUuid().toString()))) {
-                continue;
+        groupList.forEach(value -> {
+            NbtCompound compound = (NbtCompound) value;
+
+            String name = compound.getString("name");
+            Identifier parentID = new Identifier(compound.getString("parent"));
+            TrustContainer container =  new TrustContainer(name, parentID, compound.getCompound("trust"));
+
+            container.locked = name.equals("local") || compound.getBoolean("locked");
+            container.expanded = compound.getBoolean("expanded");
+
+            groups.put(new Identifier("group", name), container);
+        });
+
+        playerList.forEach(value -> {
+            NbtCompound compound = (NbtCompound) value;
+
+            String name = compound.getString("name");
+            Identifier parentID = new Identifier(compound.getString("parent"));
+
+            if (!name.equals(getClientPlayerID()) && !parentID.getPath().equals("local")) {
+                TrustContainer container = new TrustContainer(name, parentID, compound.getCompound("trust"));
+                container.locked = compound.getBoolean("locked");
+                container.expanded = compound.getBoolean("expanded");
+
+                players.put(new Identifier("player", name), container);
             }
-
-            CompoundTag containerNbt = new CompoundTag();
-            entry.getValue().toNbt(containerNbt);
-            containerList.add(containerNbt);
-        }
-
-        nbt.put("containers", containerList);
+        });
     }
 
     public static void saveToDisk() {
         try {
-            CompoundTag targetTag = new CompoundTag();
+            NbtCompound targetTag = new NbtCompound();
             writeNbt(targetTag);
 
-            Path targetPath = FabricLoader.getInstance().getGameDir().resolve("figura");
-            Files.createDirectories(targetPath);
-            targetPath = targetPath.resolve("trustSettings.nbt");
+            Path targetPath = FiguraMod.getModContentDirectory();
+            targetPath = targetPath.resolve("trust_settings.nbt");
 
             if (!Files.exists(targetPath))
                 Files.createFile(targetPath);
@@ -299,13 +158,13 @@ public class PlayerTrustManager {
 
     public static void loadFromDisk() {
         try {
-            Path targetPath = FabricLoader.getInstance().getGameDir().resolve("figura").resolve("trustSettings.nbt");
+            Path targetPath = FiguraMod.getModContentDirectory().resolve("trust_settings.nbt");
 
             if (!Files.exists(targetPath))
                 return;
 
             FileInputStream fis = new FileInputStream(targetPath.toFile());
-            CompoundTag getTag = NbtIo.readCompressed(fis);
+            NbtCompound getTag = NbtIo.readCompressed(fis);
             readNbt(getTag);
             fis.close();
         } catch (Exception e) {
@@ -313,4 +172,53 @@ public class PlayerTrustManager {
         }
     }
 
+    public static boolean increaseTrust(TrustContainer tc) {
+        Identifier parentID = tc.getParent();
+
+        int i = 0;
+        Identifier nextID = null;
+        for (Map.Entry<Identifier, TrustContainer> entry : groups.entrySet()) {
+            if (nextID != null) {
+                nextID = entry.getKey();
+                break;
+            }
+
+            if (entry.getKey().equals(parentID))
+                nextID = entry.getKey();
+
+            i++;
+        }
+
+        if (nextID == null || (nextID.getPath().equals("local") && !tc.name.equals(getClientPlayerID())) || i == groups.size())
+            return false;
+
+        tc.setParent(nextID);
+        saveToDisk();
+        return true;
+    }
+
+    public static boolean decreaseTrust(TrustContainer tc) {
+        Identifier parentID = tc.getParent();
+
+        int i = 0;
+        Identifier prevID = null;
+        for (Map.Entry<Identifier, TrustContainer> entry : groups.entrySet()) {
+            if (entry.getKey().equals(parentID))
+                break;
+
+            prevID = entry.getKey();
+            i++;
+        }
+
+        if (prevID == null || i == groups.size())
+            return false;
+
+        tc.setParent(prevID);
+        saveToDisk();
+        return true;
+    }
+
+    private static String getClientPlayerID() {
+        return MinecraftClient.getInstance().player != null ? MinecraftClient.getInstance().player.getUuid().toString() : "";
+    }
 }

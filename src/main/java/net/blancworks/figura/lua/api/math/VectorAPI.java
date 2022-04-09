@@ -1,32 +1,29 @@
 package net.blancworks.figura.lua.api.math;
 
 import net.blancworks.figura.lua.CustomScript;
-import net.blancworks.figura.lua.api.ReadOnlyLuaTable;
 import net.blancworks.figura.utils.ColorUtils;
+import net.blancworks.figura.utils.MathUtils;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.World;
+import net.minecraft.util.math.*;
+import org.luaj.vm2.LuaNumber;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.ThreeArgFunction;
+import org.luaj.vm2.lib.TwoArgFunction;
 
 import java.awt.*;
 
 public class VectorAPI {
-    private static ReadOnlyLuaTable globalLuaTable;
+    private static LuaTable globalLuaTable;
     private static boolean initialized;
-
-    private static World getWorld() {
-        return MinecraftClient.getInstance().world;
-    }
 
     public static Identifier getID() {
         return new Identifier("default", "vectors");
     }
 
-    public static ReadOnlyLuaTable getForScript(CustomScript script) {
+    public static LuaTable getForScript(CustomScript script) {
         if (!initialized) {
             updateGlobalTable();
             initialized = true;
@@ -36,12 +33,11 @@ public class VectorAPI {
     }
 
     public static void updateGlobalTable() {
-        globalLuaTable = new ReadOnlyLuaTable(new LuaTable() {{
+        globalLuaTable = new LuaTable() {{
             set("of", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
-                    arg.checktable();
-                    return LuaVector.of((LuaTable)arg);
+                    return LuaVector.of(arg.checktable());
                 }
             });
 
@@ -50,8 +46,15 @@ public class VectorAPI {
                 public LuaValue call(LuaValue arg1, LuaValue arg2, LuaValue arg3) {
                     LuaVector a = LuaVector.checkOrNew(arg1);
                     LuaVector b = LuaVector.checkOrNew(arg2);
-                    arg3.checknumber();
-                    return lerp(a, b, arg3.tofloat());
+                    return lerp(a, b, arg3.checknumber().tofloat());
+                }
+            });
+
+            set("rgbToINT", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector rgb = LuaVector.checkOrNew(arg);
+                    return LuaValue.valueOf(intFromRGB(rgb));
                 }
             });
 
@@ -87,6 +90,14 @@ public class VectorAPI {
                 }
             });
 
+            set("worldToCameraPos", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    return toCameraSpace(vec);
+                }
+            });
+
             set("getVector", new OneArgFunction() {
                 @Override
                 public LuaValue call(LuaValue arg) {
@@ -94,7 +105,53 @@ public class VectorAPI {
                     return new LuaVector(new float[n]);
                 }
             });
-        }});
+
+            set("rotateWithQuaternion", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg1, LuaValue arg2) {
+                    return rotateWithQuaternion(LuaVector.checkOrNew(arg1), LuaVector.checkOrNew(arg2));
+                }
+            });
+
+            set("rotateAroundAxis", new ThreeArgFunction() {
+                @Override
+                public LuaValue call(LuaValue vector, LuaValue axis, LuaValue degrees) {
+                    return rotateAroundAxis(LuaVector.checkOrNew(vector), LuaVector.checkOrNew(axis), degrees.checknumber());
+                }
+            });
+
+            set("axisAngleToEuler", new TwoArgFunction() {
+                @Override
+                public LuaValue call(LuaValue luaAxis, LuaValue luaAngle) {
+                    Vec3f axis = LuaVector.checkOrNew(luaAxis).asV3f();
+                    float angle = luaAngle.checknumber().tofloat();
+                    return LuaVector.of(MathUtils.quaternionToEulerXYZ(new Quaternion(axis, angle, true)));
+                }
+            });
+
+            set("toQuaternion", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    Quaternion q = Quaternion.fromEulerXyzDegrees(LuaVector.checkOrNew(arg).asV3f());
+                    return LuaVector.of(new Vector4f(q.getX(), q.getY(), q.getZ(), q.getW()));
+                }
+            });
+
+            set("fromQuaternion", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    LuaVector vec = LuaVector.checkOrNew(arg);
+                    return LuaVector.of(MathUtils.quaternionToEulerXYZ(new Quaternion(vec.x(), vec.y(), vec.z(), vec.w())));
+                }
+            });
+
+            set("worldToScreenSpace", new OneArgFunction() {
+                @Override
+                public LuaValue call(LuaValue arg) {
+                    return LuaVector.of(MathUtils.worldToScreenSpace(LuaVector.checkOrNew(arg).asV3f()));
+                }
+            });
+        }};
     }
 
     public static LuaVector lerp(LuaVector first, LuaVector second, float delta) {
@@ -123,6 +180,44 @@ public class VectorAPI {
         int[] c = new int[3];
         ColorUtils.split(rgb, c);
         return new LuaVector(((float)c[0]) / 255, ((float)c[1]) / 255, ((float)c[2]) / 255);
+    }
+
+    public static int intFromRGB(LuaVector rgb) {
+        int c = (int) (rgb.x() * 255);
+        c = (c << 8) + (int) (rgb.y() * 255);
+        c = (c << 8) + (int) (rgb.z() * 255);
+        return c;
+    }
+
+    public static LuaValue rotateWithQuaternion(LuaVector vector, LuaVector rotation) {
+        Quaternion quat = Quaternion.fromEulerXyzDegrees(vector.asV3f());
+        Quaternion rot = Quaternion.fromEulerXyzDegrees(rotation.asV3f());
+        quat.hamiltonProduct(rot);
+
+        //we cant use the quaternion to euler from the quaternion class because NaN and weird rotations
+        return LuaVector.of(MathUtils.quaternionToEulerXYZ(quat));
+    }
+
+    public static LuaValue rotateAroundAxis(LuaVector vector, LuaVector axis, LuaNumber degrees) {
+        Vec3f normalizedAxis = axis.asV3f();
+        normalizedAxis.normalize();
+        Quaternion rotatorQuat = new Quaternion(normalizedAxis, degrees.tofloat(), true);
+        Quaternion rotatorQuatConj = new Quaternion(rotatorQuat);
+        rotatorQuatConj.conjugate();
+        Quaternion vectorQuat = new Quaternion(vector.x(), vector.y(), vector.z(), 0);
+        rotatorQuat.hamiltonProduct(vectorQuat);
+        rotatorQuat.hamiltonProduct(rotatorQuatConj);
+        return LuaVector.of(new Vec3f(rotatorQuat.getX(), rotatorQuat.getY(), rotatorQuat.getZ()));
+    }
+
+    public static LuaValue toCameraSpace(LuaVector vec) {
+        Matrix3f transformMatrix = new Matrix3f(MinecraftClient.getInstance().gameRenderer.getCamera().getRotation());
+        transformMatrix.invert();
+        Vec3f target = new Vec3f(vec.x(), vec.y(), vec.z());
+        target.subtract(new Vec3f(MinecraftClient.getInstance().gameRenderer.getCamera().getPos()));
+        target.transform(transformMatrix);
+        target.set(-target.getX(), target.getY(), target.getZ());
+        return LuaVector.of(target);
     }
 
     private static final LuaVector[] MODEL_SPACE_FACTORS = new LuaVector[7];

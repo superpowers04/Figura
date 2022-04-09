@@ -13,11 +13,6 @@ public class MatrixStackMixin implements MatrixStackAccess {
     @Final
     @Shadow
     private Deque<MatrixStack.Entry> stack;
-
-    public void copyTo(MatrixStack otherStack) {
-        MatrixStackMixin access = (MatrixStackMixin) (Object) otherStack;
-        access.stack.addAll(stack);
-    }
     
     public void pushEntry(MatrixStack.Entry entry){
         stack.addLast(entry);
