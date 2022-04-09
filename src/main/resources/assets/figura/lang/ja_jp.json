@@ -1,105 +1,229 @@
 {
-  "figura.mark": "△",
-  "figura.star": "⭐",
+  "figura": "Figura",
 
-  "gui.figura.trustmenutitle": "Figura信頼メニュー",
-  "gui.figura.configtitle": "Figura設定メニュー",
-  "gui.figura.menutitle": "Figuraメニュー",
 
-  "gui.figura.blocked": "ブロック済",
-  "gui.figura.untrusted": "信頼していない",
-  "gui.figura.trusted": "信頼できる",
-  "gui.figura.friend": "フレンド",
+  "figura.trust.blocked": "ブロック",
+  "figura.trust.untrusted": "信頼しない",
+  "figura.trust.trusted": "信頼する",
+  "figura.trust.friend": "フレンド",
+  "figura.trust.local": "ローカル",
 
-  "gui.figura.maxinitinstructions": "最大初期化命令",
-  "gui.figura.maxtickinstructions": "最大ティック命令",
-  "gui.figura.maxrenderinstructions": "最大レンダリング命令",
-  "gui.figura.maxcomplexity": "最大複雑さ",
-  "gui.figura.allowvanillaedit": "バニラアバターの変更",
-  "gui.figura.allownameplateedit": "ネームプレート/チャットの名前の変更",
-  "gui.figura.allowoffscreenrendering": "画面外レンダリング",
-  "gui.figura.maxparticles": "1秒あたりの最大パーティクル数",
-  "gui.figura.maxsfx": "1秒当たりの最大サウンド数",
+  "figura.trust.maxinitinstructions": "初期化時の命令数の上限",
+  "figura.trust.maxtickinstructions": "常時実行する命令数の上限",
+  "figura.trust.maxrenderinstructions": "描画時の命令数の上限",
+  "figura.trust.maxcomplexity": "複雑さの上限",
+  "figura.trust.maxparticles": "1秒ごとのパーティクル数の上限",
+  "figura.trust.maxsfx": "1秒ごとのサウンド数の上限",
+  "figura.trust.allowvanillaedit": "バニラアバターの変更",
+  "figura.trust.allownameplateedit": "ネームプレート/チャットの名前変更",
+  "figura.trust.allowoffscreenrendering": "画面外での描画",
+  "figura.trust.allowcustomrenderlayers": "カスタム描画レイヤー",
+  "figura.trust.allowcustomsounds": "カスタムサウンド",
+  "figura.trust.bbanimations": "アニメーションの複雑さの上限",
 
-  "gui.figura.dropconfirm": "以下のモデルをFiguraに追加しますか?",
 
-  "gui.script.none": "ない",
-  "gui.script.ok": "はい",
-  "gui.script.error": "エラー",
+  "figura.gui.trustmenu.title": "Figura権限メニュー",
+  "figura.gui.config.title": "Figura設定メニュ",
+  "figura.gui.menu.title": "Figurメニュー",
+  "figura.gui.keybinds.title": "Figuraスクリプトキー設定メニュー",
+  "figura.gui.sounds.title": "Figuraカスタムサウンド試聴メニュー",
 
-  "gui.figura.button.trustmenu": "信頼メニュー",
-  "gui.figura.button.configmenu": "設定",
-  "gui.figura.button.back": "戻る",
-  "gui.figura.button.deleteavatar": "アバターをクリア",
-  "gui.figura.button.clearall": "全てのアバターをクリア",
-  "gui.figura.button.help": "ヘルプ",
-  "gui.figura.button.openfolder": "モデルフォルダーを開く",
-  "gui.figura.button.resetallperm": "全ての権限をリセット",
-  "gui.figura.button.resetperm": "権限をリセット",
-  "gui.figura.button.reloadavatar": "アバターを再読み込み",
-  "gui.figura.button.search": "検索中...",
+  "figura.gui.dropconfirm": "以下のモデルをFiguraに追加しますか？",
+  "figura.gui.panic.warning": "Figuraの使用が制限されています！アバター描画がオフになりました！*パニック*",
 
-  "gui.figura.button.tooltip.upload": "アバターをアップロードし、マルチプレイで表示します",
-  "gui.figura.button.tooltip.reloadavatar": "ローカルでアバターを消去して再ダウンロードします",
-  "gui.figura.button.tooltip.deleteavatar": "左シフトを押しながらクリックでオンラインアバターを消去します",
-  "gui.figura.button.tooltip.deleteavatartwo": "その際、他の人のアバターも消去されます",
-  "gui.figura.button.tooltip.resetperm": "左シフトを押しながらクリックでこのユーザーの選択した権限をリセットします",
-  "gui.figura.button.tooltip.cantreset": "プリセットのリセットができません",
-  "gui.figura.button.tooltip.resetallperm": "左シフトを押しながらクリックでこのユーザーの権限をリセットします",
-  "gui.figura.button.tooltip.clearcache": "左シフトを押しながらクリックで読み込まれたアバターを全て消去します",
+  "figura.gui.newver.tooltip": "新しいFiguraのバージョンを検知しました",
+  "figura.gui.newver.tooltip2": "Discrodサーバーでアップデートを確認してください！",
 
-  "gui.figura.deprecatedwarning" : "*ルートフォルダ内のモデルの使用は非推奨です",
-  "gui.figura.complexity": "複雑さ: %d",
-  "gui.figura.filesize": "ファイルサイズ: %dkb",
-  "gui.figura.name": "名前: %d",
+  "figura.gui.button.cache": "アバターをキャッシュ",
+  "figura.gui.button.cache.done": "アバターをキャッシュしました！",
 
-  "gui.figura.config.nametag": "ネームタグ",
-  "gui.figura.config.misc": "その他",
-  "gui.figura.config.dev": "開発者設定",
+  "figura.gui.button.save": "アバターを保存",
+  "figura.gui.button.save.done": "アバターを保存しました！",
+  "figura.gui.button.save.error": "おっと!",
+  "figura.gui.button.save.error.message": "アバターの保存が失敗しました",
 
-  
-  "gui.figura.config.previewnametag": "ネームタグの表示をプレビュー",
-  "gui.figura.config.tooltip.previewnametag": "モデルプレビュー画面であなたのネームタグを表示します",
+  "figura.gui.button.trustmenu": "権限メニュー",
+  "figura.gui.button.configmenu": "設定",
+  "figura.gui.button.back": "戻る",
+  "figura.gui.button.deleteavatar": "アバターを消去",
+  "figura.gui.button.clearall": "全てのアバターを消去",
+  "figura.gui.button.help": "ヘルプ",
+  "figura.gui.button.openfolder": "モデルフォルダーを開く",
+  "figura.gui.button.openavatarfolder": "アバターフォルダーを開く",
+  "figura.gui.button.resetallperm": "全ての権限をリセット",
+  "figura.gui.button.resetperm": "権限をリセット",
+  "figura.gui.button.reloadavatar": "アバターをリロード",
+  "figura.gui.button.search": "検索...",
 
-  "gui.figura.config.nametagmods": "プレイヤーネームタグのカスタマイズ",
-  "gui.figura.config.tooltip.nametagmods": "ネームタグのプレイヤー名をカスタマイズできます",
+  "figura.gui.button.upload.tooltip": "クリックしてアップロードして自分のアバターをマルチプレイで表示",
+  "figura.gui.button.uploadlocal.tooltip": "アバターはアップロード済みです！",
+  "figura.gui.button.uploadlocaltwo.tooltip": "アップロードする前にローカルアバターを選択する必要があります！",
+  "figura.gui.button.noconnection.tooltip": "アップロード/アバター削除ができません！",
+  "figura.gui.button.noconnectiontwo.tooltip": "バックエンドと接続していません！",
+  "figura.gui.button.reloadavatar.tooltip": "クリックするとローカルのアバターが消去され、再ダウンロードされます",
+  "figura.gui.button.deleteavatar.tooltip": "左シフトを押しながらクリックすると、アナタのオンラインアバターを消去します",
+  "figura.gui.button.deleteavatartwo.tooltip": "また、他の人のアバターも消去します",
+  "figura.gui.button.resetperm.tooltip": "左シフトを押しながらクリックすると、選択した権限をリセットします",
+  "figura.gui.button.clearcache.tooltip": "左シフトを押しながらクリックすると、読み込んだアバターデータをすべて消去します",
+  "figura.gui.button.keybinds.tooltip": "現在のスクリプトのキーバインド",
+  "figura.gui.button.sounds.tooltip": "カスタムサウンドを試聴",
+  "figura.gui.button.openfolder.tooltip": "左シフトを押しながらクリックすると、選択したアバターのフォルダを開きます",
 
-  "gui.figura.config.chatmods": "チャットのカスタマイズ",
-  "gui.figura.config.tooltip.chatmods": "チャット上のプレイヤー名をカスタマイズできます",
+  "figura.gui.button.status.model.0": "なし",
+  "figura.gui.button.status.model.1": "100kb+",
+  "figura.gui.button.status.model.2": "75kb+",
+  "figura.gui.button.status.model.3": "ok",
 
-  "gui.figura.config.listmods": "プレイヤーリストのカスタマイズ",
-  "gui.figura.config.tooltip.listmods": "Tabプレイヤーリストのプレイヤー名をカスタマイズできます",
+  "figura.gui.button.status.texture.0": "なし",
+  "figura.gui.button.status.texture.3": "ok",
 
-  "gui.figura.config.usenewnetwork": "新しいネットワークを使う",
-  "gui.figura.config.tooltip.usenewnetwork": "オンラインモデルで新旧どちらのネットワークを使うか切り替え",
+  "figura.gui.button.status.script.0": "なし",
+  "figura.gui.button.status.script.1": "エラー",
+  "figura.gui.button.status.script.3": "ok",
 
-  "gui.figura.config.uselocalserver": "ローカルサーバーを使う",
-  "gui.figura.config.tooltip.uselocalserver": "オンラインモデルでローカルサーバーを使うか、メインのオンラインサーバーを使うか切り替える",
+  "figura.gui.button.status.backend.1": "切断済み",
+  "figura.gui.button.status.backend.2": "接続中",
+  "figura.gui.button.status.backend.3": "接続済み",
 
-  "gui.figura.config.nametagicon": "ネームタグのアイコン表示",
-  "gui.figura.config.tooltip.nametagicon": "Figura使用者の%dに△マークを表示するか",
+  "figura.gui.status.model": "モデル",
+  "figura.gui.status.texture": "テクスチャ",
+  "figura.gui.status.script": "スクリプト",
+  "figura.gui.status.backend": "バックエンド",
 
-  "gui.figura.config.ownnametag": "自身のネームタグを表示する",
-  "gui.figura.config.tooltip.ownnametag": "ゲーム内で自分のネームタグを表示するか",
+  "figura.gui.status.complexity": "複雑さ:",
+  "figura.gui.status.filesize": "大きさ(kb):",
+  "figura.gui.status.name": "名前:",
 
-  "gui.figura.config.buttonlocation": "Figuraボタンの位置",
-  "gui.figura.config.tooltip.buttonlocation": "Figuraのの位置を決められます",
-  "gui.figura.config.buttonlocation.topleft": "左上",
-  "gui.figura.config.buttonlocation.topright": "右上",
-  "gui.figura.config.buttonlocation.bottomleft": "左下",
-  "gui.figura.config.buttonlocation.bottomright": "右下",
-  "gui.figura.config.buttonlocation.icon": "アイコン",
 
-  "gui.figura.config.scriptlog": "スクリプトログ",
-  "gui.figura.config.tooltip.scriptlog": "スクリプトデバッグログの出力先",
-  "gui.figura.config.scriptlog.console_chat": "コンソール/チャット",
-  "gui.figura.config.scriptlog.console": "コンソール",
-  "gui.figura.config.scriptlog.chat": "チャット",
+  "figura.config.nametag": "ネームタグ",
+  "figura.config.misc": "その他",
+  "figura.config.actionwheel": "アクションホイール",
+  "figura.config.dev": "開発者向け設定",
 
-  "gui.figura.toast.upload.success.title": "アバターをアップロードしました!",
+  "figura.config.log_location.1": "コンソール/チャット",
+  "figura.config.log_location.2": "コンソール",
+  "figura.config.log_location.3": "チャット",
+  "figura.config.log_location.4": "記憶しない",
 
-  "gui.figura.toast.upload.error.title": "アバターのアップロードに失敗しました!",
-  "gui.figura.toast.upload.error.many": "アバターの数が多すぎます!!",
-  "gui.figura.toast.upload.error.empty": "そのアバターは空です!!",
-  "gui.figura.toast.upload.error.space": "サーバーの容量が足りません!!"
+  "figura.config.preview_nameplate": "ネームタグのプレビュー",
+  "figura.config.preview_nameplate.tooltip": "モデルプレビュー画面にネームタグを表示するか",
+
+  "figura.config.nameplate_modifications": "プレイヤーネームタグのカスタム",
+  "figura.config.nameplate_modifications.tooltip": "プレイヤーが名前をカスタムすることを許可するか",
+
+  "figura.config.chat_modifications": "チャットのカスタム",
+  "figura.config.chat_modifications.tooltip": "プレイヤーがチャット内での名前をカスタムすることを許可するか",
+
+  "figura.config.playerlist_modifications": "プレイヤーリストのカスタム",
+  "figura.config.playerlist_modifications.tooltip": "プレイヤーがタブリスト内での名前をカスタムすることを許可するか",
+
+  "figura.config.badges": "バッジを表示",
+  "figura.config.badges.tooltip": "アバターを持っている人の名前の横にバッジを表示するか",
+
+  "figura.config.badge_as_icons": "ネームタグのマークをアイコンにする",
+  "figura.config.badge_as_icons.tooltip": "ネームタグに△マークを%dアイコンで表示するか",
+
+  "figura.config.figura_button_location": "Figuraボタンの位置",
+  "figura.config.figura_button_location.tooltip": "Figuraの設定ボタンを配置する位置",
+  "figura.config.figura_button_location.1": "左上",
+  "figura.config.figura_button_location.2": "右上",
+  "figura.config.figura_button_location.3": "左下",
+  "figura.config.figura_button_location.4": "右下",
+  "figura.config.figura_button_location.5": "アイコン",
+
+  "figura.config.script_log_location": "スクリプトログ",
+  "figura.config.script_log_location.tooltip": "スクリプトデバッグログを出力する場所",
+
+  "figura.config.player_popup_button": "プレイヤーポップアップキー",
+  "figura.config.player_popup_button.tooltip": "プレイヤーポップアップのキー設定",
+
+  "figura.config.accent_color": "UIアクセントカラー",
+  "figura.config.accent_color.tooltip": "UIで使用するアクセントカラーを変更する",
+
+  "figura.config.release_channel": "バージョンアップデートチャンネル",
+  "figura.config.release_channel.tooltip": "新しいバージョンを読み込むアップデートチャンネルを変更する",
+  "figura.config.release_channel.1": "プレリリース",
+  "figura.config.release_channel.2": "正式リリース",
+  "figura.config.release_channel.3": "アップデートしない",
+
+  "figura.config.custom_player_heads": "カスタムプレイヤーヘッド",
+  "figura.config.custom_player_heads.tooltip": "タブリスト内のプレイヤーヘッドにアバター描画を使うか",
+
+  "figura.config.fix_hands": "一人称視点の手の固定",
+  "figura.config.fix_hands.tooltip": "一人称視点の手をアバターに合わせるか",
+
+  "figura.config.easter_eggs": "イースターエッグを有効化",
+  "figura.config.easter_eggs.tooltip": "Figuraのたのしい思わぬ要素を切り替える",
+
+  "figura.config.action_wheel_button": "アクションホイールキー",
+  "figura.config.action_wheel_button.tooltip": "アクションホイールを出すキーの設定",
+
+  "figura.config.action_wheel_title_pos": "アクションホイールタイトルの位置",
+  "figura.config.action_wheel_title_pos.tooltip": "アクションホイールのタイトルの位置",
+  "figura.config.action_wheel_title_pos.1": "マウス",
+  "figura.config.action_wheel_title_pos.2": "上",
+  "figura.config.action_wheel_title_pos.3": "下",
+  "figura.config.action_wheel_title_pos.4": "中央",
+
+  "figura.config.action_wheel_execute_on_close": "閉じたときに実行",
+  "figura.config.action_wheel_execute_on_close.tooltip": "選択したアクションをアクションホイールを閉じたときに実行するか、マウスでクリックした時のみ実行するか",
+
+  "figura.config.new_action_wheel": "新しいアクションホイールを使う",
+  "figura.config.new_action_wheel.tooltip": "より新しい実装のアクションホイールを使うか",
+
+  "figura.config.use_local_server": "ローカルサーバーを使うか",
+  "figura.config.use_local_server.tooltip": "オンラインアバターにローカルサーバーを使うかメインのオンラインサーバーを使うか切り替える",
+
+  "figura.config.format_script_on_upload": "スクリプトの方式",
+  "figura.config.format_script_on_upload.tooltip": "アップロードしたあなたのアバターのスクリプトのフォーマット",
+
+  "figura.config.log_others_script": "他のプレイヤーのアバターのログ",
+  "figura.config.log_others_script.tooltip": "他のプレイヤーのアバターのスクリプトデバッグログを表示するか",
+
+  "figura.config.render_debug_parts_pivot": "パーツの回転軸を描画",
+  "figura.config.render_debug_parts_pivot.tooltip": "ヒットボックスの描画がオンの時に%dと%dの回転軸を描画する",
+  "figura.config.render_debug_parts_pivot.tooltip.cubes": "キューブ",
+  "figura.config.render_debug_parts_pivot.tooltip.groups": "グループ",
+
+  "figura.config.render_own_nameplate": "自分のネームタグを描画",
+  "figura.config.render_own_nameplate.tooltip": "ゲーム内で自分のネームタグを描画する",
+
+  "figura.config.model_folder_path": "Figuraフォルダ",
+  "figura.config.model_folder_path.tooltip": "すべてのFiguraファイル(権限、アバター、キャッシュ)を置く場所。Minecraftフォルダを使う場合は空白にしてください",
+
+  "figura.config.panic_button": "アバター描画の切り替え",
+  "figura.config.panic_button.tooltip": "このキーは全員のアバターの描画を切り替える！ 注意！",
+
+  "figura.config.pings_log_location": "pingを記憶",
+  "figura.config.pings_log_location.tooltip": "受け取ったpingを記憶するか",
+
+
+  "figura.toast.upload.success.title": "アバターアップロード完了！",
+  "figura.toast.upload.error.title": "アバターアップロード失敗！",
+
+  "figura.toast.upload.error.many": "あなたはアバターを持ちすぎています！！",
+  "figura.toast.upload.error.empty": "そのアバターは空です！！",
+  "figura.toast.upload.error.space": "サーバーのスペースが足りません！！",
+
+  "figura.toast.avatar.reload.title": "アバターリロード完了！",
+  "figura.toast.avatar.trust.title": "現在の権限: ",
+
+
+  "figura.actionwheel.warning": "スクリプトが見つかりません",
+  "figura.actionwheel.warninginfo": "アクションホイールの内容は、アバタースクリプトで設定します",
+  "figura.actionwheel.nofunction": "未定義の関数！",
+
+
+  "figura.playerpopup.cancel": "キャンセル",
+  "figura.playerpopup.reload": "アバターの再読み込み",
+  "figura.playerpopup.increasetrust": "権限を上げる",
+  "figura.playerpopup.decreasetrust": "権限を下げる",
+  "figura.playerpopup.trustmenu": "権限メニューを開く",
+
+  "figura.playerpopup.trustissue": "アバターの全機能にはより上位の権限が必要です！",
+  "figura.playerpopup.scriptissue": "アバターのスクリプトにエラーがあります！",
+
+
+  "figura.models.unselect": "-未選択-",
+  "figura.models.loading": "読み込み中..."
 }
